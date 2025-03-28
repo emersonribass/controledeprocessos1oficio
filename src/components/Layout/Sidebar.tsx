@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, ClipboardList, Users, Settings, ChevronRight, ChevronLeft } from "lucide-react";
+import { Home, ClipboardList, Users, Settings, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -21,7 +21,7 @@ const Sidebar = () => {
   const links: SidebarLink[] = [
     {
       title: "Dashboard",
-      href: "/",
+      href: "/dashboard",
       icon: <Home className="h-5 w-5" />,
     },
     {
@@ -51,12 +51,12 @@ const Sidebar = () => {
   return (
     <aside
       className={cn(
-        "bg-white border-r border-border transition-all duration-300 h-[calc(100vh-3.5rem)]",
-        collapsed ? "w-16" : "w-60"
+        "bg-white border-b border-border transition-all duration-300",
+        collapsed ? "h-14" : "h-auto"
       )}
     >
-      <div className="px-3 py-4 h-full flex flex-col">
-        <div className="flex justify-end mb-6">
+      <div className="px-4 py-2 w-full">
+        <div className="flex justify-end mb-2">
           <Button
             variant="ghost"
             size="icon"
@@ -64,66 +64,59 @@ const Sidebar = () => {
             className="h-6 w-6"
           >
             {collapsed ? (
-              <ChevronRight className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4" />
             ) : (
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronUp className="h-4 w-4" />
             )}
           </Button>
         </div>
 
-        <nav className="space-y-1 flex-1">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              to={link.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                pathname === link.href
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-secondary"
-              )}
-            >
-              {link.icon}
-              {!collapsed && <span>{link.title}</span>}
-            </Link>
-          ))}
+        {!collapsed && (
+          <nav className="flex flex-wrap gap-2">
+            {links.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-md transition-colors",
+                  pathname === link.href
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-secondary"
+                )}
+              >
+                {link.icon}
+                <span>{link.title}</span>
+              </Link>
+            ))}
 
-          {isAdmin && (
-            <>
-              <Separator className="my-4" />
-              {adminLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                    pathname === link.href
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-secondary"
-                  )}
-                >
-                  {link.icon}
-                  {!collapsed && <span>{link.title}</span>}
-                </Link>
-              ))}
-            </>
-          )}
-        </nav>
+            {isAdmin && (
+              <>
+                <Separator orientation="vertical" className="h-8 mx-2" />
+                {adminLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-md transition-colors",
+                      pathname === link.href
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:bg-secondary"
+                    )}
+                  >
+                    {link.icon}
+                    <span>{link.title}</span>
+                  </Link>
+                ))}
+              </>
+            )}
+          </nav>
+        )}
 
-        <div className="mt-auto">
-          <div
-            className={cn(
-              "flex items-center gap-3 px-3 py-2",
-              collapsed && "justify-center"
-            )}
-          >
-            {!collapsed && (
-              <div className="text-xs text-muted-foreground">
-                Nottar v1.0.0
-              </div>
-            )}
+        {!collapsed && (
+          <div className="mt-2 text-xs text-muted-foreground">
+            Nottar v1.0.0
           </div>
-        </div>
+        )}
       </div>
     </aside>
   );
