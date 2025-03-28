@@ -1,50 +1,71 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User } from "@/types";
-import { mockUsers } from "@/lib/mockData";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 
 type AuthContextType = {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
+  session: Session | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper function to convert Supabase user to our User type
+const convertSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
+  if (!supabaseUser) return null;
+  
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email || "",
+    name: supabaseUser.user_metadata?.nome || supabaseUser.user_metadata?.full_name || "Usuário",
+    departments: [],
+    createdAt: supabaseUser.created_at,
+  };
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for user in localStorage (simulating persistent sessions)
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setIsLoading(false);
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(convertSupabaseUser(session?.user ?? null));
+        setIsLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(convertSupabaseUser(session?.user ?? null));
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // Simple mock authentication
-      if (password !== "password") {
-        throw new Error("Credenciais inválidas");
+      if (error) {
+        throw new Error(error.message);
       }
 
-      const foundUser = mockUsers.find((u) => u.email === email);
-      if (!foundUser) {
-        throw new Error("Usuário não encontrado");
-      }
-
-      // Store user in localStorage for session persistence
-      localStorage.setItem("user", JSON.stringify(foundUser));
-      setUser(foundUser);
       toast.success("Login realizado com sucesso!");
     } catch (error) {
       if (error instanceof Error) {
@@ -58,14 +79,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-    toast.info("Sessão encerrada");
+  const signup = async (email: string, password: string, name: string) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            nome: name,
+            full_name: name,
+          },
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmação.");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Erro ao realizar cadastro");
+      }
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.info("Sessão encerrada");
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      toast.error("Erro ao encerrar sessão");
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, isLoading, session }}>
       {children}
     </AuthContext.Provider>
   );

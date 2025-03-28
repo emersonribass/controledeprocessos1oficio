@@ -14,6 +14,9 @@ const LoginPage = () => {
         <br />
         <code className="bg-muted rounded p-1">admin@nottar.com / password</code>
       </p>
+      <p className="mt-2 text-center text-xs text-muted-foreground">
+        Você pode criar uma nova conta clicando na aba "Cadastro"
+      </p>
     </div>
   );
 };
