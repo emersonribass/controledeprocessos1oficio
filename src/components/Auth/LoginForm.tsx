@@ -9,8 +9,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 const LoginForm = () => {
   // Login state
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("emerson.ribas@live.com");
+  const [password, setPassword] = useState("123456");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { login } = useAuth();
