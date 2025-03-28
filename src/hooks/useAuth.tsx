@@ -8,7 +8,6 @@ import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 type AuthContextType = {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
   session: Session | null;
@@ -79,37 +78,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signup = async (email: string, password: string, name: string) => {
-    setIsLoading(true);
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            nome: name,
-            full_name: name,
-          },
-        },
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      toast.success("Cadastro realizado com sucesso! Verifique seu email para confirmação.");
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Erro ao realizar cadastro");
-      }
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const logout = async () => {
     try {
       await supabase.auth.signOut();
@@ -121,7 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isLoading, session }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading, session }}>
       {children}
     </AuthContext.Provider>
   );
