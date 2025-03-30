@@ -13,7 +13,9 @@ const ProcessList = () => {
     getProcessTypeName,
     moveProcessToNextDepartment,
     moveProcessToPreviousDepartment,
-    isLoading
+    isLoading,
+    processTypes,
+    updateProcessType
   } = useProcesses();
 
   const [filters, setFilters] = useState<{
@@ -82,6 +84,8 @@ const ProcessList = () => {
         getProcessTypeName={getProcessTypeName}
         moveProcessToNextDepartment={moveProcessToNextDepartment}
         moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+        processTypes={processTypes}
+        updateProcessType={updateProcessType}
       />
     </div>
   );

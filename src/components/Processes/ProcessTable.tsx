@@ -5,7 +5,7 @@ import {
   TableCell,
   TableRow,
 } from "@/components/ui/table";
-import { Process } from "@/types";
+import { Process, ProcessType } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
 import ProcessTableRow from "./ProcessTableRow";
 
@@ -18,6 +18,8 @@ interface ProcessTableProps {
   getProcessTypeName: (id: string) => string;
   moveProcessToNextDepartment: (processId: string) => void;
   moveProcessToPreviousDepartment: (processId: string) => void;
+  processTypes: ProcessType[];
+  updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
 }
 
 const ProcessTable = ({
@@ -29,6 +31,8 @@ const ProcessTable = ({
   getProcessTypeName,
   moveProcessToNextDepartment,
   moveProcessToPreviousDepartment,
+  processTypes,
+  updateProcessType,
 }: ProcessTableProps) => {
   return (
     <div className="rounded-md border">
@@ -54,6 +58,8 @@ const ProcessTable = ({
                 getProcessTypeName={getProcessTypeName}
                 moveProcessToNextDepartment={moveProcessToNextDepartment}
                 moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+                processTypes={processTypes}
+                updateProcessType={updateProcessType}
               />
             ))
           )}

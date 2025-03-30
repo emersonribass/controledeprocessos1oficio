@@ -82,6 +82,31 @@ export const useSupabaseProcesses = () => {
     }
   };
 
+  const updateProcessType = async (processId: string, newTypeId: string) => {
+    try {
+      const now = new Date().toISOString();
+
+      // Atualizar o tipo de processo
+      const { error } = await supabase
+        .from('processos')
+        .update({ 
+          tipo_processo: newTypeId,
+          updated_at: now
+        })
+        .eq('id', processId);
+
+      if (error) {
+        throw error;
+      }
+
+      // Atualizar os processos em memória
+      await fetchProcesses();
+    } catch (error) {
+      console.error('Erro ao atualizar tipo de processo:', error);
+      throw error;
+    }
+  };
+
   const moveProcessToNextDepartment = async (processId: string) => {
     try {
       // Obter informações do processo atual
@@ -285,6 +310,7 @@ export const useSupabaseProcesses = () => {
     isLoading,
     fetchProcesses,
     moveProcessToNextDepartment,
-    moveProcessToPreviousDepartment
+    moveProcessToPreviousDepartment,
+    updateProcessType
   };
 };

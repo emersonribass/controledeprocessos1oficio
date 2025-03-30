@@ -23,6 +23,7 @@ type ProcessesContextType = {
   processTypes: ReturnType<typeof useProcessTypes>["processTypes"];
   isLoading: boolean;
   refreshProcesses: () => Promise<void>;
+  updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
 };
 
 const ProcessesContext = createContext<ProcessesContextType | undefined>(undefined);
@@ -35,7 +36,8 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
     isLoading, 
     fetchProcesses, 
     moveProcessToNextDepartment, 
-    moveProcessToPreviousDepartment 
+    moveProcessToPreviousDepartment,
+    updateProcessType
   } = useSupabaseProcesses();
   const { filterProcesses, isProcessOverdue } = useProcessFilters(processes);
 
@@ -52,7 +54,8 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
         moveProcessToPreviousDepartment,
         isProcessOverdue,
         isLoading,
-        refreshProcesses: fetchProcesses
+        refreshProcesses: fetchProcesses,
+        updateProcessType
       }}
     >
       {children}
