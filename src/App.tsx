@@ -28,7 +28,7 @@ const queryClient = new QueryClient();
 
 // Protected route component
 const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAdmin } = useAuth();
   
   // Show loading state while checking authentication
   if (isLoading) {
@@ -43,8 +43,8 @@ const ProtectedRoute = ({ children, adminOnly = false }: { children: React.React
     return <Navigate to="/login" replace />;
   }
 
-  // Verificar se é rota de admin e se usuário tem permissão
-  if (adminOnly && user.email !== "admin@nottar.com") {
+  // Verificar se é rota de admin e se usuário tem permissão usando a função isAdmin
+  if (adminOnly && !isAdmin(user.email)) {
     return <Navigate to="/dashboard" replace />;
   }
   

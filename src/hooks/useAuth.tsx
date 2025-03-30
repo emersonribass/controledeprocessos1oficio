@@ -11,9 +11,13 @@ type AuthContextType = {
   logout: () => void;
   isLoading: boolean;
   session: Session | null;
+  isAdmin: (email: string) => boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Lista de emails de administradores
+const adminEmails = ["admin@nottar.com", "emerson.ribas@live.com"];
 
 // Helper function to convert Supabase user to our User type
 const convertSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
@@ -32,6 +36,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Função para verificar se um email pertence a um administrador
+  const isAdmin = (email: string): boolean => {
+    return adminEmails.includes(email);
+  };
 
   useEffect(() => {
     // Set up auth state change listener
@@ -89,7 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading, session }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading, session, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

@@ -25,7 +25,7 @@ import NotificationsPopover from "../Notifications/NotificationsPopover";
 import { cn } from "@/lib/utils";
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { unreadCount } = useNotifications();
@@ -49,8 +49,8 @@ const Navbar = () => {
     },
   ];
 
-  // Verificação se o usuário tem acesso de administrador
-  const isAdmin = user?.email === "admin@nottar.com";
+  // Verificação se o usuário tem acesso de administrador usando a função isAdmin
+  const userIsAdmin = user && isAdmin(user.email);
 
   return (
     <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
@@ -81,7 +81,7 @@ const Navbar = () => {
           ))}
           
           {/* Menu Administração - Apenas visível para administradores */}
-          {isAdmin && (
+          {userIsAdmin && (
             <Menubar className="border-none bg-transparent p-0">
               <MenubarMenu>
                 <MenubarTrigger className={cn(
