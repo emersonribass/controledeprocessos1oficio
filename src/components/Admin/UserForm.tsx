@@ -59,6 +59,11 @@ export function UserForm({ usuarioAtual, departments, onSave, onCancel }: UserFo
     },
   });
 
+  // Divide os departamentos em duas colunas
+  const halfLength = Math.ceil(departments.length / 2);
+  const leftColumnDepartments = departments.slice(0, halfLength);
+  const rightColumnDepartments = departments.slice(halfLength);
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSave)} className="space-y-4 py-2">
@@ -165,39 +170,78 @@ export function UserForm({ usuarioAtual, departments, onSave, onCancel }: UserFo
                     </FormDescription>
                   </div>
                   <ScrollArea className="h-[200px] rounded-md border p-2">
-                    {departments.map((department) => (
-                      <FormField
-                        key={department.id}
-                        control={form.control}
-                        name="setores_atribuidos"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={department.id}
-                              className="flex flex-row items-start space-x-3 space-y-0 mb-2"
-                            >
-                              <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(department.id)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...field.value, department.id])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== department.id
-                                          )
-                                        );
-                                  }}
-                                />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                {department.name}
-                              </FormLabel>
-                            </FormItem>
-                          );
-                        }}
-                      />
-                    ))}
+                    <div className="grid grid-cols-2 gap-x-4">
+                      <div>
+                        {leftColumnDepartments.map((department) => (
+                          <FormField
+                            key={department.id}
+                            control={form.control}
+                            name="setores_atribuidos"
+                            render={({ field }) => {
+                              return (
+                                <FormItem
+                                  key={department.id}
+                                  className="flex flex-row items-start space-x-3 space-y-0 mb-2"
+                                >
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value?.includes(department.id)}
+                                      onCheckedChange={(checked) => {
+                                        return checked
+                                          ? field.onChange([...field.value, department.id])
+                                          : field.onChange(
+                                              field.value?.filter(
+                                                (value) => value !== department.id
+                                              )
+                                            );
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="font-normal">
+                                    {department.name}
+                                  </FormLabel>
+                                </FormItem>
+                              );
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <div>
+                        {rightColumnDepartments.map((department) => (
+                          <FormField
+                            key={department.id}
+                            control={form.control}
+                            name="setores_atribuidos"
+                            render={({ field }) => {
+                              return (
+                                <FormItem
+                                  key={department.id}
+                                  className="flex flex-row items-start space-x-3 space-y-0 mb-2"
+                                >
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value?.includes(department.id)}
+                                      onCheckedChange={(checked) => {
+                                        return checked
+                                          ? field.onChange([...field.value, department.id])
+                                          : field.onChange(
+                                              field.value?.filter(
+                                                (value) => value !== department.id
+                                              )
+                                            );
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="font-normal">
+                                    {department.name}
+                                  </FormLabel>
+                                </FormItem>
+                              );
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </ScrollArea>
                   <FormMessage />
                 </FormItem>
