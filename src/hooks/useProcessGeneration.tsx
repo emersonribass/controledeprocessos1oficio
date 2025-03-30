@@ -3,32 +3,20 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useDepartmentsData } from "./useDepartmentsData";
-import { useProcessTypes } from "./useProcessTypes";
 
 export const useProcessGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
   const { departments } = useDepartmentsData();
-  const { processTypes } = useProcessTypes();
 
   const generateProcesses = async (
     initialNumber: number,
-    quantity: number,
-    processTypeId: string
+    quantity: number
   ) => {
     if (quantity <= 0 || initialNumber <= 0) {
       toast({
         title: "Erro",
         description: "O número inicial e a quantidade devem ser maiores que zero.",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    if (!processTypeId) {
-      toast({
-        title: "Erro",
-        description: "Selecione um tipo de processo.",
         variant: "destructive"
       });
       return false;
@@ -56,7 +44,7 @@ export const useProcessGeneration = () => {
         
         processesToInsert.push({
           numero_protocolo: protocolNumber,
-          tipo_processo: processTypeId,
+          tipo_processo: "pendente", // Valor padrão para ser atualizado posteriormente
           setor_atual: firstDepartment.id,
           status: "Não iniciado",
           data_inicio: new Date().toISOString(),

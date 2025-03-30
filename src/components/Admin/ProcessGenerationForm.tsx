@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useProcessGeneration } from "@/hooks/useProcessGeneration";
-import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
@@ -17,23 +16,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const formSchema = z.object({
   initialNumber: z.coerce.number().positive("Número inicial deve ser positivo"),
   quantity: z.coerce.number().positive("Quantidade deve ser positiva").max(100, "Máximo de 100 processos por vez"),
-  processType: z.string().min(1, "Selecione um tipo de processo"),
 });
 
 const ProcessGenerationForm = () => {
   const { isGenerating, generateProcesses } = useProcessGeneration();
-  const { processTypes } = useProcessTypes();
   const [success, setSuccess] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -41,7 +31,6 @@ const ProcessGenerationForm = () => {
     defaultValues: {
       initialNumber: 1,
       quantity: 10,
-      processType: "",
     },
   });
 
@@ -49,8 +38,7 @@ const ProcessGenerationForm = () => {
     setSuccess(false);
     const result = await generateProcesses(
       values.initialNumber,
-      values.quantity,
-      values.processType
+      values.quantity
     );
     
     if (result) {
@@ -97,37 +85,6 @@ const ProcessGenerationForm = () => {
             )}
           />
         </div>
-
-        <FormField
-          control={form.control}
-          name="processType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tipo de Processo</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um tipo de processo" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {processTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Tipo de processo a ser gerado
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
         <Button
           type="submit"
