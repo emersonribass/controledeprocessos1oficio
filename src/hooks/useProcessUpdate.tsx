@@ -34,7 +34,42 @@ export const useProcessUpdate = () => {
     }
   };
 
+  const updateProcessStatus = async (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => {
+    try {
+      const now = new Date().toISOString();
+
+      // Atualizar o status do processo
+      const { error } = await supabase
+        .from('processos')
+        .update({ 
+          status: newStatus,
+          updated_at: now
+        })
+        .eq('id', processId);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: `Status atualizado para "${newStatus}".`
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Erro ao atualizar status do processo:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status do processo.",
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
   return {
-    updateProcessType
+    updateProcessType,
+    updateProcessStatus
   };
 };

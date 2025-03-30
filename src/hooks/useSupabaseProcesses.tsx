@@ -16,7 +16,8 @@ export const useSupabaseProcesses = () => {
   } = useProcessMovement(processes);
   
   const { 
-    updateProcessType 
+    updateProcessType,
+    updateProcessStatus
   } = useProcessUpdate();
 
   // Este hook agora orquestra os hooks específicos
@@ -44,12 +45,23 @@ export const useSupabaseProcesses = () => {
     }
   };
 
+  const handleUpdateProcessStatus = async (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => {
+    try {
+      await updateProcessStatus(processId, newStatus);
+      await fetchProcesses();
+    } catch (error) {
+      console.error('Erro ao atualizar status do processo:', error);
+      throw error;
+    }
+  };
+
   return {
     processes,
     isLoading,
     fetchProcesses,
     moveProcessToNextDepartment: handleMoveProcessToNextDepartment,
     moveProcessToPreviousDepartment: handleMoveProcessToPreviousDepartment,
-    updateProcessType: handleUpdateProcessType
+    updateProcessType: handleUpdateProcessType,
+    updateProcessStatus: handleUpdateProcessStatus
   };
 };
