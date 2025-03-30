@@ -5,6 +5,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Department } from "@/types";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type UsuarioSupabase = {
   id: string;
@@ -40,6 +46,10 @@ export function UsersTable({
     return department ? department.name : "Desconhecido";
   };
 
+  const getSetoresNames = (setorIds: string[]) => {
+    return setorIds.map(id => getDepartmentName(id)).join(", ");
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center p-4">
@@ -49,85 +59,90 @@ export function UsersTable({
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nome</TableHead>
-          <TableHead>Email</TableHead>
-          <TableHead>Data de Cadastro</TableHead>
-          <TableHead>Departamentos</TableHead>
-          <TableHead>Perfil</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead className="text-right">Ações</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {usuarios.length === 0 ? (
+    <TooltipProvider>
+      <Table>
+        <TableHeader>
           <TableRow>
-            <TableCell colSpan={7} className="text-center py-6">
-              Nenhum usuário encontrado.
-            </TableCell>
+            <TableHead>Nome</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Data de Cadastro</TableHead>
+            <TableHead>Setores</TableHead>
+            <TableHead>Perfil</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
-        ) : (
-          usuarios.map((usuario) => (
-            <TableRow key={usuario.id}>
-              <TableCell className="font-medium">{usuario.nome}</TableCell>
-              <TableCell>{usuario.email}</TableCell>
-              <TableCell>
-                {format(new Date(usuario.created_at), "dd/MM/yyyy")}
-              </TableCell>
-              <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {usuario.setores_atribuidos.map((depId) => (
-                    <Badge key={depId} variant="outline">
-                      {getDepartmentName(depId)}
-                    </Badge>
-                  ))}
-                </div>
-              </TableCell>
-              <TableCell>
-                <Badge variant={usuario.perfil === "administrador" ? "default" : "secondary"}>
-                  {usuario.perfil === "administrador" ? "Administrador" : "Usuário"}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant={usuario.ativo ? "default" : "destructive"}>
-                  {usuario.ativo ? "Ativo" : "Inativo"}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end space-x-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => onToggleActive(usuario)}
-                    title={usuario.ativo ? "Desativar usuário" : "Ativar usuário"}
-                  >
-                    {usuario.ativo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    onClick={() => onEdit(usuario)}
-                    title="Editar usuário"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-destructive"
-                    onClick={() => onDelete(usuario)}
-                    title="Excluir usuário"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+        </TableHeader>
+        <TableBody>
+          {usuarios.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-6">
+                Nenhum usuário encontrado.
               </TableCell>
             </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+          ) : (
+            usuarios.map((usuario) => (
+              <TableRow key={usuario.id}>
+                <TableCell className="font-medium">{usuario.nome}</TableCell>
+                <TableCell>{usuario.email}</TableCell>
+                <TableCell>
+                  {format(new Date(usuario.created_at), "dd/MM/yyyy")}
+                </TableCell>
+                <TableCell>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="cursor-help">
+                        {usuario.setores_atribuidos.length}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{getSetoresNames(usuario.setores_atribuidos) || "Nenhum setor atribuído"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={usuario.perfil === "administrador" ? "default" : "secondary"}>
+                    {usuario.perfil === "administrador" ? "Administrador" : "Usuário"}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={usuario.ativo ? "default" : "destructive"}>
+                    {usuario.ativo ? "Ativo" : "Inativo"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => onToggleActive(usuario)}
+                      title={usuario.ativo ? "Desativar usuário" : "Ativar usuário"}
+                    >
+                      {usuario.ativo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => onEdit(usuario)}
+                      title="Editar usuário"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-destructive"
+                      onClick={() => onDelete(usuario)}
+                      title="Excluir usuário"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </TooltipProvider>
   );
 }
