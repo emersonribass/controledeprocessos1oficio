@@ -34,7 +34,7 @@ const DepartmentStatusChart = () => {
   return (
     <Card className="col-span-2">
       <CardHeader>
-        <CardTitle>Processos por Departamento</CardTitle>
+        <CardTitle>Processos por Setor</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">

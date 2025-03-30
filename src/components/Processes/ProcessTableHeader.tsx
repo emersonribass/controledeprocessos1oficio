@@ -27,7 +27,7 @@ const ProcessTableHeader = ({
           </div>
         </TableHead>
         <TableHead>Tipo</TableHead>
-        <TableHead>Departamento</TableHead>
+        <TableHead>Setor</TableHead>
         <TableHead
           className="cursor-pointer"
           onClick={() => toggleSort("startDate")}

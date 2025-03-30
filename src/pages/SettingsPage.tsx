@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -52,13 +53,13 @@ const SettingsPage = () => {
       // Verificar erros
       const hasError = results.some(result => result.error);
       if (hasError) {
-        throw new Error("Erro ao atualizar a ordem dos departamentos");
+        throw new Error("Erro ao atualizar a ordem dos setores");
       }
       
       setSortedDepartments(newDepartments);
       toast.success("Ordem atualizada com sucesso");
     } catch (error) {
-      console.error("Erro ao mover departamento:", error);
+      console.error("Erro ao mover setor:", error);
       toast.error("Não foi possível atualizar a ordem");
     } finally {
       setIsMoving(false);
@@ -99,13 +100,13 @@ const SettingsPage = () => {
       // Verificar erros
       const hasError = results.some(result => result.error);
       if (hasError) {
-        throw new Error("Erro ao atualizar a ordem dos departamentos");
+        throw new Error("Erro ao atualizar a ordem dos setores");
       }
       
       setSortedDepartments(newDepartments);
       toast.success("Ordem atualizada com sucesso");
     } catch (error) {
-      console.error("Erro ao mover departamento:", error);
+      console.error("Erro ao mover setor:", error);
       toast.error("Não foi possível atualizar a ordem");
     } finally {
       setIsMoving(false);

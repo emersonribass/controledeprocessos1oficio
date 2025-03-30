@@ -116,13 +116,13 @@ const ProcessFilters = ({ filters, setFilters }: ProcessFiltersProps) => {
               </div>
 
               <div className="space-y-2">
-                <h4 className="font-medium text-sm">Departamento</h4>
+                <h4 className="font-medium text-sm">Setor</h4>
                 <Select
                   value={filters.department || "todos_departamentos"}
                   onValueChange={handleDepartmentChange}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um departamento" />
+                    <SelectValue placeholder="Selecione um setor" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todos_departamentos">Todos</SelectItem>
