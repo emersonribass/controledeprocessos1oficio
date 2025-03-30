@@ -2,13 +2,19 @@
 import { Process } from "@/types";
 
 export const useProcessFilters = (processes: Process[]) => {
-  const filterProcesses = (filters: {
-    department?: string;
-    status?: string;
-    processType?: string;
-    search?: string;
-  }) => {
-    return processes.filter((process) => {
+  const filterProcesses = (
+    filters: {
+      department?: string;
+      status?: string;
+      processType?: string;
+      search?: string;
+    },
+    processesToFilter?: Process[]
+  ) => {
+    // Se for fornecida uma lista personalizada, use-a, caso contrário use a lista padrão
+    const listToFilter = processesToFilter || processes;
+    
+    return listToFilter.filter((process) => {
       if (filters.department && process.currentDepartment !== filters.department) {
         return false;
       }

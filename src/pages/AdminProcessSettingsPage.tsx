@@ -1,9 +1,9 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProcessGenerationForm from "@/components/Admin/ProcessGenerationForm";
+import ProcessSettingsGeneral from "@/components/Admin/ProcessSettingsGeneral";
 
 const AdminProcessSettingsPage = () => {
   const [activeTab, setActiveTab] = useState("general");
@@ -25,21 +25,7 @@ const AdminProcessSettingsPage = () => {
         </TabsList>
         
         <TabsContent value="general">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configurações Gerais</CardTitle>
-              <CardDescription>
-                Defina as configurações básicas para todos os processos.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center py-10">
-                <p className="text-muted-foreground">
-                  Esta funcionalidade está em desenvolvimento e será implementada em breve.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <ProcessSettingsGeneral />
         </TabsContent>
         
         <TabsContent value="generation">

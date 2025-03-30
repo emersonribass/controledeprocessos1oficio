@@ -20,6 +20,7 @@ interface ProcessTableProps {
   moveProcessToPreviousDepartment: (processId: string) => void;
   processTypes: ProcessType[];
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
+  updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
 }
 
 const ProcessTable = ({
@@ -33,6 +34,7 @@ const ProcessTable = ({
   moveProcessToPreviousDepartment,
   processTypes,
   updateProcessType,
+  updateProcessStatus,
 }: ProcessTableProps) => {
   return (
     <div className="rounded-md border">
@@ -60,6 +62,7 @@ const ProcessTable = ({
                 moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
                 processTypes={processTypes}
                 updateProcessType={updateProcessType}
+                updateProcessStatus={updateProcessStatus}
               />
             ))
           )}

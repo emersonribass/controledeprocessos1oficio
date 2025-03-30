@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Process, ProcessType } from "@/types";
@@ -21,6 +20,7 @@ interface ProcessTableRowProps {
   moveProcessToPreviousDepartment: (processId: string) => void;
   processTypes: ProcessType[];
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
+  updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
 }
 
 const ProcessTableRow = ({
@@ -31,6 +31,7 @@ const ProcessTableRow = ({
   moveProcessToPreviousDepartment,
   processTypes,
   updateProcessType,
+  updateProcessStatus,
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();

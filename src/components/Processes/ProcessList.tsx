@@ -15,7 +15,9 @@ const ProcessList = () => {
     moveProcessToPreviousDepartment,
     isLoading,
     processTypes,
-    updateProcessType
+    updateProcessType,
+    updateProcessStatus,
+    processes
   } = useProcesses();
 
   const [filters, setFilters] = useState<{
@@ -28,7 +30,9 @@ const ProcessList = () => {
   const [sortField, setSortField] = useState<keyof Process>("protocolNumber");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  const filteredProcesses = filterProcesses(filters);
+  // Filtrar para exibir apenas processos que já foram iniciados
+  const startedProcesses = processes.filter(p => !p.protocolNumber.includes('Não iniciado'));
+  const filteredProcesses = filterProcesses(filters, startedProcesses);
 
   // Sort processes with numeric sorting for protocolNumber
   const sortedProcesses = [...filteredProcesses].sort((a, b) => {
@@ -86,6 +90,7 @@ const ProcessList = () => {
         moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
         processTypes={processTypes}
         updateProcessType={updateProcessType}
+        updateProcessStatus={updateProcessStatus}
       />
     </div>
   );
