@@ -10,27 +10,8 @@ import { useProcesses } from "@/hooks/useProcesses";
 import { UsersTable } from "@/components/Admin/UsersTable";
 import { UserForm } from "@/components/Admin/UserForm";
 import { DeleteUserDialog } from "@/components/Admin/DeleteUserDialog";
-
-type UsuarioSupabase = {
-  id: string;
-  nome: string;
-  email: string;
-  senha: string;
-  ativo: boolean;
-  setores_atribuidos: string[];
-  perfil: 'administrador' | 'usuario';
-  created_at: string;
-  updated_at: string;
-};
-
-type FormUsuario = {
-  nome: string;
-  email: string;
-  senha: string;
-  ativo: boolean;
-  setores_atribuidos: string[];
-  perfil: 'administrador' | 'usuario';
-};
+import { UsuarioSupabase, FormUsuario } from "@/types/usuario";
+import { useAuth } from "@/hooks/useAuth";
 
 const AdminUsersPage = () => {
   const [usuarios, setUsuarios] = useState<UsuarioSupabase[]>([]);
@@ -40,6 +21,7 @@ const AdminUsersPage = () => {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const { toast } = useToast();
   const { departments } = useProcesses();
+  const { user } = useAuth();
 
   const fetchUsuarios = async () => {
     setIsLoading(true);
