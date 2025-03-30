@@ -1,11 +1,23 @@
 
+import { useEffect, useState } from "react";
 import ProcessList from "@/components/Processes/ProcessList";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const ProcessesPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [initialFilters, setInitialFilters] = useState({});
+  
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const statusParam = searchParams.get('status');
+    
+    if (statusParam) {
+      setInitialFilters({ status: statusParam });
+    }
+  }, [location.search]);
   
   return (
     <div className="space-y-6">
@@ -25,7 +37,7 @@ const ProcessesPage = () => {
         </Button>
       </div>
 
-      <ProcessList />
+      <ProcessList initialFilters={initialFilters} />
     </div>
   );
 };
