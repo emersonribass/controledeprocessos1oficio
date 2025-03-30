@@ -41,11 +41,11 @@ const SettingsPage = () => {
         supabase
           .from('departments')
           .update({ order_num: prevDept.order })
-          .eq('id', currentDept.id),
+          .eq('id', Number(currentDept.id)),
         supabase
           .from('departments')
           .update({ order_num: currentDept.order })
-          .eq('id', prevDept.id)
+          .eq('id', Number(prevDept.id))
       ];
       
       const results = await Promise.all(batch);
@@ -88,11 +88,11 @@ const SettingsPage = () => {
         supabase
           .from('departments')
           .update({ order_num: nextDept.order })
-          .eq('id', currentDept.id),
+          .eq('id', Number(currentDept.id)),
         supabase
           .from('departments')
           .update({ order_num: currentDept.order })
-          .eq('id', nextDept.id)
+          .eq('id', Number(nextDept.id))
       ];
       
       const results = await Promise.all(batch);

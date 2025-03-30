@@ -57,7 +57,7 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
 
   // Função para verificar se a ordem já existe
   function orderExists(order: number): boolean {
-    return existingDepartments.some(d => d.order === order && d.id !== department?.id);
+    return existingDepartments.some(d => d.order === order && (department ? Number(d.id) !== Number(department.id) : true));
   }
 
   // Manipular o envio do formulário
@@ -84,7 +84,7 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
             time_limit: data.timeLimit,
             updated_at: new Date().toISOString()
           })
-          .eq('id', department.id);
+          .eq('id', Number(department.id));
 
         if (error) throw error;
         

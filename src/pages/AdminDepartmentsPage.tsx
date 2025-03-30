@@ -78,7 +78,7 @@ const AdminDepartmentsPage = () => {
       const { error } = await supabase
         .from('departments')
         .delete()
-        .eq('id', selectedDepartment.id);
+        .eq('id', Number(selectedDepartment.id));
 
       if (error) {
         throw error;
