@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 const AdminUsersPage = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const { departments } = useProcesses();
   const { user } = useAuth();
   
@@ -62,9 +63,23 @@ const AdminUsersPage = () => {
     }
   };
 
+  // Filtra os usuários com base no termo de busca
+  const usuariosFiltrados = usuarios.filter((usuario) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return (
+      usuario.nome.toLowerCase().includes(searchTermLower) ||
+      usuario.email.toLowerCase().includes(searchTermLower) ||
+      usuario.perfil.toLowerCase().includes(searchTermLower)
+    );
+  });
+
   return (
     <div className="space-y-6">
-      <UsersPageHeader onAddUsuario={handleAddUsuario} />
+      <UsersPageHeader 
+        onAddUsuario={handleAddUsuario} 
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+      />
 
       <Card>
         <CardHeader>
@@ -75,7 +90,7 @@ const AdminUsersPage = () => {
         </CardHeader>
         <CardContent>
           <UsersTable
-            usuarios={usuarios}
+            usuarios={usuariosFiltrados}
             isLoading={isLoading}
             departments={departments}
             onToggleActive={handleToggleAtivo}
