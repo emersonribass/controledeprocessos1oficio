@@ -1,15 +1,14 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
-import { Process, Department } from "@/types";
-import { mockProcesses, mockProcessTypes } from "@/lib/mockData";
+import { Process } from "@/types";
+import { mockProcesses } from "@/lib/mockData";
 import { useDepartmentsData } from "@/hooks/useDepartmentsData";
 import { useProcessOperations } from "@/hooks/useProcessOperations";
 import { useProcessFilters } from "@/hooks/useProcessFilters";
+import { useProcessTypes } from "@/hooks/useProcessTypes";
 
 type ProcessesContextType = {
   processes: Process[];
-  departments: Department[];
-  processTypes: typeof mockProcessTypes;
   filterProcesses: (filters: {
     department?: string;
     status?: string;
@@ -21,22 +20,19 @@ type ProcessesContextType = {
   moveProcessToNextDepartment: (processId: string) => void;
   moveProcessToPreviousDepartment: (processId: string) => void;
   isProcessOverdue: (process: Process) => boolean;
+  departments: ReturnType<typeof useDepartmentsData>["departments"];
+  processTypes: ReturnType<typeof useProcessTypes>["processTypes"];
 };
 
 const ProcessesContext = createContext<ProcessesContextType | undefined>(undefined);
 
 export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const [processes, setProcesses] = useState<Process[]>(mockProcesses);
-  const [processTypes] = useState(mockProcessTypes);
   
   const { departments, getDepartmentName } = useDepartmentsData();
+  const { processTypes, getProcessTypeName } = useProcessTypes();
   const { moveProcessToNextDepartment, moveProcessToPreviousDepartment } = useProcessOperations(processes, setProcesses, departments);
   const { filterProcesses, isProcessOverdue } = useProcessFilters(processes);
-
-  const getProcessTypeName = (id: string) => {
-    const processType = processTypes.find((pt) => pt.id === id);
-    return processType ? processType.name : "Desconhecido";
-  };
 
   return (
     <ProcessesContext.Provider
