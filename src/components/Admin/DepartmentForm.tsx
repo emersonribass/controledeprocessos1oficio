@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -77,7 +76,7 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
       if (department) {
         // Atualização de departamento existente
         const { error } = await supabase
-          .from('departments')
+          .from('setores')
           .update({
             name: data.name,
             order_num: data.order,
@@ -95,7 +94,7 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
       } else {
         // Inserção de novo departamento
         const { error } = await supabase
-          .from('departments')
+          .from('setores')
           .insert({
             name: data.name,
             order_num: data.order,
@@ -112,7 +111,7 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
       
       onSave();
     } catch (error) {
-      console.error('Erro ao salvar departamento:', error);
+      console.error('Erro ao salvar setor:', error);
       toast({
         title: "Erro",
         description: "Não foi possível salvar o setor.",

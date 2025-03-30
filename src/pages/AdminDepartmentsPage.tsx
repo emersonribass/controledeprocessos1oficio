@@ -27,7 +27,7 @@ const AdminDepartmentsPage = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('departments')
+        .from('setores')
         .select('*')
         .order('order_num', { ascending: true });
 
@@ -45,10 +45,10 @@ const AdminDepartmentsPage = () => {
 
       setDepartments(formattedDepartments);
     } catch (error) {
-      console.error('Erro ao buscar departamentos:', error);
+      console.error('Erro ao buscar setores:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar os departamentos.",
+        description: "Não foi possível carregar os setores.",
         variant: "destructive"
       });
     } finally {
@@ -76,7 +76,7 @@ const AdminDepartmentsPage = () => {
 
     try {
       const { error } = await supabase
-        .from('departments')
+        .from('setores')
         .delete()
         .eq('id', Number(selectedDepartment.id));
 
@@ -91,7 +91,7 @@ const AdminDepartmentsPage = () => {
 
       fetchDepartments();
     } catch (error) {
-      console.error('Erro ao excluir departamento:', error);
+      console.error('Erro ao excluir setor:', error);
       toast({
         title: "Erro",
         description: "Não foi possível remover o setor.",
@@ -231,4 +231,3 @@ const AdminDepartmentsPage = () => {
 };
 
 export default AdminDepartmentsPage;
-

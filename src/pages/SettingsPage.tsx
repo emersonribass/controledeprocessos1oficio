@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -39,11 +38,11 @@ const SettingsPage = () => {
       // Atualizar o banco de dados
       const batch = [
         supabase
-          .from('departments')
+          .from('setores')
           .update({ order_num: prevDept.order })
           .eq('id', Number(currentDept.id)),
         supabase
-          .from('departments')
+          .from('setores')
           .update({ order_num: currentDept.order })
           .eq('id', Number(prevDept.id))
       ];
@@ -86,11 +85,11 @@ const SettingsPage = () => {
       // Atualizar o banco de dados
       const batch = [
         supabase
-          .from('departments')
+          .from('setores')
           .update({ order_num: nextDept.order })
           .eq('id', Number(currentDept.id)),
         supabase
-          .from('departments')
+          .from('setores')
           .update({ order_num: currentDept.order })
           .eq('id', Number(nextDept.id))
       ];
@@ -118,16 +117,16 @@ const SettingsPage = () => {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Configurações</h2>
         <p className="text-muted-foreground">
-          Configure o fluxo de trabalho e os departamentos.
+          Configure o fluxo de trabalho e os setores.
         </p>
       </div>
 
       <div className="grid gap-6 grid-cols-1">
         <Card>
           <CardHeader>
-            <CardTitle>Ordem dos Departamentos</CardTitle>
+            <CardTitle>Ordem dos Setores</CardTitle>
             <CardDescription>
-              Configure a ordem dos departamentos no fluxo de processos.
+              Configure a ordem dos setores no fluxo de processos.
             </CardDescription>
           </CardHeader>
           <CardContent>

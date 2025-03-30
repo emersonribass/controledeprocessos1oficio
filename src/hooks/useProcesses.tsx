@@ -33,7 +33,7 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
     const fetchDepartments = async () => {
       try {
         const { data, error } = await supabase
-          .from('departments')
+          .from('setores')
           .select('*')
           .order('order_num', { ascending: true });
 
@@ -50,7 +50,7 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
 
         setDepartments(formattedDepartments);
       } catch (error) {
-        console.error('Erro ao buscar departamentos:', error);
+        console.error('Erro ao buscar setores:', error);
       } finally {
         setIsLoading(false);
       }
@@ -119,7 +119,7 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
           const nextDept = departments.find((d) => d.order === currentDept.order + 1);
           
           if (!nextDept) {
-            toast.error("Não há próximo departamento");
+            toast.error("Não há próximo setor");
             return process;
           }
           
@@ -167,7 +167,7 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
           const currentDept = departments.find((d) => d.id === currentDeptId);
           
           if (!currentDept || currentDept.order <= 1) {
-            toast.error("Não há departamento anterior");
+            toast.error("Não há setor anterior");
             return process;
           }
           
