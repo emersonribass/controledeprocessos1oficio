@@ -20,9 +20,9 @@ import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 // Páginas de administração
-const AdminUsersPage = () => <div className="p-4"><h1 className="text-2xl font-bold mb-4">Cadastro de Usuários</h1><p>Esta página está em desenvolvimento.</p></div>;
-const AdminDepartmentsPage = () => <div className="p-4"><h1 className="text-2xl font-bold mb-4">Cadastro de Setores</h1><p>Esta página está em desenvolvimento.</p></div>;
-const AdminProcessSettingsPage = () => <div className="p-4"><h1 className="text-2xl font-bold mb-4">Configurações de Processos</h1><p>Esta página está em desenvolvimento.</p></div>;
+import AdminUsersPage from "./pages/AdminUsersPage";
+import AdminDepartmentsPage from "./pages/AdminDepartmentsPage";
+import AdminProcessSettingsPage from "./pages/AdminProcessSettingsPage";
 
 const queryClient = new QueryClient();
 
