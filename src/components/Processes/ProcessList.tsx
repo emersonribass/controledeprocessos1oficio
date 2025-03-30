@@ -28,12 +28,19 @@ const ProcessList = () => {
 
   const filteredProcesses = filterProcesses(filters);
 
-  // Sort processes
+  // Sort processes with numeric sorting for protocolNumber
   const sortedProcesses = [...filteredProcesses].sort((a, b) => {
     if (sortField === "startDate" || sortField === "expectedEndDate") {
       const dateA = new Date(a[sortField]).getTime();
       const dateB = new Date(b[sortField]).getTime();
       return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
+    }
+
+    if (sortField === "protocolNumber") {
+      // Extrair números dos protocolos para ordenação numérica
+      const numA = parseInt(a.protocolNumber.replace(/\D/g, ""));
+      const numB = parseInt(b.protocolNumber.replace(/\D/g, ""));
+      return sortDirection === "asc" ? numA - numB : numB - numA;
     }
 
     if (a[sortField] < b[sortField]) {
