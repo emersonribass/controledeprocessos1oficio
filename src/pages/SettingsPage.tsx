@@ -5,37 +5,112 @@ import { Button } from "@/components/ui/button";
 import { useProcesses } from "@/hooks/useProcesses";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Department } from "@/types";
 
 const SettingsPage = () => {
   const { departments } = useProcesses();
-  const [sortedDepartments, setSortedDepartments] = useState([...departments]);
+  const [sortedDepartments, setSortedDepartments] = useState<Department[]>([]);
+  const [isMoving, setIsMoving] = useState(false);
   
-  // This is mock functionality as we're not actually changing the state permanently
-  const moveDepartmentUp = (index: number) => {
-    if (index <= 0) return;
+  useEffect(() => {
+    setSortedDepartments([...departments]);
+  }, [departments]);
+  
+  const moveDepartmentUp = async (index: number) => {
+    if (index <= 0 || isMoving) return;
     
-    const newDepartments = [...sortedDepartments];
-    [newDepartments[index - 1], newDepartments[index]] = [newDepartments[index], newDepartments[index - 1]];
+    setIsMoving(true);
     
-    // Update order property
-    newDepartments[index - 1] = { ...newDepartments[index - 1], order: index };
-    newDepartments[index] = { ...newDepartments[index], order: index + 1 };
-    
-    setSortedDepartments(newDepartments);
+    try {
+      const newDepartments = [...sortedDepartments];
+      const currentDept = newDepartments[index];
+      const prevDept = newDepartments[index - 1];
+      
+      // Trocar as ordens no array
+      newDepartments[index - 1] = { ...prevDept, order: currentDept.order };
+      newDepartments[index] = { ...currentDept, order: prevDept.order };
+      
+      // Organizar o array pela ordem
+      newDepartments.sort((a, b) => a.order - b.order);
+      
+      // Atualizar o banco de dados
+      const batch = [
+        supabase
+          .from('departments')
+          .update({ order_num: prevDept.order })
+          .eq('id', currentDept.id),
+        supabase
+          .from('departments')
+          .update({ order_num: currentDept.order })
+          .eq('id', prevDept.id)
+      ];
+      
+      const results = await Promise.all(batch);
+      
+      // Verificar erros
+      const hasError = results.some(result => result.error);
+      if (hasError) {
+        throw new Error("Erro ao atualizar a ordem dos departamentos");
+      }
+      
+      setSortedDepartments(newDepartments);
+      toast.success("Ordem atualizada com sucesso");
+    } catch (error) {
+      console.error("Erro ao mover departamento:", error);
+      toast.error("Não foi possível atualizar a ordem");
+    } finally {
+      setIsMoving(false);
+    }
   };
   
-  const moveDepartmentDown = (index: number) => {
-    if (index >= sortedDepartments.length - 1) return;
+  const moveDepartmentDown = async (index: number) => {
+    if (index >= sortedDepartments.length - 1 || isMoving) return;
     
-    const newDepartments = [...sortedDepartments];
-    [newDepartments[index], newDepartments[index + 1]] = [newDepartments[index + 1], newDepartments[index]];
+    setIsMoving(true);
     
-    // Update order property
-    newDepartments[index] = { ...newDepartments[index], order: index + 1 };
-    newDepartments[index + 1] = { ...newDepartments[index + 1], order: index + 2 };
-    
-    setSortedDepartments(newDepartments);
+    try {
+      const newDepartments = [...sortedDepartments];
+      const currentDept = newDepartments[index];
+      const nextDept = newDepartments[index + 1];
+      
+      // Trocar as ordens no array
+      newDepartments[index] = { ...currentDept, order: nextDept.order };
+      newDepartments[index + 1] = { ...nextDept, order: currentDept.order };
+      
+      // Organizar o array pela ordem
+      newDepartments.sort((a, b) => a.order - b.order);
+      
+      // Atualizar o banco de dados
+      const batch = [
+        supabase
+          .from('departments')
+          .update({ order_num: nextDept.order })
+          .eq('id', currentDept.id),
+        supabase
+          .from('departments')
+          .update({ order_num: currentDept.order })
+          .eq('id', nextDept.id)
+      ];
+      
+      const results = await Promise.all(batch);
+      
+      // Verificar erros
+      const hasError = results.some(result => result.error);
+      if (hasError) {
+        throw new Error("Erro ao atualizar a ordem dos departamentos");
+      }
+      
+      setSortedDepartments(newDepartments);
+      toast.success("Ordem atualizada com sucesso");
+    } catch (error) {
+      console.error("Erro ao mover departamento:", error);
+      toast.error("Não foi possível atualizar a ordem");
+    } finally {
+      setIsMoving(false);
+    }
   };
 
   return (
@@ -87,7 +162,7 @@ const SettingsPage = () => {
                           variant="outline"
                           size="icon"
                           onClick={() => moveDepartmentUp(index)}
-                          disabled={index === 0}
+                          disabled={index === 0 || isMoving}
                         >
                           <ArrowUp className="h-4 w-4" />
                         </Button>
@@ -95,7 +170,7 @@ const SettingsPage = () => {
                           variant="outline"
                           size="icon"
                           onClick={() => moveDepartmentDown(index)}
-                          disabled={index === sortedDepartments.length - 1}
+                          disabled={index === sortedDepartments.length - 1 || isMoving}
                         >
                           <ArrowDown className="h-4 w-4" />
                         </Button>

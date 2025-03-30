@@ -1,8 +1,8 @@
-
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Process, Department } from "@/types";
-import { mockProcesses, mockDepartments, mockProcessTypes } from "@/lib/mockData";
+import { mockProcesses, mockProcessTypes } from "@/lib/mockData";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 type ProcessesContextType = {
   processes: Process[];
@@ -25,8 +25,39 @@ const ProcessesContext = createContext<ProcessesContextType | undefined>(undefin
 
 export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const [processes, setProcesses] = useState<Process[]>(mockProcesses);
-  const [departments] = useState<Department[]>(mockDepartments);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [processTypes] = useState(mockProcessTypes);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('departments')
+          .select('*')
+          .order('order_num', { ascending: true });
+
+        if (error) {
+          throw error;
+        }
+
+        const formattedDepartments: Department[] = data.map(dept => ({
+          id: dept.id.toString(),
+          name: dept.name,
+          order: dept.order_num,
+          timeLimit: dept.time_limit
+        }));
+
+        setDepartments(formattedDepartments);
+      } catch (error) {
+        console.error('Erro ao buscar departamentos:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
 
   const getDepartmentName = (id: string) => {
     const department = departments.find((d) => d.id === id);
@@ -45,22 +76,18 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
     search?: string;
   }) => {
     return processes.filter((process) => {
-      // Department filter
       if (filters.department && process.currentDepartment !== filters.department) {
         return false;
       }
 
-      // Status filter
       if (filters.status && process.status !== filters.status) {
         return false;
       }
 
-      // Process type filter
       if (filters.processType && process.processType !== filters.processType) {
         return false;
       }
 
-      // Search by protocol number
       if (
         filters.search &&
         !process.protocolNumber.toLowerCase().includes(filters.search.toLowerCase())
@@ -89,7 +116,6 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
             return process;
           }
           
-          // Find the next department in order
           const nextDept = departments.find((d) => d.order === currentDept.order + 1);
           
           if (!nextDept) {
@@ -97,10 +123,8 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
             return process;
           }
           
-          // Update history
           const history = [...process.history];
           
-          // Set exit date for current department
           const currentDeptHistoryIndex = history.findIndex(
             (h) => h.departmentId === currentDeptId && !h.exitDate
           );
@@ -112,17 +136,15 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
             };
           }
           
-          // Add entry for next department
           history.push({
             departmentId: nextDept.id,
             entryDate: new Date().toISOString(),
             exitDate: null,
-            userId: "1", // In a real app, this would be the current user
+            userId: "1",
           });
           
           toast.success(`Processo movido para ${nextDept.name}`);
           
-          // If the process is moved to "Concluído(a)", mark it as completed
           const isCompleted = nextDept.name === "Concluído(a)";
           
           return {
@@ -149,17 +171,14 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
             return process;
           }
           
-          // Find the previous department in order
           const prevDept = departments.find((d) => d.order === currentDept.order - 1);
           
           if (!prevDept) {
             return process;
           }
           
-          // Update history
           const history = [...process.history];
           
-          // Set exit date for current department
           const currentDeptHistoryIndex = history.findIndex(
             (h) => h.departmentId === currentDeptId && !h.exitDate
           );
@@ -171,12 +190,11 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
             };
           }
           
-          // Add entry for previous department
           history.push({
             departmentId: prevDept.id,
             entryDate: new Date().toISOString(),
             exitDate: null,
-            userId: "1", // In a real app, this would be the current user
+            userId: "1",
           });
           
           toast.success(`Processo devolvido para ${prevDept.name}`);
@@ -184,7 +202,6 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
           return {
             ...process,
             currentDepartment: prevDept.id,
-            // If a process is moved back, it's no longer completed
             status: process.status === "completed" ? "pending" : process.status,
             history,
           };
