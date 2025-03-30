@@ -1,0 +1,117 @@
+
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Department } from "@/types";
+
+export const useDepartments = () => {
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [openSheet, setOpenSheet] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  const fetchDepartments = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('setores')
+        .select('*')
+        .order('order_num', { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+
+      // Converter os dados do Supabase para o formato do nosso tipo Department
+      const formattedDepartments: Department[] = data.map(dept => ({
+        id: dept.id.toString(),
+        name: dept.name,
+        order: dept.order_num,
+        timeLimit: dept.time_limit
+      }));
+
+      setDepartments(formattedDepartments);
+    } catch (error) {
+      console.error('Erro ao buscar setores:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os setores.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddDepartment = () => {
+    setSelectedDepartment(null);
+    setOpenSheet(true);
+  };
+
+  const handleEditDepartment = (department: Department) => {
+    setSelectedDepartment(department);
+    setOpenSheet(true);
+  };
+
+  const handleDeleteDepartment = (department: Department) => {
+    setSelectedDepartment(department);
+    setOpenDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedDepartment) return;
+
+    try {
+      const { error } = await supabase
+        .from('setores')
+        .delete()
+        .eq('id', Number(selectedDepartment.id));
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: `Setor "${selectedDepartment.name}" removido com sucesso.`
+      });
+
+      fetchDepartments();
+    } catch (error) {
+      console.error('Erro ao excluir setor:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover o setor.",
+        variant: "destructive"
+      });
+    } finally {
+      setOpenDeleteDialog(false);
+    }
+  };
+
+  const onDepartmentSaved = () => {
+    fetchDepartments();
+    setOpenSheet(false);
+  };
+
+  return {
+    departments,
+    isLoading,
+    openSheet,
+    setOpenSheet,
+    openDeleteDialog,
+    setOpenDeleteDialog,
+    selectedDepartment,
+    handleAddDepartment,
+    handleEditDepartment,
+    handleDeleteDepartment,
+    confirmDelete,
+    onDepartmentSaved
+  };
+};
