@@ -349,9 +349,9 @@ const AdminUsersPage = () => {
         </CardContent>
       </Card>
 
-      {/* Diálogo para adicionar/editar usuário */}
+      {/* Diálogo para adicionar/editar usuário - Melhorado com layout em colunas */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
             <DialogTitle>
               {usuarioAtual ? "Editar Usuário" : "Adicionar Novo Usuário"}
@@ -362,149 +362,160 @@ const AdminUsersPage = () => {
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="nome"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome completo" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Coluna da esquerda */}
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="nome"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nome completo" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="email@exemplo.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input type="email" placeholder="email@exemplo.com" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="senha"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{usuarioAtual ? "Nova Senha (deixe em branco para manter a atual)" : "Senha"}</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="********" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="senha"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{usuarioAtual ? "Nova Senha (deixe em branco para manter a atual)" : "Senha"}</FormLabel>
+                        <FormControl>
+                          <Input type="password" placeholder="********" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="perfil"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel>Perfil</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="usuario" id="usuario" />
-                          <Label htmlFor="usuario">Usuário</Label>
+                  <FormField
+                    control={form.control}
+                    name="perfil"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel>Perfil</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            className="flex flex-col space-y-1"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="usuario" id="usuario" />
+                              <Label htmlFor="usuario">Usuário</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="administrador" id="administrador" />
+                              <Label htmlFor="administrador">Administrador</Label>
+                            </div>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="ativo"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                        <div className="space-y-0.5">
+                          <FormLabel>Ativo</FormLabel>
+                          <FormDescription>
+                            Determina se o usuário pode acessar o sistema.
+                          </FormDescription>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="administrador" id="administrador" />
-                          <Label htmlFor="administrador">Administrador</Label>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Coluna da direita */}
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="setores_atribuidos"
+                    render={() => (
+                      <FormItem>
+                        <div className="mb-2">
+                          <FormLabel className="text-base">Setores atribuídos</FormLabel>
+                          <FormDescription>
+                            Selecione os setores aos quais o usuário terá acesso.
+                          </FormDescription>
                         </div>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="ativo"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                    <div className="space-y-0.5">
-                      <FormLabel>Ativo</FormLabel>
-                      <FormDescription>
-                        Determina se o usuário pode acessar o sistema.
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="setores_atribuidos"
-                render={() => (
-                  <FormItem>
-                    <div className="mb-4">
-                      <FormLabel className="text-base">Setores atribuídos</FormLabel>
-                      <FormDescription>
-                        Selecione os setores aos quais o usuário terá acesso.
-                      </FormDescription>
-                    </div>
-                    <div className="space-y-2">
-                      {departments.map((department) => (
-                        <FormField
-                          key={department.id}
-                          control={form.control}
-                          name="setores_atribuidos"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={department.id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(department.id)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...field.value, department.id])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== department.id
-                                            )
-                                          );
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  {department.name}
-                                </FormLabel>
-                              </FormItem>
-                            );
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                        <div className="h-[320px] overflow-y-auto border rounded-md p-3">
+                          {departments.map((department) => (
+                            <FormField
+                              key={department.id}
+                              control={form.control}
+                              name="setores_atribuidos"
+                              render={({ field }) => {
+                                return (
+                                  <FormItem
+                                    key={department.id}
+                                    className="flex flex-row items-start space-x-3 space-y-0 mb-2"
+                                  >
+                                    <FormControl>
+                                      <Checkbox
+                                        checked={field.value?.includes(department.id)}
+                                        onCheckedChange={(checked) => {
+                                          return checked
+                                            ? field.onChange([...field.value, department.id])
+                                            : field.onChange(
+                                                field.value?.filter(
+                                                  (value) => value !== department.id
+                                                )
+                                              );
+                                        }}
+                                      />
+                                    </FormControl>
+                                    <FormLabel className="font-normal">
+                                      {department.name}
+                                    </FormLabel>
+                                  </FormItem>
+                                );
+                              }}
+                            />
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
 
               <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setOpenDialog(false)} className="mr-2">
+                  Cancelar
+                </Button>
                 <Button type="submit">Salvar</Button>
               </DialogFooter>
             </form>
