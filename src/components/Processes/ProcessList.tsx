@@ -4,6 +4,7 @@ import { useProcesses } from "@/hooks/useProcesses";
 import { Process } from "@/types";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
+import { Loader2 } from "lucide-react";
 
 const ProcessList = () => {
   const {
@@ -12,6 +13,7 @@ const ProcessList = () => {
     getProcessTypeName,
     moveProcessToNextDepartment,
     moveProcessToPreviousDepartment,
+    isLoading
   } = useProcesses();
 
   const [filters, setFilters] = useState<{
@@ -51,6 +53,14 @@ const ProcessList = () => {
       setSortDirection("asc");
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div>

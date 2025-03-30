@@ -1,11 +1,10 @@
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, ReactNode } from "react";
 import { Process } from "@/types";
-import { mockProcesses } from "@/lib/mockData";
 import { useDepartmentsData } from "@/hooks/useDepartmentsData";
-import { useProcessOperations } from "@/hooks/useProcessOperations";
 import { useProcessFilters } from "@/hooks/useProcessFilters";
 import { useProcessTypes } from "@/hooks/useProcessTypes";
+import { useSupabaseProcesses } from "@/hooks/useSupabaseProcesses";
 
 type ProcessesContextType = {
   processes: Process[];
@@ -22,16 +21,22 @@ type ProcessesContextType = {
   isProcessOverdue: (process: Process) => boolean;
   departments: ReturnType<typeof useDepartmentsData>["departments"];
   processTypes: ReturnType<typeof useProcessTypes>["processTypes"];
+  isLoading: boolean;
+  refreshProcesses: () => Promise<void>;
 };
 
 const ProcessesContext = createContext<ProcessesContextType | undefined>(undefined);
 
 export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
-  const [processes, setProcesses] = useState<Process[]>(mockProcesses);
-  
   const { departments, getDepartmentName } = useDepartmentsData();
   const { processTypes, getProcessTypeName } = useProcessTypes();
-  const { moveProcessToNextDepartment, moveProcessToPreviousDepartment } = useProcessOperations(processes, setProcesses, departments);
+  const { 
+    processes, 
+    isLoading, 
+    fetchProcesses, 
+    moveProcessToNextDepartment, 
+    moveProcessToPreviousDepartment 
+  } = useSupabaseProcesses();
   const { filterProcesses, isProcessOverdue } = useProcessFilters(processes);
 
   return (
@@ -46,6 +51,8 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
         moveProcessToNextDepartment,
         moveProcessToPreviousDepartment,
         isProcessOverdue,
+        isLoading,
+        refreshProcesses: fetchProcesses
       }}
     >
       {children}

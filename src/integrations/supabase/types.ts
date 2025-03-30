@@ -9,6 +9,80 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      processos: {
+        Row: {
+          created_at: string | null
+          data_fim_esperada: string | null
+          data_inicio: string | null
+          id: string
+          numero_protocolo: string
+          setor_atual: string
+          status: string
+          tipo_processo: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_fim_esperada?: string | null
+          data_inicio?: string | null
+          id?: string
+          numero_protocolo: string
+          setor_atual: string
+          status?: string
+          tipo_processo: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_fim_esperada?: string | null
+          data_inicio?: string | null
+          id?: string
+          numero_protocolo?: string
+          setor_atual?: string
+          status?: string
+          tipo_processo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      processos_historico: {
+        Row: {
+          created_at: string | null
+          data_entrada: string
+          data_saida: string | null
+          id: string
+          processo_id: string
+          setor_id: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_entrada?: string
+          data_saida?: string | null
+          id?: string
+          processo_id: string
+          setor_id: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_entrada?: string
+          data_saida?: string | null
+          id?: string
+          processo_id?: string
+          setor_id?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processos_historico_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "processos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       setores: {
         Row: {
           created_at: string | null
