@@ -13,6 +13,8 @@ type SidebarLink = {
   icon: React.ReactNode;
 };
 
+// Este componente não está sendo usado na navegação principal,
+// mantido no projeto para possível uso futuro em outras seções
 const Sidebar = () => {
   const { pathname } = useLocation();
   const [collapsed, setCollapsed] = useState(false);
