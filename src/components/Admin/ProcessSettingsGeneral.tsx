@@ -15,8 +15,8 @@ const ProcessSettingsGeneral = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Filtrar apenas processos não iniciados (status = 'Não iniciado')
-    const filteredProcesses = processes.filter(p => p.status === 'pending' && p.protocolNumber.includes('Não iniciado'));
+    // Filtrar apenas processos não iniciados (que têm "Não iniciado" no protocolNumber)
+    const filteredProcesses = processes.filter(p => p.protocolNumber.includes('Não iniciado'));
     setNotStartedProcesses(filteredProcesses);
   }, [processes]);
 

@@ -79,19 +79,25 @@ const ProcessList = () => {
     <div>
       <ProcessFilters filters={filters} setFilters={setFilters} />
 
-      <ProcessTable
-        processes={sortedProcesses}
-        sortField={sortField}
-        sortDirection={sortDirection}
-        toggleSort={toggleSort}
-        getDepartmentName={getDepartmentName}
-        getProcessTypeName={getProcessTypeName}
-        moveProcessToNextDepartment={moveProcessToNextDepartment}
-        moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-        processTypes={processTypes}
-        updateProcessType={updateProcessType}
-        updateProcessStatus={updateProcessStatus}
-      />
+      {startedProcesses.length === 0 ? (
+        <div className="flex justify-center items-center h-64 border rounded-md p-6 mt-4 bg-gray-50">
+          <p className="text-muted-foreground text-lg">Nenhum processo iniciado encontrado</p>
+        </div>
+      ) : (
+        <ProcessTable
+          processes={sortedProcesses}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          toggleSort={toggleSort}
+          getDepartmentName={getDepartmentName}
+          getProcessTypeName={getProcessTypeName}
+          moveProcessToNextDepartment={moveProcessToNextDepartment}
+          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+          processTypes={processTypes}
+          updateProcessType={updateProcessType}
+          updateProcessStatus={updateProcessStatus}
+        />
+      )}
     </div>
   );
 };

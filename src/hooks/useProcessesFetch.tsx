@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Process } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -8,6 +8,14 @@ export const useProcessesFetch = () => {
   const [processes, setProcesses] = useState<Process[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Carregar processos automaticamente ao montar o componente
+    fetchProcesses().catch(error => {
+      console.error("Erro ao buscar processos:", error);
+      setIsLoading(false); // Garantir que o loading termina mesmo com erro
+    });
+  }, []);
 
   const fetchProcesses = async () => {
     try {
@@ -27,7 +35,7 @@ export const useProcessesFetch = () => {
       }
 
       // Converter para o formato do nosso tipo Process
-      const formattedProcesses: Process[] = processesData.map(process => {
+      const formattedProcesses: Process[] = processesData ? processesData.map(process => {
         // Verificar se está atrasado
         const expectedEndDate = new Date(process.data_fim_esperada);
         const now = new Date();
@@ -42,12 +50,12 @@ export const useProcessesFetch = () => {
         }
 
         // Formatar o histórico
-        const history = process.processos_historico.map((h: any) => ({
+        const history = process.processos_historico ? process.processos_historico.map((h: any) => ({
           departmentId: h.setor_id,
           entryDate: h.data_entrada,
           exitDate: h.data_saida,
           userId: h.usuario_id || "1"
-        }));
+        })) : [];
 
         return {
           id: process.id,
@@ -59,7 +67,7 @@ export const useProcessesFetch = () => {
           status,
           history
         };
-      });
+      }) : [];
 
       setProcesses(formattedProcesses);
     } catch (error) {
@@ -69,6 +77,8 @@ export const useProcessesFetch = () => {
         description: "Não foi possível carregar os processos.",
         variant: "destructive"
       });
+      // Definir um array vazio mesmo em caso de erro
+      setProcesses([]);
     } finally {
       setIsLoading(false);
     }
