@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -353,7 +352,7 @@ const AdminUsersPage = () => {
       </Card>
 
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
             <DialogTitle>
               {usuarioAtual ? "Editar Usuário" : "Adicionar Novo Usuário"}
@@ -441,13 +440,8 @@ const AdminUsersPage = () => {
                       control={form.control}
                       name="ativo"
                       render={({ field }) => (
-                        <FormItem className="flex flex-col justify-between rounded-lg border p-2 h-full">
-                          <div className="space-y-0.5">
-                            <FormLabel>Ativo</FormLabel>
-                            <FormDescription className="text-xs">
-                              Usuário pode acessar o sistema
-                            </FormDescription>
-                          </div>
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 h-full">
+                          <FormLabel>Ativo</FormLabel>
                           <FormControl>
                             <Switch
                               checked={field.value}
@@ -468,7 +462,7 @@ const AdminUsersPage = () => {
                       <FormItem>
                         <div className="mb-2">
                           <FormLabel className="text-base">Setores atribuídos</FormLabel>
-                          <FormDescription className="text-xs">
+                          <FormDescription>
                             Selecione os setores aos quais o usuário terá acesso.
                           </FormDescription>
                         </div>
