@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -352,7 +353,7 @@ const AdminUsersPage = () => {
       </Card>
 
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-[650px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>
               {usuarioAtual ? "Editar Usuário" : "Adicionar Novo Usuário"}
@@ -408,53 +409,55 @@ const AdminUsersPage = () => {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="perfil"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <FormLabel>Perfil</FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex flex-col space-y-1"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="usuario" id="usuario" />
-                              <Label htmlFor="usuario">Usuário</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="administrador" id="administrador" />
-                              <Label htmlFor="administrador">Administrador</Label>
-                            </div>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="perfil"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel>Perfil</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="flex flex-col space-y-1"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="usuario" id="usuario" />
+                                <Label htmlFor="usuario">Usuário</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="administrador" id="administrador" />
+                                <Label htmlFor="administrador">Administrador</Label>
+                              </div>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="ativo"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-2">
-                        <div className="space-y-0.5">
-                          <FormLabel>Ativo</FormLabel>
-                          <FormDescription className="text-xs">
-                            Usuário pode acessar o sistema
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="ativo"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col justify-between rounded-lg border p-2 h-full">
+                          <div className="space-y-0.5">
+                            <FormLabel>Ativo</FormLabel>
+                            <FormDescription className="text-xs">
+                              Usuário pode acessar o sistema
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -469,7 +472,7 @@ const AdminUsersPage = () => {
                             Selecione os setores aos quais o usuário terá acesso.
                           </FormDescription>
                         </div>
-                        <ScrollArea className="h-[210px] rounded-md border p-2">
+                        <ScrollArea className="h-[200px] rounded-md border p-2">
                           {departments.map((department) => (
                             <FormField
                               key={department.id}
