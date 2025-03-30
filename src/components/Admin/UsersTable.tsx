@@ -89,7 +89,7 @@ export function UsersTable({
                 </TableCell>
                 <TableCell>
                   <Tooltip>
-                    <TooltipTrigger asChild>
+                    <TooltipTrigger>
                       <Badge variant="outline" className="cursor-help">
                         {usuario.setores_atribuidos.length}
                       </Badge>
