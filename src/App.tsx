@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,18 +18,15 @@ import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
-// Páginas de administração
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminDepartmentsPage from "./pages/AdminDepartmentsPage";
 import AdminProcessSettingsPage from "./pages/AdminProcessSettingsPage";
 
 const queryClient = new QueryClient();
 
-// Protected route component
 const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) => {
   const { user, isLoading, isAdmin } = useAuth();
   
-  // Show loading state while checking authentication
   if (isLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
@@ -43,16 +39,19 @@ const ProtectedRoute = ({ children, adminOnly = false }: { children: React.React
     return <Navigate to="/login" replace />;
   }
 
-  // Verificar se é rota de admin e se usuário tem permissão usando a função isAdmin
   if (adminOnly && !isAdmin(user.email)) {
     return <Navigate to="/dashboard" replace />;
   }
   
-  return <>{children}</>;
+  return (
+    <ProcessesProvider>
+      {children}
+    </ProcessesProvider>
+  );
 };
 
-// App component that provides the ProtectedRoute
 const AppRoutes = () => {
+  console.log("Renderizando AppRoutes");
   return (
     <BrowserRouter>
       <Routes>
@@ -60,7 +59,6 @@ const AppRoutes = () => {
           <Route index element={<Index />} />
           <Route path="login" element={<LoginPage />} />
           
-          {/* Protected routes */}
           <Route path="dashboard" element={
             <ProtectedRoute>
               <Dashboard />
@@ -91,7 +89,6 @@ const AppRoutes = () => {
             </ProtectedRoute>
           } />
 
-          {/* Rotas de administração */}
           <Route path="admin/users" element={
             <ProtectedRoute adminOnly={true}>
               <AdminUsersPage />
@@ -117,10 +114,11 @@ const AppRoutes = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <ProcessesProvider>
+const App = () => {
+  console.log("Renderizando App");
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
         <NotificationsProvider>
           <TooltipProvider>
             <Toaster />
@@ -128,9 +126,9 @@ const App = () => (
             <AppRoutes />
           </TooltipProvider>
         </NotificationsProvider>
-      </ProcessesProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
