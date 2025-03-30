@@ -19,10 +19,15 @@ import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
+// Páginas de administração
+const AdminUsersPage = () => <div className="p-4"><h1 className="text-2xl font-bold mb-4">Cadastro de Usuários</h1><p>Esta página está em desenvolvimento.</p></div>;
+const AdminDepartmentsPage = () => <div className="p-4"><h1 className="text-2xl font-bold mb-4">Cadastro de Setores</h1><p>Esta página está em desenvolvimento.</p></div>;
+const AdminProcessSettingsPage = () => <div className="p-4"><h1 className="text-2xl font-bold mb-4">Configurações de Processos</h1><p>Esta página está em desenvolvimento.</p></div>;
+
 const queryClient = new QueryClient();
 
 // Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) => {
   const { user, isLoading } = useAuth();
   
   // Show loading state while checking authentication
@@ -36,6 +41,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Verificar se é rota de admin e se usuário tem permissão
+  if (adminOnly && user.email !== "admin@nottar.com") {
+    return <Navigate to="/dashboard" replace />;
   }
   
   return <>{children}</>;
@@ -78,6 +88,25 @@ const AppRoutes = () => {
           <Route path="settings" element={
             <ProtectedRoute>
               <SettingsPage />
+            </ProtectedRoute>
+          } />
+
+          {/* Rotas de administração */}
+          <Route path="admin/users" element={
+            <ProtectedRoute adminOnly={true}>
+              <AdminUsersPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="admin/departments" element={
+            <ProtectedRoute adminOnly={true}>
+              <AdminDepartmentsPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="admin/process-settings" element={
+            <ProtectedRoute adminOnly={true}>
+              <AdminProcessSettingsPage />
             </ProtectedRoute>
           } />
           

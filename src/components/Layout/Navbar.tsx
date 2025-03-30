@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { UserCircle, BellIcon, LogOut, Home, ClipboardList } from "lucide-react";
+import { UserCircle, BellIcon, LogOut, Home, ClipboardList, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarTrigger,
+} from "@/components/ui/menubar";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationsPopover from "../Notifications/NotificationsPopover";
@@ -42,6 +49,9 @@ const Navbar = () => {
     },
   ];
 
+  // Verificação se o usuário tem acesso de administrador
+  const isAdmin = user?.email === "admin@nottar.com";
+
   return (
     <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
       <div className="flex items-center">
@@ -69,6 +79,40 @@ const Navbar = () => {
               <span>{link.title}</span>
             </Link>
           ))}
+          
+          {/* Menu Administração - Apenas visível para administradores */}
+          {isAdmin && (
+            <Menubar className="border-none bg-transparent p-0">
+              <MenubarMenu>
+                <MenubarTrigger className={cn(
+                  "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  pathname.startsWith("/admin")
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-secondary"
+                )}>
+                  <Settings className="h-4 w-4 mr-1" />
+                  <span>Administração</span>
+                </MenubarTrigger>
+                <MenubarContent align="start" className="min-w-[200px] bg-white">
+                  <MenubarItem asChild>
+                    <Link to="/admin/departments" className="w-full cursor-pointer">
+                      Cadastro de Setores
+                    </Link>
+                  </MenubarItem>
+                  <MenubarItem asChild>
+                    <Link to="/admin/process-settings" className="w-full cursor-pointer">
+                      Configurações de Processos
+                    </Link>
+                  </MenubarItem>
+                  <MenubarItem asChild>
+                    <Link to="/admin/users" className="w-full cursor-pointer">
+                      Cadastro de Usuários
+                    </Link>
+                  </MenubarItem>
+                </MenubarContent>
+              </MenubarMenu>
+            </Menubar>
+          )}
         </div>
       </div>
 
