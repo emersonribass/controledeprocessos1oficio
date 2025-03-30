@@ -95,19 +95,19 @@ const ProcessFilters = ({ filters, setFilters }: ProcessFiltersProps) => {
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-4" align="end">
+          <PopoverContent className="w-96 p-4" align="end">
             <div className="space-y-4">
               <div className="space-y-2">
                 <h4 className="font-medium text-sm">Status</h4>
                 <Select
-                  value={filters.status || ""}
+                  value={filters.status || "todos_status"}
                   onValueChange={handleStatusChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="todos_status">Todos</SelectItem>
                     <SelectItem value="pending">Em andamento</SelectItem>
                     <SelectItem value="completed">Concluído</SelectItem>
                     <SelectItem value="overdue">Atrasado</SelectItem>
@@ -118,14 +118,14 @@ const ProcessFilters = ({ filters, setFilters }: ProcessFiltersProps) => {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm">Departamento</h4>
                 <Select
-                  value={filters.department || ""}
+                  value={filters.department || "todos_departamentos"}
                   onValueChange={handleDepartmentChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um departamento" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="todos_departamentos">Todos</SelectItem>
                     {departments.map((department) => (
                       <SelectItem key={department.id} value={department.id}>
                         {department.name}
@@ -138,14 +138,14 @@ const ProcessFilters = ({ filters, setFilters }: ProcessFiltersProps) => {
               <div className="space-y-2">
                 <h4 className="font-medium text-sm">Tipo de Ato</h4>
                 <Select
-                  value={filters.processType || ""}
+                  value={filters.processType || "todos_tipos"}
                   onValueChange={handleProcessTypeChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="todos_tipos">Todos</SelectItem>
                     {processTypes.map((type) => (
                       <SelectItem key={type.id} value={type.id}>
                         {type.name}
