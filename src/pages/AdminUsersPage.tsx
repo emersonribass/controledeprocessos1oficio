@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,8 +17,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-// Definição do tipo para a tabela de usuários no Supabase
 type UsuarioSupabase = {
   id: string;
   nome: string;
@@ -32,7 +32,6 @@ type UsuarioSupabase = {
   updated_at: string;
 };
 
-// Formulário de usuário
 type FormUsuario = {
   nome: string;
   email: string;
@@ -47,6 +46,7 @@ const AdminUsersPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [usuarioAtual, setUsuarioAtual] = useState<UsuarioSupabase | null>(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const { toast } = useToast();
   const { departments } = useProcesses();
 
@@ -61,7 +61,6 @@ const AdminUsersPage = () => {
     },
   });
 
-  // Buscar usuários do Supabase
   const fetchUsuarios = async () => {
     setIsLoading(true);
     try {
@@ -150,37 +149,42 @@ const AdminUsersPage = () => {
   };
 
   const handleDeleteUsuario = async (usuario: UsuarioSupabase) => {
-    if (confirm(`Tem certeza que deseja excluir o usuário ${usuario.nome}?`)) {
-      try {
-        const { error } = await supabase
-          .from("usuarios")
-          .delete()
-          .eq("id", usuario.id);
+    setUsuarioAtual(usuario);
+    setOpenDeleteDialog(true);
+  };
 
-        if (error) {
-          throw error;
-        }
+  const confirmDelete = async () => {
+    if (!usuarioAtual) return;
+    
+    try {
+      const { error } = await supabase
+        .from("usuarios")
+        .delete()
+        .eq("id", usuarioAtual.id);
 
-        toast({
-          title: "Sucesso",
-          description: "Usuário excluído com sucesso!",
-        });
-
-        fetchUsuarios(); // Recarregar a lista após a exclusão
-      } catch (error) {
-        console.error("Erro ao excluir usuário:", error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível excluir o usuário.",
-          variant: "destructive",
-        });
+      if (error) {
+        throw error;
       }
+
+      toast({
+        title: "Sucesso",
+        description: "Usuário excluído com sucesso!",
+      });
+
+      fetchUsuarios(); // Recarregar a lista após a exclusão
+      setOpenDeleteDialog(false);
+    } catch (error) {
+      console.error("Erro ao excluir usuário:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o usuário.",
+        variant: "destructive",
+      });
     }
   };
 
   const onSubmit = async (data: FormUsuario) => {
     try {
-      // Se estamos editando um usuário existente
       if (usuarioAtual) {
         const updateData: Partial<UsuarioSupabase> = {
           nome: data.nome,
@@ -190,7 +194,6 @@ const AdminUsersPage = () => {
           perfil: data.perfil,
         };
 
-        // Só incluir senha se foi fornecida
         if (data.senha) {
           updateData.senha = data.senha;
         }
@@ -207,7 +210,6 @@ const AdminUsersPage = () => {
           description: "Usuário atualizado com sucesso!",
         });
       } else {
-        // Estamos criando um novo usuário
         const { error } = await supabase.from("usuarios").insert({
           nome: data.nome,
           email: data.email,
@@ -349,9 +351,8 @@ const AdminUsersPage = () => {
         </CardContent>
       </Card>
 
-      {/* Diálogo para adicionar/editar usuário - Melhorado com layout em colunas */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className="sm:max-w-[650px]">
           <DialogHeader>
             <DialogTitle>
               {usuarioAtual ? "Editar Usuário" : "Adicionar Novo Usuário"}
@@ -362,10 +363,9 @@ const AdminUsersPage = () => {
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Coluna da esquerda */}
-                <div className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
                   <FormField
                     control={form.control}
                     name="nome"
@@ -439,11 +439,11 @@ const AdminUsersPage = () => {
                     control={form.control}
                     name="ativo"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-2">
                         <div className="space-y-0.5">
                           <FormLabel>Ativo</FormLabel>
-                          <FormDescription>
-                            Determina se o usuário pode acessar o sistema.
+                          <FormDescription className="text-xs">
+                            Usuário pode acessar o sistema
                           </FormDescription>
                         </div>
                         <FormControl>
@@ -457,7 +457,6 @@ const AdminUsersPage = () => {
                   />
                 </div>
 
-                {/* Coluna da direita */}
                 <div>
                   <FormField
                     control={form.control}
@@ -466,11 +465,11 @@ const AdminUsersPage = () => {
                       <FormItem>
                         <div className="mb-2">
                           <FormLabel className="text-base">Setores atribuídos</FormLabel>
-                          <FormDescription>
+                          <FormDescription className="text-xs">
                             Selecione os setores aos quais o usuário terá acesso.
                           </FormDescription>
                         </div>
-                        <div className="h-[320px] overflow-y-auto border rounded-md p-3">
+                        <ScrollArea className="h-[210px] rounded-md border p-2">
                           {departments.map((department) => (
                             <FormField
                               key={department.id}
@@ -504,7 +503,7 @@ const AdminUsersPage = () => {
                               }}
                             />
                           ))}
-                        </div>
+                        </ScrollArea>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -512,7 +511,7 @@ const AdminUsersPage = () => {
                 </div>
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="pt-2">
                 <Button variant="outline" type="button" onClick={() => setOpenDialog(false)} className="mr-2">
                   Cancelar
                 </Button>
@@ -522,6 +521,24 @@ const AdminUsersPage = () => {
           </Form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o usuário "{usuarioAtual?.nome}"?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
