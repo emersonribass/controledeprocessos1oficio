@@ -1,24 +1,15 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Trash2, UserCheck, UserX } from "lucide-react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { User } from "@/types";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useProcesses } from "@/hooks/useProcesses";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
-import { useForm } from "react-hook-form";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { UsersTable } from "@/components/Admin/UsersTable";
+import { UserForm } from "@/components/Admin/UserForm";
+import { DeleteUserDialog } from "@/components/Admin/DeleteUserDialog";
 
 type UsuarioSupabase = {
   id: string;
@@ -50,17 +41,6 @@ const AdminUsersPage = () => {
   const { toast } = useToast();
   const { departments } = useProcesses();
 
-  const form = useForm<FormUsuario>({
-    defaultValues: {
-      nome: "",
-      email: "",
-      senha: "",
-      ativo: true,
-      setores_atribuidos: [],
-      perfil: "usuario",
-    },
-  });
-
   const fetchUsuarios = async () => {
     setIsLoading(true);
     try {
@@ -90,34 +70,13 @@ const AdminUsersPage = () => {
     fetchUsuarios();
   }, []);
 
-  const getDepartmentName = (id: string) => {
-    const department = departments.find((d) => d.id === id);
-    return department ? department.name : "Desconhecido";
-  };
-
   const handleAddUsuario = () => {
     setUsuarioAtual(null);
-    form.reset({
-      nome: "",
-      email: "",
-      senha: "",
-      ativo: true,
-      setores_atribuidos: [],
-      perfil: "usuario",
-    });
     setOpenDialog(true);
   };
 
   const handleEditUsuario = (usuario: UsuarioSupabase) => {
     setUsuarioAtual(usuario);
-    form.reset({
-      nome: usuario.nome,
-      email: usuario.email,
-      senha: "", // Não preencher senha na edição
-      ativo: usuario.ativo,
-      setores_atribuidos: usuario.setores_atribuidos,
-      perfil: usuario.perfil,
-    });
     setOpenDialog(true);
   };
 
@@ -137,7 +96,7 @@ const AdminUsersPage = () => {
         description: `Usuário ${usuario.ativo ? 'desativado' : 'ativado'} com sucesso!`,
       });
 
-      fetchUsuarios(); // Recarregar a lista após a alteração
+      fetchUsuarios();
     } catch (error) {
       console.error("Erro ao atualizar status do usuário:", error);
       toast({
@@ -148,7 +107,7 @@ const AdminUsersPage = () => {
     }
   };
 
-  const handleDeleteUsuario = async (usuario: UsuarioSupabase) => {
+  const handleDeleteUsuario = (usuario: UsuarioSupabase) => {
     setUsuarioAtual(usuario);
     setOpenDeleteDialog(true);
   };
@@ -171,7 +130,7 @@ const AdminUsersPage = () => {
         description: "Usuário excluído com sucesso!",
       });
 
-      fetchUsuarios(); // Recarregar a lista após a exclusão
+      fetchUsuarios();
       setOpenDeleteDialog(false);
     } catch (error) {
       console.error("Erro ao excluir usuário:", error);
@@ -228,7 +187,7 @@ const AdminUsersPage = () => {
       }
 
       setOpenDialog(false);
-      fetchUsuarios(); // Recarregar a lista após salvar
+      fetchUsuarios();
     } catch (error) {
       console.error("Erro ao salvar usuário:", error);
       toast({
@@ -262,92 +221,14 @@ const AdminUsersPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center p-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Data de Cadastro</TableHead>
-                  <TableHead>Departamentos</TableHead>
-                  <TableHead>Perfil</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {usuarios.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-6">
-                      Nenhum usuário encontrado.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  usuarios.map((usuario) => (
-                    <TableRow key={usuario.id}>
-                      <TableCell className="font-medium">{usuario.nome}</TableCell>
-                      <TableCell>{usuario.email}</TableCell>
-                      <TableCell>
-                        {format(new Date(usuario.created_at), "dd/MM/yyyy")}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {usuario.setores_atribuidos.map((depId) => (
-                            <Badge key={depId} variant="outline">
-                              {getDepartmentName(depId)}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={usuario.perfil === "administrador" ? "default" : "secondary"}>
-                          {usuario.perfil === "administrador" ? "Administrador" : "Usuário"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={usuario.ativo ? "default" : "destructive"}>
-                          {usuario.ativo ? "Ativo" : "Inativo"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleToggleAtivo(usuario)}
-                            title={usuario.ativo ? "Desativar usuário" : "Ativar usuário"}
-                          >
-                            {usuario.ativo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleEditUsuario(usuario)}
-                            title="Editar usuário"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-destructive"
-                            onClick={() => handleDeleteUsuario(usuario)}
-                            title="Excluir usuário"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          )}
+          <UsersTable
+            usuarios={usuarios}
+            isLoading={isLoading}
+            departments={departments}
+            onToggleActive={handleToggleAtivo}
+            onEdit={handleEditUsuario}
+            onDelete={handleDeleteUsuario}
+          />
         </CardContent>
       </Card>
 
@@ -362,180 +243,21 @@ const AdminUsersPage = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <FormField
-                    control={form.control}
-                    name="nome"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Nome completo" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="email@exemplo.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="senha"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{usuarioAtual ? "Nova Senha (deixe em branco para manter a atual)" : "Senha"}</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="********" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="perfil"
-                      render={({ field }) => (
-                        <FormItem className="space-y-1">
-                          <FormLabel>Perfil</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="flex flex-col space-y-1"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="usuario" id="usuario" />
-                                <Label htmlFor="usuario">Usuário</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="administrador" id="administrador" />
-                                <Label htmlFor="administrador">Administrador</Label>
-                              </div>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="ativo"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 h-full">
-                          <FormLabel>Ativo</FormLabel>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="setores_atribuidos"
-                    render={() => (
-                      <FormItem>
-                        <div className="mb-2">
-                          <FormLabel className="text-base">Setores atribuídos</FormLabel>
-                          <FormDescription>
-                            Selecione os setores aos quais o usuário terá acesso.
-                          </FormDescription>
-                        </div>
-                        <ScrollArea className="h-[200px] rounded-md border p-2">
-                          {departments.map((department) => (
-                            <FormField
-                              key={department.id}
-                              control={form.control}
-                              name="setores_atribuidos"
-                              render={({ field }) => {
-                                return (
-                                  <FormItem
-                                    key={department.id}
-                                    className="flex flex-row items-start space-x-3 space-y-0 mb-2"
-                                  >
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(department.id)}
-                                        onCheckedChange={(checked) => {
-                                          return checked
-                                            ? field.onChange([...field.value, department.id])
-                                            : field.onChange(
-                                                field.value?.filter(
-                                                  (value) => value !== department.id
-                                                )
-                                              );
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="font-normal">
-                                      {department.name}
-                                    </FormLabel>
-                                  </FormItem>
-                                );
-                              }}
-                            />
-                          ))}
-                        </ScrollArea>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              <DialogFooter className="pt-2">
-                <Button variant="outline" type="button" onClick={() => setOpenDialog(false)} className="mr-2">
-                  Cancelar
-                </Button>
-                <Button type="submit">Salvar</Button>
-              </DialogFooter>
-            </form>
-          </Form>
+          <UserForm
+            usuarioAtual={usuarioAtual}
+            departments={departments}
+            onSave={onSubmit}
+            onCancel={() => setOpenDialog(false)}
+          />
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o usuário "{usuarioAtual?.nome}"?
-              Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive">
-              Excluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteUserDialog
+        open={openDeleteDialog}
+        usuario={usuarioAtual}
+        onOpenChange={setOpenDeleteDialog}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 };
