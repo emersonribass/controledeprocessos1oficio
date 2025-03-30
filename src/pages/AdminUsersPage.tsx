@@ -2,34 +2,93 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2, UserCheck, UserX } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { User } from "@/types";
-import { mockUsers } from "@/lib/mockData";
 import { useProcesses } from "@/hooks/useProcesses";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { useForm } from "react-hook-form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+// Definição do tipo para a tabela de usuários no Supabase
+type UsuarioSupabase = {
+  id: string;
+  nome: string;
+  email: string;
+  senha: string;
+  ativo: boolean;
+  setores_atribuidos: string[];
+  perfil: 'administrador' | 'usuario';
+  created_at: string;
+  updated_at: string;
+};
+
+// Formulário de usuário
+type FormUsuario = {
+  nome: string;
+  email: string;
+  senha: string;
+  ativo: boolean;
+  setores_atribuidos: string[];
+  perfil: 'administrador' | 'usuario';
+};
 
 const AdminUsersPage = () => {
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [usuarios, setUsuarios] = useState<UsuarioSupabase[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [usuarioAtual, setUsuarioAtual] = useState<UsuarioSupabase | null>(null);
   const { toast } = useToast();
   const { departments } = useProcesses();
 
-  // Esta função será implementada quando tivermos um backend real para usuários
-  const fetchUsers = async () => {
+  const form = useForm<FormUsuario>({
+    defaultValues: {
+      nome: "",
+      email: "",
+      senha: "",
+      ativo: true,
+      setores_atribuidos: [],
+      perfil: "usuario",
+    },
+  });
+
+  // Buscar usuários do Supabase
+  const fetchUsuarios = async () => {
     setIsLoading(true);
-    // Por enquanto, estamos usando dados simulados
-    setTimeout(() => {
-      setUsers(mockUsers);
+    try {
+      const { data, error } = await supabase
+        .from("usuarios")
+        .select("*")
+        .order("nome");
+
+      if (error) {
+        throw error;
+      }
+
+      setUsuarios(data as UsuarioSupabase[]);
+    } catch (error) {
+      console.error("Erro ao buscar usuários:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar a lista de usuários.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsuarios();
   }, []);
 
   const getDepartmentName = (id: string) => {
@@ -37,11 +96,145 @@ const AdminUsersPage = () => {
     return department ? department.name : "Desconhecido";
   };
 
-  const handleAddUser = () => {
-    toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: "O cadastro de usuários será implementado em breve."
+  const handleAddUsuario = () => {
+    setUsuarioAtual(null);
+    form.reset({
+      nome: "",
+      email: "",
+      senha: "",
+      ativo: true,
+      setores_atribuidos: [],
+      perfil: "usuario",
     });
+    setOpenDialog(true);
+  };
+
+  const handleEditUsuario = (usuario: UsuarioSupabase) => {
+    setUsuarioAtual(usuario);
+    form.reset({
+      nome: usuario.nome,
+      email: usuario.email,
+      senha: "", // Não preencher senha na edição
+      ativo: usuario.ativo,
+      setores_atribuidos: usuario.setores_atribuidos,
+      perfil: usuario.perfil,
+    });
+    setOpenDialog(true);
+  };
+
+  const handleToggleAtivo = async (usuario: UsuarioSupabase) => {
+    try {
+      const { error } = await supabase
+        .from("usuarios")
+        .update({ ativo: !usuario.ativo })
+        .eq("id", usuario.id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Sucesso",
+        description: `Usuário ${usuario.ativo ? 'desativado' : 'ativado'} com sucesso!`,
+      });
+
+      fetchUsuarios(); // Recarregar a lista após a alteração
+    } catch (error) {
+      console.error("Erro ao atualizar status do usuário:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status do usuário.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteUsuario = async (usuario: UsuarioSupabase) => {
+    if (confirm(`Tem certeza que deseja excluir o usuário ${usuario.nome}?`)) {
+      try {
+        const { error } = await supabase
+          .from("usuarios")
+          .delete()
+          .eq("id", usuario.id);
+
+        if (error) {
+          throw error;
+        }
+
+        toast({
+          title: "Sucesso",
+          description: "Usuário excluído com sucesso!",
+        });
+
+        fetchUsuarios(); // Recarregar a lista após a exclusão
+      } catch (error) {
+        console.error("Erro ao excluir usuário:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível excluir o usuário.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const onSubmit = async (data: FormUsuario) => {
+    try {
+      // Se estamos editando um usuário existente
+      if (usuarioAtual) {
+        const updateData: Partial<UsuarioSupabase> = {
+          nome: data.nome,
+          email: data.email,
+          ativo: data.ativo,
+          setores_atribuidos: data.setores_atribuidos,
+          perfil: data.perfil,
+        };
+
+        // Só incluir senha se foi fornecida
+        if (data.senha) {
+          updateData.senha = data.senha;
+        }
+
+        const { error } = await supabase
+          .from("usuarios")
+          .update(updateData)
+          .eq("id", usuarioAtual.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso",
+          description: "Usuário atualizado com sucesso!",
+        });
+      } else {
+        // Estamos criando um novo usuário
+        const { error } = await supabase.from("usuarios").insert({
+          nome: data.nome,
+          email: data.email,
+          senha: data.senha,
+          ativo: data.ativo,
+          setores_atribuidos: data.setores_atribuidos,
+          perfil: data.perfil,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso",
+          description: "Usuário criado com sucesso!",
+        });
+      }
+
+      setOpenDialog(false);
+      fetchUsuarios(); // Recarregar a lista após salvar
+    } catch (error) {
+      console.error("Erro ao salvar usuário:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar o usuário.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -53,7 +246,7 @@ const AdminUsersPage = () => {
             Gerencie os usuários do sistema e suas permissões.
           </p>
         </div>
-        <Button onClick={handleAddUser}>
+        <Button onClick={handleAddUsuario}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Usuário
         </Button>
@@ -79,37 +272,73 @@ const AdminUsersPage = () => {
                   <TableHead>Email</TableHead>
                   <TableHead>Data de Cadastro</TableHead>
                   <TableHead>Departamentos</TableHead>
+                  <TableHead>Perfil</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.length === 0 ? (
+                {usuarios.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-6">
+                    <TableCell colSpan={7} className="text-center py-6">
                       Nenhum usuário encontrado.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell className="font-medium">{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
+                  usuarios.map((usuario) => (
+                    <TableRow key={usuario.id}>
+                      <TableCell className="font-medium">{usuario.nome}</TableCell>
+                      <TableCell>{usuario.email}</TableCell>
                       <TableCell>
-                        {format(new Date(user.createdAt), "dd/MM/yyyy")}
+                        {format(new Date(usuario.created_at), "dd/MM/yyyy")}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {user.departments.map((depId) => (
+                          {usuario.setores_atribuidos.map((depId) => (
                             <Badge key={depId} variant="outline">
                               {getDepartmentName(depId)}
                             </Badge>
                           ))}
                         </div>
                       </TableCell>
+                      <TableCell>
+                        <Badge variant={usuario.perfil === "administrador" ? "default" : "secondary"}>
+                          {usuario.perfil === "administrador" ? "Administrador" : "Usuário"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={usuario.ativo ? "default" : "destructive"}>
+                          {usuario.ativo ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          Editar
-                        </Button>
+                        <div className="flex justify-end space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleToggleAtivo(usuario)}
+                            title={usuario.ativo ? "Desativar usuário" : "Ativar usuário"}
+                          >
+                            {usuario.ativo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleEditUsuario(usuario)}
+                            title="Editar usuário"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-destructive"
+                            onClick={() => handleDeleteUsuario(usuario)}
+                            title="Excluir usuário"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -119,6 +348,169 @@ const AdminUsersPage = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Diálogo para adicionar/editar usuário */}
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {usuarioAtual ? "Editar Usuário" : "Adicionar Novo Usuário"}
+            </DialogTitle>
+            <DialogDescription>
+              Preencha as informações do usuário e clique em salvar quando terminar.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="nome"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome completo" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="email@exemplo.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="senha"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{usuarioAtual ? "Nova Senha (deixe em branco para manter a atual)" : "Senha"}</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="********" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="perfil"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel>Perfil</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="usuario" id="usuario" />
+                          <Label htmlFor="usuario">Usuário</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="administrador" id="administrador" />
+                          <Label htmlFor="administrador">Administrador</Label>
+                        </div>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ativo"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel>Ativo</FormLabel>
+                      <FormDescription>
+                        Determina se o usuário pode acessar o sistema.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="setores_atribuidos"
+                render={() => (
+                  <FormItem>
+                    <div className="mb-4">
+                      <FormLabel className="text-base">Setores atribuídos</FormLabel>
+                      <FormDescription>
+                        Selecione os setores aos quais o usuário terá acesso.
+                      </FormDescription>
+                    </div>
+                    <div className="space-y-2">
+                      {departments.map((department) => (
+                        <FormField
+                          key={department.id}
+                          control={form.control}
+                          name="setores_atribuidos"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={department.id}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(department.id)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([...field.value, department.id])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== department.id
+                                            )
+                                          );
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  {department.name}
+                                </FormLabel>
+                              </FormItem>
+                            );
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button type="submit">Salvar</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
