@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -39,14 +39,21 @@ const ProcessFilters = ({ filters, setFilters }: ProcessFiltersProps) => {
   const { departments, processTypes } = useProcesses();
   const [search, setSearch] = useState(filters.search || "");
 
+  // Efeito para aplicar o filtro conforme o usuário digita
+  useEffect(() => {
+    // Pequeno delay para evitar muitas requisições durante digitação rápida
+    const debounceTimer = setTimeout(() => {
+      setFilters({ ...filters, search });
+    }, 300); // 300ms de delay
+
+    return () => clearTimeout(debounceTimer);
+  }, [search]);
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFilters({ ...filters, search });
-  };
+  // Removido o handleSearchSubmit pois não precisamos mais dele
 
   const handleStatusChange = (status: string) => {
     setFilters({ ...filters, status: status || undefined });
@@ -68,10 +75,7 @@ const ProcessFilters = ({ filters, setFilters }: ProcessFiltersProps) => {
 
   return (
     <div className="flex flex-col md:flex-row gap-4 md:items-center mb-6">
-      <form
-        className="relative w-full md:max-w-sm"
-        onSubmit={handleSearchSubmit}
-      >
+      <div className="relative w-full md:max-w-sm">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
@@ -79,8 +83,9 @@ const ProcessFilters = ({ filters, setFilters }: ProcessFiltersProps) => {
           className="pl-8"
           value={search}
           onChange={handleSearchChange}
+          // Removido o onKeyDown que poderia estar aqui
         />
-      </form>
+      </div>
 
       <div className="flex gap-2 ml-auto">
         <Popover open={filterOpen} onOpenChange={setFilterOpen}>
