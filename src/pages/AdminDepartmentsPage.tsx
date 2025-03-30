@@ -135,9 +135,9 @@ const AdminDepartmentsPage = () => {
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <Table>
+            <Table className="w-full">
               <TableHeader>
-                <TableRow>
+                <TableRow className="h-10">
                   <TableHead>ID</TableHead>
                   <TableHead>Nome</TableHead>
                   <TableHead>Ordem</TableHead>
@@ -154,12 +154,12 @@ const AdminDepartmentsPage = () => {
                   </TableRow>
                 ) : (
                   departments.map((department) => (
-                    <TableRow key={department.id}>
-                      <TableCell>{department.id}</TableCell>
-                      <TableCell className="font-medium">{department.name}</TableCell>
-                      <TableCell>{department.order}</TableCell>
-                      <TableCell>{department.timeLimit}</TableCell>
-                      <TableCell className="text-right">
+                    <TableRow key={department.id} className="h-8 py-1">
+                      <TableCell className="py-1">{department.id}</TableCell>
+                      <TableCell className="font-medium py-1">{department.name}</TableCell>
+                      <TableCell className="py-1">{department.order}</TableCell>
+                      <TableCell className="py-1">{department.timeLimit}</TableCell>
+                      <TableCell className="text-right py-1">
                         <div className="flex justify-end space-x-2">
                           <Button
                             variant="outline"
@@ -231,3 +231,4 @@ const AdminDepartmentsPage = () => {
 };
 
 export default AdminDepartmentsPage;
+
