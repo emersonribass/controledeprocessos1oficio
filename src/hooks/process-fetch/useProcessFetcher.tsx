@@ -15,15 +15,28 @@ export const useProcessFetcher = () => {
         .select(`
           *,
           processos_historico(*),
-          setor_info:setores!inner(id, name, time_limit)
-        `)
-        .eq('setores.id', supabase.raw('processos.setor_atual::int'));
+          setor_info:setores(id, name, time_limit)
+        `);
 
       if (error) {
         throw error;
       }
 
-      return processesData;
+      // Filtrar para garantir que o setor_info corresponda ao setor_atual do processo
+      const processesWithCorrectDepartment = processesData.map(process => {
+        // Filtrar para obter apenas o setor que corresponde ao setor_atual
+        const matchingDept = process.setor_info.find(
+          dept => dept.id.toString() === process.setor_atual
+        );
+        
+        // Retornar o processo com apenas o setor correspondente
+        return {
+          ...process,
+          setor_info: matchingDept || null
+        };
+      });
+
+      return processesWithCorrectDepartment;
     } catch (error) {
       console.error('Erro ao buscar processos:', error);
       return [];
