@@ -37,8 +37,10 @@ const ProcessTableRow = ({
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
 
-  // Ordenar departamentos por ordem
-  const sortedDepartments = [...departments].sort((a, b) => a.order - b.order);
+  // Ordenar departamentos por ordem e filtrar o departamento "Concluído"
+  const sortedDepartments = [...departments]
+    .filter(dept => dept.name !== "Concluído(a)")
+    .sort((a, b) => a.order - b.order);
 
   // Função para obter a data de entrada de um departamento do histórico
   const getDepartmentEntryDate = (departmentId: string): string | null => {

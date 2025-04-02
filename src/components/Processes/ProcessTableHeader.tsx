@@ -17,8 +17,10 @@ const ProcessTableHeader = ({
   toggleSort,
   departments
 }: ProcessTableHeaderProps) => {
-  // Ordenar departamentos por ordem
-  const sortedDepartments = [...departments].sort((a, b) => a.order - b.order);
+  // Ordenar departamentos por ordem e filtrar o departamento "Concluído"
+  const sortedDepartments = [...departments]
+    .filter(dept => dept.name !== "Concluído(a)")
+    .sort((a, b) => a.order - b.order);
 
   return (
     <TableHeader>
