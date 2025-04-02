@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { Department, Process, ProcessHistory, ProcessType } from "@/types";
+import { Department, Process, ProcessType } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Eye, MoveLeft, MoveRight, PencilIcon, Save } from "lucide-react";
