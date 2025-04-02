@@ -8,6 +8,7 @@ interface ProcessDepartmentCellProps {
   isCurrentDepartment: boolean;
   hasPassedDepartment: boolean;
   entryDate: string | null;
+  showDate: boolean;
 }
 
 const ProcessDepartmentCell = ({
@@ -15,6 +16,7 @@ const ProcessDepartmentCell = ({
   isCurrentDepartment,
   hasPassedDepartment,
   entryDate,
+  showDate,
 }: ProcessDepartmentCellProps) => {
   return (
     <div 
@@ -24,7 +26,7 @@ const ProcessDepartmentCell = ({
         isCurrentDepartment ? "bg-blue-50 font-medium" : ""
       )}
     >
-      {hasPassedDepartment && entryDate && (
+      {showDate && entryDate && (
         <div className="text-xs text-gray-600">
           {format(new Date(entryDate), "dd/MM/yyyy", { locale: ptBR })}
         </div>

@@ -9,6 +9,7 @@ import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -36,6 +37,7 @@ const ProcessTableRow = ({
   const { user } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
 
   // Ordenar departamentos por ordem e filtrar o departamento "Concluído"
   const sortedDepartments = [...departments]
@@ -58,18 +60,37 @@ const ProcessTableRow = ({
     return process.currentDepartment === departmentId;
   };
 
+  // Determina se um departamento é anterior ao departamento atual
+  const isPreviousDepartment = (departmentId: string): boolean => {
+    const deptOrder = departments.find(d => d.id === departmentId)?.order || 0;
+    const currentDeptOrder = departments.find(d => d.id === process.currentDepartment)?.order || 0;
+    return deptOrder < currentDeptOrder;
+  };
+
   // Verifica se é o primeiro departamento
   const isFirstDepartment = process.currentDepartment === sortedDepartments[0]?.id;
   
   // Verifica se é o último departamento
   const isLastDepartment = process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id;
 
+  // Função para lidar com o clique na linha
+  const handleRowClick = (e: React.MouseEvent) => {
+    // Verifica se o clique não foi em um botão ou no seletor de tipo
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('select') || isEditing) {
+      return;
+    }
+    navigate(`/processes/${process.id}`);
+  };
+
   return (
     <TableRow
       key={process.id}
       className={cn(
-        process.status === "overdue" ? "bg-destructive/5" : ""
+        process.status === "overdue" ? "bg-destructive/5" : "",
+        !isEditing ? "cursor-pointer hover:bg-gray-100" : ""
       )}
+      onClick={handleRowClick}
     >
       <TableCell className="font-medium">
         {process.protocolNumber}
@@ -89,7 +110,7 @@ const ProcessTableRow = ({
       {/* Células para cada departamento */}
       {sortedDepartments.map((dept) => {
         const entryDate = getDepartmentEntryDate(dept.id);
-        const isPastDept = hasPassedDepartment(dept.id);
+        const isPastDept = hasPassedDepartment(dept.id) && isPreviousDepartment(dept.id);
         const isActive = isCurrentDepartment(dept.id);
         
         return (
@@ -99,6 +120,7 @@ const ProcessTableRow = ({
               isCurrentDepartment={isActive}
               hasPassedDepartment={isPastDept}
               entryDate={entryDate}
+              showDate={isActive || isPastDept}
             />
           </TableCell>
         );
