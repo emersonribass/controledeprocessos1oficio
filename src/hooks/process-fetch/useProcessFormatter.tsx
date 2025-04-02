@@ -4,14 +4,38 @@ import { Process } from "@/types";
 export const useProcessFormatter = () => {
   const formatProcesses = (processesData: any[]): Process[] => {
     return processesData ? processesData.map(process => {
-      // Verificar se está atrasado
+      // Verificar a data final esperada geral
       const expectedEndDate = new Date(process.data_fim_esperada);
       const now = new Date();
+      
+      // Verificar prazo do departamento atual
+      let isDepartmentOverdue = false;
+      const currentDeptHistory = process.processos_historico?.find(
+        (h: any) => h.setor_id === process.setor_atual && h.data_saida === null
+      );
+      
+      if (currentDeptHistory) {
+        const entryDate = new Date(currentDeptHistory.data_entrada);
+        const departmentTimeLimit = process.setor_info?.time_limit || 0;
+        
+        if (departmentTimeLimit > 0) {
+          // Calcular data limite para o departamento atual
+          const deptDeadline = new Date(entryDate);
+          deptDeadline.setDate(deptDeadline.getDate() + departmentTimeLimit);
+          
+          // Verificar se ultrapassou o prazo do departamento
+          if (now > deptDeadline) {
+            isDepartmentOverdue = true;
+          }
+        }
+      }
+      
+      // Determinar status com base em ambas verificações
       let status: 'pending' | 'completed' | 'overdue';
       
       if (process.status === 'Concluído') {
         status = 'completed';
-      } else if (now > expectedEndDate) {
+      } else if (isDepartmentOverdue || now > expectedEndDate) {
         status = 'overdue';
       } else {
         status = 'pending';

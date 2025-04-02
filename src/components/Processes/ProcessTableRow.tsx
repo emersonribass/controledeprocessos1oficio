@@ -67,6 +67,23 @@ const ProcessTableRow = ({
     return deptOrder < currentDeptOrder;
   };
 
+  // Verifica se o departamento está com prazo expirado
+  const isDepartmentOverdue = (departmentId: string): boolean => {
+    if (departmentId !== process.currentDepartment) return false;
+    
+    const dept = departments.find(d => d.id === departmentId);
+    if (!dept || dept.timeLimit <= 0) return false;
+    
+    const entryDate = getDepartmentEntryDate(departmentId);
+    if (!entryDate) return false;
+    
+    const entryDateTime = new Date(entryDate).getTime();
+    const deadlineTime = entryDateTime + (dept.timeLimit * 24 * 60 * 60 * 1000);
+    const currentTime = new Date().getTime();
+    
+    return currentTime > deadlineTime;
+  };
+
   // Verifica se é o primeiro departamento
   const isFirstDepartment = process.currentDepartment === sortedDepartments[0]?.id;
   
@@ -112,6 +129,7 @@ const ProcessTableRow = ({
         const entryDate = getDepartmentEntryDate(dept.id);
         const isPastDept = hasPassedDepartment(dept.id) && isPreviousDepartment(dept.id);
         const isActive = isCurrentDepartment(dept.id);
+        const isOverdue = isDepartmentOverdue(dept.id);
         
         return (
           <TableCell key={dept.id}>
@@ -121,6 +139,8 @@ const ProcessTableRow = ({
               hasPassedDepartment={isPastDept}
               entryDate={entryDate}
               showDate={isActive || isPastDept}
+              isDepartmentOverdue={isActive && isOverdue}
+              departmentTimeLimit={dept.timeLimit}
             />
           </TableCell>
         );
