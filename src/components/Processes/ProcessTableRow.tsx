@@ -1,6 +1,7 @@
+
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { Process, ProcessType } from "@/types";
+import { Department, Process, ProcessHistory, ProcessType } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Eye, MoveLeft, MoveRight, PencilIcon, Save } from "lucide-react";
@@ -14,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface ProcessTableRowProps {
   process: Process;
+  departments: Department[];
   getDepartmentName: (id: string) => string;
   getProcessTypeName: (id: string) => string;
   moveProcessToNextDepartment: (processId: string) => void;
@@ -25,6 +27,7 @@ interface ProcessTableRowProps {
 
 const ProcessTableRow = ({
   process,
+  departments,
   getDepartmentName,
   getProcessTypeName,
   moveProcessToNextDepartment,
@@ -38,6 +41,9 @@ const ProcessTableRow = ({
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedType, setSelectedType] = useState(process.processType);
+
+  // Ordenar departamentos por ordem
+  const sortedDepartments = [...departments].sort((a, b) => a.order - b.order);
 
   const handleSave = async () => {
     if (!user) {
@@ -64,6 +70,22 @@ const ProcessTableRow = ({
         variant: "destructive"
       });
     }
+  };
+
+  // Função para obter a data de entrada de um departamento do histórico
+  const getDepartmentEntryDate = (departmentId: string): string | null => {
+    const historyEntry = process.history.find(h => h.departmentId === departmentId);
+    return historyEntry ? historyEntry.entryDate : null;
+  };
+
+  // Verifica se o processo já passou pelo departamento
+  const hasPassedDepartment = (departmentId: string): boolean => {
+    return process.history.some(h => h.departmentId === departmentId);
+  };
+
+  // Verifica se o processo está atualmente no departamento
+  const isCurrentDepartment = (departmentId: string): boolean => {
+    return process.currentDepartment === departmentId;
   };
 
   return (
@@ -104,10 +126,36 @@ const ProcessTableRow = ({
           getProcessTypeName(process.processType)
         )}
       </TableCell>
-      <TableCell>{getDepartmentName(process.currentDepartment)}</TableCell>
-      <TableCell>
-        {format(new Date(process.startDate), "dd/MM/yyyy", { locale: ptBR })}
-      </TableCell>
+      
+      {/* Células para cada departamento */}
+      {sortedDepartments.map((dept) => {
+        const entryDate = getDepartmentEntryDate(dept.id);
+        const isPastDept = hasPassedDepartment(dept.id);
+        const isActive = isCurrentDepartment(dept.id);
+        
+        return (
+          <TableCell 
+            key={dept.id} 
+            className={cn(
+              "text-center",
+              isPastDept ? "bg-green-50" : "",
+              isActive ? "bg-blue-50 font-medium" : ""
+            )}
+          >
+            {isPastDept && entryDate && (
+              <div className="text-xs text-gray-600">
+                {format(new Date(entryDate), "dd/MM/yyyy", { locale: ptBR })}
+              </div>
+            )}
+            {isActive && (
+              <div className="text-xs font-medium text-blue-600">
+                Em andamento
+              </div>
+            )}
+          </TableCell>
+        );
+      })}
+      
       <TableCell><ProcessStatusBadge status={process.status} /></TableCell>
       <TableCell className="text-right">
         <div className="flex justify-end gap-2">
@@ -115,7 +163,7 @@ const ProcessTableRow = ({
             variant="ghost"
             size="icon"
             onClick={() => moveProcessToPreviousDepartment(process.id)}
-            disabled={process.currentDepartment === "1"}
+            disabled={process.currentDepartment === sortedDepartments[0]?.id}
           >
             <MoveLeft className="h-4 w-4" />
           </Button>
@@ -123,7 +171,7 @@ const ProcessTableRow = ({
             variant="ghost"
             size="icon"
             onClick={() => moveProcessToNextDepartment(process.id)}
-            disabled={process.currentDepartment === "10"}
+            disabled={process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id}
           >
             <MoveRight className="h-4 w-4" />
           </Button>

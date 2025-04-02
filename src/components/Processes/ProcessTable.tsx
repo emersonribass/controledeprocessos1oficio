@@ -5,7 +5,7 @@ import {
   TableCell,
   TableRow,
 } from "@/components/ui/table";
-import { Process, ProcessType } from "@/types";
+import { Department, Process, ProcessType } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
 import ProcessTableRow from "./ProcessTableRow";
 
@@ -21,6 +21,7 @@ interface ProcessTableProps {
   processTypes: ProcessType[];
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
+  departments: Department[];
 }
 
 const ProcessTable = ({
@@ -35,19 +36,21 @@ const ProcessTable = ({
   processTypes,
   updateProcessType,
   updateProcessStatus,
+  departments,
 }: ProcessTableProps) => {
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
       <Table>
         <ProcessTableHeader
           sortField={sortField}
           sortDirection={sortDirection}
           toggleSort={toggleSort}
+          departments={departments}
         />
         <TableBody>
           {processes.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
+              <TableCell colSpan={departments.length + 4} className="h-24 text-center">
                 Nenhum processo encontrado
               </TableCell>
             </TableRow>
@@ -56,6 +59,7 @@ const ProcessTable = ({
               <ProcessTableRow
                 key={process.id}
                 process={process}
+                departments={departments}
                 getDepartmentName={getDepartmentName}
                 getProcessTypeName={getProcessTypeName}
                 moveProcessToNextDepartment={moveProcessToNextDepartment}

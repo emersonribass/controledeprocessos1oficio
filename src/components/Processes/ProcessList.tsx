@@ -26,7 +26,8 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     processTypes,
     updateProcessType,
     updateProcessStatus,
-    processes
+    processes,
+    departments
   } = useProcesses();
 
   const [filters, setFilters] = useState<{
@@ -116,6 +117,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
           processTypes={processTypes}
           updateProcessType={updateProcessType}
           updateProcessStatus={updateProcessStatus}
+          departments={departments}
         />
       )}
     </div>

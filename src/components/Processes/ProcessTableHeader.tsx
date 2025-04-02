@@ -2,23 +2,29 @@
 import { ArrowUpDown } from "lucide-react";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Process } from "@/types";
+import { Department } from "@/types";
 
 interface ProcessTableHeaderProps {
   sortField: keyof Process;
   sortDirection: "asc" | "desc";
   toggleSort: (field: keyof Process) => void;
+  departments: Department[];
 }
 
 const ProcessTableHeader = ({ 
   sortField, 
   sortDirection, 
-  toggleSort 
+  toggleSort,
+  departments
 }: ProcessTableHeaderProps) => {
+  // Ordenar departamentos por ordem
+  const sortedDepartments = [...departments].sort((a, b) => a.order - b.order);
+
   return (
     <TableHeader>
       <TableRow>
         <TableHead
-          className="cursor-pointer"
+          className="cursor-pointer whitespace-nowrap"
           onClick={() => toggleSort("protocolNumber")}
         >
           <div className="flex items-center">
@@ -26,19 +32,17 @@ const ProcessTableHeader = ({
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </div>
         </TableHead>
-        <TableHead>Tipo</TableHead>
-        <TableHead>Setor</TableHead>
-        <TableHead
-          className="cursor-pointer"
-          onClick={() => toggleSort("startDate")}
-        >
-          <div className="flex items-center">
-            Data Início
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </div>
-        </TableHead>
-        <TableHead>Status</TableHead>
-        <TableHead className="text-right">Ações</TableHead>
+        <TableHead className="whitespace-nowrap">Tipo</TableHead>
+        
+        {/* Colunas dinâmicas para cada departamento */}
+        {sortedDepartments.map((dept) => (
+          <TableHead key={dept.id} className="text-center whitespace-nowrap">
+            {dept.name}
+          </TableHead>
+        ))}
+        
+        <TableHead className="whitespace-nowrap">Status</TableHead>
+        <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
       </TableRow>
     </TableHeader>
   );
