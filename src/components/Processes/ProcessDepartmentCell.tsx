@@ -1,0 +1,41 @@
+
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+interface ProcessDepartmentCellProps {
+  departmentId: string;
+  isCurrentDepartment: boolean;
+  hasPassedDepartment: boolean;
+  entryDate: string | null;
+}
+
+const ProcessDepartmentCell = ({
+  departmentId,
+  isCurrentDepartment,
+  hasPassedDepartment,
+  entryDate,
+}: ProcessDepartmentCellProps) => {
+  return (
+    <div 
+      className={cn(
+        "text-center",
+        hasPassedDepartment ? "bg-green-50" : "",
+        isCurrentDepartment ? "bg-blue-50 font-medium" : ""
+      )}
+    >
+      {hasPassedDepartment && entryDate && (
+        <div className="text-xs text-gray-600">
+          {format(new Date(entryDate), "dd/MM/yyyy", { locale: ptBR })}
+        </div>
+      )}
+      {isCurrentDepartment && (
+        <div className="text-xs font-medium text-blue-600">
+          Em andamento
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ProcessDepartmentCell;

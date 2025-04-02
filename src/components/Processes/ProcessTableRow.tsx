@@ -1,15 +1,12 @@
 
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Department, Process, ProcessType } from "@/types";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Eye, MoveLeft, MoveRight, PencilIcon, Save } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import ProcessStatusBadge from "./ProcessStatusBadge";
-import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ProcessTypePicker from "./ProcessTypePicker";
+import ProcessDepartmentCell from "./ProcessDepartmentCell";
+import ProcessActionButtons from "./ProcessActionButtons";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -36,41 +33,12 @@ const ProcessTableRow = ({
   updateProcessType,
   updateProcessStatus,
 }: ProcessTableRowProps) => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedType, setSelectedType] = useState(process.processType);
 
   // Ordenar departamentos por ordem
   const sortedDepartments = [...departments].sort((a, b) => a.order - b.order);
-
-  const handleSave = async () => {
-    if (!user) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar logado para realizar esta ação",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      await updateProcessType(process.id, selectedType);
-      setIsEditing(false);
-      toast({
-        title: "Sucesso",
-        description: "Tipo de processo atualizado com sucesso"
-      });
-    } catch (error) {
-      console.error("Erro ao atualizar tipo de processo:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o tipo de processo",
-        variant: "destructive"
-      });
-    }
-  };
 
   // Função para obter a data de entrada de um departamento do histórico
   const getDepartmentEntryDate = (departmentId: string): string | null => {
@@ -88,6 +56,12 @@ const ProcessTableRow = ({
     return process.currentDepartment === departmentId;
   };
 
+  // Verifica se é o primeiro departamento
+  const isFirstDepartment = process.currentDepartment === sortedDepartments[0]?.id;
+  
+  // Verifica se é o último departamento
+  const isLastDepartment = process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id;
+
   return (
     <TableRow
       key={process.id}
@@ -99,32 +73,15 @@ const ProcessTableRow = ({
         {process.protocolNumber}
       </TableCell>
       <TableCell>
-        {isEditing ? (
-          <div className="flex items-center gap-2">
-            <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Selecione o tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                {processTypes.map((type) => (
-                  <SelectItem key={type.id} value={type.id}>
-                    {type.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={handleSave}
-              title="Salvar"
-            >
-              <Save className="h-4 w-4" />
-            </Button>
-          </div>
-        ) : (
-          getProcessTypeName(process.processType)
-        )}
+        <ProcessTypePicker
+          processId={process.id}
+          currentTypeId={process.processType}
+          processTypes={processTypes}
+          getProcessTypeName={getProcessTypeName}
+          updateProcessType={updateProcessType}
+          isEditing={isEditing}
+          setIsEditing={setIsEditing}
+        />
       </TableCell>
       
       {/* Células para cada departamento */}
@@ -134,65 +91,28 @@ const ProcessTableRow = ({
         const isActive = isCurrentDepartment(dept.id);
         
         return (
-          <TableCell 
-            key={dept.id} 
-            className={cn(
-              "text-center",
-              isPastDept ? "bg-green-50" : "",
-              isActive ? "bg-blue-50 font-medium" : ""
-            )}
-          >
-            {isPastDept && entryDate && (
-              <div className="text-xs text-gray-600">
-                {format(new Date(entryDate), "dd/MM/yyyy", { locale: ptBR })}
-              </div>
-            )}
-            {isActive && (
-              <div className="text-xs font-medium text-blue-600">
-                Em andamento
-              </div>
-            )}
+          <TableCell key={dept.id}>
+            <ProcessDepartmentCell
+              departmentId={dept.id}
+              isCurrentDepartment={isActive}
+              hasPassedDepartment={isPastDept}
+              entryDate={entryDate}
+            />
           </TableCell>
         );
       })}
       
       <TableCell><ProcessStatusBadge status={process.status} /></TableCell>
       <TableCell className="text-right">
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => moveProcessToPreviousDepartment(process.id)}
-            disabled={process.currentDepartment === sortedDepartments[0]?.id}
-          >
-            <MoveLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => moveProcessToNextDepartment(process.id)}
-            disabled={process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id}
-          >
-            <MoveRight className="h-4 w-4" />
-          </Button>
-          {!isEditing && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsEditing(true)}
-              title="Editar tipo"
-            >
-              <PencilIcon className="h-4 w-4" />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(`/processes/${process.id}`)}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-        </div>
+        <ProcessActionButtons
+          processId={process.id}
+          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+          moveProcessToNextDepartment={moveProcessToNextDepartment}
+          isFirstDepartment={isFirstDepartment}
+          isLastDepartment={isLastDepartment}
+          setIsEditing={setIsEditing}
+          isEditing={isEditing}
+        />
       </TableCell>
     </TableRow>
   );
