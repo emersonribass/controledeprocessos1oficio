@@ -9,34 +9,42 @@ export const useProcessFetcher = () => {
     try {
       setIsLoading(true);
       
-      // Buscar processos com histórico
-      const { data: processesData, error } = await supabase
+      // Buscar processos
+      const { data: processesData, error: processesError } = await supabase
         .from('processos')
         .select(`
           *,
-          processos_historico(*),
-          setor_info:setores(id, name, time_limit)
+          processos_historico(*)
         `);
 
-      if (error) {
-        throw error;
+      if (processesError) {
+        throw processesError;
       }
 
-      // Filtrar para garantir que o setor_info corresponda ao setor_atual do processo
-      const processesWithCorrectDepartment = processesData.map(process => {
-        // Filtrar para obter apenas o setor que corresponde ao setor_atual
-        const matchingDept = process.setor_info.find(
+      // Buscar todos os setores separadamente
+      const { data: departmentsData, error: departmentsError } = await supabase
+        .from('setores')
+        .select('*');
+
+      if (departmentsError) {
+        throw departmentsError;
+      }
+
+      // Combinar os dados dos processos com os setores correspondentes
+      const processesWithDepartments = processesData.map(process => {
+        // Encontrar o setor que corresponde ao setor_atual do processo
+        const matchingDept = departmentsData.find(
           dept => dept.id.toString() === process.setor_atual
         );
         
-        // Retornar o processo com apenas o setor correspondente
+        // Retornar o processo com as informações do setor
         return {
           ...process,
           setor_info: matchingDept || null
         };
       });
 
-      return processesWithCorrectDepartment;
+      return processesWithDepartments;
     } catch (error) {
       console.error('Erro ao buscar processos:', error);
       return [];
