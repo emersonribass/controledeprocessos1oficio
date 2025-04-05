@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +22,7 @@ import NotFound from "./pages/NotFound";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminDepartmentsPage from "./pages/AdminDepartmentsPage";
 import AdminProcessSettingsPage from "./pages/AdminProcessSettingsPage";
+import AdminProcessTypesPage from "./pages/AdminProcessTypesPage";
 
 const queryClient = new QueryClient();
 
@@ -104,6 +106,12 @@ const AppRoutes = () => {
           <Route path="admin/process-settings" element={
             <ProtectedRoute adminOnly={true}>
               <AdminProcessSettingsPage />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="admin/process-types" element={
+            <ProtectedRoute adminOnly={true}>
+              <AdminProcessTypesPage />
             </ProtectedRoute>
           } />
           

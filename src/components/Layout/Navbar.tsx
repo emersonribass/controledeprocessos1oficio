@@ -105,6 +105,11 @@ const Navbar = () => {
                     </Link>
                   </MenubarItem>
                   <MenubarItem asChild>
+                    <Link to="/admin/process-types" className="w-full cursor-pointer">
+                      Tipos de Processo
+                    </Link>
+                  </MenubarItem>
+                  <MenubarItem asChild>
                     <Link to="/admin/users" className="w-full cursor-pointer">
                       Cadastro de Usuários
                     </Link>
