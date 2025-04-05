@@ -13,6 +13,8 @@ const ProcessStatusBadge = ({ status }: StatusProps) => {
       return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Atrasado</Badge>;
     case "pending":
       return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Em andamento</Badge>;
+    case "not_started":
+      return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Não iniciado</Badge>;
     default:
       return <Badge>Desconhecido</Badge>;
   }

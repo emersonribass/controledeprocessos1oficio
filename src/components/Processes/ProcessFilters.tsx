@@ -113,6 +113,7 @@ const ProcessFilters = ({ filters, setFilters }: ProcessFiltersProps) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todos_status">Todos</SelectItem>
+                    <SelectItem value="not_started">Não iniciado</SelectItem>
                     <SelectItem value="pending">Em andamento</SelectItem>
                     <SelectItem value="completed">Concluído</SelectItem>
                     <SelectItem value="overdue">Atrasado</SelectItem>

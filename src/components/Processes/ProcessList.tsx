@@ -47,9 +47,8 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     }
   }, [initialFilters]);
 
-  // Filtrar para exibir apenas processos que já foram iniciados
-  const startedProcesses = processes.filter(p => !p.protocolNumber.includes('Não iniciado'));
-  const filteredProcesses = filterProcesses(filters, startedProcesses);
+  // Filtrar processos de acordo com os status
+  const filteredProcesses = filterProcesses(filters, processes);
 
   // Sort processes with numeric sorting for protocolNumber
   const sortedProcesses = [...filteredProcesses].sort((a, b) => {
@@ -96,9 +95,9 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     <div>
       <ProcessFilters filters={filters} setFilters={setFilters} />
 
-      {startedProcesses.length === 0 ? (
+      {processes.length === 0 ? (
         <div className="flex justify-center items-center h-64 border rounded-md p-6 mt-4 bg-gray-50">
-          <p className="text-muted-foreground text-lg">Nenhum processo iniciado encontrado</p>
+          <p className="text-muted-foreground text-lg">Nenhum processo encontrado</p>
         </div>
       ) : filteredProcesses.length === 0 ? (
         <div className="flex justify-center items-center h-64 border rounded-md p-6 mt-4 bg-gray-50">

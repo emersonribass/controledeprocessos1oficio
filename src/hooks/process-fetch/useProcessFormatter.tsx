@@ -31,9 +31,12 @@ export const useProcessFormatter = () => {
       }
       
       // Determinar status com base em ambas verificações
-      let status: 'pending' | 'completed' | 'overdue';
+      let status: 'pending' | 'completed' | 'overdue' | 'not_started';
       
-      if (process.status === 'Concluído') {
+      // Primeiro verificar se é "Não iniciado"
+      if (process.status === 'Não iniciado') {
+        status = 'not_started';
+      } else if (process.status === 'Concluído') {
         status = 'completed';
       } else if (isDepartmentOverdue || now > expectedEndDate) {
         status = 'overdue';

@@ -26,7 +26,7 @@ export type Process = {
   currentDepartment: string;
   startDate: string;
   expectedEndDate: string;
-  status: 'pending' | 'completed' | 'overdue';
+  status: 'pending' | 'completed' | 'overdue' | 'not_started';
   history: ProcessHistory[];
 };
 
