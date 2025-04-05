@@ -42,6 +42,7 @@ const ProcessTableRow = ({
   const navigate = useNavigate();
 
   const isNotStarted = process.status === "not_started";
+  const isProcessStarted = !isNotStarted;
 
   // Ordenar departamentos por ordem e filtrar o departamento "Concluído"
   const sortedDepartments = [...departments]
@@ -73,7 +74,7 @@ const ProcessTableRow = ({
 
   // Verifica se o departamento está com prazo expirado
   const isDepartmentOverdue = (departmentId: string): boolean => {
-    if (departmentId !== process.currentDepartment) return false;
+    if (departmentId !== process.currentDepartment || !isProcessStarted) return false;
     
     const dept = departments.find(d => d.id === departmentId);
     if (!dept || dept.timeLimit <= 0) return false;
@@ -146,6 +147,7 @@ const ProcessTableRow = ({
               showDate={isActive || isPastDept}
               isDepartmentOverdue={isActive && isOverdue}
               departmentTimeLimit={dept.timeLimit}
+              isProcessStarted={isProcessStarted}
             />
           </TableCell>
         );
