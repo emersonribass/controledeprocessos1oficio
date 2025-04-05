@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Eye, MoveLeft, MoveRight, PencilIcon, Play } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { MoveLeft, MoveRight, Play } from "lucide-react";
 
 interface ProcessActionButtonsProps {
   processId: string;
@@ -26,8 +25,6 @@ const ProcessActionButtons = ({
   status,
   startProcess,
 }: ProcessActionButtonsProps) => {
-  const navigate = useNavigate();
-  
   const isNotStarted = status === "not_started";
 
   return (
@@ -48,6 +45,7 @@ const ProcessActionButtons = ({
             size="icon"
             onClick={() => moveProcessToPreviousDepartment(processId)}
             disabled={isFirstDepartment}
+            title="Mover para departamento anterior"
           >
             <MoveLeft className="h-4 w-4" />
           </Button>
@@ -56,28 +54,12 @@ const ProcessActionButtons = ({
             size="icon"
             onClick={() => moveProcessToNextDepartment(processId)}
             disabled={isLastDepartment}
+            title="Mover para próximo departamento"
           >
             <MoveRight className="h-4 w-4" />
           </Button>
-          {!isEditing && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsEditing(true)}
-              title="Editar tipo"
-            >
-              <PencilIcon className="h-4 w-4" />
-            </Button>
-          )}
         </>
       )}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => navigate(`/processes/${processId}`)}
-      >
-        <Eye className="h-4 w-4" />
-      </Button>
     </div>
   );
 };

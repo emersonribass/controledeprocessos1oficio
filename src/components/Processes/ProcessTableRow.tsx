@@ -9,7 +9,6 @@ import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -38,7 +37,6 @@ const ProcessTableRow = ({
 }: ProcessTableRowProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const isNotStarted = process.status === "not_started";
   const isProcessStarted = !isNotStarted;
@@ -94,25 +92,13 @@ const ProcessTableRow = ({
   // Verifica se é o último departamento
   const isLastDepartment = process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id;
 
-  // Função para lidar com o clique na linha
-  const handleRowClick = (e: React.MouseEvent) => {
-    // Verifica se o clique não foi em um botão ou no seletor de tipo
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('[role="combobox"]')) {
-      return;
-    }
-    navigate(`/processes/${process.id}`);
-  };
-
   return (
     <TableRow
       key={process.id}
       className={cn(
         process.status === "overdue" ? "bg-destructive/5" : "",
         isNotStarted ? "bg-blue-50" : "",
-        "cursor-pointer hover:bg-gray-100"
       )}
-      onClick={handleRowClick}
     >
       <TableCell className="font-medium">
         {process.protocolNumber}
