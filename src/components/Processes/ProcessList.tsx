@@ -50,8 +50,17 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   // Filtrar processos de acordo com os status
   const filteredProcesses = filterProcesses(filters, processes);
 
-  // Sort processes with numeric sorting for protocolNumber
+  // Sort processes with priority for started processes and then by protocol number
   const sortedProcesses = [...filteredProcesses].sort((a, b) => {
+    // Primeiro ordenar por status (processos não iniciados ficam por último)
+    if (a.status === 'not_started' && b.status !== 'not_started') {
+      return 1; // a vai para o final
+    }
+    if (a.status !== 'not_started' && b.status === 'not_started') {
+      return -1; // b vai para o final
+    }
+    
+    // Depois aplicar ordenação normal
     if (sortField === "startDate" || sortField === "expectedEndDate") {
       const dateA = new Date(a[sortField]).getTime();
       const dateB = new Date(b[sortField]).getTime();
