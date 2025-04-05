@@ -16,7 +16,7 @@ export type Database = {
           data_inicio: string | null
           id: string
           numero_protocolo: string
-          setor_atual: string
+          setor_atual: string | null
           status: string
           tipo_processo: string
           updated_at: string | null
@@ -27,7 +27,7 @@ export type Database = {
           data_inicio?: string | null
           id?: string
           numero_protocolo: string
-          setor_atual: string
+          setor_atual?: string | null
           status?: string
           tipo_processo: string
           updated_at?: string | null
@@ -38,7 +38,7 @@ export type Database = {
           data_inicio?: string | null
           id?: string
           numero_protocolo?: string
-          setor_atual?: string
+          setor_atual?: string | null
           status?: string
           tipo_processo?: string
           updated_at?: string | null
