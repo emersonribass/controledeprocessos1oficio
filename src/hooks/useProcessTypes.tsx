@@ -17,7 +17,9 @@ export const useProcessTypes = () => {
     try {
       setIsLoading(true);
       
-      const { data, error } = await supabase
+      // Usando 'as any' para contornar as restrições de tipo temporariamente
+      // Isso é necessário porque o tipo Types do Supabase não foi atualizado para incluir 'tipos_processo'
+      const { data, error } = await (supabase as any)
         .from('tipos_processo')
         .select('*')
         .order('name');
@@ -27,9 +29,11 @@ export const useProcessTypes = () => {
       }
       
       // Mapear para o formato do tipo ProcessType
-      const formattedTypes: ProcessType[] = data.map(item => ({
+      const formattedTypes: ProcessType[] = data.map((item: any) => ({
         id: item.id,
-        name: item.name
+        name: item.name,
+        active: item.active,
+        description: item.description
       }));
       
       setProcessTypes(formattedTypes);
@@ -53,7 +57,8 @@ export const useProcessTypes = () => {
   // Adicionar função para criar novo tipo de processo
   const createProcessType = async (name: string) => {
     try {
-      const { data, error } = await supabase
+      // Usando 'as any' para contornar as restrições de tipo
+      const { data, error } = await (supabase as any)
         .from('tipos_processo')
         .insert([{ name }])
         .select();
@@ -85,7 +90,8 @@ export const useProcessTypes = () => {
   // Adicionar função para atualizar tipo de processo
   const updateProcessType = async (id: string, name: string) => {
     try {
-      const { error } = await supabase
+      // Usando 'as any' para contornar as restrições de tipo
+      const { error } = await (supabase as any)
         .from('tipos_processo')
         .update({ name })
         .eq('id', id);
@@ -117,7 +123,8 @@ export const useProcessTypes = () => {
   // Adicionar função para desativar/ativar tipo de processo
   const toggleProcessTypeActive = async (id: string, active: boolean) => {
     try {
-      const { error } = await supabase
+      // Usando 'as any' para contornar as restrições de tipo
+      const { error } = await (supabase as any)
         .from('tipos_processo')
         .update({ active })
         .eq('id', id);

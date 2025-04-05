@@ -48,6 +48,9 @@ const ProcessTypePicker = ({
     }
   };
 
+  // Filtrar apenas tipos de processo ativos
+  const activeProcessTypes = processTypes.filter(type => type.active !== false);
+
   return (
     <div className="w-[120px]">
       <Select value={selectedType} onValueChange={handleChange}>
@@ -55,7 +58,7 @@ const ProcessTypePicker = ({
           <SelectValue placeholder="Selecione o tipo" className="truncate" />
         </SelectTrigger>
         <SelectContent>
-          {processTypes.map((type) => (
+          {activeProcessTypes.map((type) => (
             <SelectItem key={type.id} value={type.id}>
               {type.name}
             </SelectItem>

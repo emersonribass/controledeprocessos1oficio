@@ -17,6 +17,8 @@ export type Department = {
 export type ProcessType = {
   id: string;
   name: string;
+  active?: boolean; // Adicionando propriedade 'active'
+  description?: string; // Adicionando propriedade opcional 'description'
 };
 
 export type Process = {
