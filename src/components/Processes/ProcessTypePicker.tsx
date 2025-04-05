@@ -49,10 +49,10 @@ const ProcessTypePicker = ({
   };
 
   return (
-    <div className="w-[180px]">
+    <div className="w-[120px]">
       <Select value={selectedType} onValueChange={handleChange}>
-        <SelectTrigger>
-          <SelectValue placeholder="Selecione o tipo" />
+        <SelectTrigger className="h-8 px-2 py-1">
+          <SelectValue placeholder="Selecione o tipo" className="truncate" />
         </SelectTrigger>
         <SelectContent>
           {processTypes.map((type) => (
