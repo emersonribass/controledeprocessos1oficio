@@ -7,11 +7,10 @@ import {
 } from "@/components/ui/table";
 import { Department, Process, ProcessType } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
-import ProcessTableRow from "./ProcessTableRow";
 import ProcessTypePicker from "./ProcessTypePicker";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
-import ProcessStatusBadge from "./ProcessStatusBadge";
 import ProcessActionButtons from "./ProcessActionButtons";
+import ProcessStatusBadge from "./ProcessStatusBadge";
 import { useNavigate } from "react-router-dom";
 
 interface ProcessTableProps {
@@ -68,7 +67,7 @@ const ProcessTable = ({
         <TableBody>
           {processes.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={departments.length + 4} className="h-24 text-center">
+              <TableCell colSpan={departments.length + 3} className="h-24 text-center">
                 Nenhum processo encontrado
               </TableCell>
             </TableRow>
@@ -129,7 +128,6 @@ const ProcessTable = ({
                   );
                 })}
                 
-                <TableCell><ProcessStatusBadge status={process.status} /></TableCell>
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                   <ProcessActionButtons
                     processId={process.id}
