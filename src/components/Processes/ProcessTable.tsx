@@ -22,6 +22,7 @@ interface ProcessTableProps {
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
   departments: Department[];
+  startProcess?: (processId: string) => Promise<void>;
 }
 
 const ProcessTable = ({
@@ -37,6 +38,7 @@ const ProcessTable = ({
   updateProcessType,
   updateProcessStatus,
   departments,
+  startProcess,
 }: ProcessTableProps) => {
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -67,6 +69,7 @@ const ProcessTable = ({
                 processTypes={processTypes}
                 updateProcessType={updateProcessType}
                 updateProcessStatus={updateProcessStatus}
+                startProcess={startProcess}
               />
             ))
           )}

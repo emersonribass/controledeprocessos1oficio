@@ -21,6 +21,7 @@ interface ProcessTableRowProps {
   processTypes: ProcessType[];
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
+  startProcess?: (processId: string) => Promise<void>;
 }
 
 const ProcessTableRow = ({
@@ -33,11 +34,14 @@ const ProcessTableRow = ({
   processTypes,
   updateProcessType,
   updateProcessStatus,
+  startProcess,
 }: ProcessTableRowProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
+
+  const isNotStarted = process.status === "not_started";
 
   // Ordenar departamentos por ordem e filtrar o departamento "Concluído"
   const sortedDepartments = [...departments]
@@ -105,6 +109,7 @@ const ProcessTableRow = ({
       key={process.id}
       className={cn(
         process.status === "overdue" ? "bg-destructive/5" : "",
+        isNotStarted ? "bg-blue-50" : "",
         !isEditing ? "cursor-pointer hover:bg-gray-100" : ""
       )}
       onClick={handleRowClick}
@@ -119,7 +124,7 @@ const ProcessTableRow = ({
           processTypes={processTypes}
           getProcessTypeName={getProcessTypeName}
           updateProcessType={updateProcessType}
-          isEditing={isEditing}
+          isEditing={isEditing && !isNotStarted}
           setIsEditing={setIsEditing}
         />
       </TableCell>
@@ -156,6 +161,8 @@ const ProcessTableRow = ({
           isLastDepartment={isLastDepartment}
           setIsEditing={setIsEditing}
           isEditing={isEditing}
+          status={process.status}
+          startProcess={startProcess}
         />
       </TableCell>
     </TableRow>
