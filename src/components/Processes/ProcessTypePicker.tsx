@@ -1,8 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Save } from "lucide-react";
 import { ProcessType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,8 +10,6 @@ interface ProcessTypePickerProps {
   processTypes: ProcessType[];
   getProcessTypeName: (id: string) => string;
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
-  isEditing: boolean;
-  setIsEditing: (value: boolean) => void;
 }
 
 const ProcessTypePicker = ({
@@ -22,22 +18,28 @@ const ProcessTypePicker = ({
   processTypes,
   getProcessTypeName,
   updateProcessType,
-  isEditing,
-  setIsEditing,
 }: ProcessTypePickerProps) => {
   const [selectedType, setSelectedType] = useState(currentTypeId);
   const { toast } = useToast();
+  
+  // Atualizar selectedType quando currentTypeId mudar
+  useEffect(() => {
+    setSelectedType(currentTypeId);
+  }, [currentTypeId]);
 
-  const handleSave = async () => {
+  const handleChange = async (value: string) => {
+    if (value === currentTypeId) return;
+    
+    setSelectedType(value);
     try {
-      await updateProcessType(processId, selectedType);
-      setIsEditing(false);
+      await updateProcessType(processId, value);
       toast({
         title: "Sucesso",
         description: "Tipo de processo atualizado com sucesso"
       });
     } catch (error) {
       console.error("Erro ao atualizar tipo de processo:", error);
+      setSelectedType(currentTypeId); // Reverter para o valor original em caso de erro
       toast({
         title: "Erro",
         description: "Não foi possível atualizar o tipo de processo",
@@ -46,34 +48,22 @@ const ProcessTypePicker = ({
     }
   };
 
-  if (isEditing) {
-    return (
-      <div className="flex items-center gap-2">
-        <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Selecione o tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            {processTypes.map((type) => (
-              <SelectItem key={type.id} value={type.id}>
-                {type.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={handleSave}
-          title="Salvar"
-        >
-          <Save className="h-4 w-4" />
-        </Button>
-      </div>
-    );
-  }
-
-  return <>{getProcessTypeName(currentTypeId)}</>;
+  return (
+    <div className="w-[180px]">
+      <Select value={selectedType} onValueChange={handleChange}>
+        <SelectTrigger>
+          <SelectValue placeholder="Selecione o tipo" />
+        </SelectTrigger>
+        <SelectContent>
+          {processTypes.map((type) => (
+            <SelectItem key={type.id} value={type.id}>
+              {type.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 };
 
 export default ProcessTypePicker;

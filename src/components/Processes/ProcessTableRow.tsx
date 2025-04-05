@@ -38,7 +38,6 @@ const ProcessTableRow = ({
 }: ProcessTableRowProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
 
   const isNotStarted = process.status === "not_started";
@@ -99,7 +98,7 @@ const ProcessTableRow = ({
   const handleRowClick = (e: React.MouseEvent) => {
     // Verifica se o clique não foi em um botão ou no seletor de tipo
     const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('select') || isEditing) {
+    if (target.closest('button') || target.closest('[role="combobox"]')) {
       return;
     }
     navigate(`/processes/${process.id}`);
@@ -111,7 +110,7 @@ const ProcessTableRow = ({
       className={cn(
         process.status === "overdue" ? "bg-destructive/5" : "",
         isNotStarted ? "bg-blue-50" : "",
-        !isEditing ? "cursor-pointer hover:bg-gray-100" : ""
+        "cursor-pointer hover:bg-gray-100"
       )}
       onClick={handleRowClick}
     >
@@ -125,8 +124,6 @@ const ProcessTableRow = ({
           processTypes={processTypes}
           getProcessTypeName={getProcessTypeName}
           updateProcessType={updateProcessType}
-          isEditing={isEditing && !isNotStarted}
-          setIsEditing={setIsEditing}
         />
       </TableCell>
       
@@ -161,8 +158,8 @@ const ProcessTableRow = ({
           moveProcessToNextDepartment={moveProcessToNextDepartment}
           isFirstDepartment={isFirstDepartment}
           isLastDepartment={isLastDepartment}
-          setIsEditing={setIsEditing}
-          isEditing={isEditing}
+          setIsEditing={() => {}}
+          isEditing={false}
           status={process.status}
           startProcess={startProcess}
         />
