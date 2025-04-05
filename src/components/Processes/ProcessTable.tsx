@@ -8,6 +8,10 @@ import {
 import { Department, Process, ProcessType } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
 import ProcessTableRow from "./ProcessTableRow";
+import ProcessTypePicker from "./ProcessTypePicker";
+import ProcessDepartmentCell from "./ProcessDepartmentCell";
+import ProcessStatusBadge from "./ProcessStatusBadge";
+import ProcessActionButtons from "./ProcessActionButtons";
 import { useNavigate } from "react-router-dom";
 
 interface ProcessTableProps {
@@ -47,6 +51,11 @@ const ProcessTable = ({
     navigate(`/processes/${processId}`);
   };
 
+  // Ordenar departamentos por ordem e filtrar o departamento "Concluído(a)"
+  const sortedDepartments = [...departments]
+    .filter(dept => dept.name !== "Concluído(a)")
+    .sort((a, b) => a.order - b.order);
+
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
@@ -84,45 +93,41 @@ const ProcessTable = ({
                 </TableCell>
                 
                 {/* Células para cada departamento */}
-                {departments
-                  .filter(dept => dept.name !== "Concluído(a)")
-                  .sort((a, b) => a.order - b.order)
-                  .map((dept) => {
-                    const historyEntry = process.history.find(h => h.departmentId === dept.id);
-                    const entryDate = historyEntry ? historyEntry.entryDate : null;
-                    const isPastDept = process.history.some(h => h.departmentId === dept.id) && 
-                      ((departments.find(d => d.id === dept.id)?.order || 0) < 
-                      (departments.find(d => d.id === process.currentDepartment)?.order || 0));
-                    const isActive = process.currentDepartment === dept.id;
-                    
-                    // Verifica se o departamento está com prazo expirado
-                    let isOverdue = false;
-                    if (isActive && process.status !== "not_started") {
-                      const department = departments.find(d => d.id === dept.id);
-                      if (department && department.timeLimit > 0 && entryDate) {
-                        const entryDateTime = new Date(entryDate).getTime();
-                        const deadlineTime = entryDateTime + (department.timeLimit * 24 * 60 * 60 * 1000);
-                        const currentTime = new Date().getTime();
-                        isOverdue = currentTime > deadlineTime;
-                      }
+                {sortedDepartments.map((dept) => {
+                  const historyEntry = process.history.find(h => h.departmentId === dept.id);
+                  const entryDate = historyEntry ? historyEntry.entryDate : null;
+                  const isPastDept = process.history.some(h => h.departmentId === dept.id) && 
+                    ((departments.find(d => d.id === dept.id)?.order || 0) < 
+                    (departments.find(d => d.id === process.currentDepartment)?.order || 0));
+                  const isActive = process.currentDepartment === dept.id;
+                  
+                  // Verifica se o departamento está com prazo expirado
+                  let isOverdue = false;
+                  if (isActive && process.status !== "not_started") {
+                    const department = departments.find(d => d.id === dept.id);
+                    if (department && department.timeLimit > 0 && entryDate) {
+                      const entryDateTime = new Date(entryDate).getTime();
+                      const deadlineTime = entryDateTime + (department.timeLimit * 24 * 60 * 60 * 1000);
+                      const currentTime = new Date().getTime();
+                      isOverdue = currentTime > deadlineTime;
                     }
-                    
-                    return (
-                      <TableCell key={dept.id}>
-                        <ProcessDepartmentCell
-                          departmentId={dept.id}
-                          isCurrentDepartment={isActive}
-                          hasPassedDepartment={isPastDept}
-                          entryDate={entryDate}
-                          showDate={isActive || isPastDept}
-                          isDepartmentOverdue={isActive && isOverdue}
-                          departmentTimeLimit={dept.timeLimit}
-                          isProcessStarted={process.status !== "not_started"}
-                        />
-                      </TableCell>
-                    );
-                  })
-                }
+                  }
+                  
+                  return (
+                    <TableCell key={dept.id}>
+                      <ProcessDepartmentCell
+                        departmentId={dept.id}
+                        isCurrentDepartment={isActive}
+                        hasPassedDepartment={isPastDept}
+                        entryDate={entryDate}
+                        showDate={isActive || isPastDept}
+                        isDepartmentOverdue={isActive && isOverdue}
+                        departmentTimeLimit={dept.timeLimit}
+                        isProcessStarted={process.status !== "not_started"}
+                      />
+                    </TableCell>
+                  );
+                })}
                 
                 <TableCell><ProcessStatusBadge status={process.status} /></TableCell>
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
