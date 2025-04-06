@@ -26,7 +26,7 @@ import AdminProcessTypesPage from "./pages/AdminProcessTypesPage";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) => {
+const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: { children: React.ReactNode, adminOnly?: boolean, needsProcesses?: boolean }) => {
   const { user, isLoading, isAdmin } = useAuth();
   
   if (isLoading) {
@@ -45,11 +45,16 @@ const ProtectedRoute = ({ children, adminOnly = false }: { children: React.React
     return <Navigate to="/dashboard" replace />;
   }
   
-  return (
-    <ProcessesProvider>
-      {children}
-    </ProcessesProvider>
-  );
+  // Apenas envolve com ProcessesProvider se necessário
+  if (needsProcesses) {
+    return (
+      <ProcessesProvider>
+        {children}
+      </ProcessesProvider>
+    );
+  }
+  
+  return children;
 };
 
 const AppRoutes = () => {
@@ -62,7 +67,7 @@ const AppRoutes = () => {
           <Route path="login" element={<LoginPage />} />
           
           <Route path="dashboard" element={
-            <ProtectedRoute>
+            <ProtectedRoute needsProcesses={false}>
               <Dashboard />
             </ProtectedRoute>
           } />
