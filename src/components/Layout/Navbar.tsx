@@ -56,10 +56,14 @@ const Navbar = () => {
     <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
       <div className="flex items-center">
         <Link to="/" className="flex items-center mr-6">
-          <h1 className="text-xl font-bold text-primary">
-            Nottar
-            <span className="text-muted-foreground text-sm ml-2">Controle de Processos</span>
-          </h1>
+          <div className="flex items-center">
+            <img 
+              src="/Logo Nottar.svg" 
+              alt="Logo Nottar" 
+              className="h-8 mr-2"
+            />
+            <span className="text-muted-foreground text-sm">Controle de Processos</span>
+          </div>
         </Link>
 
         {/* Navigation Links */}
