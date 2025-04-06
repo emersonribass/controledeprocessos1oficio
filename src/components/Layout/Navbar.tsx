@@ -1,99 +1,64 @@
-
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { UserCircle, BellIcon, LogOut, Home, ClipboardList, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Menubar,
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarTrigger,
-} from "@/components/ui/menubar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationsPopover from "../Notifications/NotificationsPopover";
 import { cn } from "@/lib/utils";
-
 const Navbar = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const {
+    user,
+    logout,
+    isAdmin
+  } = useAuth();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const { unreadCount } = useNotifications();
+  const {
+    pathname
+  } = useLocation();
+  const {
+    unreadCount
+  } = useNotifications();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
-
-  const navLinks = [
-    {
-      title: "Dashboard",
-      href: "/dashboard",
-      icon: <Home className="h-4 w-4 mr-1" />,
-    },
-    {
-      title: "Processos",
-      href: "/processes",
-      icon: <ClipboardList className="h-4 w-4 mr-1" />,
-    },
-  ];
+  const navLinks = [{
+    title: "Dashboard",
+    href: "/dashboard",
+    icon: <Home className="h-4 w-4 mr-1" />
+  }, {
+    title: "Processos",
+    href: "/processes",
+    icon: <ClipboardList className="h-4 w-4 mr-1" />
+  }];
 
   // Verificação se o usuário tem acesso de administrador usando a função isAdmin
   const userIsAdmin = user && isAdmin(user.email);
-
-  return (
-    <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
+  return <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
       <div className="flex items-center">
         <Link to="/" className="flex items-center mr-6">
           <div className="flex items-center">
-            <img 
-              src="/Logo Nottar.svg" 
-              alt="Logo Nottar" 
-              className="h-8 mr-2"
-            />
+            <img src="/Logo Nottar.svg" alt="Logo Nottar" className="h-12 mr-3 object-scale-down" />
             <span className="text-muted-foreground text-sm">Controle de Processos</span>
           </div>
         </Link>
 
         {/* Navigation Links */}
         <div className="hidden md:flex items-center space-x-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              to={link.href}
-              className={cn(
-                "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                pathname === link.href
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-secondary"
-              )}
-            >
+          {navLinks.map(link => <Link key={link.href} to={link.href} className={cn("flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors", pathname === link.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary")}>
               {link.icon}
               <span>{link.title}</span>
-            </Link>
-          ))}
+            </Link>)}
           
           {/* Menu Administração - Apenas visível para administradores */}
-          {userIsAdmin && (
-            <Menubar className="border-none bg-transparent p-0">
+          {userIsAdmin && <Menubar className="border-none bg-transparent p-0">
               <MenubarMenu>
-                <MenubarTrigger className={cn(
-                  "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                  pathname.startsWith("/admin")
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-secondary"
-                )}>
+                <MenubarTrigger className={cn("flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors", pathname.startsWith("/admin") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary")}>
                   <Settings className="h-4 w-4 mr-1" />
                   <span>Administração</span>
                 </MenubarTrigger>
@@ -120,29 +85,18 @@ const Navbar = () => {
                   </MenubarItem>
                 </MenubarContent>
               </MenubarMenu>
-            </Menubar>
-          )}
+            </Menubar>}
         </div>
       </div>
 
       <div className="flex items-center space-x-4">
         {/* Notifications */}
-        <NotificationsPopover
-          open={notificationsOpen}
-          onOpenChange={setNotificationsOpen}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-            onClick={() => setNotificationsOpen(true)}
-          >
+        <NotificationsPopover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+          <Button variant="ghost" size="icon" className="relative" onClick={() => setNotificationsOpen(true)}>
             <BellIcon className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-destructive text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {unreadCount > 0 && <span className="absolute -top-1 -right-1 bg-destructive text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {unreadCount}
-              </span>
-            )}
+              </span>}
           </Button>
         </NotificationsPopover>
 
@@ -182,8 +136,6 @@ const Navbar = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navbar;
