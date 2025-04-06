@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { UserCircle, BellIcon, LogOut, Home, ClipboardList, Settings } from "lucide-react";
@@ -11,7 +10,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationsPopover from "../Notifications/NotificationsPopover";
 import { cn } from "@/lib/utils";
-
 const Navbar = () => {
   const {
     user,
@@ -46,7 +44,7 @@ const Navbar = () => {
       <div className="flex items-center">
         <Link to="/" className="flex items-center mr-6">
           <div className="flex items-center">
-            <img src="/Logo Nottar.svg" alt="Logo Nottar" className="h-12 mr-3 object-scale-down" />
+            <img src="/Logo Nottar.svg" alt="Logo Nottar" className="h-12 mr-0 object-scale-down" />
             <Separator orientation="vertical" className="h-8 mx-2" />
             <span className="text-muted-foreground text-sm">Controle de Processos</span>
           </div>
