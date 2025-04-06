@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { UserCircle, BellIcon, LogOut, Home, ClipboardList, Settings } from "lucide-react";
@@ -5,10 +6,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarTrigger } from "@/components/ui/menubar";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationsPopover from "../Notifications/NotificationsPopover";
 import { cn } from "@/lib/utils";
+
 const Navbar = () => {
   const {
     user,
@@ -44,6 +47,7 @@ const Navbar = () => {
         <Link to="/" className="flex items-center mr-6">
           <div className="flex items-center">
             <img src="/Logo Nottar.svg" alt="Logo Nottar" className="h-12 mr-3 object-scale-down" />
+            <Separator orientation="vertical" className="h-8 mx-2" />
             <span className="text-muted-foreground text-sm">Controle de Processos</span>
           </div>
         </Link>
