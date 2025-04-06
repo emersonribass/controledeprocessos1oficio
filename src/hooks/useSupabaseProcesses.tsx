@@ -72,12 +72,13 @@ export const useSupabaseProcesses = () => {
       
       const now = new Date().toISOString();
       
-      // 1. Atualizar o processo para setor de atendimento e status "Em andamento"
+      // 1. Atualizar o processo para setor de atendimento, status "Em andamento" e definir a data de início
       const { error: updateError } = await supabase
         .from('processos')
         .update({ 
           setor_atual: firstDept.id,
           status: "Em andamento",
+          data_inicio: now,  // Definir a data de início apenas quando o processo é iniciado
           updated_at: now
         })
         .eq('id', processId);

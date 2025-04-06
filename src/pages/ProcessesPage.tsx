@@ -16,6 +16,9 @@ const ProcessesPage = () => {
     
     if (statusParam) {
       setInitialFilters({ status: statusParam });
+    } else {
+      // Quando não há status na URL, resetamos os filtros
+      setInitialFilters({});
     }
   }, [location.search]);
   

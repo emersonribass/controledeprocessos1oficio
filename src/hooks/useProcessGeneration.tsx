@@ -38,7 +38,7 @@ export const useProcessGeneration = () => {
           tipo_processo: "pendente", // Valor padrão para ser atualizado posteriormente
           setor_atual: null, // Sem setor atribuído inicialmente
           status: "Não iniciado",
-          data_inicio: new Date().toISOString(),
+          data_inicio: null, // Definimos como null e será atribuído apenas quando iniciar o processo
           data_fim_esperada: endDate.toISOString()
         });
       }

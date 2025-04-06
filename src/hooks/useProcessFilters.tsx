@@ -22,8 +22,22 @@ export const useProcessFilters = (processes: Process[]) => {
 
       // Verificar filtro de status
       if (filters.status) {
+        // Converter os valores da UI para o formato usado no tipo Process
+        let statusToMatch = filters.status;
+        
+        // Mapear os valores da UI para os valores internos do tipo Process
+        if (filters.status === "pending") {
+          statusToMatch = "pending";
+        } else if (filters.status === "completed") {
+          statusToMatch = "completed";
+        } else if (filters.status === "overdue") {
+          statusToMatch = "overdue";
+        } else if (filters.status === "not_started") {
+          statusToMatch = "not_started";
+        }
+        
         // Garantir que o status corresponda exatamente ao solicitado
-        if (process.status !== filters.status) {
+        if (process.status !== statusToMatch) {
           return false;
         }
       }
