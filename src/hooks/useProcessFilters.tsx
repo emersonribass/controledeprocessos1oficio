@@ -15,18 +15,25 @@ export const useProcessFilters = (processes: Process[]) => {
     const listToFilter = processesToFilter || processes;
     
     return listToFilter.filter((process) => {
+      // Verificar filtro de departamento
       if (filters.department && process.currentDepartment !== filters.department) {
         return false;
       }
 
-      if (filters.status && process.status !== filters.status) {
-        return false;
+      // Verificar filtro de status
+      if (filters.status) {
+        // Garantir que o status corresponda exatamente ao solicitado
+        if (process.status !== filters.status) {
+          return false;
+        }
       }
 
+      // Verificar filtro de tipo de processo
       if (filters.processType && process.processType !== filters.processType) {
         return false;
       }
 
+      // Verificar filtro de busca
       if (
         filters.search &&
         !process.protocolNumber.toLowerCase().includes(filters.search.toLowerCase())

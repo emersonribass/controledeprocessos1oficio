@@ -53,18 +53,35 @@ const ProcessFilters = ({ filters, setFilters }: ProcessFiltersProps) => {
     setSearch(e.target.value);
   };
 
-  // Removido o handleSearchSubmit pois não precisamos mais dele
-
   const handleStatusChange = (status: string) => {
-    setFilters({ ...filters, status: status || undefined });
+    // Se o valor selecionado for "todos_status", remover o filtro de status
+    if (status === "todos_status") {
+      const newFilters = { ...filters };
+      delete newFilters.status;
+      setFilters(newFilters);
+    } else {
+      setFilters({ ...filters, status });
+    }
   };
 
   const handleDepartmentChange = (departmentId: string) => {
-    setFilters({ ...filters, department: departmentId || undefined });
+    if (departmentId === "todos_departamentos") {
+      const newFilters = { ...filters };
+      delete newFilters.department;
+      setFilters(newFilters);
+    } else {
+      setFilters({ ...filters, department: departmentId });
+    }
   };
 
   const handleProcessTypeChange = (typeId: string) => {
-    setFilters({ ...filters, processType: typeId || undefined });
+    if (typeId === "todos_tipos") {
+      const newFilters = { ...filters };
+      delete newFilters.processType;
+      setFilters(newFilters);
+    } else {
+      setFilters({ ...filters, processType: typeId });
+    }
   };
 
   const handleClearFilters = () => {
@@ -83,7 +100,6 @@ const ProcessFilters = ({ filters, setFilters }: ProcessFiltersProps) => {
           className="pl-8"
           value={search}
           onChange={handleSearchChange}
-          // Removido o onKeyDown que poderia estar aqui
         />
       </div>
 
