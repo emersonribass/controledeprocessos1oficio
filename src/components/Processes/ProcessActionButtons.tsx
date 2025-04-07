@@ -1,8 +1,7 @@
 
-import { ChevronLeft, ChevronRight, Play, FileText } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Process } from "@/types";
-import { useNavigate } from "react-router-dom";
 
 interface ProcessActionButtonsProps {
   processId: string;
@@ -27,13 +26,7 @@ const ProcessActionButtons = ({
   status,
   startProcess,
 }: ProcessActionButtonsProps) => {
-  const navigate = useNavigate();
-  
   const isNotStarted = status === "not_started";
-
-  const handleShowPlan = () => {
-    navigate(`/processes/${processId}/plan`);
-  };
   
   return (
     <div className="flex items-center justify-end space-x-1">
@@ -56,16 +49,6 @@ const ProcessActionButtons = ({
           <span className="sr-only md:not-sr-only md:ml-2">Iniciar</span>
         </Button>
       )}
-      
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleShowPlan}
-        title="Ver plano do processo"
-      >
-        <FileText className="h-4 w-4" />
-        <span className="sr-only md:not-sr-only md:ml-2">Plano</span>
-      </Button>
       
       <Button
         variant="outline"
