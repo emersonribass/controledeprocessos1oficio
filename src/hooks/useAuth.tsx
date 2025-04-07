@@ -38,13 +38,26 @@ const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boole
     console.log("Tentando sincronizar usuário:", email);
     
     // Primeiro tentar sincronizar apenas os IDs
-    const { data: syncData, error: syncError } = await supabase.rpc('sync_user_ids', { 
-      usuario_email: email
-    });
+    // Usando query direta ao invés de rpc para evitar erro de tipos
+    const { data: syncData, error: syncError } = await supabase
+      .from('usuarios')
+      .select('*')
+      .filter('email', 'eq', email)
+      .limit(1)
+      .maybeSingle();
     
-    if (!syncError && syncData === true) {
-      console.log("IDs sincronizados com sucesso sem recriar o usuário");
-      return true;
+    if (syncData && !syncError) {
+      // Chamar a função sync_user_ids usando funções SQL genéricas
+      // Isto contorna a limitação dos tipos
+      const { data, error } = await supabase.rpc(
+        'sync_user_ids' as any, 
+        { usuario_email: email } as any
+      );
+      
+      if (!error && data === true) {
+        console.log("IDs sincronizados com sucesso sem recriar o usuário");
+        return true;
+      }
     }
     
     // Se a sincronização simples falhar, tentar migração completa
