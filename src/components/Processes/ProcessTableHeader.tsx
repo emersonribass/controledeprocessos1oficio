@@ -43,6 +43,8 @@ const ProcessTableHeader = ({
           </TableHead>
         ))}
         
+        {/* Adicionando a coluna de status explicitamente */}
+        <TableHead className="whitespace-nowrap">Status</TableHead>
         <TableHead className="text-right whitespace-nowrap">Ações</TableHead>
       </TableRow>
     </TableHeader>

@@ -12,7 +12,7 @@ import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
 import ProcessStatusBadge from "./ProcessStatusBadge";
 import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils"; // Adicionando a importação da função cn
+import { cn } from "@/lib/utils";
 
 interface ProcessTableProps {
   processes: Process[];
@@ -124,7 +124,11 @@ const ProcessTable = ({
                   );
                 })}
                 
-                <TableCell><ProcessStatusBadge status={process.status} /></TableCell>
+                {/* Célula para o status do processo */}
+                <TableCell>
+                  <ProcessStatusBadge status={process.status} />
+                </TableCell>
+                
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                   <ProcessActionButtons
                     processId={process.id}
