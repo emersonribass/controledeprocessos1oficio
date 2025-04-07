@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -8,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Department } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 // Schema de validação para o formulário
 const departmentSchema = z.object({
@@ -28,7 +27,6 @@ type FormValues = z.infer<typeof departmentSchema>;
 
 const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: DepartmentFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   // Inicializar o formulário com valores default ou do departamento existente
   const form = useForm<FormValues>({
@@ -88,10 +86,7 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
 
         if (error) throw error;
         
-        toast({
-          title: "Sucesso",
-          description: "Setor atualizado com sucesso."
-        });
+        toast.success("Setor atualizado com sucesso.");
       } else {
         // Inserção de novo departamento
         const { error } = await supabase
@@ -104,20 +99,13 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
 
         if (error) throw error;
         
-        toast({
-          title: "Sucesso",
-          description: "Novo setor criado com sucesso."
-        });
+        toast.success("Novo setor criado com sucesso.");
       }
       
       onSave();
     } catch (error) {
       console.error('Erro ao salvar setor:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar o setor.",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível salvar o setor.");
     } finally {
       setIsSubmitting(false);
     }

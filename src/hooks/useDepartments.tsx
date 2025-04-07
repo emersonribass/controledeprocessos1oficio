@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "sonner";  // Importando corretamente o toast da biblioteca sonner
 import { Department } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -47,11 +47,8 @@ export const useDepartments = () => {
       setDepartments(formattedDepartments);
     } catch (error) {
       console.error('Erro ao buscar setores:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os setores.",
-        variant: "destructive"
-      });
+      // Corrigindo a chamada do toast para utilizar a biblioteca sonner
+      toast.error("Não foi possível carregar os setores.");
     } finally {
       setIsLoading(false);
     }
@@ -85,19 +82,14 @@ export const useDepartments = () => {
         throw error;
       }
 
-      toast({
-        title: "Sucesso",
-        description: `Setor "${selectedDepartment.name}" removido com sucesso.`
-      });
+      // Corrigindo a chamada do toast para utilizar a biblioteca sonner
+      toast.success(`Setor "${selectedDepartment.name}" removido com sucesso.`);
 
       fetchDepartments();
     } catch (error) {
       console.error('Erro ao excluir setor:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover o setor.",
-        variant: "destructive"
-      });
+      // Corrigindo a chamada do toast para utilizar a biblioteca sonner
+      toast.error("Não foi possível remover o setor.");
     } finally {
       setOpenDeleteDialog(false);
     }
