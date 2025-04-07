@@ -236,6 +236,10 @@ export type Database = {
         Args: { usuario_email: string; usuario_senha: string }
         Returns: string
       }
+      sync_user_ids: {
+        Args: { usuario_email: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

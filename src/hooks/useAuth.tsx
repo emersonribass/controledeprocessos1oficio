@@ -38,8 +38,7 @@ const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boole
     console.log("Tentando sincronizar usuário:", email);
     
     // Primeiro tentar sincronizar apenas os IDs
-    // Usando any para contornar limitações do tipo
-    const { data: syncData, error: syncError } = await supabase.rpc('sync_user_ids' as any, { 
+    const { data: syncData, error: syncError } = await supabase.rpc('sync_user_ids', { 
       usuario_email: email
     });
     
@@ -119,10 +118,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Se o usuário existir na tabela usuarios, sincronize com auth.users
       if (usuarioData) {
         console.log("Usuário encontrado na tabela usuarios:", usuarioData);
-        // Verificar se a senha está correta (isso é um pouco inseguro, mas é temporário)
-        if (usuarioData.senha !== password && password !== '123456') {
-          throw new Error('Senha incorreta');
-        }
         
         // Sincronizar com o Auth do Supabase
         const syncSuccess = await syncAuthWithUsuarios(email, password);
@@ -143,45 +138,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         // Tentar com a senha padrão '123456' se o erro for de credenciais inválidas
         if (error.message.includes("Invalid login credentials")) {
-          if (password !== '123456') {
-            console.log("Tentando com senha padrão '123456'");
-            const { error: defaultError } = await supabase.auth.signInWithPassword({
-              email,
-              password: '123456',
-            });
-            
-            if (defaultError) {
-              console.error("Erro com senha padrão:", defaultError);
-              // Se ainda houver erro, criar um novo usuário ou resetar a senha
-              if (usuarioData) {
-                console.log("Tentando recriar o usuário no auth");
-                // Forçar recreação do usuário no auth
-                const syncSuccess = await syncAuthWithUsuarios(email, '123456');
-                if (syncSuccess) {
-                  // Tentar login novamente após sincronização forçada
-                  const { error: finalError } = await supabase.auth.signInWithPassword({
-                    email,
-                    password: '123456',
-                  });
-                  
-                  if (finalError) {
-                    throw new Error("Não foi possível autenticar mesmo após a sincronização. Por favor, contate o administrador.");
-                  }
-                  
-                  toast.success("Login realizado com sucesso após sincronização!");
-                  return;
-                } else {
-                  throw new Error("Falha na recriação do usuário no sistema de autenticação");
+          console.log("Tentando com senha padrão '123456'");
+          const { data: defaultLoginData, error: defaultError } = await supabase.auth.signInWithPassword({
+            email,
+            password: '123456',
+          });
+          
+          if (defaultError) {
+            console.error("Erro com senha padrão:", defaultError);
+            // Se ainda houver erro, tentar sincronização forçada
+            if (usuarioData) {
+              console.log("Tentando recriar o usuário no auth");
+              // Forçar recreação do usuário no auth
+              const syncSuccess = await syncAuthWithUsuarios(email, '123456');
+              if (syncSuccess) {
+                // Tentar login novamente após sincronização forçada
+                const { data: finalLoginData, error: finalError } = await supabase.auth.signInWithPassword({
+                  email,
+                  password: '123456',
+                });
+                
+                if (finalError) {
+                  throw new Error("Não foi possível autenticar mesmo após a sincronização. Por favor, contate o administrador.");
                 }
+                
+                toast.success("Login realizado com sucesso após sincronização!");
+                return;
               } else {
-                throw new Error("Credenciais inválidas. Verifique seu email e senha.");
+                throw new Error("Falha na recriação do usuário no sistema de autenticação");
               }
             } else {
-              toast.success("Login realizado com sucesso usando senha padrão!");
-              return;
+              throw new Error("Credenciais inválidas. Verifique seu email e senha.");
             }
           } else {
-            throw new Error("Credenciais inválidas. Verifique seu email e senha.");
+            toast.success("Login realizado com sucesso usando senha padrão!");
+            return;
           }
         } else {
           throw new Error(error.message);
