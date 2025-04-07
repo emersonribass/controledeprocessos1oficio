@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -45,7 +44,6 @@ const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: 
     return <Navigate to="/dashboard" replace />;
   }
   
-  // Apenas envolve com ProcessesProvider se necessário
   if (needsProcesses) {
     return (
       <ProcessesProvider>
