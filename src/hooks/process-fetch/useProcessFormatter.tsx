@@ -2,15 +2,8 @@
 import { Process } from "@/types";
 
 export const useProcessFormatter = () => {
-  const formatProcesses = (processesData: { processes: any[], history: any[] }): Process[] => {
-    console.log("Formatando processos:", processesData);
-    
-    if (!processesData.processes || processesData.processes.length === 0) {
-      console.log("Nenhum processo encontrado para formatar");
-      return [];
-    }
-    
-    return processesData.processes.map(process => {
+  const formatProcesses = (processesData: any[]): Process[] => {
+    return processesData ? processesData.map(process => {
       // Verificar status do processo primeiro
       let status: 'pending' | 'completed' | 'overdue' | 'not_started';
       
@@ -26,14 +19,12 @@ export const useProcessFormatter = () => {
           startDate: process.data_inicio,
           expectedEndDate: process.data_fim_esperada,
           status,
-          history: (processesData.history || [])
-            .filter((h: any) => h.processo_id === process.id)
-            .map((h: any) => ({
-              departmentId: h.setor_id,
-              entryDate: h.data_entrada,
-              exitDate: h.data_saida,
-              userId: h.usuario_id || ""
-            })),
+          history: process.processos_historico ? process.processos_historico.map((h: any) => ({
+            departmentId: h.setor_id,
+            entryDate: h.data_entrada,
+            exitDate: h.data_saida,
+            userId: h.usuario_id || ""
+          })) : [],
           userId: process.usuario_id,
           responsibleUserId: process.usuario_responsavel
         };
@@ -49,16 +40,13 @@ export const useProcessFormatter = () => {
         
         // Verificar prazo do departamento atual
         let isDepartmentOverdue = false;
-        const historyEntries = (processesData.history || []).filter((h: any) => h.processo_id === process.id);
-        const currentDeptHistory = historyEntries.find(
+        const currentDeptHistory = process.processos_historico?.find(
           (h: any) => h.setor_id === process.setor_atual && h.data_saida === null
         );
         
         if (currentDeptHistory) {
           const entryDate = new Date(currentDeptHistory.data_entrada);
-          // Como não temos mais o "setor_info", precisamos lidar com isso de outra forma
-          // Podemos adicionar uma lógica para buscar o time_limit do setor posteriormente
-          const departmentTimeLimit = 0; // Valor padrão temporário
+          const departmentTimeLimit = process.setor_info?.time_limit || 0;
           
           if (departmentTimeLimit > 0) {
             // Calcular data limite para o departamento atual
@@ -81,14 +69,12 @@ export const useProcessFormatter = () => {
       }
 
       // Formatar o histórico
-      const history = (processesData.history || [])
-        .filter((h: any) => h.processo_id === process.id)
-        .map((h: any) => ({
-          departmentId: h.setor_id,
-          entryDate: h.data_entrada,
-          exitDate: h.data_saida,
-          userId: h.usuario_id || ""
-        }));
+      const history = process.processos_historico ? process.processos_historico.map((h: any) => ({
+        departmentId: h.setor_id,
+        entryDate: h.data_entrada,
+        exitDate: h.data_saida,
+        userId: h.usuario_id || ""
+      })) : [];
 
       return {
         id: process.id,
@@ -102,7 +88,7 @@ export const useProcessFormatter = () => {
         userId: process.usuario_id,
         responsibleUserId: process.usuario_responsavel
       };
-    });
+    }) : [];
   };
 
   return { formatProcesses };

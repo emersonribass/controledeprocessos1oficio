@@ -27,8 +27,9 @@ const LoginForm = () => {
 
     try {
       await login(email, password);
-      navigate("/dashboard");
+      navigate("/");
     } catch (error) {
+      // Erro já é tratado pelo hook useAuth, mas podemos exibir mensagem específica aqui
       if (error instanceof Error) {
         setError(error.message);
       } else {

@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Department } from "@/types";
-import { supabase, getAdminSupabaseClient } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 // Schema de validação para o formulário
 const departmentSchema = z.object({
@@ -29,7 +28,7 @@ type FormValues = z.infer<typeof departmentSchema>;
 
 const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: DepartmentFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user, isAdmin } = useAuth();
+  const { toast } = useToast();
 
   // Inicializar o formulário com valores default ou do departamento existente
   const form = useForm<FormValues>({
@@ -75,13 +74,9 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
     setIsSubmitting(true);
     
     try {
-      // Use o cliente apropriado baseado no perfil do usuário
-      const client = user && isAdmin(user.email) ? getAdminSupabaseClient() : supabase;
-      console.log("DepartmentForm: Cliente Supabase para salvar setor:", isAdmin(user?.email) ? "Admin" : "Regular");
-      
       if (department) {
         // Atualização de departamento existente
-        const { error } = await client
+        const { error } = await supabase
           .from('setores')
           .update({
             name: data.name,
@@ -93,10 +88,13 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
 
         if (error) throw error;
         
-        toast.success("Setor atualizado com sucesso.");
+        toast({
+          title: "Sucesso",
+          description: "Setor atualizado com sucesso."
+        });
       } else {
         // Inserção de novo departamento
-        const { error } = await client
+        const { error } = await supabase
           .from('setores')
           .insert({
             name: data.name,
@@ -106,13 +104,20 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
 
         if (error) throw error;
         
-        toast.success("Novo setor criado com sucesso.");
+        toast({
+          title: "Sucesso",
+          description: "Novo setor criado com sucesso."
+        });
       }
       
       onSave();
     } catch (error) {
       console.error('Erro ao salvar setor:', error);
-      toast.error("Não foi possível salvar o setor.");
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar o setor.",
+        variant: "destructive"
+      });
     } finally {
       setIsSubmitting(false);
     }

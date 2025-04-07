@@ -1,9 +1,8 @@
 
 import { useState, useEffect } from "react";
-import { supabase, adminSupabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { Department } from "@/types";
-import { useAuth } from "@/hooks/useAuth";
 
 export const useDepartments = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -11,33 +10,23 @@ export const useDepartments = () => {
   const [openSheet, setOpenSheet] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
-  const { user, isAdmin } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
-      fetchDepartments();
-    }
-  }, [user]);
+    fetchDepartments();
+  }, []);
 
   const fetchDepartments = async () => {
-    console.log("Buscando setores...");
     setIsLoading(true);
     try {
-      // Use o cliente apropriado baseado no perfil do usuário
-      const client = user && isAdmin(user.email) ? adminSupabase : supabase;
-      console.log("Cliente Supabase para buscar setores:", isAdmin(user?.email) ? "Admin" : "Regular");
-      
-      const { data, error } = await client
+      const { data, error } = await supabase
         .from('setores')
         .select('*')
         .order('order_num', { ascending: true });
 
       if (error) {
-        console.error("Erro ao buscar setores:", error);
         throw error;
       }
-
-      console.log("Setores carregados:", data);
 
       // Converter os dados do Supabase para o formato do nosso tipo Department
       const formattedDepartments: Department[] = data.map(dept => ({
@@ -50,7 +39,11 @@ export const useDepartments = () => {
       setDepartments(formattedDepartments);
     } catch (error) {
       console.error('Erro ao buscar setores:', error);
-      toast.error("Não foi possível carregar os setores.");
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os setores.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -75,10 +68,7 @@ export const useDepartments = () => {
     if (!selectedDepartment) return;
 
     try {
-      // Use o cliente apropriado baseado no perfil do usuário
-      const client = user && isAdmin(user.email) ? adminSupabase : supabase;
-      
-      const { error } = await client
+      const { error } = await supabase
         .from('setores')
         .delete()
         .eq('id', Number(selectedDepartment.id));
@@ -87,11 +77,19 @@ export const useDepartments = () => {
         throw error;
       }
 
-      toast.success(`Setor "${selectedDepartment.name}" removido com sucesso.`);
+      toast({
+        title: "Sucesso",
+        description: `Setor "${selectedDepartment.name}" removido com sucesso.`
+      });
+
       fetchDepartments();
     } catch (error) {
       console.error('Erro ao excluir setor:', error);
-      toast.error("Não foi possível remover o setor.");
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover o setor.",
+        variant: "destructive"
+      });
     } finally {
       setOpenDeleteDialog(false);
     }
