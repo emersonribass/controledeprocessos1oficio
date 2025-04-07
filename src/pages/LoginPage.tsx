@@ -38,7 +38,7 @@ const LoginPage = () => {
           <InfoIcon className="h-4 w-4" />
           <AlertTitle>Informação</AlertTitle>
           <AlertDescription>
-            O sistema agora está integrado com autenticação segura. Suas credenciais existentes serão migradas automaticamente ao fazer login.
+            Use suas credenciais cadastradas no sistema para acessar a plataforma de gestão de processos.
           </AlertDescription>
         </Alert>
       </div>
