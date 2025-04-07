@@ -1,11 +1,28 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { UserCheck, UserX, Pencil, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, ToggleLeft, ToggleRight, RefreshCw } from "lucide-react";
-import { UsuarioSupabase } from "@/types/usuario";
 import { Department } from "@/types";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+type UsuarioSupabase = {
+  id: string;
+  nome: string;
+  email: string;
+  senha: string;
+  ativo: boolean;
+  setores_atribuidos: string[];
+  perfil: 'administrador' | 'usuario';
+  created_at: string;
+  updated_at: string;
+};
 
 type UsersTableProps = {
   usuarios: UsuarioSupabase[];
@@ -14,7 +31,6 @@ type UsersTableProps = {
   onToggleActive: (usuario: UsuarioSupabase) => void;
   onEdit: (usuario: UsuarioSupabase) => void;
   onDelete: (usuario: UsuarioSupabase) => void;
-  onSync?: (usuario: UsuarioSupabase) => void;
 };
 
 export function UsersTable({
@@ -24,44 +40,34 @@ export function UsersTable({
   onToggleActive,
   onEdit,
   onDelete,
-  onSync
 }: UsersTableProps) {
-  const [syncingUser, setSyncingUser] = useState<string | null>(null);
-
-  const handleSyncClick = async (usuario: UsuarioSupabase) => {
-    if (onSync) {
-      setSyncingUser(usuario.id);
-      await onSync(usuario);
-      setSyncingUser(null);
-    }
+  const getDepartmentName = (id: string) => {
+    const department = departments.find((d) => d.id === id);
+    return department ? department.name : "Desconhecido";
   };
 
-  const getDepartmentNames = (departmentIds: string[]) => {
-    return departmentIds
-      .map((id) => {
-        const dept = departments.find((d) => d.id.toString() === id);
-        return dept ? dept.name : id;
-      })
-      .join(", ");
+  const getSetoresNames = (setorIds: string[]) => {
+    return setorIds.map(id => getDepartmentName(id)).join(", ");
   };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin h-8 w-8 border-t-2 border-b-2 border-primary rounded-full"></div>
+      <div className="flex justify-center p-4">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-md border overflow-hidden">
+    <TooltipProvider>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Email</TableHead>
+            <TableHead>Data de Cadastro</TableHead>
+            <TableHead>Setores</TableHead>
             <TableHead>Perfil</TableHead>
-            <TableHead>Setores Atribuídos</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
@@ -69,7 +75,7 @@ export function UsersTable({
         <TableBody>
           {usuarios.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+              <TableCell colSpan={7} className="text-center py-6">
                 Nenhum usuário encontrado.
               </TableCell>
             </TableRow>
@@ -79,70 +85,56 @@ export function UsersTable({
                 <TableCell className="font-medium">{usuario.nome}</TableCell>
                 <TableCell>{usuario.email}</TableCell>
                 <TableCell>
-                  <Badge
-                    variant={usuario.perfil === "administrador" ? "destructive" : "outline"}
-                  >
+                  {format(new Date(usuario.created_at), "dd/MM/yyyy")}
+                </TableCell>
+                <TableCell>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge variant="outline" className="cursor-help">
+                        {usuario.setores_atribuidos.length}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{getSetoresNames(usuario.setores_atribuidos) || "Nenhum setor atribuído"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={usuario.perfil === "administrador" ? "default" : "secondary"}>
                     {usuario.perfil === "administrador" ? "Administrador" : "Usuário"}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {usuario.setores_atribuidos?.length > 0
-                    ? getDepartmentNames(usuario.setores_atribuidos)
-                    : "Nenhum"}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={usuario.ativo ? "default" : "secondary"}
-                    className="cursor-pointer"
-                    onClick={() => onToggleActive(usuario)}
-                  >
+                  <Badge variant={usuario.ativo ? "default" : "destructive"}>
                     {usuario.ativo ? "Ativo" : "Inativo"}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex items-center justify-end space-x-1">
-                    <Button
-                      variant="ghost"
+                  <div className="flex justify-end space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      onClick={() => onToggleActive(usuario)}
+                      title={usuario.ativo ? "Desativar usuário" : "Ativar usuário"}
+                    >
+                      {usuario.ativo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
                       size="icon"
                       onClick={() => onEdit(usuario)}
                       title="Editar usuário"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onToggleActive(usuario)}
-                      title={usuario.ativo ? "Desativar" : "Ativar"}
-                    >
-                      {usuario.ativo ? (
-                        <ToggleRight className="h-4 w-4" />
-                      ) : (
-                        <ToggleLeft className="h-4 w-4" />
-                      )}
-                    </Button>
-                    {onSync && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleSyncClick(usuario)}
-                        disabled={syncingUser === usuario.id}
-                        title="Sincronizar com autenticação"
-                      >
-                        {syncingUser === usuario.id ? (
-                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                        ) : (
-                          <RefreshCw className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-destructive"
                       onClick={() => onDelete(usuario)}
                       title="Excluir usuário"
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
@@ -151,6 +143,6 @@ export function UsersTable({
           )}
         </TableBody>
       </Table>
-    </div>
+    </TooltipProvider>
   );
 }

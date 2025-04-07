@@ -14,7 +14,6 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import ProcessesPage from "./pages/ProcessesPage";
 import ProcessDetailsPage from "./pages/ProcessDetailsPage";
-import ProcessPlanPage from "./pages/ProcessPlanPage"; // Importando a nova página
 import LoginPage from "./pages/LoginPage";
 import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -46,6 +45,7 @@ const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: 
     return <Navigate to="/dashboard" replace />;
   }
   
+  // Apenas envolve com ProcessesProvider se necessário
   if (needsProcesses) {
     return (
       <ProcessesProvider>
@@ -58,6 +58,7 @@ const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: 
 };
 
 const AppRoutes = () => {
+  console.log("Renderizando AppRoutes");
   return (
     <BrowserRouter>
       <Routes>
@@ -80,13 +81,6 @@ const AppRoutes = () => {
           <Route path="processes/:id" element={
             <ProtectedRoute>
               <ProcessDetailsPage />
-            </ProtectedRoute>
-          } />
-          
-          {/* Nova rota para o plano do processo */}
-          <Route path="processes/:id/plan" element={
-            <ProtectedRoute>
-              <ProcessPlanPage />
             </ProtectedRoute>
           } />
           
@@ -134,6 +128,7 @@ const AppRoutes = () => {
 };
 
 const App = () => {
+  console.log("Renderizando App");
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

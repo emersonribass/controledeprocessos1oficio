@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { UserCircle, BellIcon, LogOut, Home, ClipboardList, Settings } from "lucide-react";
@@ -11,7 +10,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationsPopover from "../Notifications/NotificationsPopover";
 import { cn } from "@/lib/utils";
-
 const Navbar = () => {
   const {
     user,
@@ -26,20 +24,10 @@ const Navbar = () => {
     unreadCount
   } = useNotifications();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-
-  const handleLogout = async () => {
-    console.log("Botão de logout clicado");
-    try {
-      await logout();
-      console.log("Redirecionando após logout");
-      navigate("/login");
-    } catch (error) {
-      console.error("Erro ao processar logout:", error);
-      // Forçar navegação para login mesmo em caso de erro
-      navigate("/login");
-    }
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
-
   const navLinks = [{
     title: "Dashboard",
     href: "/dashboard",
@@ -50,8 +38,8 @@ const Navbar = () => {
     icon: <ClipboardList className="h-4 w-4 mr-1" />
   }];
 
+  // Verificação se o usuário tem acesso de administrador usando a função isAdmin
   const userIsAdmin = user && isAdmin(user.email);
-
   return <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
       <div className="flex items-center">
         <Link to="/" className="flex items-center mr-6">
@@ -62,12 +50,14 @@ const Navbar = () => {
           </div>
         </Link>
 
+        {/* Navigation Links */}
         <div className="hidden md:flex items-center space-x-1">
           {navLinks.map(link => <Link key={link.href} to={link.href} className={cn("flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors", pathname === link.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary")}>
               {link.icon}
               <span>{link.title}</span>
             </Link>)}
           
+          {/* Menu Administração - Apenas visível para administradores */}
           {userIsAdmin && <Menubar className="border-none bg-transparent p-0">
               <MenubarMenu>
                 <MenubarTrigger className={cn("flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors", pathname.startsWith("/admin") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary")}>
@@ -102,6 +92,7 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center space-x-4">
+        {/* Notifications */}
         <NotificationsPopover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
           <Button variant="ghost" size="icon" className="relative" onClick={() => setNotificationsOpen(true)}>
             <BellIcon className="h-5 w-5" />
@@ -111,6 +102,7 @@ const Navbar = () => {
           </Button>
         </NotificationsPopover>
 
+        {/* User Menu */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -148,5 +140,4 @@ const Navbar = () => {
       </div>
     </nav>;
 };
-
 export default Navbar;

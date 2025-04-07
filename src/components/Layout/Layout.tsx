@@ -5,8 +5,6 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Layout = () => {
   const { user, isLoading } = useAuth();
-  
-  console.log("Layout renderizando, usuário:", user?.id);
 
   if (isLoading) {
     return (

@@ -1,7 +1,6 @@
 
-import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Process } from "@/types";
+import { MoveLeft, MoveRight } from "lucide-react";
 
 interface ProcessActionButtonsProps {
   processId: string;
@@ -9,9 +8,9 @@ interface ProcessActionButtonsProps {
   moveProcessToNextDepartment: (processId: string) => void;
   isFirstDepartment: boolean;
   isLastDepartment: boolean;
-  setIsEditing: (isEditing: boolean) => void;
+  setIsEditing: (value: boolean) => void;
   isEditing: boolean;
-  status?: Process['status'];
+  status: string;
   startProcess?: (processId: string) => Promise<void>;
 }
 
@@ -27,37 +26,41 @@ const ProcessActionButtons = ({
   startProcess,
 }: ProcessActionButtonsProps) => {
   const isNotStarted = status === "not_started";
-  
+
   return (
-    <div className="flex items-center justify-end space-x-1">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => moveProcessToPreviousDepartment(processId)}
-        disabled={isFirstDepartment || isEditing || isNotStarted}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </Button>
-      
-      {isNotStarted && startProcess && (
+    <div className="flex justify-end gap-2">
+      {isNotStarted ? (
         <Button
           variant="outline"
           size="sm"
-          onClick={() => startProcess(processId)}
+          onClick={() => startProcess && startProcess(processId)}
+          title="Iniciar processo"
+          className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300"
         >
-          <Play className="h-4 w-4" />
-          <span className="sr-only md:not-sr-only md:ml-2">Iniciar</span>
+          Iniciar
         </Button>
+      ) : (
+        <>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => moveProcessToPreviousDepartment(processId)}
+            disabled={isFirstDepartment}
+            title="Mover para departamento anterior"
+          >
+            <MoveLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => moveProcessToNextDepartment(processId)}
+            disabled={isLastDepartment}
+            title="Mover para próximo departamento"
+          >
+            <MoveRight className="h-4 w-4" />
+          </Button>
+        </>
       )}
-      
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => moveProcessToNextDepartment(processId)}
-        disabled={isLastDepartment || isEditing || isNotStarted}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </Button>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { BellOff, CheckCheck } from "lucide-react";
@@ -16,84 +16,56 @@ interface NotificationsPopoverProps {
 }
 
 const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPopoverProps) => {
-  try {
-    const { notifications, markAsRead, markAllAsRead } = useNotifications();
-    
-    useEffect(() => {
-      console.log("NotificationsPopover montado com", notifications.length, "notificações");
-    }, [notifications.length]);
+  const { notifications, markAsRead, markAllAsRead } = useNotifications();
 
-    return (
-      <Popover open={open} onOpenChange={onOpenChange}>
-        <PopoverTrigger asChild>{children}</PopoverTrigger>
-        <PopoverContent className="w-[380px] p-0" align="end">
-          <div className="flex items-center justify-between p-4">
-            <h3 className="font-semibold">Notificações</h3>
-            {notifications.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-auto p-0 text-xs text-primary"
-                onClick={markAllAsRead}
-              >
-                <CheckCheck className="mr-1 h-3 w-3" />
-                Marcar todas como lidas
-              </Button>
-            )}
-          </div>
-          <Separator />
-          {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 text-center">
-              <BellOff className="h-8 w-8 text-muted-foreground mb-2" />
-              <h4 className="text-sm font-medium">Sem notificações</h4>
-              <p className="text-xs text-muted-foreground mt-1">
-                Você não tem nenhuma notificação no momento.
-              </p>
-            </div>
-          ) : (
-            <ScrollArea className="h-[300px]">
-              <div className="divide-y divide-border">
-                {notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`p-4 ${!notification.read ? "bg-primary/5" : ""}`}
-                    onClick={() => markAsRead(notification.id)}
-                  >
-                    <p className="text-sm">{notification.message}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {format(new Date(notification.createdAt), "dd MMM, HH:mm", { locale: ptBR })}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
+  return (
+    <Popover open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverContent className="w-[380px] p-0" align="end">
+        <div className="flex items-center justify-between p-4">
+          <h3 className="font-semibold">Notificações</h3>
+          {notifications.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-0 text-xs text-primary"
+              onClick={markAllAsRead}
+            >
+              <CheckCheck className="mr-1 h-3 w-3" />
+              Marcar todas como lidas
+            </Button>
           )}
-        </PopoverContent>
-      </Popover>
-    );
-  } catch (error) {
-    console.error("Erro ao renderizar NotificationsPopover:", error);
-    
-    // Fallback para caso o contexto não esteja disponível
-    return (
-      <Popover open={open} onOpenChange={onOpenChange}>
-        <PopoverTrigger asChild>{children}</PopoverTrigger>
-        <PopoverContent className="w-[380px] p-0" align="end">
-          <div className="flex items-center justify-between p-4">
-            <h3 className="font-semibold">Notificações</h3>
-          </div>
-          <Separator />
+        </div>
+        <Separator />
+        {notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <BellOff className="h-8 w-8 text-muted-foreground mb-2" />
-            <h4 className="text-sm font-medium">Erro ao carregar notificações</h4>
+            <h4 className="text-sm font-medium">Sem notificações</h4>
             <p className="text-xs text-muted-foreground mt-1">
-              Ocorreu um erro ao carregar suas notificações.
+              Você não tem nenhuma notificação no momento.
             </p>
           </div>
-        </PopoverContent>
-      </Popover>
-    );
-  }
+        ) : (
+          <ScrollArea className="h-[300px]">
+            <div className="divide-y divide-border">
+              {notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`p-4 ${!notification.read ? "bg-primary/5" : ""}`}
+                  onClick={() => markAsRead(notification.id)}
+                >
+                  <p className="text-sm">{notification.message}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {format(new Date(notification.createdAt), "dd MMM, HH:mm", { locale: ptBR })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
 };
 
 export default NotificationsPopover;

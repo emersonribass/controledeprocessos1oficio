@@ -10,8 +10,8 @@ import ProcessTableHeader from "./ProcessTableHeader";
 import ProcessTypePicker from "./ProcessTypePicker";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
+import ProcessStatusBadge from "./ProcessStatusBadge";
 import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
 
 interface ProcessTableProps {
   processes: Process[];
@@ -47,7 +47,6 @@ const ProcessTable = ({
   const navigate = useNavigate();
   
   const handleRowClick = (processId: string) => {
-    console.log("Clicou na linha do processo:", processId);
     navigate(`/processes/${processId}`);
   };
 
@@ -76,26 +75,20 @@ const ProcessTable = ({
             processes.map((process) => (
               <TableRow 
                 key={process.id} 
-                className={cn(
-                  "cursor-pointer hover:bg-gray-100",
-                  process.status === "overdue" ? "bg-destructive/5" : "",
-                  process.status === "not_started" ? "bg-blue-50" : ""
-                )}
+                className="cursor-pointer hover:bg-gray-100"
                 onClick={() => handleRowClick(process.id)}
               >
                 <TableCell className="font-medium">
                   {process.protocolNumber}
                 </TableCell>
-                <TableCell>
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <ProcessTypePicker
-                      processId={process.id}
-                      currentTypeId={process.processType}
-                      processTypes={processTypes}
-                      getProcessTypeName={getProcessTypeName}
-                      updateProcessType={updateProcessType}
-                    />
-                  </div>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <ProcessTypePicker
+                    processId={process.id}
+                    currentTypeId={process.processType}
+                    processTypes={processTypes}
+                    getProcessTypeName={getProcessTypeName}
+                    updateProcessType={updateProcessType}
+                  />
                 </TableCell>
                 
                 {/* Células para cada departamento */}
@@ -107,41 +100,46 @@ const ProcessTable = ({
                     (departments.find(d => d.id === process.currentDepartment)?.order || 0));
                   const isActive = process.currentDepartment === dept.id;
                   
-                  // Usar a propriedade isDepartmentOverdue para verificar se o prazo está expirado
-                  const isOverdue = isActive && process.isDepartmentOverdue;
+                  // Verifica se o departamento está com prazo expirado
+                  let isOverdue = false;
+                  if (isActive && process.status !== "not_started") {
+                    const department = departments.find(d => d.id === dept.id);
+                    if (department && department.timeLimit > 0 && entryDate) {
+                      const entryDateTime = new Date(entryDate).getTime();
+                      const deadlineTime = entryDateTime + (department.timeLimit * 24 * 60 * 60 * 1000);
+                      const currentTime = new Date().getTime();
+                      isOverdue = currentTime > deadlineTime;
+                    }
+                  }
                   
                   return (
                     <TableCell key={dept.id}>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <ProcessDepartmentCell
-                          departmentId={dept.id}
-                          isCurrentDepartment={isActive}
-                          hasPassedDepartment={isPastDept}
-                          entryDate={entryDate}
-                          showDate={isActive || isPastDept}
-                          isDepartmentOverdue={isOverdue}
-                          departmentTimeLimit={dept.timeLimit}
-                          isProcessStarted={process.status !== "not_started"}
-                        />
-                      </div>
+                      <ProcessDepartmentCell
+                        departmentId={dept.id}
+                        isCurrentDepartment={isActive}
+                        hasPassedDepartment={isPastDept}
+                        entryDate={entryDate}
+                        showDate={isActive || isPastDept}
+                        isDepartmentOverdue={isActive && isOverdue}
+                        departmentTimeLimit={dept.timeLimit}
+                        isProcessStarted={process.status !== "not_started"}
+                      />
                     </TableCell>
                   );
                 })}
                 
-                <TableCell className="text-right">
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <ProcessActionButtons
-                      processId={process.id}
-                      moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-                      moveProcessToNextDepartment={moveProcessToNextDepartment}
-                      isFirstDepartment={process.currentDepartment === sortedDepartments[0]?.id}
-                      isLastDepartment={process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id}
-                      setIsEditing={() => {}}
-                      isEditing={false}
-                      status={process.status}
-                      startProcess={startProcess}
-                    />
-                  </div>
+                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                  <ProcessActionButtons
+                    processId={process.id}
+                    moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+                    moveProcessToNextDepartment={moveProcessToNextDepartment}
+                    isFirstDepartment={process.currentDepartment === sortedDepartments[0]?.id}
+                    isLastDepartment={process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id}
+                    setIsEditing={() => {}}
+                    isEditing={false}
+                    status={process.status}
+                    startProcess={startProcess}
+                  />
                 </TableCell>
               </TableRow>
             ))

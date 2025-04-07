@@ -32,11 +32,6 @@ const RecentProcessList = () => {
         return <Badge variant="outline">Desconhecido</Badge>;
     }
   };
-  
-  const handleProcessClick = (processId: string) => {
-    console.log("Clicou em processo na lista recente:", processId);
-    navigate(`/processes/${processId}`);
-  };
 
   return (
     <Card className="col-span-2">
@@ -55,8 +50,7 @@ const RecentProcessList = () => {
           recentProcesses.map((process) => (
             <div
               key={process.id}
-              className="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0 cursor-pointer"
-              onClick={() => handleProcessClick(process.id)}
+              className="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0"
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -70,14 +64,7 @@ const RecentProcessList = () => {
                   Iniciado {formatDistanceToNow(new Date(process.startDate), { addSuffix: true, locale: ptBR })}
                 </p>
               </div>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={(e) => {
-                  e.stopPropagation(); // Evitar propagação do clique
-                  handleProcessClick(process.id);
-                }}
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate(`/processes/${process.id}`)}>
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </div>
