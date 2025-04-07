@@ -3,6 +3,8 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UsuarioSupabase, FormUsuario } from "@/types/usuario";
+import { syncAuthWithUsuarios } from "@/hooks/auth/userSyncUtils";
+import { toast as sonnerToast } from "sonner";
 
 export function useUsuarios() {
   const [usuarios, setUsuarios] = useState<UsuarioSupabase[]>([]);
@@ -113,6 +115,17 @@ export function useUsuarios() {
           .eq("id", usuarioId);
 
         if (error) throw error;
+        
+        // Sincronizar com auth se a senha for alterada
+        if (data.senha) {
+          try {
+            await syncAuthWithUsuarios(data.email, data.senha);
+          } catch (syncError) {
+            console.error("Erro ao sincronizar com auth:", syncError);
+            // Não bloqueamos a atualização se a sincronização falhar
+            sonnerToast.warning("Usuário atualizado, mas houve um problema na sincronização com o sistema de autenticação.");
+          }
+        }
 
         toast({
           title: "Sucesso",
@@ -130,6 +143,17 @@ export function useUsuarios() {
         });
 
         if (error) throw error;
+        
+        // Sincronizar o novo usuário com o sistema de autenticação
+        try {
+          const syncResult = await syncAuthWithUsuarios(data.email, data.senha);
+          if (!syncResult) {
+            sonnerToast.warning("Usuário criado, mas houve um problema na sincronização com o sistema de autenticação.");
+          }
+        } catch (syncError) {
+          console.error("Erro ao sincronizar com auth:", syncError);
+          sonnerToast.warning("Usuário criado, mas houve um problema na sincronização com o sistema de autenticação.");
+        }
 
         toast({
           title: "Sucesso",
