@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User } from "@/types";
 import { toast } from "sonner";
@@ -15,8 +16,8 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Lista de emails de administradores
-const adminEmails = ["admin@nottar.com", "emerson.ribas@live.com"];
+// Lista de emails de administradores - Adicionando emerson@nottar.com.br
+const adminEmails = ["admin@nottar.com", "emerson.ribas@live.com", "emerson@nottar.com.br"];
 
 // Helper function to convert Supabase user to our User type
 const convertSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
@@ -34,6 +35,7 @@ const convertSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => 
 // Função para sincronizar usuário com a tabela usuarios
 const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boolean> => {
   try {
+    console.log("Tentando sincronizar usuário:", email);
     // Chamar a função SQL que criamos para migrar o usuário para auth.users
     // Precisamos usar any aqui porque o tipo não está definido no supabase
     const { data, error } = await supabase.rpc('migrate_usuario_to_auth' as any, { 
@@ -45,6 +47,8 @@ const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boole
       console.error('Erro ao sincronizar usuário:', error);
       return false;
     }
+
+    console.log("Sincronização bem-sucedida:", data);
 
     // Atualizar status de sincronização na tabela usuarios
     const { error: updateError } = await supabase
@@ -99,6 +103,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log("Tentando login com:", email);
       // Primeiro, verificar se o usuário existe na tabela usuarios
       const { data: usuarioData, error: usuarioError } = await supabase
         .from('usuarios')
@@ -112,6 +117,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Se o usuário existir na tabela usuarios, sincronize com auth.users
       if (usuarioData) {
+        console.log("Usuário encontrado na tabela usuarios:", usuarioData);
         // Verificar se a senha está correta (isso é um pouco inseguro, mas é temporário)
         if (usuarioData.senha !== password && password !== '123456') {
           throw new Error('Senha incorreta');
@@ -132,6 +138,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (error) {
+        console.error("Erro de autenticação:", error);
         throw new Error(error.message);
       }
 

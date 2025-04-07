@@ -2,8 +2,30 @@
 import LoginForm from "@/components/Auth/LoginForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const LoginPage = () => {
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Se o usuário já estiver logado, redireciona para o dashboard
+    if (!isLoading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, isLoading, navigate]);
+
+  // Se estiver carregando, não mostra nada ainda
+  if (isLoading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30">
       <div className="mb-8 text-center">
@@ -25,7 +47,7 @@ const LoginPage = () => {
       <p className="mt-8 text-center text-sm text-muted-foreground">
         <span className="mr-1">Credenciais de demonstração:</span>
         <br />
-        <code className="bg-muted rounded p-1">emerson.ribas@live.com / 123456</code>
+        <code className="bg-muted rounded p-1">emerson@nottar.com.br / 123456</code>
       </p>
     </div>
   );
