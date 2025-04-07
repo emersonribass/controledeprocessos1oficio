@@ -12,6 +12,7 @@ import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
 import ProcessStatusBadge from "./ProcessStatusBadge";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils"; // Adicionando a importação da função cn
 
 interface ProcessTableProps {
   processes: Process[];
