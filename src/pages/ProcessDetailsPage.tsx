@@ -2,11 +2,14 @@
 import { useParams } from "react-router-dom";
 import ProcessDetails from "@/components/Processes/ProcessDetails";
 import { ProcessesProvider } from "@/hooks/useProcesses";
+import { useEffect } from "react";
 
 const ProcessDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   
-  console.log("Renderizando ProcessDetailsPage, ID do processo:", id);
+  useEffect(() => {
+    console.log("ProcessDetailsPage montado com ID:", id);
+  }, [id]);
   
   return (
     <ProcessesProvider>
