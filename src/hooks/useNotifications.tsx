@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { Notification } from "@/types";
 import { mockNotifications } from "@/lib/mockData";
 import { useAuth } from "./useAuth";
@@ -19,12 +19,44 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { fetchUserNotifications, markNotificationAsRead } = useNotificationsService();
   const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [loadedForUserId, setLoadedForUserId] = useState<string | null>(null);
 
+  // Otimizando as funções com useCallback para evitar recriações desnecessárias
+  const markAsRead = useCallback(async (id: string) => {
+    // Marcar no estado local primeiro para resposta imediata
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.id === id
+          ? { ...notification, read: true }
+          : notification
+      )
+    );
+
+    // Se o usuário estiver logado, tenta atualizar no backend
+    if (user) {
+      try {
+        await markNotificationAsRead(id);
+      } catch (error) {
+        console.error("Erro ao marcar notificação como lida:", error);
+      }
+    }
+  }, [user, markNotificationAsRead]);
+
+  const markAllAsRead = useCallback(() => {
+    // Atualiza todas localmente
+    setNotifications((prev) =>
+      prev.map((notification) => ({ ...notification, read: true }))
+    );
+    
+    // Implementação futura para backend
+  }, []);
+
+  // Usando um efeito com melhores dependências para carregar notificações apenas quando necessário
   useEffect(() => {
-    // Função para carregar as notificações
+    // Evitar carregamento redundante se já carregou para este usuário
+    if (!user || loadingNotifications || (loadedForUserId === user.id)) return;
+    
     const loadNotifications = async () => {
-      if (!user || loadingNotifications) return;
-      
       try {
         setLoadingNotifications(true);
         console.log("Carregando notificações para usuário:", user.id);
@@ -41,6 +73,9 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
           );
           setNotifications(mockUserNotifications);
         }
+        
+        // Registrar que já carregamos para este usuário
+        setLoadedForUserId(user.id);
       } catch (error) {
         console.error("Erro ao buscar notificações:", error);
         
@@ -55,42 +90,9 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     };
 
     loadNotifications();
-  }, [user, fetchUserNotifications]);
+  }, [user, fetchUserNotifications, loadedForUserId, loadingNotifications]);
 
   const unreadCount = notifications.filter((notification) => !notification.read).length;
-
-  const markAsRead = async (id: string) => {
-    // Marcar no estado local primeiro para resposta imediata
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === id
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
-
-    // Se o usuário estiver logado, tenta atualizar no backend
-    if (user) {
-      try {
-        await markNotificationAsRead(id);
-      } catch (error) {
-        console.error("Erro ao marcar notificação como lida:", error);
-        // Não revertemos o estado local, pois queremos manter a experiência do usuário
-      }
-    }
-  };
-
-  const markAllAsRead = () => {
-    // Atualiza todas localmente
-    setNotifications((prev) =>
-      prev.map((notification) => ({ ...notification, read: true }))
-    );
-
-    // Se houver implementação no backend, poderia chamar um método para marcar todas como lidas
-  };
-
-  // Registrando explicitamente o provedor para debug
-  console.log("NotificationsProvider sendo renderizado, usuário:", user?.id);
 
   return (
     <NotificationsContext.Provider
@@ -104,7 +106,6 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
 export const useNotifications = () => {
   const context = useContext(NotificationsContext);
   
-  // Adicionando melhor mensagem de erro para debug
   if (context === undefined) {
     console.error("useNotifications está sendo chamado fora de um NotificationsProvider");
     // Fornecer um contexto de fallback para evitar erros
