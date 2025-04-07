@@ -16,7 +16,7 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Lista de emails de administradores - Adicionando emerson@nottar.com.br
+// Lista de emails de administradores
 const adminEmails = ["admin@nottar.com", "emerson.ribas@live.com", "emerson@nottar.com.br"];
 
 // Helper function to convert Supabase user to our User type
@@ -32,35 +32,34 @@ const convertSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => 
   };
 };
 
-// Função para sincronizar usuário com a tabela usuarios
+// Função melhorada para sincronizar usuário com a tabela usuarios
 const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boolean> => {
   try {
     console.log("Tentando sincronizar usuário:", email);
     
-    // Primeiro tentar sincronizar apenas os IDs
-    // Usando query direta ao invés de rpc para evitar erro de tipos
-    const { data: syncData, error: syncError } = await supabase
-      .from('usuarios')
-      .select('*')
-      .filter('email', 'eq', email)
-      .limit(1)
-      .maybeSingle();
+    // Verificar se o usuário existe na tabela auth.users mas com metadados incorretos
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password: senha
+    });
     
-    if (syncData && !syncError) {
-      // Chamar a função sync_user_ids usando funções SQL genéricas
-      // Isto contorna a limitação dos tipos
+    if (authData?.user && !authError) {
+      console.log("Autenticação realizada com sucesso, verificando metadados");
+      // Usuário existe e senha está correta, mas pode ter metadados incorretos
+      // Vamos sincronizar os IDs
       const { data, error } = await supabase.rpc(
         'sync_user_ids' as any, 
         { usuario_email: email } as any
       );
       
       if (!error && data === true) {
-        console.log("IDs sincronizados com sucesso sem recriar o usuário");
+        console.log("IDs sincronizados com sucesso");
         return true;
       }
     }
     
-    // Se a sincronização simples falhar, tentar migração completa
+    // Se a autenticação falhou ou a sincronização de IDs falhou, tentar migração completa
+    console.log("Tentando migração completa do usuário");
     const { data, error } = await supabase.rpc('migrate_usuario_to_auth', { 
       usuario_email: email, 
       usuario_senha: senha 
@@ -71,7 +70,7 @@ const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boole
       return false;
     }
 
-    console.log("Sincronização bem-sucedida:", data);
+    console.log("Migração concluída com sucesso:", data);
     return true;
   } catch (error) {
     console.error('Exceção ao sincronizar usuário:', error);
@@ -121,7 +120,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         .from('usuarios')
         .select('*')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       if (usuarioError && usuarioError.code !== 'PGRST116') { // PGRST116 é "não encontrado"
         console.error("Erro ao buscar usuário:", usuarioError);
@@ -132,15 +131,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (usuarioData) {
         console.log("Usuário encontrado na tabela usuarios:", usuarioData);
         
-        // Sincronizar com o Auth do Supabase
-        const syncSuccess = await syncAuthWithUsuarios(email, password);
-        
-        if (!syncSuccess) {
-          throw new Error('Falha na sincronização com autenticação');
-        }
+        // Tentar sincronizar com o Auth do Supabase
+        await syncAuthWithUsuarios(email, password);
       }
 
-      // Agora tenta fazer login diretamente pela autenticação do Supabase
+      // Agora tenta fazer login pela autenticação do Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -159,7 +154,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           
           if (defaultError) {
             console.error("Erro com senha padrão:", defaultError);
-            // Se ainda houver erro, tentar sincronização forçada
+            // Tentar migração forçada
             if (usuarioData) {
               console.log("Tentando recriar o usuário no auth");
               // Forçar recreação do usuário no auth

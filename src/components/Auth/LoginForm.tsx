@@ -16,6 +16,7 @@ const LoginForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -24,9 +25,11 @@ const LoginForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+    setStatusMessage("Verificando credenciais...");
 
     try {
       await login(email, password);
+      setStatusMessage("Login bem-sucedido! Redirecionando...");
       navigate("/");
     } catch (error) {
       // Erro já é tratado pelo hook useAuth, mas podemos exibir mensagem específica aqui
@@ -35,6 +38,7 @@ const LoginForm = () => {
       } else {
         setError("Ocorreu um erro ao tentar fazer login. Tente novamente.");
       }
+      setStatusMessage(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -55,6 +59,12 @@ const LoginForm = () => {
             <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          {statusMessage && !error && (
+            <Alert className="mb-4">
+              <AlertDescription>{statusMessage}</AlertDescription>
             </Alert>
           )}
           
