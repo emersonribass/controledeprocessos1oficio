@@ -2,7 +2,7 @@
 import { ProcessHistory as ProcessHistoryType } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock } from "lucide-react";
+import { Clock, User } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -13,9 +13,10 @@ import {
 type ProcessHistoryProps = {
   history: ProcessHistoryType[];
   getDepartmentName: (id: string) => string;
+  getUserName?: (id: string) => string;
 };
 
-const ProcessHistory = ({ history, getDepartmentName }: ProcessHistoryProps) => {
+const ProcessHistory = ({ history, getDepartmentName, getUserName }: ProcessHistoryProps) => {
   return (
     <Card>
       <CardHeader>
@@ -34,6 +35,12 @@ const ProcessHistory = ({ history, getDepartmentName }: ProcessHistoryProps) => 
                 <p className="font-medium">
                   {getDepartmentName(entry.departmentId)}
                 </p>
+                {entry.userId && getUserName && (
+                  <p className="text-sm flex items-center">
+                    <User className="h-3 w-3 mr-1" /> 
+                    Responsável: {getUserName(entry.userId)}
+                  </p>
+                )}
                 <p className="text-sm text-muted-foreground">
                   Entrada: {format(new Date(entry.entryDate), "dd/MM/yyyy", { locale: ptBR })}
                 </p>

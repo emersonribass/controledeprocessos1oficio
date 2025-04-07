@@ -23,7 +23,7 @@ export const useProcessFormatter = () => {
             departmentId: h.setor_id,
             entryDate: h.data_entrada,
             exitDate: h.data_saida,
-            userId: h.usuario_id || "1"
+            userId: h.usuario_id || ""
           })) : []
         };
       }
@@ -71,7 +71,7 @@ export const useProcessFormatter = () => {
         departmentId: h.setor_id,
         entryDate: h.data_entrada,
         exitDate: h.data_saida,
-        userId: h.usuario_id || "1"
+        userId: h.usuario_id || ""
       })) : [];
 
       return {

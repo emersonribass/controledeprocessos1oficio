@@ -30,6 +30,7 @@ export type Process = {
   expectedEndDate: string;
   status: 'pending' | 'completed' | 'overdue' | 'not_started';
   history: ProcessHistory[];
+  userId?: string; // Adicionando o ID do usuário responsável
 };
 
 export type ProcessHistory = {

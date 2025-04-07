@@ -5,6 +5,7 @@ import { useProcessUpdate } from "@/hooks/useProcessUpdate";
 import { useDepartmentsData } from "@/hooks/useDepartmentsData";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useSupabaseProcesses = () => {
   const { 
@@ -25,6 +26,7 @@ export const useSupabaseProcesses = () => {
   
   const { departments } = useDepartmentsData();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Este hook agora orquestra os hooks específicos
   const handleMoveProcessToNextDepartment = async (processId: string) => {
@@ -72,6 +74,11 @@ export const useSupabaseProcesses = () => {
       
       const now = new Date().toISOString();
       
+      // Verificar se o usuário está logado
+      if (!user || !user.id) {
+        throw new Error("Usuário não autenticado");
+      }
+      
       // 1. Atualizar o processo para setor de atendimento, status "Em andamento" e definir a data de início
       const { error: updateError } = await supabase
         .from('processos')
@@ -87,14 +94,15 @@ export const useSupabaseProcesses = () => {
         throw updateError;
       }
       
-      // 2. Criar registro no histórico
+      // 2. Criar registro no histórico com o ID do usuário logado
       const { error: historyError } = await supabase
         .from('processos_historico')
         .insert({
           processo_id: processId,
           setor_id: firstDept.id,
           data_entrada: now,
-          data_saida: null
+          data_saida: null,
+          usuario_id: user.id  // Adicionando o ID do usuário logado
         });
         
       if (historyError) {
