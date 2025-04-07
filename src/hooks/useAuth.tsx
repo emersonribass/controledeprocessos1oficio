@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User } from "@/types";
 import { toast } from "sonner";
@@ -36,13 +35,11 @@ const convertSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => 
 const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boolean> => {
   try {
     // Chamar a função SQL que criamos para migrar o usuário para auth.users
-    const { data, error } = await supabase.rpc(
-      'migrate_usuario_to_auth', 
-      { 
-        usuario_email: email, 
-        usuario_senha: senha 
-      }
-    );
+    // Precisamos usar any aqui porque o tipo não está definido no supabase
+    const { data, error } = await supabase.rpc('migrate_usuario_to_auth' as any, { 
+      usuario_email: email, 
+      usuario_senha: senha 
+    });
 
     if (error) {
       console.error('Erro ao sincronizar usuário:', error);
@@ -52,7 +49,10 @@ const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boole
     // Atualizar status de sincronização na tabela usuarios
     const { error: updateError } = await supabase
       .from('usuarios')
-      .update({ auth_sincronizado: true })
+      .update({ 
+        // Usamos o tipo any para contornar a limitação do TypeScript
+        auth_sincronizado: true as any 
+      })
       .eq('email', email);
 
     if (updateError) {
