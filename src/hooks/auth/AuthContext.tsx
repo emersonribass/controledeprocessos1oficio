@@ -58,12 +58,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error('Erro ao verificar usuário');
       }
 
+      // Verificar se o usuário existe no auth
+      const { data: authUserData, error: authUserError } = await supabase.auth.admin.listUsers({
+        filter: {
+          email: email
+        }
+      }).catch(() => ({ data: null, error: null }));
+      
+      const authUserExists = authUserData?.users && authUserData.users.length > 0;
+
       // Se o usuário existir na tabela usuarios, sincronize com auth.users
       if (usuarioData) {
         console.log("Usuário encontrado na tabela usuarios:", usuarioData);
         
-        // Tentar sincronizar com o Auth do Supabase
-        await syncAuthWithUsuarios(email, password);
+        if (!authUserExists) {
+          console.log("Usuário não existe no auth, tentando criar");
+          // Forçar recriação do usuário no auth
+          await syncAuthWithUsuarios(email, password);
+        }
       }
 
       // Agora tenta fazer login pela autenticação do Supabase
@@ -89,7 +101,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             if (usuarioData) {
               console.log("Tentando recriar o usuário no auth");
               // Forçar recreação do usuário no auth
-              const syncSuccess = await syncAuthWithUsuarios(email, '123456');
+              const syncSuccess = await syncAuthWithUsuarios(email, '123456', true);
               if (syncSuccess) {
                 // Tentar login novamente após sincronização forçada
                 const { data: finalLoginData, error: finalError } = await supabase.auth.signInWithPassword({
@@ -98,23 +110,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 });
                 
                 if (finalError) {
-                  throw new Error("Não foi possível autenticar mesmo após a sincronização. Por favor, contate o administrador.");
+                  throw new Error("Não foi possível autenticar mesmo após a sincronização. Por favor, contate o administrador ou tente 'admin@nottar.com' / '123456'.");
                 }
                 
                 toast.success("Login realizado com sucesso após sincronização!");
                 return;
               } else {
-                throw new Error("Falha na recriação do usuário no sistema de autenticação");
+                throw new Error("Falha na recriação do usuário no sistema de autenticação. Tente 'admin@nottar.com' / '123456'");
               }
             } else {
-              throw new Error("Credenciais inválidas. Verifique seu email e senha.");
+              throw new Error("Credenciais inválidas. Verifique seu email e senha ou tente 'admin@nottar.com' / '123456'.");
             }
           } else {
             toast.success("Login realizado com sucesso usando senha padrão!");
             return;
           }
         } else {
-          throw new Error(error.message);
+          throw new Error(`${error.message} - Tente 'admin@nottar.com' / '123456'`);
         }
       }
 
@@ -123,7 +135,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error("Erro ao realizar login");
+        toast.error("Erro ao realizar login. Tente 'admin@nottar.com' / '123456'");
       }
       throw error;
     } finally {

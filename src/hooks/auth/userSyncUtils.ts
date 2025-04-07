@@ -17,32 +17,27 @@ export const convertSupabaseUser = (supabaseUser: SupabaseUser | null): User | n
 };
 
 // Função melhorada para sincronizar usuário com a tabela usuarios
-export const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boolean> => {
+export const syncAuthWithUsuarios = async (email: string, senha: string, forceRecreate: boolean = false): Promise<boolean> => {
   try {
     console.log("Tentando sincronizar usuário:", email);
     
-    // Verificar se o usuário existe na tabela auth.users mas com metadados incorretos
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password: senha
-    });
-    
-    if (authData?.user && !authError) {
-      console.log("Autenticação realizada com sucesso, verificando metadados");
-      // Usuário existe e senha está correta, mas pode ter metadados incorretos
-      // Vamos sincronizar os IDs
-      const { data, error } = await supabase.rpc(
-        'sync_user_ids' as any, 
-        { usuario_email: email } as any
-      );
-      
-      if (!error && data === true) {
-        console.log("IDs sincronizados com sucesso");
-        return true;
+    if (forceRecreate) {
+      // Verificar se o usuário existe no auth e remover se necessário
+      try {
+        const { data: authUsers } = await supabase.auth.admin.listUsers({
+          filter: { email }
+        }).catch(() => ({ data: null }));
+        
+        if (authUsers?.users.length) {
+          const userId = authUsers.users[0].id;
+          await supabase.auth.admin.deleteUser(userId).catch(e => console.error("Erro ao deletar usuário existente:", e));
+        }
+      } catch (e) {
+        console.error("Erro ao verificar/deletar usuário:", e);
       }
     }
     
-    // Se a autenticação falhou ou a sincronização de IDs falhou, tentar migração completa
+    // Tentar migração completa do usuário
     console.log("Tentando migração completa do usuário");
     const { data, error } = await supabase.rpc('migrate_usuario_to_auth', { 
       usuario_email: email, 
@@ -55,6 +50,10 @@ export const syncAuthWithUsuarios = async (email: string, senha: string): Promis
     }
 
     console.log("Migração concluída com sucesso:", data);
+    
+    // Aguardar um momento para garantir que as alterações foram processadas
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     return true;
   } catch (error) {
     console.error('Exceção ao sincronizar usuário:', error);
