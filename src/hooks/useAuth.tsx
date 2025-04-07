@@ -27,7 +27,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const storedUser = localStorage.getItem('nottar_user');
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        console.log("Usuário recuperado do localStorage:", parsedUser);
+        setUser(parsedUser);
       } catch (error) {
         console.error('Erro ao recuperar sessão do usuário:', error);
         localStorage.removeItem('nottar_user');
@@ -38,7 +40,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Função para verificar se um email pertence a um administrador
   const isAdmin = (email: string): boolean => {
-    return adminEmails.includes(email);
+    console.log("Verificando se é admin:", email);
+    const result = adminEmails.includes(email);
+    console.log("Resultado da verificação admin:", result);
+    return result;
   };
 
   const login = async (email: string, password: string) => {
@@ -64,6 +69,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw new Error('Senha incorreta');
       }
 
+      console.log("Dados do usuário recuperados:", usuarioData);
+
       // Criar objeto de usuário para armazenar na sessão
       const loggedUser: User = {
         id: usuarioData.id,
@@ -76,6 +83,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Salvar usuário no estado e no localStorage
       setUser(loggedUser);
       localStorage.setItem('nottar_user', JSON.stringify(loggedUser));
+      console.log("Usuário logado com sucesso:", loggedUser);
 
       toast.success("Login realizado com sucesso!");
     } catch (error) {

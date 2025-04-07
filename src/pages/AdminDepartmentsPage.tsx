@@ -1,4 +1,5 @@
 
+import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -6,6 +7,7 @@ import { useDepartments } from "@/hooks/useDepartments";
 import DepartmentsList from "@/components/Admin/DepartmentsList";
 import DeleteDepartmentDialog from "@/components/Admin/DeleteDepartmentDialog";
 import DepartmentFormSheet from "@/components/Admin/DepartmentFormSheet";
+import { useAuth } from "@/hooks/useAuth";
 
 const AdminDepartmentsPage = () => {
   const {
@@ -22,6 +24,18 @@ const AdminDepartmentsPage = () => {
     confirmDelete,
     onDepartmentSaved
   } = useDepartments();
+  
+  const { user, isAdmin } = useAuth();
+
+  useEffect(() => {
+    console.log("AdminDepartmentsPage montada");
+    console.log("Usuário logado:", user);
+    if (user) {
+      console.log("É admin:", isAdmin(user.email));
+      console.log("Departamentos carregados:", departments);
+      console.log("Estado de carregamento:", isLoading);
+    }
+  }, [user, departments, isLoading]);
 
   return (
     <div className="space-y-6">

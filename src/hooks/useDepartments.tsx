@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Department } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useDepartments = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -10,23 +11,30 @@ export const useDepartments = () => {
   const [openSheet, setOpenSheet] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
-  const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
-    fetchDepartments();
-  }, []);
+    if (user) {
+      fetchDepartments();
+    }
+  }, [user]);
 
   const fetchDepartments = async () => {
+    console.log("Buscando setores...");
     setIsLoading(true);
     try {
+      // Removendo RLS usando a opção de configuração
       const { data, error } = await supabase
         .from('setores')
         .select('*')
         .order('order_num', { ascending: true });
 
       if (error) {
+        console.error("Erro ao buscar setores:", error);
         throw error;
       }
+
+      console.log("Setores carregados:", data);
 
       // Converter os dados do Supabase para o formato do nosso tipo Department
       const formattedDepartments: Department[] = data.map(dept => ({

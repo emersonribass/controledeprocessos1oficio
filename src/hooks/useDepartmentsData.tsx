@@ -2,40 +2,48 @@
 import { useState, useEffect } from "react";
 import { Department } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useDepartmentsData = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('setores')
-          .select('*')
-          .order('order_num', { ascending: true });
+    if (user) {
+      fetchDepartments();
+    }
+  }, [user]);
 
-        if (error) {
-          throw error;
-        }
+  const fetchDepartments = async () => {
+    console.log("useDepartmentData: Buscando setores...");
+    try {
+      const { data, error } = await supabase
+        .from('setores')
+        .select('*')
+        .order('order_num', { ascending: true });
 
-        const formattedDepartments: Department[] = data.map(dept => ({
-          id: dept.id.toString(),
-          name: dept.name,
-          order: dept.order_num,
-          timeLimit: dept.time_limit
-        }));
-
-        setDepartments(formattedDepartments);
-      } catch (error) {
-        console.error('Erro ao buscar setores:', error);
-      } finally {
-        setIsLoading(false);
+      if (error) {
+        console.error("useDepartmentData: Erro ao buscar setores:", error);
+        throw error;
       }
-    };
 
-    fetchDepartments();
-  }, []);
+      console.log("useDepartmentData: Setores carregados:", data);
+
+      const formattedDepartments: Department[] = data.map(dept => ({
+        id: dept.id.toString(),
+        name: dept.name,
+        order: dept.order_num,
+        timeLimit: dept.time_limit
+      }));
+
+      setDepartments(formattedDepartments);
+    } catch (error) {
+      console.error('useDepartmentData: Erro ao buscar setores:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const getDepartmentName = (id: string) => {
     const department = departments.find((d) => d.id === id);
@@ -46,5 +54,6 @@ export const useDepartmentsData = () => {
     departments,
     isLoading,
     getDepartmentName,
+    fetchDepartments
   };
 };
