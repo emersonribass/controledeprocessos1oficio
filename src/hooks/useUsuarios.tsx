@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -93,6 +92,30 @@ export function useUsuarios() {
     }
   };
 
+  const forceSyncUsuario = async (usuario: UsuarioSupabase) => {
+    try {
+      setIsLoading(true);
+      const success = await syncAuthWithUsuarios(
+        usuario.email, 
+        usuario.senha, 
+        true // Forçar recreação
+      );
+      
+      if (success) {
+        sonnerToast.success("Usuário sincronizado com o sistema de autenticação com sucesso!");
+        return true;
+      } else {
+        throw new Error("Falha na sincronização");
+      }
+    } catch (error) {
+      console.error("Erro ao sincronizar usuário:", error);
+      sonnerToast.error("Não foi possível sincronizar o usuário com o sistema de autenticação.");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const saveUsuario = async (data: FormUsuario, usuarioId?: string) => {
     try {
       if (usuarioId) {
@@ -116,15 +139,13 @@ export function useUsuarios() {
 
         if (error) throw error;
         
-        // Sincronizar com auth se a senha for alterada
-        if (data.senha) {
-          try {
-            await syncAuthWithUsuarios(data.email, data.senha);
-          } catch (syncError) {
-            console.error("Erro ao sincronizar com auth:", syncError);
-            // Não bloqueamos a atualização se a sincronização falhar
-            sonnerToast.warning("Usuário atualizado, mas houve um problema na sincronização com o sistema de autenticação.");
-          }
+        // Sincronizar com auth se a senha for alterada ou forçar sincronização independente da senha
+        try {
+          await syncAuthWithUsuarios(data.email, data.senha || "123456");
+        } catch (syncError) {
+          console.error("Erro ao sincronizar com auth:", syncError);
+          // Não bloqueamos a atualização se a sincronização falhar
+          sonnerToast.warning("Usuário atualizado, mas houve um problema na sincronização com o sistema de autenticação.");
         }
 
         toast({
@@ -145,15 +166,18 @@ export function useUsuarios() {
         if (error) throw error;
         
         // Sincronizar o novo usuário com o sistema de autenticação
-        try {
-          const syncResult = await syncAuthWithUsuarios(data.email, data.senha);
-          if (!syncResult) {
+        // Adicionando um delay para garantir que o usuário foi criado no banco antes de sincronizar
+        setTimeout(async () => {
+          try {
+            const syncResult = await syncAuthWithUsuarios(data.email, data.senha);
+            if (!syncResult) {
+              sonnerToast.warning("Usuário criado, mas houve um problema na sincronização com o sistema de autenticação.");
+            }
+          } catch (syncError) {
+            console.error("Erro ao sincronizar com auth:", syncError);
             sonnerToast.warning("Usuário criado, mas houve um problema na sincronização com o sistema de autenticação.");
           }
-        } catch (syncError) {
-          console.error("Erro ao sincronizar com auth:", syncError);
-          sonnerToast.warning("Usuário criado, mas houve um problema na sincronização com o sistema de autenticação.");
-        }
+        }, 1000);
 
         toast({
           title: "Sucesso",
@@ -182,6 +206,7 @@ export function useUsuarios() {
     fetchUsuarios,
     handleToggleAtivo,
     handleDeleteUsuario,
-    saveUsuario
+    saveUsuario,
+    forceSyncUsuario
   };
 }
