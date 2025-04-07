@@ -13,7 +13,7 @@ export type AuthContextType = {
 
 // Tipos para as funções de admin
 export interface AdminUserManagement {
-  listUsers: (options?: { filter?: { email?: string } }) => Promise<{
+  listUsers: () => Promise<{
     data: {
       users: Array<{
         id: string;

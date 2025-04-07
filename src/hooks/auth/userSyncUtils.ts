@@ -24,13 +24,14 @@ export const syncAuthWithUsuarios = async (email: string, senha: string, forceRe
     if (forceRecreate) {
       // Verificar se o usuário existe no auth e remover se necessário
       try {
-        const { data: authUsers } = await supabase.auth.admin.listUsers({
-          filter: { email }
-        }).catch(() => ({ data: null }));
-        
-        if (authUsers?.users.length) {
-          const userId = authUsers.users[0].id;
-          await supabase.auth.admin.deleteUser(userId).catch(e => console.error("Erro ao deletar usuário existente:", e));
+        const { data: usuarioData } = await supabase.from('usuarios')
+          .select('*')
+          .eq('email', email)
+          .maybeSingle();
+          
+        if (usuarioData) {
+          // Tentar usar a função RPC para sincronizar usuários
+          await supabase.rpc('sync_user_ids', { usuario_email: email });
         }
       } catch (e) {
         console.error("Erro ao verificar/deletar usuário:", e);

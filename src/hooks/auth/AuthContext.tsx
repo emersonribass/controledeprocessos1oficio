@@ -59,13 +59,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
 
       // Verificar se o usuário existe no auth
-      const { data: authUserData, error: authUserError } = await supabase.auth.admin.listUsers({
-        filter: {
-          email: email
-        }
-      }).catch(() => ({ data: null, error: null }));
-      
-      const authUserExists = authUserData?.users && authUserData.users.length > 0;
+      let authUserExists = false;
+      try {
+        const { data: authData } = await supabase.rpc('sync_user_ids', { 
+          usuario_email: email 
+        });
+        authUserExists = !!authData;
+      } catch (err) {
+        console.log("Erro ao verificar usuário no auth:", err);
+      }
 
       // Se o usuário existir na tabela usuarios, sincronize com auth.users
       if (usuarioData) {

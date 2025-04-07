@@ -7,15 +7,33 @@ export const supabaseAdmin = {
   auth: {
     ...supabase.auth,
     admin: {
-      listUsers: async ({ filter = {} } = {}) => {
+      listUsers: async () => {
         try {
-          const { data, error } = await supabase.rpc('admin_list_users', { filter });
+          // Usar função RPC existente ou fazer uma consulta direta na tabela usuarios
+          const { data, error } = await supabase
+            .from('usuarios')
+            .select('id, email, created_at, nome, ativo, setores_atribuidos, perfil')
+            .order('created_at', { ascending: false });
           
           if (error) throw error;
           
+          // Transformar o resultado para corresponder ao formato esperado
+          const users = data?.map(user => ({
+            id: user.id,
+            email: user.email,
+            created_at: user.created_at,
+            last_sign_in_at: null,
+            raw_user_meta_data: {
+              nome: user.nome,
+              ativo: user.ativo,
+              setores_atribuidos: user.setores_atribuidos,
+              perfil: user.perfil
+            }
+          })) || [];
+          
           return { 
             data: { 
-              users: data || [],
+              users: users,
               aud: 'authenticated'
             }, 
             error: null 
@@ -28,11 +46,15 @@ export const supabaseAdmin = {
       
       deleteUser: async (userId: string) => {
         try {
-          const { data, error } = await supabase.rpc('admin_delete_user', { user_id: userId });
+          // Excluir o usuário da tabela usuarios
+          const { data, error } = await supabase
+            .from('usuarios')
+            .delete()
+            .eq('id', userId);
           
           if (error) throw error;
           
-          return { data, error: null };
+          return { data: true, error: null };
         } catch (error) {
           console.error("Erro ao deletar usuário:", error);
           return { data: null, error };
