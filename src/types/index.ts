@@ -31,6 +31,7 @@ export type Process = {
   status: 'pending' | 'completed' | 'overdue' | 'not_started';
   history: ProcessHistory[];
   userId?: string; // Adicionando o ID do usuário responsável
+  responsibleUserId?: string; // Adicionando o ID do usuário que aceitou o processo
 };
 
 export type ProcessHistory = {
@@ -47,4 +48,6 @@ export type Notification = {
   message: string;
   read: boolean;
   createdAt: string;
+  type?: string;
+  responded?: boolean;
 };

@@ -9,21 +9,49 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import AcceptProcessButton from "./AcceptProcessButton";
+import { useAuth } from "@/hooks/useAuth";
 
 type ProcessHistoryProps = {
   history: ProcessHistoryType[];
   getDepartmentName: (id: string) => string;
   getUserName?: (id: string) => string;
+  processId: string;
+  protocolNumber: string;
+  hasResponsibleUser: boolean;
+  onProcessAccepted: () => void;
 };
 
-const ProcessHistory = ({ history, getDepartmentName, getUserName }: ProcessHistoryProps) => {
+const ProcessHistory = ({ 
+  history, 
+  getDepartmentName, 
+  getUserName,
+  processId,
+  protocolNumber,
+  hasResponsibleUser,
+  onProcessAccepted
+}: ProcessHistoryProps) => {
+  const { user } = useAuth();
+  
+  // Verificar se o usuário está no departamento atual
+  const currentDeptEntry = history.find(entry => !entry.exitDate);
+  const isUserInCurrentDept = user && user.departments.includes(currentDeptEntry?.departmentId || "");
+  
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center">
           <Clock className="mr-2 h-5 w-5" />
           Histórico do Processo
         </CardTitle>
+        {isUserInCurrentDept && (
+          <AcceptProcessButton 
+            processId={processId}
+            protocolNumber={protocolNumber}
+            hasResponsibleUser={hasResponsibleUser}
+            onAccept={onProcessAccepted}
+          />
+        )}
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

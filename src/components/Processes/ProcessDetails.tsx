@@ -14,6 +14,8 @@ const ProcessDetails = () => {
   
   const { id } = useParams<{ id: string }>();
   const [userNames, setUserNames] = useState<Record<string, string>>({});
+  const [responsibleUser, setResponsibleUser] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Função para buscar nomes de usuários
   const fetchUserNames = async (userIds: string[]) => {
@@ -45,6 +47,33 @@ const ProcessDetails = () => {
   const getUserName = (userId: string): string => {
     return userNames[userId] || "Usuário não encontrado";
   };
+
+  // Função para buscar usuário responsável pelo processo
+  const fetchResponsibleUser = async (processId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('processos')
+        .select('usuario_responsavel')
+        .eq('id', processId)
+        .single();
+
+      if (error) {
+        console.error('Erro ao buscar usuário responsável:', error);
+        return;
+      }
+
+      setResponsibleUser(data.usuario_responsavel);
+    } catch (error) {
+      console.error('Erro ao processar usuário responsável:', error);
+    }
+  };
+
+  const handleProcessAccepted = () => {
+    if (id) {
+      setIsRefreshing(true);
+      fetchResponsibleUser(id).finally(() => setIsRefreshing(false));
+    }
+  };
   
   // Verificando se o hook useProcesses está funcionando
   try {
@@ -54,6 +83,7 @@ const ProcessDetails = () => {
       getProcessTypeName,
       moveProcessToNextDepartment,
       moveProcessToPreviousDepartment,
+      refreshProcesses,
     } = useProcesses();
     
     console.log("Hook useProcesses carregado com sucesso", processes.length);
@@ -71,8 +101,18 @@ const ProcessDetails = () => {
           .filter((id, index, self) => self.indexOf(id) === index);
           
         fetchUserNames(userIds);
+        fetchResponsibleUser(process.id);
       }
     }, [process?.id]);
+
+    // Efeito para atualizar a lista de processos periodicamente
+    useEffect(() => {
+      const intervalId = setInterval(() => {
+        refreshProcesses();
+      }, 30000); // Atualizar a cada 30 segundos
+      
+      return () => clearInterval(intervalId);
+    }, [refreshProcesses]);
 
     if (!process) {
       return <ProcessNotFound />;
@@ -89,12 +129,17 @@ const ProcessDetails = () => {
             getProcessTypeName={getProcessTypeName}
             moveProcessToNextDepartment={moveProcessToNextDepartment}
             moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+            responsibleUserName={responsibleUser ? userNames[responsibleUser] : undefined}
           />
 
           <ProcessHistory 
             history={process.history} 
             getDepartmentName={getDepartmentName} 
             getUserName={getUserName}
+            processId={process.id}
+            protocolNumber={process.protocolNumber}
+            hasResponsibleUser={!!responsibleUser}
+            onProcessAccepted={handleProcessAccepted}
           />
         </div>
       </div>

@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { MoveLeft, MoveRight } from "lucide-react";
+import { MoveLeft, MoveRight, User } from "lucide-react";
 import ProcessStatusBadge from "./ProcessStatusBadge";
 import {
   Card,
@@ -21,6 +21,7 @@ type ProcessCardProps = {
   getDepartmentName: (id: string) => string;
   moveProcessToNextDepartment: (processId: string) => void;
   moveProcessToPreviousDepartment: (processId: string) => void;
+  responsibleUserName?: string;
 };
 
 const ProcessCard = ({
@@ -29,6 +30,7 @@ const ProcessCard = ({
   getDepartmentName,
   moveProcessToNextDepartment,
   moveProcessToPreviousDepartment,
+  responsibleUserName,
 }: ProcessCardProps) => {
   return (
     <Card className="md:col-span-2">
@@ -75,6 +77,16 @@ const ProcessCard = ({
               {format(new Date(process.expectedEndDate), "dd/MM/yyyy", { locale: ptBR })}
             </p>
           </div>
+          {responsibleUserName && (
+            <div className="col-span-2">
+              <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
+                <User className="h-4 w-4 mr-1" /> Responsável
+              </h3>
+              <p className="font-medium">
+                {responsibleUserName}
+              </p>
+            </div>
+          )}
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">

@@ -9,6 +9,47 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      notificacoes: {
+        Row: {
+          created_at: string
+          id: string
+          lida: boolean
+          mensagem: string
+          processo_id: string
+          respondida: boolean
+          tipo: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem: string
+          processo_id: string
+          respondida?: boolean
+          tipo?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem?: string
+          processo_id?: string
+          respondida?: boolean
+          tipo?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "processos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       processos: {
         Row: {
           created_at: string | null
@@ -20,6 +61,7 @@ export type Database = {
           status: string
           tipo_processo: string
           updated_at: string | null
+          usuario_responsavel: string | null
         }
         Insert: {
           created_at?: string | null
@@ -31,6 +73,7 @@ export type Database = {
           status?: string
           tipo_processo: string
           updated_at?: string | null
+          usuario_responsavel?: string | null
         }
         Update: {
           created_at?: string | null
@@ -42,6 +85,7 @@ export type Database = {
           status?: string
           tipo_processo?: string
           updated_at?: string | null
+          usuario_responsavel?: string | null
         }
         Relationships: []
       }

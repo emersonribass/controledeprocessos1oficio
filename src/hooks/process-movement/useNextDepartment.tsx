@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Process } from "@/types";
 import { Department } from "@/types";
+import { useNotificationsService } from "@/hooks/useNotificationsService";
 
 export const useNextDepartment = (departments: Department[]) => {
   const { toast } = useToast();
+  const { notifyDepartmentUsers } = useNotificationsService();
 
   const moveProcessToNextDepartment = async (process: Process) => {
     try {
@@ -64,7 +66,7 @@ export const useNextDepartment = (departments: Department[]) => {
           setor_id: nextDept.id,
           data_entrada: now,
           data_saida: null,
-          usuario_id: "1" // Usuário atual (placeholder)
+          usuario_id: process.userId || "1" // Usar o ID do usuário que está movendo o processo
         });
 
       if (newHistoryError) {
@@ -75,19 +77,27 @@ export const useNextDepartment = (departments: Department[]) => {
       const isCompleted = nextDept.order === departments.length;
       const newStatus = isCompleted ? "Concluído" : "Em andamento";
 
-      // Atualizar o processo
+      // Atualizar o processo, resetando o usuário responsável
       const { error: updateProcessError } = await supabase
         .from('processos')
         .update({ 
           setor_atual: nextDept.id,
           status: newStatus,
-          updated_at: now
+          updated_at: now,
+          usuario_responsavel: null // Resetar o usuário responsável ao mudar de departamento
         })
         .eq('id', process.id);
 
       if (updateProcessError) {
         throw updateProcessError;
       }
+      
+      // Enviar notificações para usuários do próximo departamento
+      await notifyDepartmentUsers(
+        process.id, 
+        nextDept.id, 
+        `Processo ${process.protocolNumber} foi movido para o setor ${nextDept.name} e necessita de atenção.`
+      );
 
       toast({
         title: "Sucesso",
