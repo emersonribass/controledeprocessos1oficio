@@ -53,7 +53,7 @@ const ProcessDetails = () => {
     try {
       const { data, error } = await supabase
         .from('processos')
-        .select('usuario_responsavel')
+        .select('*')
         .eq('id', processId)
         .single();
 

@@ -38,9 +38,9 @@ const AcceptProcessButton = ({
     try {
       // Verificar se o processo já tem um responsável
       const { data: processData, error: processError } = await supabase
-        .from("processos")
-        .select("usuario_responsavel")
-        .eq("id", processId)
+        .from('processos')
+        .select('*')
+        .eq('id', processId)
         .single();
 
       if (processError) {
@@ -58,9 +58,11 @@ const AcceptProcessButton = ({
 
       // Atualizar o processo com o usuário responsável
       const { error: updateError } = await supabase
-        .from("processos")
-        .update({ usuario_responsavel: user.id })
-        .eq("id", processId);
+        .from('processos')
+        .update({ 
+          usuario_responsavel: user.id 
+        } as any)
+        .eq('id', processId);
 
       if (updateError) {
         throw updateError;
@@ -68,10 +70,12 @@ const AcceptProcessButton = ({
 
       // Marcar notificações como respondidas
       const { error: notificationError } = await supabase
-        .from("notificacoes")
-        .update({ respondida: true })
-        .eq("processo_id", processId)
-        .eq("usuario_id", user.id);
+        .from('notificacoes')
+        .update({ 
+          respondida: true 
+        } as any)
+        .eq('processo_id', processId)
+        .eq('usuario_id', user.id);
 
       if (notificationError) {
         console.error("Erro ao atualizar notificações:", notificationError);

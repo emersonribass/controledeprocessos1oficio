@@ -12,6 +12,7 @@ export const useNotificationsService = () => {
   const fetchUserNotifications = async (userId: string): Promise<Notification[]> => {
     setIsLoading(true);
     try {
+      // Aqui usamos a notação de string para a tabela que não está no types.ts do Supabase
       const { data, error } = await supabase
         .from('notificacoes')
         .select('*')
@@ -22,6 +23,7 @@ export const useNotificationsService = () => {
         throw error;
       }
 
+      // Mapear os dados para o nosso tipo Notification
       const notifications: Notification[] = data.map(n => ({
         id: n.id,
         userId: n.usuario_id,
@@ -55,6 +57,7 @@ export const useNotificationsService = () => {
     type: string = 'movimento'
   ): Promise<boolean> => {
     try {
+      // Usando a notação de string para evitar problemas de tipo
       const { error } = await supabase
         .from('notificacoes')
         .insert({
@@ -62,7 +65,7 @@ export const useNotificationsService = () => {
           usuario_id: userId,
           mensagem: message,
           tipo: type
-        });
+        } as any);
 
       if (error) {
         throw error;
@@ -77,9 +80,10 @@ export const useNotificationsService = () => {
   // Marcar notificação como lida
   const markNotificationAsRead = async (notificationId: string): Promise<boolean> => {
     try {
+      // Usando a notação de string para evitar problemas de tipo
       const { error } = await supabase
         .from('notificacoes')
-        .update({ lida: true })
+        .update({ lida: true } as any)
         .eq('id', notificationId);
 
       if (error) {
@@ -95,9 +99,10 @@ export const useNotificationsService = () => {
   // Marcar notificação como respondida
   const markNotificationAsResponded = async (notificationId: string): Promise<boolean> => {
     try {
+      // Usando a notação de string para evitar problemas de tipo
       const { error } = await supabase
         .from('notificacoes')
-        .update({ respondida: true })
+        .update({ respondida: true } as any)
         .eq('id', notificationId);
 
       if (error) {
@@ -144,16 +149,18 @@ export const useNotificationsService = () => {
         return false;
       }
 
-      const notifications = userIds.map(userId => ({
+      // Preparar notificações para todos os usuários
+      const notificationsData = userIds.map(userId => ({
         processo_id: processId,
         usuario_id: userId,
         mensagem: message,
         tipo: 'movimento'
       }));
 
+      // Inserir as notificações usando .from('string') para evitar problemas de tipo
       const { error } = await supabase
         .from('notificacoes')
-        .insert(notifications);
+        .insert(notificationsData as any);
 
       if (error) {
         throw error;
