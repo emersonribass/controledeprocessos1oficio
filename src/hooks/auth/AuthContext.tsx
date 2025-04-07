@@ -22,8 +22,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        console.log("Estado de autenticação alterado:", session?.user?.email);
+      (event, session) => {
+        console.log("Estado de autenticação alterado:", event, session?.user?.email);
         setSession(session);
         setUser(convertSupabaseUser(session?.user ?? null));
         setIsLoading(false);
@@ -146,12 +146,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
+    console.log("Tentando fazer logout...");
     try {
-      await supabase.auth.signOut();
-      toast.info("Sessão encerrada");
+      setIsLoading(true);
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Erro ao fazer logout:", error);
+        toast.error("Erro ao encerrar sessão: " + error.message);
+      } else {
+        // Limpar manualmente o estado, mesmo que ocorra um erro
+        setUser(null);
+        setSession(null);
+        console.log("Logout realizado com sucesso");
+        toast.info("Sessão encerrada");
+      }
     } catch (error) {
-      console.error("Erro ao fazer logout:", error);
+      console.error("Exceção ao fazer logout:", error);
       toast.error("Erro ao encerrar sessão");
+      
+      // Garantir que o estado seja limpo mesmo em caso de erro
+      setUser(null);
+      setSession(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 

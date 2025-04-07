@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { UserCircle, BellIcon, LogOut, Home, ClipboardList, Settings } from "lucide-react";
@@ -26,9 +27,17 @@ const Navbar = () => {
   } = useNotifications();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    console.log("Botão de logout clicado");
+    try {
+      await logout();
+      console.log("Redirecionando após logout");
+      navigate("/login");
+    } catch (error) {
+      console.error("Erro ao processar logout:", error);
+      // Forçar navegação para login mesmo em caso de erro
+      navigate("/login");
+    }
   };
 
   const navLinks = [{
