@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User } from "@/types";
 import { toast } from "sonner";
@@ -37,7 +38,8 @@ const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boole
     console.log("Tentando sincronizar usuário:", email);
     
     // Primeiro tentar sincronizar apenas os IDs
-    const { data: syncData, error: syncError } = await supabase.rpc('sync_user_ids', { 
+    // Usando any para contornar limitações do tipo
+    const { data: syncData, error: syncError } = await supabase.rpc('sync_user_ids' as any, { 
       usuario_email: email
     });
     
