@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { supabase, getAdminSupabaseClient } from "@/integrations/supabase/client";
-import { toast } from "sonner";  // Importando corretamente o toast da biblioteca sonner
+import { supabase, adminSupabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Department } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -24,7 +24,7 @@ export const useDepartments = () => {
     setIsLoading(true);
     try {
       // Use o cliente apropriado baseado no perfil do usuário
-      const client = user && isAdmin(user.email) ? getAdminSupabaseClient() : supabase;
+      const client = user && isAdmin(user.email) ? adminSupabase : supabase;
       console.log("Cliente Supabase para buscar setores:", isAdmin(user?.email) ? "Admin" : "Regular");
       
       const { data, error } = await client
@@ -50,7 +50,6 @@ export const useDepartments = () => {
       setDepartments(formattedDepartments);
     } catch (error) {
       console.error('Erro ao buscar setores:', error);
-      // Corrigindo a chamada do toast para utilizar a biblioteca sonner
       toast.error("Não foi possível carregar os setores.");
     } finally {
       setIsLoading(false);
@@ -77,7 +76,7 @@ export const useDepartments = () => {
 
     try {
       // Use o cliente apropriado baseado no perfil do usuário
-      const client = user && isAdmin(user.email) ? getAdminSupabaseClient() : supabase;
+      const client = user && isAdmin(user.email) ? adminSupabase : supabase;
       
       const { error } = await client
         .from('setores')
@@ -88,13 +87,10 @@ export const useDepartments = () => {
         throw error;
       }
 
-      // Corrigindo a chamada do toast para utilizar a biblioteca sonner
       toast.success(`Setor "${selectedDepartment.name}" removido com sucesso.`);
-
       fetchDepartments();
     } catch (error) {
       console.error('Erro ao excluir setor:', error);
-      // Corrigindo a chamada do toast para utilizar a biblioteca sonner
       toast.error("Não foi possível remover o setor.");
     } finally {
       setOpenDeleteDialog(false);

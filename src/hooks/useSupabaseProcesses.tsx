@@ -4,7 +4,7 @@ import { useProcessMovement } from "@/hooks/useProcessMovement";
 import { useProcessUpdate } from "@/hooks/useProcessUpdate";
 import { useDepartmentsData } from "@/hooks/useDepartmentsData";
 import { useToast } from "@/hooks/use-toast";
-import { supabase, getAdminSupabaseClient } from "@/integrations/supabase/client";
+import { supabase, adminSupabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 export const useSupabaseProcesses = () => {
@@ -66,7 +66,7 @@ export const useSupabaseProcesses = () => {
   const startProcess = async (processId: string) => {
     try {
       // Use o cliente apropriado baseado no perfil do usuário
-      const client = user && isAdmin(user.email) ? getAdminSupabaseClient() : supabase;
+      const client = user && isAdmin(user.email) ? adminSupabase : supabase;
       console.log("startProcess: Cliente Supabase para iniciar processo:", isAdmin(user?.email) ? "Admin" : "Regular");
       
       // Encontrar o primeiro departamento (setor de atendimento)

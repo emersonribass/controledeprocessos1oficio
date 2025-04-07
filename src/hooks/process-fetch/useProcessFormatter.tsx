@@ -3,7 +3,14 @@ import { Process } from "@/types";
 
 export const useProcessFormatter = () => {
   const formatProcesses = (processesData: { processes: any[], history: any[] }): Process[] => {
-    return processesData.processes ? processesData.processes.map(process => {
+    console.log("Formatando processos:", processesData);
+    
+    if (!processesData.processes || processesData.processes.length === 0) {
+      console.log("Nenhum processo encontrado para formatar");
+      return [];
+    }
+    
+    return processesData.processes.map(process => {
       // Verificar status do processo primeiro
       let status: 'pending' | 'completed' | 'overdue' | 'not_started';
       
@@ -19,7 +26,7 @@ export const useProcessFormatter = () => {
           startDate: process.data_inicio,
           expectedEndDate: process.data_fim_esperada,
           status,
-          history: processesData.history
+          history: (processesData.history || [])
             .filter((h: any) => h.processo_id === process.id)
             .map((h: any) => ({
               departmentId: h.setor_id,
@@ -42,7 +49,7 @@ export const useProcessFormatter = () => {
         
         // Verificar prazo do departamento atual
         let isDepartmentOverdue = false;
-        const historyEntries = processesData.history.filter((h: any) => h.processo_id === process.id);
+        const historyEntries = (processesData.history || []).filter((h: any) => h.processo_id === process.id);
         const currentDeptHistory = historyEntries.find(
           (h: any) => h.setor_id === process.setor_atual && h.data_saida === null
         );
@@ -74,7 +81,7 @@ export const useProcessFormatter = () => {
       }
 
       // Formatar o histórico
-      const history = processesData.history
+      const history = (processesData.history || [])
         .filter((h: any) => h.processo_id === process.id)
         .map((h: any) => ({
           departmentId: h.setor_id,
@@ -95,7 +102,7 @@ export const useProcessFormatter = () => {
         userId: process.usuario_id,
         responsibleUserId: process.usuario_responsavel
       };
-    }) : [];
+    });
   };
 
   return { formatProcesses };

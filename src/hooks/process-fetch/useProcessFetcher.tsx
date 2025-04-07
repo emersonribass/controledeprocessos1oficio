@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { supabase, getAdminSupabaseClient } from "@/integrations/supabase/client";
+import { supabase, adminSupabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 export const useProcessFetcher = () => {
@@ -13,7 +13,7 @@ export const useProcessFetcher = () => {
       console.log("fetchProcessesData: Buscando processos...");
       
       // Use o cliente apropriado baseado no perfil do usuário
-      const client = user && isAdmin(user.email) ? getAdminSupabaseClient() : supabase;
+      const client = user && isAdmin(user.email) ? adminSupabase : supabase;
       console.log("fetchProcessesData: Cliente Supabase para buscar processos:", isAdmin(user?.email) ? "Admin" : "Regular");
       
       // Buscar todos os processos
@@ -27,7 +27,8 @@ export const useProcessFetcher = () => {
         throw processesError;
       }
 
-      console.log(`Processos recuperados: ${processesData.length}`);
+      console.log(`Processos recuperados: ${processesData?.length || 0}`);
+      console.log("Detalhes dos processos:", processesData);
 
       // Buscar histórico de todos os processos
       const { data: historyData, error: historyError } = await client
@@ -40,7 +41,7 @@ export const useProcessFetcher = () => {
         throw historyError;
       }
 
-      console.log(`Registros de histórico recuperados: ${historyData.length}`);
+      console.log(`Registros de histórico recuperados: ${historyData?.length || 0}`);
 
       // Retornar dados brutos para serem processados pelo formatter
       return {

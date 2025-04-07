@@ -9,13 +9,22 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Cliente Supabase padrão (sem bypass de RLS)
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+  }
+});
+
+// Cliente Supabase para administradores (com bypass de RLS)
+export const adminSupabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    storage: localStorage,
+    persistSession: true,
+    autoRefreshToken: true,
   },
-  // Added global headers para contornar as políticas RLS para usuários admin locais
   global: {
     headers: {
       'x-bypass-rls': 'true'
@@ -23,7 +32,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   }
 });
 
-// Função auxiliar para obter o cliente Supabase configurado para administradores
+// Função auxiliar para obter o cliente Supabase apropriado para o usuário
 export const getAdminSupabaseClient = () => {
-  return supabase;
+  return adminSupabase;
 };
