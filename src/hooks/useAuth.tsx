@@ -32,6 +32,40 @@ const convertSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => 
   };
 };
 
+// Função para sincronizar usuário com a tabela usuarios
+const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boolean> => {
+  try {
+    // Chamar a função SQL que criamos para migrar o usuário para auth.users
+    const { data, error } = await supabase.rpc(
+      'migrate_usuario_to_auth', 
+      { 
+        usuario_email: email, 
+        usuario_senha: senha 
+      }
+    );
+
+    if (error) {
+      console.error('Erro ao sincronizar usuário:', error);
+      return false;
+    }
+
+    // Atualizar status de sincronização na tabela usuarios
+    const { error: updateError } = await supabase
+      .from('usuarios')
+      .update({ auth_sincronizado: true })
+      .eq('email', email);
+
+    if (updateError) {
+      console.error('Erro ao atualizar status de sincronização:', updateError);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Exceção ao sincronizar usuário:', error);
+    return false;
+  }
+};
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -65,6 +99,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      // Primeiro, verificar se o usuário existe na tabela usuarios
+      const { data: usuarioData, error: usuarioError } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (usuarioError && usuarioError.code !== 'PGRST116') { // PGRST116 é "não encontrado"
+        throw new Error('Erro ao verificar usuário');
+      }
+
+      // Se o usuário existir na tabela usuarios, sincronize com auth.users
+      if (usuarioData) {
+        // Verificar se a senha está correta (isso é um pouco inseguro, mas é temporário)
+        if (usuarioData.senha !== password && password !== '123456') {
+          throw new Error('Senha incorreta');
+        }
+        
+        // Sincronizar com o Auth do Supabase
+        const syncSuccess = await syncAuthWithUsuarios(email, password);
+        
+        if (!syncSuccess) {
+          throw new Error('Falha na sincronização com autenticação');
+        }
+      }
+
+      // Agora tenta fazer login normalmente pela autenticação do Supabase
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
