@@ -47,6 +47,7 @@ const ProcessTable = ({
   const navigate = useNavigate();
   
   const handleRowClick = (processId: string) => {
+    console.log("Clicou na linha do processo:", processId);
     navigate(`/processes/${processId}`);
   };
 

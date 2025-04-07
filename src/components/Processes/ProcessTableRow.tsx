@@ -8,6 +8,7 @@ import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -36,6 +37,7 @@ const ProcessTableRow = ({
 }: ProcessTableRowProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const isNotStarted = process.status === "not_started";
   const isProcessStarted = !isNotStarted;
@@ -80,18 +82,26 @@ const ProcessTableRow = ({
   // Verifica se é o último departamento
   const isLastDepartment = process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id;
 
+  // Função para navegar para a página de detalhes do processo
+  const handleRowClick = () => {
+    console.log("Clicou na linha do processo:", process.id);
+    navigate(`/processes/${process.id}`);
+  };
+
   return (
     <TableRow
       key={process.id}
       className={cn(
+        "cursor-pointer hover:bg-gray-100",
         process.status === "overdue" ? "bg-destructive/5" : "",
         isNotStarted ? "bg-blue-50" : "",
       )}
+      onClick={handleRowClick}
     >
       <TableCell className="font-medium">
         {process.protocolNumber}
       </TableCell>
-      <TableCell>
+      <TableCell onClick={(e) => e.stopPropagation()}>
         <ProcessTypePicker
           processId={process.id}
           currentTypeId={process.processType}
@@ -109,7 +119,7 @@ const ProcessTableRow = ({
         const isOverdue = isDepartmentOverdue(dept.id);
         
         return (
-          <TableCell key={dept.id}>
+          <TableCell key={dept.id} onClick={(e) => e.stopPropagation()}>
             <ProcessDepartmentCell
               departmentId={dept.id}
               isCurrentDepartment={isActive}
@@ -124,7 +134,7 @@ const ProcessTableRow = ({
         );
       })}
       
-      <TableCell className="text-right">
+      <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
         <ProcessActionButtons
           processId={process.id}
           moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
