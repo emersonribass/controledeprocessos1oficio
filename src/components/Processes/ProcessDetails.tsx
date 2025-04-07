@@ -7,6 +7,8 @@ import ProcessHistory from "./ProcessHistory";
 import ProcessNotFound from "./ProcessNotFound";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 const ProcessDetails = () => {
   // Adicionando console log para debug
@@ -16,6 +18,9 @@ const ProcessDetails = () => {
   const [userNames, setUserNames] = useState<Record<string, string>>({});
   const [responsibleUser, setResponsibleUser] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { toast } = useToast();
+  
+  console.log("ID do processo recebido:", id);
   
   // Função para buscar nomes de usuários
   const fetchUserNames = async (userIds: string[]) => {
@@ -84,9 +89,16 @@ const ProcessDetails = () => {
       moveProcessToNextDepartment,
       moveProcessToPreviousDepartment,
       refreshProcesses,
+      isLoading: processesLoading
     } = useProcesses();
     
     console.log("Hook useProcesses carregado com sucesso", processes.length);
+    console.log("Processos disponíveis:", processes.map(p => `${p.id} - ${p.protocolNumber}`).join(', '));
+    
+    // Garantir que os processos são carregados
+    useEffect(() => {
+      refreshProcesses();
+    }, []);
     
     const process = processes.find((p) => p.id === id);
     console.log("Processo encontrado:", process);
@@ -114,13 +126,26 @@ const ProcessDetails = () => {
       return () => clearInterval(intervalId);
     }, [refreshProcesses]);
 
+    if (processesLoading) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Carregando detalhes do processo...</span>
+        </div>
+      );
+    }
+
     if (!process) {
+      console.log("Processo não encontrado para ID:", id);
+      if (processes.length > 0) {
+        console.log("Processos disponíveis:", processes.map(p => p.id).join(', '));
+      }
       return <ProcessNotFound />;
     }
 
     return (
       <div className="space-y-6">
-        <ProcessHeader title="Detalhes do Processo" />
+        <ProcessHeader title={`Detalhes do Processo: ${process.protocolNumber}`} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <ProcessCard
@@ -146,6 +171,11 @@ const ProcessDetails = () => {
     );
   } catch (error) {
     console.error("Erro ao usar hook useProcesses:", error);
+    toast({
+      title: "Erro",
+      description: "Não foi possível carregar os detalhes do processo.",
+      variant: "destructive"
+    });
     return <div>Erro ao carregar detalhes do processo. Tente novamente mais tarde.</div>;
   }
 };
