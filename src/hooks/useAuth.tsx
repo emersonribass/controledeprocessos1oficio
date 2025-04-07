@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { User } from "@/types";
 import { toast } from "sonner";
@@ -36,7 +35,18 @@ const convertSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => 
 const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boolean> => {
   try {
     console.log("Tentando sincronizar usuário:", email);
-    // Chamar a função SQL que criamos para migrar o usuário para auth.users
+    
+    // Primeiro tentar sincronizar apenas os IDs
+    const { data: syncData, error: syncError } = await supabase.rpc('sync_user_ids', { 
+      usuario_email: email
+    });
+    
+    if (!syncError && syncData === true) {
+      console.log("IDs sincronizados com sucesso sem recriar o usuário");
+      return true;
+    }
+    
+    // Se a sincronização simples falhar, tentar migração completa
     const { data, error } = await supabase.rpc('migrate_usuario_to_auth', { 
       usuario_email: email, 
       usuario_senha: senha 
@@ -48,17 +58,6 @@ const syncAuthWithUsuarios = async (email: string, senha: string): Promise<boole
     }
 
     console.log("Sincronização bem-sucedida:", data);
-
-    // Atualizar status de sincronização na tabela usuarios
-    const { error: updateError } = await supabase
-      .from('usuarios')
-      .update({ auth_sincronizado: true })
-      .eq('email', email);
-
-    if (updateError) {
-      console.error('Erro ao atualizar status de sincronização:', updateError);
-    }
-
     return true;
   } catch (error) {
     console.error('Exceção ao sincronizar usuário:', error);
