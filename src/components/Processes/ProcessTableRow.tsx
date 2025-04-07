@@ -3,7 +3,6 @@ import { useState } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Department, Process, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
-import ProcessStatusBadge from "./ProcessStatusBadge";
 import ProcessTypePicker from "./ProcessTypePicker";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
@@ -125,7 +124,6 @@ const ProcessTableRow = ({
         );
       })}
       
-      <TableCell><ProcessStatusBadge status={process.status} /></TableCell>
       <TableCell className="text-right">
         <ProcessActionButtons
           processId={process.id}

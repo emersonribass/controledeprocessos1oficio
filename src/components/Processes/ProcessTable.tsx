@@ -10,7 +10,6 @@ import ProcessTableHeader from "./ProcessTableHeader";
 import ProcessTypePicker from "./ProcessTypePicker";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
-import ProcessStatusBadge from "./ProcessStatusBadge";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -123,11 +122,6 @@ const ProcessTable = ({
                     </TableCell>
                   );
                 })}
-                
-                {/* Célula para o status do processo */}
-                <TableCell>
-                  <ProcessStatusBadge status={process.status} />
-                </TableCell>
                 
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                   <ProcessActionButtons
