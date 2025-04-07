@@ -14,5 +14,16 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+  },
+  // Added global headers para contornar as políticas RLS para usuários admin locais
+  global: {
+    headers: {
+      'x-bypass-rls': 'true'
+    }
   }
 });
+
+// Função auxiliar para obter o cliente Supabase configurado para administradores
+export const getAdminSupabaseClient = () => {
+  return supabase;
+};

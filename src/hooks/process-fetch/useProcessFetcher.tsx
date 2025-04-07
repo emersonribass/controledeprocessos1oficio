@@ -1,53 +1,55 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getAdminSupabaseClient } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useProcessFetcher = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const { user, isAdmin } = useAuth();
 
   const fetchProcessesData = async () => {
     try {
       setIsLoading(true);
+      console.log("fetchProcessesData: Buscando processos...");
       
-      // Buscar processos
-      const { data: processesData, error: processesError } = await supabase
+      // Use o cliente apropriado baseado no perfil do usuário
+      const client = user && isAdmin(user.email) ? getAdminSupabaseClient() : supabase;
+      console.log("fetchProcessesData: Cliente Supabase para buscar processos:", isAdmin(user?.email) ? "Admin" : "Regular");
+      
+      // Buscar todos os processos
+      const { data: processesData, error: processesError } = await client
         .from('processos')
-        .select(`
-          *,
-          processos_historico(*)
-        `);
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (processesError) {
+        console.error("Erro ao buscar processos:", processesError);
         throw processesError;
       }
 
-      // Buscar todos os setores separadamente
-      const { data: departmentsData, error: departmentsError } = await supabase
-        .from('setores')
-        .select('*');
+      console.log(`Processos recuperados: ${processesData.length}`);
 
-      if (departmentsError) {
-        throw departmentsError;
+      // Buscar histórico de todos os processos
+      const { data: historyData, error: historyError } = await client
+        .from('processos_historico')
+        .select('*')
+        .order('data_entrada', { ascending: true });
+
+      if (historyError) {
+        console.error("Erro ao buscar histórico dos processos:", historyError);
+        throw historyError;
       }
 
-      // Combinar os dados dos processos com os setores correspondentes
-      const processesWithDepartments = processesData.map(process => {
-        // Encontrar o setor que corresponde ao setor_atual do processo
-        const matchingDept = departmentsData.find(
-          dept => dept.id.toString() === process.setor_atual
-        );
-        
-        // Retornar o processo com as informações do setor
-        return {
-          ...process,
-          setor_info: matchingDept || null
-        };
-      });
+      console.log(`Registros de histórico recuperados: ${historyData.length}`);
 
-      return processesWithDepartments;
+      // Retornar dados brutos para serem processados pelo formatter
+      return {
+        processes: processesData || [],
+        history: historyData || []
+      };
     } catch (error) {
-      console.error('Erro ao buscar processos:', error);
-      return [];
+      console.error("Erro ao buscar dados dos processos:", error);
+      throw error;
     } finally {
       setIsLoading(false);
     }

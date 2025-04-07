@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -6,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Department } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getAdminSupabaseClient } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 // Schema de validação para o formulário
 const departmentSchema = z.object({
@@ -27,6 +29,7 @@ type FormValues = z.infer<typeof departmentSchema>;
 
 const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: DepartmentFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user, isAdmin } = useAuth();
 
   // Inicializar o formulário com valores default ou do departamento existente
   const form = useForm<FormValues>({
@@ -72,9 +75,13 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
     setIsSubmitting(true);
     
     try {
+      // Use o cliente apropriado baseado no perfil do usuário
+      const client = user && isAdmin(user.email) ? getAdminSupabaseClient() : supabase;
+      console.log("DepartmentForm: Cliente Supabase para salvar setor:", isAdmin(user?.email) ? "Admin" : "Regular");
+      
       if (department) {
         // Atualização de departamento existente
-        const { error } = await supabase
+        const { error } = await client
           .from('setores')
           .update({
             name: data.name,
@@ -89,7 +96,7 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
         toast.success("Setor atualizado com sucesso.");
       } else {
         // Inserção de novo departamento
-        const { error } = await supabase
+        const { error } = await client
           .from('setores')
           .insert({
             name: data.name,

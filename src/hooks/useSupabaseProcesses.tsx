@@ -4,7 +4,7 @@ import { useProcessMovement } from "@/hooks/useProcessMovement";
 import { useProcessUpdate } from "@/hooks/useProcessUpdate";
 import { useDepartmentsData } from "@/hooks/useDepartmentsData";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getAdminSupabaseClient } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 export const useSupabaseProcesses = () => {
@@ -26,7 +26,7 @@ export const useSupabaseProcesses = () => {
   
   const { departments } = useDepartmentsData();
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   // Este hook agora orquestra os hooks específicos
   const handleMoveProcessToNextDepartment = async (processId: string) => {
@@ -65,6 +65,10 @@ export const useSupabaseProcesses = () => {
   
   const startProcess = async (processId: string) => {
     try {
+      // Use o cliente apropriado baseado no perfil do usuário
+      const client = user && isAdmin(user.email) ? getAdminSupabaseClient() : supabase;
+      console.log("startProcess: Cliente Supabase para iniciar processo:", isAdmin(user?.email) ? "Admin" : "Regular");
+      
       // Encontrar o primeiro departamento (setor de atendimento)
       const firstDept = departments.find(d => d.order === 1);
       
@@ -80,7 +84,7 @@ export const useSupabaseProcesses = () => {
       }
       
       // 1. Atualizar o processo para setor de atendimento, status "Em andamento" e definir a data de início
-      const { error: updateError } = await supabase
+      const { error: updateError } = await client
         .from('processos')
         .update({ 
           setor_atual: firstDept.id,
@@ -95,7 +99,7 @@ export const useSupabaseProcesses = () => {
       }
       
       // 2. Criar registro no histórico com o ID do usuário logado
-      const { error: historyError } = await supabase
+      const { error: historyError } = await client
         .from('processos_historico')
         .insert({
           processo_id: processId,

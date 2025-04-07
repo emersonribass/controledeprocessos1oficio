@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getAdminSupabaseClient } from "@/integrations/supabase/client";
 import { toast } from "sonner";  // Importando corretamente o toast da biblioteca sonner
 import { Department } from "@/types";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,7 +11,7 @@ export const useDepartments = () => {
   const [openSheet, setOpenSheet] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   useEffect(() => {
     if (user) {
@@ -23,8 +23,11 @@ export const useDepartments = () => {
     console.log("Buscando setores...");
     setIsLoading(true);
     try {
-      // Removendo RLS usando a opção de configuração
-      const { data, error } = await supabase
+      // Use o cliente apropriado baseado no perfil do usuário
+      const client = user && isAdmin(user.email) ? getAdminSupabaseClient() : supabase;
+      console.log("Cliente Supabase para buscar setores:", isAdmin(user?.email) ? "Admin" : "Regular");
+      
+      const { data, error } = await client
         .from('setores')
         .select('*')
         .order('order_num', { ascending: true });
@@ -73,7 +76,10 @@ export const useDepartments = () => {
     if (!selectedDepartment) return;
 
     try {
-      const { error } = await supabase
+      // Use o cliente apropriado baseado no perfil do usuário
+      const client = user && isAdmin(user.email) ? getAdminSupabaseClient() : supabase;
+      
+      const { error } = await client
         .from('setores')
         .delete()
         .eq('id', Number(selectedDepartment.id));

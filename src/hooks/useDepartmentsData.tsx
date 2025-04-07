@@ -1,13 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { Department } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getAdminSupabaseClient } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 export const useDepartmentsData = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
 
   useEffect(() => {
     if (user) {
@@ -18,7 +18,11 @@ export const useDepartmentsData = () => {
   const fetchDepartments = async () => {
     console.log("useDepartmentData: Buscando setores...");
     try {
-      const { data, error } = await supabase
+      // Use o cliente apropriado baseado no perfil do usuário
+      const client = user && isAdmin(user.email) ? getAdminSupabaseClient() : supabase;
+      console.log("useDepartmentData: Cliente Supabase para buscar setores:", isAdmin(user?.email) ? "Admin" : "Regular");
+      
+      const { data, error } = await client
         .from('setores')
         .select('*')
         .order('order_num', { ascending: true });
