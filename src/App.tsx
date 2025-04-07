@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -56,7 +57,6 @@ const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: 
 };
 
 const AppRoutes = () => {
-  console.log("Renderizando AppRoutes");
   return (
     <BrowserRouter>
       <Routes>
@@ -126,7 +126,6 @@ const AppRoutes = () => {
 };
 
 const App = () => {
-  console.log("Renderizando App");
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
