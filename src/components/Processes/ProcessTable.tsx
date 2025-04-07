@@ -75,7 +75,11 @@ const ProcessTable = ({
             processes.map((process) => (
               <TableRow 
                 key={process.id} 
-                className="cursor-pointer hover:bg-gray-100"
+                className={cn(
+                  "cursor-pointer hover:bg-gray-100",
+                  process.status === "overdue" ? "bg-destructive/5" : "",
+                  process.status === "not_started" ? "bg-blue-50" : ""
+                )}
                 onClick={() => handleRowClick(process.id)}
               >
                 <TableCell className="font-medium">
@@ -100,27 +104,18 @@ const ProcessTable = ({
                     (departments.find(d => d.id === process.currentDepartment)?.order || 0));
                   const isActive = process.currentDepartment === dept.id;
                   
-                  // Verifica se o departamento está com prazo expirado
-                  let isOverdue = false;
-                  if (isActive && process.status !== "not_started") {
-                    const department = departments.find(d => d.id === dept.id);
-                    if (department && department.timeLimit > 0 && entryDate) {
-                      const entryDateTime = new Date(entryDate).getTime();
-                      const deadlineTime = entryDateTime + (department.timeLimit * 24 * 60 * 60 * 1000);
-                      const currentTime = new Date().getTime();
-                      isOverdue = currentTime > deadlineTime;
-                    }
-                  }
+                  // Usar a propriedade isDepartmentOverdue para verificar se o prazo está expirado
+                  const isOverdue = isActive && process.isDepartmentOverdue;
                   
                   return (
-                    <TableCell key={dept.id}>
+                    <TableCell key={dept.id} onClick={(e) => e.stopPropagation()}>
                       <ProcessDepartmentCell
                         departmentId={dept.id}
                         isCurrentDepartment={isActive}
                         hasPassedDepartment={isPastDept}
                         entryDate={entryDate}
                         showDate={isActive || isPastDept}
-                        isDepartmentOverdue={isActive && isOverdue}
+                        isDepartmentOverdue={isOverdue}
                         departmentTimeLimit={dept.timeLimit}
                         isProcessStarted={process.status !== "not_started"}
                       />
@@ -128,6 +123,7 @@ const ProcessTable = ({
                   );
                 })}
                 
+                <TableCell><ProcessStatusBadge status={process.status} /></TableCell>
                 <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                   <ProcessActionButtons
                     processId={process.id}

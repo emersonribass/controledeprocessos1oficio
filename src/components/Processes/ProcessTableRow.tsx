@@ -69,21 +69,10 @@ const ProcessTableRow = ({
     return deptOrder < currentDeptOrder;
   };
 
-  // Verifica se o departamento está com prazo expirado
+  // Verifica se o departamento está com prazo expirado usando a nova propriedade
   const isDepartmentOverdue = (departmentId: string): boolean => {
     if (departmentId !== process.currentDepartment || !isProcessStarted) return false;
-    
-    const dept = departments.find(d => d.id === departmentId);
-    if (!dept || dept.timeLimit <= 0) return false;
-    
-    const entryDate = getDepartmentEntryDate(departmentId);
-    if (!entryDate) return false;
-    
-    const entryDateTime = new Date(entryDate).getTime();
-    const deadlineTime = entryDateTime + (dept.timeLimit * 24 * 60 * 60 * 1000);
-    const currentTime = new Date().getTime();
-    
-    return currentTime > deadlineTime;
+    return !!process.isDepartmentOverdue;
   };
 
   // Verifica se é o primeiro departamento

@@ -12,8 +12,9 @@ const DashboardSummary = () => {
   // Calculate summary statistics
   const totalProcesses = processes.length;
   const completedProcesses = processes.filter(p => p.status === "completed").length;
-  const overdueProcesses = processes.filter(p => p.status === "overdue").length;
-  const pendingProcesses = processes.filter(p => p.status === "pending").length;
+  // Agora incluir processos com departamento atrasado na contagem de atrasados
+  const overdueProcesses = processes.filter(p => p.status === "overdue" || p.isDepartmentOverdue).length;
+  const pendingProcesses = processes.filter(p => p.status === "pending" && !p.isDepartmentOverdue).length;
   
   // Calculate completion rate
   const completionRate = totalProcesses > 0 

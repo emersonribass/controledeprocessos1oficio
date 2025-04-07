@@ -61,11 +61,11 @@ const ProcessDepartmentCell = ({
           ) : (
             <span>Em andamento</span>
           )}
-          {!isDepartmentOverdue && departmentTimeLimit > 0 && (
+          {departmentTimeLimit > 0 && (
             <div className="text-xs mt-1">
               {remainingDays > 0 
                 ? `${remainingDays} dia(s) restante(s)` 
-                : "Vence hoje"}
+                : remainingDays === 0 ? "Vence hoje" : "Prazo expirado"}
             </div>
           )}
         </div>

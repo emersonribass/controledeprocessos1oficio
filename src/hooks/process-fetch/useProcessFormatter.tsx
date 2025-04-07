@@ -26,7 +26,8 @@ export const useProcessFormatter = () => {
             userId: h.usuario_id || ""
           })) : [],
           userId: process.usuario_id,
-          responsibleUserId: process.usuario_responsavel
+          responsibleUserId: process.usuario_responsavel,
+          isDepartmentOverdue: false
         };
       }
       
@@ -34,37 +35,15 @@ export const useProcessFormatter = () => {
       if (process.status === 'Concluído') {
         status = 'completed';
       } else {
-        // Verificar a data final esperada geral
-        const expectedEndDate = new Date(process.data_fim_esperada);
-        const now = new Date();
-        
-        // Verificar prazo do departamento atual
-        let isDepartmentOverdue = false;
-        const currentDeptHistory = process.processos_historico?.find(
-          (h: any) => h.setor_id === process.setor_atual && h.data_saida === null
-        );
-        
-        if (currentDeptHistory) {
-          const entryDate = new Date(currentDeptHistory.data_entrada);
-          const departmentTimeLimit = process.setor_info?.time_limit || 0;
-          
-          if (departmentTimeLimit > 0) {
-            // Calcular data limite para o departamento atual
-            const deptDeadline = new Date(entryDate);
-            deptDeadline.setDate(deptDeadline.getDate() + departmentTimeLimit);
-            
-            // Verificar se ultrapassou o prazo do departamento
-            if (now > deptDeadline) {
-              isDepartmentOverdue = true;
-            }
-          }
-        }
-        
-        // Determinar status com base em ambas verificações
-        if (isDepartmentOverdue || now > expectedEndDate) {
+        // Verificar se o departamento está com prazo expirado (nova lógica)
+        if (process.is_department_overdue) {
           status = 'overdue';
         } else {
-          status = 'pending';
+          // Se o departamento não estiver com prazo expirado, verificar prazo geral
+          const expectedEndDate = new Date(process.data_fim_esperada);
+          const now = new Date();
+          
+          status = now > expectedEndDate ? 'overdue' : 'pending';
         }
       }
 
@@ -86,7 +65,8 @@ export const useProcessFormatter = () => {
         status,
         history,
         userId: process.usuario_id,
-        responsibleUserId: process.usuario_responsavel
+        responsibleUserId: process.usuario_responsavel,
+        isDepartmentOverdue: process.is_department_overdue || false
       };
     }) : [];
   };

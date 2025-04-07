@@ -32,6 +32,7 @@ export type Process = {
   history: ProcessHistory[];
   userId?: string; // Adicionando o ID do usuário responsável
   responsibleUserId?: string; // Adicionando o ID do usuário que aceitou o processo
+  isDepartmentOverdue?: boolean; // Nova propriedade para controlar se o departamento está com prazo expirado
 };
 
 export type ProcessHistory = {

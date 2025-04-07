@@ -31,13 +31,14 @@ export const useProcessFilters = (processes: Process[]) => {
         } else if (filters.status === "completed") {
           statusToMatch = "completed";
         } else if (filters.status === "overdue") {
-          statusToMatch = "overdue";
+          // Para "overdue", incluímos tanto processos com status overdue quanto com departamentos atrasados
+          return process.status === "overdue" || process.isDepartmentOverdue === true;
         } else if (filters.status === "not_started") {
           statusToMatch = "not_started";
         }
         
-        // Garantir que o status corresponda exatamente ao solicitado
-        if (process.status !== statusToMatch) {
+        // Para status que não são "overdue", fazemos a verificação normal
+        if (filters.status !== "overdue" && process.status !== statusToMatch) {
           return false;
         }
       }
@@ -60,9 +61,8 @@ export const useProcessFilters = (processes: Process[]) => {
   };
 
   const isProcessOverdue = (process: Process) => {
-    const now = new Date();
-    const expectedEndDate = new Date(process.expectedEndDate);
-    return now > expectedEndDate;
+    // Verificar tanto o prazo geral quanto o prazo do departamento
+    return process.status === "overdue" || process.isDepartmentOverdue === true;
   };
 
   return {
