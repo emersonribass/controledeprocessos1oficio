@@ -59,7 +59,15 @@ export const useProcessFilters = (processes: Process[]) => {
     });
   };
 
+  // A função isProcessOverdue agora deve verificar a data limite do departamento atual
+  // além da data limite geral do processo
   const isProcessOverdue = (process: Process) => {
+    // Se o status já foi determinado como 'overdue', respeitar essa decisão
+    if (process.status === 'overdue') {
+      return true;
+    }
+    
+    // Caso contrário, verificar a data fim esperada
     const now = new Date();
     const expectedEndDate = new Date(process.expectedEndDate);
     return now > expectedEndDate;

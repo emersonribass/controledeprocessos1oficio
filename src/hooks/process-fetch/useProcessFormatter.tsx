@@ -34,11 +34,7 @@ export const useProcessFormatter = () => {
       if (process.status === 'Concluído') {
         status = 'completed';
       } else {
-        // Verificar a data final esperada geral
-        const expectedEndDate = new Date(process.data_fim_esperada);
-        const now = new Date();
-        
-        // Verificar prazo do departamento atual
+        // Verificar o prazo do departamento atual (prioridade máxima)
         let isDepartmentOverdue = false;
         const currentDeptHistory = process.processos_historico?.find(
           (h: any) => h.setor_id === process.setor_atual && h.data_saida === null
@@ -54,17 +50,27 @@ export const useProcessFormatter = () => {
             deptDeadline.setDate(deptDeadline.getDate() + departmentTimeLimit);
             
             // Verificar se ultrapassou o prazo do departamento
+            const now = new Date();
             if (now > deptDeadline) {
               isDepartmentOverdue = true;
             }
           }
         }
         
-        // Determinar status com base em ambas verificações
-        if (isDepartmentOverdue || now > expectedEndDate) {
+        // Se o prazo do departamento estiver expirado, o processo está atrasado
+        // Não precisamos mais verificar o prazo geral se o departamento já estiver atrasado
+        if (isDepartmentOverdue) {
           status = 'overdue';
         } else {
-          status = 'pending';
+          // Verificar a data final esperada geral apenas se o departamento não estiver atrasado
+          const expectedEndDate = new Date(process.data_fim_esperada);
+          const now = new Date();
+          
+          if (now > expectedEndDate) {
+            status = 'overdue';
+          } else {
+            status = 'pending';
+          }
         }
       }
 
