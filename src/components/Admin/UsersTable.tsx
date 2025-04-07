@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, ToggleLeft, ToggleRight, Sync } from "lucide-react";
+import { Pencil, Trash2, ToggleLeft, ToggleRight, RefreshCw } from "lucide-react";
 import { UsuarioSupabase } from "@/types/usuario";
 import { Department } from "@/types";
 
@@ -132,7 +132,7 @@ export function UsersTable({
                         {syncingUser === usuario.id ? (
                           <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                         ) : (
-                          <Sync className="h-4 w-4" />
+                          <RefreshCw className="h-4 w-4" />
                         )}
                       </Button>
                     )}

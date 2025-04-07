@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProcesses } from "@/hooks/useProcesses";
@@ -10,7 +9,7 @@ import { useUsuarios } from "@/hooks/useUsuarios";
 import { UsuarioSupabase } from "@/types/usuario";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Sync } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 const AdminUsersPage = () => {
@@ -109,7 +108,6 @@ const AdminUsersPage = () => {
     }
   };
 
-  // Filtra os usuários com base no termo de busca
   const usuariosFiltrados = usuarios.filter((usuario) => {
     const searchTermLower = searchTerm.toLowerCase();
     return (
@@ -141,7 +139,7 @@ const AdminUsersPage = () => {
             </>
           ) : (
             <>
-              <Sync className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4 mr-2" />
               Sincronizar todos os usuários
             </>
           )}
