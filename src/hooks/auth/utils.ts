@@ -2,6 +2,7 @@
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { adminEmails } from "./types";
 
 // Helper function to convert Supabase user to our User type
 export const convertSupabaseUser = async (supabaseUser: SupabaseUser | null): Promise<User | null> => {
@@ -29,8 +30,6 @@ export const convertSupabaseUser = async (supabaseUser: SupabaseUser | null): Pr
 
 // Função para verificar se um email pertence a um administrador
 export const isAdmin = (email: string): boolean => {
-  // Importando a lista de adminEmails do arquivo de tipos
-  const { adminEmails } = require('./types');
   return adminEmails.includes(email);
 };
 

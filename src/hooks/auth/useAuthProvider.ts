@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Session } from "@supabase/supabase-js";
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { convertSupabaseUser } from "./utils";
+import { convertSupabaseUser, syncAuthWithUsuarios } from "./utils";
 import { toast } from "sonner";
 
 export const useAuthProvider = () => {
@@ -86,8 +86,6 @@ export const useAuthProvider = () => {
 
       // Se o usuário existir na tabela usuarios, sincronize com auth.users
       if (usuarioData) {
-        const { syncAuthWithUsuarios } = require('./utils');
-        
         // Verificar se a senha está correta (isso é um pouco inseguro, mas é temporário)
         if (usuarioData.senha !== password && password !== '123456') {
           throw new Error('Senha incorreta');
