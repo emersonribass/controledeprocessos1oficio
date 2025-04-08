@@ -119,21 +119,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
         );
         
+        setIsLoading(false);
         return () => subscription.unsubscribe();
       } catch (error) {
         console.error("Erro ao inicializar autenticação:", error);
-      } finally {
         setIsLoading(false);
+        return () => {}; // Retorna uma função vazia em caso de erro
       }
     };
     
-    const unsubscribe = initAuth();
+    // Inicializa a autenticação e armazena a função de limpeza
+    let cleanupFunction = () => {};
     
-    // Limpar subscrição quando o componente for desmontado
-    return () => {
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
+    // Executa a inicialização de forma assíncrona
+    initAuth().then(cleanup => {
+      if (cleanup && typeof cleanup === 'function') {
+        cleanupFunction = cleanup;
       }
+    }).catch(error => {
+      console.error("Erro durante inicialização da autenticação:", error);
+    });
+    
+    // Retorna a função de limpeza para useEffect
+    return () => {
+      cleanupFunction();
     };
   }, []);
 
