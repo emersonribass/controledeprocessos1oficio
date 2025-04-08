@@ -19,32 +19,49 @@ export const useAuthProvider = () => {
       try {
         setIsLoading(true);
         
-        // Primeiro verificar se há uma sessão existente
-        const { data: sessionData } = await supabase.auth.getSession();
-        console.log("Sessão inicial:", sessionData.session ? "Existe" : "Não existe");
-        setSession(sessionData.session);
-        
-        if (sessionData.session?.user) {
-          const userData = await convertSupabaseUser(sessionData.session.user);
-          setUser(userData);
-        }
-        
-        // Configurar listener para mudanças de estado de autenticação
+        // Primeiro configurar listener para mudanças de estado de autenticação
+        // Isso deve ser feito antes de verificar a sessão atual
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (_event, session) => {
+          (_event, currentSession) => {
             console.log("Evento de autenticação:", _event);
-            setSession(session);
             
-            if (session?.user) {
-              const userData = await convertSupabaseUser(session.user);
-              setUser(userData);
+            // Atualizar o estado da sessão
+            setSession(currentSession);
+            
+            // Processar dados do usuário de forma síncrona
+            if (currentSession?.user) {
+              // Usar setTimeout para evitar bloqueios na atualização do estado
+              setTimeout(async () => {
+                try {
+                  const userData = await convertSupabaseUser(currentSession.user);
+                  setUser(userData);
+                } catch (error) {
+                  console.error("Erro ao converter dados do usuário:", error);
+                } finally {
+                  setIsLoading(false);
+                }
+              }, 0);
             } else {
               setUser(null);
+              setIsLoading(false);
             }
           }
         );
         
-        setIsLoading(false);
+        // Depois verificar se há uma sessão existente
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Erro ao obter sessão:", sessionError);
+          setIsLoading(false);
+          return () => subscription.unsubscribe();
+        }
+        
+        console.log("Sessão inicial:", sessionData.session ? "Existe" : "Não existe");
+        
+        // Não atualizamos o estado aqui diretamente para evitar conflitos com o listener
+        // O listener será responsável por atualizar o estado quando receber o evento INITIAL_SESSION
+        
         return () => subscription.unsubscribe();
       } catch (error) {
         console.error("Erro ao inicializar autenticação:", error);
@@ -101,7 +118,7 @@ export const useAuthProvider = () => {
       }
 
       // Agora tenta fazer login normalmente pela autenticação do Supabase
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -110,8 +127,15 @@ export const useAuthProvider = () => {
         throw new Error(error.message);
       }
 
-      // O usuário será definido pelo listener onAuthStateChange
-      toast.success("Login realizado com sucesso!");
+      // Atualize o estado diretamente para uma resposta mais rápida ao usuário
+      // O listener onAuthStateChange também atualizará, mas isso melhora a UX
+      if (data && data.user) {
+        // Não atualizamos a sessão e o usuário aqui para evitar condições de corrida
+        // O listener onAuthStateChange será responsável por isso
+        toast.success("Login realizado com sucesso!");
+        return data;
+      }
+      
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -121,21 +145,25 @@ export const useAuthProvider = () => {
       setIsLoading(false); // Garantir que isLoading volta para false em caso de erro
       throw error;
     }
-    // Não precisamos mais definir setIsLoading(false) aqui, pois isso é feito pelo listener onAuthStateChange
   };
 
   const logout = async () => {
-    setIsLoading(true);
     try {
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
+      setIsLoading(true);
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Não atualizamos os estados aqui para evitar conflitos com o listener
+      // O listener onAuthStateChange será responsável por limpar a sessão e o usuário
       toast.info("Sessão encerrada");
+      
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
       toast.error("Erro ao encerrar sessão");
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Garantir que isLoading volta para false em caso de erro
     }
   };
 

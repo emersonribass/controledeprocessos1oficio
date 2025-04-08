@@ -28,7 +28,14 @@ const LoginForm = () => {
     try {
       await login(email, password);
       console.log("Login bem-sucedido, redirecionando para /dashboard");
-      navigate("/dashboard");
+      
+      // Adicionar um pequeno atraso para garantir que a sessão seja processada corretamente
+      // antes de redirecionar
+      setTimeout(() => {
+        navigate("/dashboard", { replace: true });
+        setIsSubmitting(false);
+      }, 100);
+      
     } catch (error) {
       // Erro já é tratado pelo hook useAuth, mas podemos exibir mensagem específica aqui
       if (error instanceof Error) {
@@ -36,7 +43,6 @@ const LoginForm = () => {
       } else {
         setError("Ocorreu um erro ao tentar fazer login. Tente novamente.");
       }
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -63,7 +69,6 @@ const LoginForm = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Senha</Label>
-              
             </div>
             <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
           </div>

@@ -2,20 +2,25 @@
 import LoginForm from "@/components/Auth/LoginForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 
 const LoginPage = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
+    // Evitar redirecionamentos múltiplos
+    if (hasRedirected) return;
+    
     if (!isLoading && user) {
       console.log("LoginPage: Usuário já autenticado, redirecionando para /dashboard");
+      setHasRedirected(true);
       navigate("/dashboard", { replace: true });
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, navigate, hasRedirected]);
 
   if (isLoading) {
     return (
