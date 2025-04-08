@@ -88,25 +88,53 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   useEffect(() => {
-    // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        const user = await convertSupabaseUser(session?.user ?? null);
-        setUser(user);
+    console.log("Inicializando AuthProvider");
+    
+    // Função para obter sessão inicial e configurar listener
+    const initAuth = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Primeiro verificar se há uma sessão existente
+        const { data: sessionData } = await supabase.auth.getSession();
+        setSession(sessionData.session);
+        
+        if (sessionData.session?.user) {
+          const userData = await convertSupabaseUser(sessionData.session.user);
+          setUser(userData);
+        }
+        
+        // Configurar listener para mudanças de estado de autenticação
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (_event, session) => {
+            console.log("Evento de autenticação:", _event);
+            setSession(session);
+            
+            if (session?.user) {
+              const userData = await convertSupabaseUser(session.user);
+              setUser(userData);
+            } else {
+              setUser(null);
+            }
+          }
+        );
+        
+        return () => subscription.unsubscribe();
+      } catch (error) {
+        console.error("Erro ao inicializar autenticação:", error);
+      } finally {
         setIsLoading(false);
       }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      const user = await convertSupabaseUser(session?.user ?? null);
-      setUser(user);
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    };
+    
+    const unsubscribe = initAuth();
+    
+    // Limpar subscrição quando o componente for desmontado
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -155,19 +183,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else {
         toast.error("Erro ao realizar login");
       }
+      setIsLoading(false); // Garantir que isLoading volta para false em caso de erro
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const logout = async () => {
+    setIsLoading(true);
     try {
       await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
       toast.info("Sessão encerrada");
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
       toast.error("Erro ao encerrar sessão");
+    } finally {
+      setIsLoading(false);
     }
   };
 
