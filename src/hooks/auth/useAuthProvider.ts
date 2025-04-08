@@ -131,8 +131,18 @@ export const useAuthProvider = () => {
       // Exibe mensagem de sucesso
       toast.success("Login realizado com sucesso!");
       
-      // Retorna os dados da autenticação
-      return data;
+      // Converte o usuário do Supabase para o formato do nosso aplicativo
+      let appUser = null;
+      if (data.user) {
+        appUser = await convertSupabaseUser(data.user);
+      }
+      
+      // Retorna os dados da autenticação no formato esperado
+      return {
+        user: appUser,
+        session: data.session,
+        weakPassword: data.user?.user_metadata?.weakPassword || null
+      };
       
     } catch (error) {
       if (error instanceof Error) {
