@@ -60,6 +60,7 @@ const DepartmentsList = ({
                     onClick={() => onMoveUp(department)}
                     disabled={departments[0].id === department.id}
                     title="Mover para cima"
+                    className="hover:bg-blue-100 hover:text-blue-600 hover:border-blue-200"
                   >
                     <ArrowUp className="h-4 w-4" />
                   </Button>
@@ -69,6 +70,7 @@ const DepartmentsList = ({
                     onClick={() => onMoveDown(department)}
                     disabled={departments[departments.length - 1].id === department.id}
                     title="Mover para baixo"
+                    className="hover:bg-blue-100 hover:text-blue-600 hover:border-blue-200"
                   >
                     <ArrowDown className="h-4 w-4" />
                   </Button>
@@ -77,6 +79,7 @@ const DepartmentsList = ({
                     size="icon"
                     onClick={() => onEdit(department)}
                     title="Editar"
+                    className="hover:bg-amber-100 hover:text-amber-600 hover:border-amber-200"
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -85,6 +88,7 @@ const DepartmentsList = ({
                     size="icon"
                     onClick={() => onDelete(department)}
                     title="Excluir"
+                    className="hover:bg-red-100 hover:text-red-600 hover:border-red-200"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

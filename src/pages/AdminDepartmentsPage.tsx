@@ -34,7 +34,7 @@ const AdminDepartmentsPage = () => {
             Gerencie os setores do sistema e seus prazos de permanência.
           </p>
         </div>
-        <Button onClick={handleAddDepartment}>
+        <Button onClick={handleAddDepartment} className="bg-green-600 hover:bg-green-700">
           <Plus className="mr-2 h-4 w-4" />
           Novo Setor
         </Button>
