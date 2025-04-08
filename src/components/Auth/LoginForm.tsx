@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,16 +8,19 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+
 const LoginForm = () => {
   // Login state
   const [email, setEmail] = useState("emerson.ribas@live.com");
   const [password, setPassword] = useState("123456");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
   const {
     login
   } = useAuth();
   const navigate = useNavigate();
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -35,6 +39,7 @@ const LoginForm = () => {
       setIsSubmitting(false);
     }
   };
+
   return <Card className="w-[380px]">
       <CardHeader>
         <CardTitle className="text-2xl text-center">Nottar</CardTitle>
@@ -73,4 +78,5 @@ const LoginForm = () => {
       </form>
     </Card>;
 };
+
 export default LoginForm;

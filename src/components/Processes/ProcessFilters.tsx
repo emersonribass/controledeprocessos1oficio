@@ -65,7 +65,7 @@ const ProcessFilters = ({ filters, setFilters, availableDepartments }: ProcessFi
   const handleSelectChange = (key: string, value: string) => {
     setFilters((prev) => ({
       ...prev,
-      [key]: value,
+      [key]: value === "all" ? undefined : value,
     }));
   };
 
@@ -86,16 +86,14 @@ const ProcessFilters = ({ filters, setFilters, availableDepartments }: ProcessFi
         </div>
 
         <Select
-          value={filters.status || ""}
-          onValueChange={(value) =>
-            handleSelectChange("status", value || undefined)
-          }
+          value={filters.status || "all"}
+          onValueChange={(value) => handleSelectChange("status", value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="pending">Em andamento</SelectItem>
             <SelectItem value="overdue">Atrasado</SelectItem>
             <SelectItem value="completed">Concluído</SelectItem>
@@ -104,16 +102,14 @@ const ProcessFilters = ({ filters, setFilters, availableDepartments }: ProcessFi
         </Select>
 
         <Select
-          value={filters.department || ""}
-          onValueChange={(value) =>
-            handleSelectChange("department", value || undefined)
-          }
+          value={filters.department || "all"}
+          onValueChange={(value) => handleSelectChange("department", value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Setor" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             {deptsToShow.map((department) => (
               <SelectItem key={department.id} value={department.id}>
                 {department.name}
@@ -125,16 +121,14 @@ const ProcessFilters = ({ filters, setFilters, availableDepartments }: ProcessFi
 
       <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
         <Select
-          value={filters.processType || ""}
-          onValueChange={(value) =>
-            handleSelectChange("processType", value || undefined)
-          }
+          value={filters.processType || "all"}
+          onValueChange={(value) => handleSelectChange("processType", value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="Tipo de Processo" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
             {processTypes.map((type) => (
               <SelectItem key={type.id} value={type.id}>
                 {type.name}
@@ -159,4 +153,3 @@ const ProcessFilters = ({ filters, setFilters, availableDepartments }: ProcessFi
 };
 
 export default ProcessFilters;
-

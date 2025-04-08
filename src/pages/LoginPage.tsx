@@ -1,6 +1,8 @@
+
 import LoginForm from "@/components/Auth/LoginForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
+
 const LoginPage = () => {
   return <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30">
       <div className="mb-8 text-center">
@@ -20,4 +22,5 @@ const LoginPage = () => {
       </p>
     </div>;
 };
+
 export default LoginPage;
