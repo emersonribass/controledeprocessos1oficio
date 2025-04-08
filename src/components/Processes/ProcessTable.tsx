@@ -85,7 +85,7 @@ const ProcessTable = ({
                     </TableCell>;
           })}
                 
-                <TableCell onClick={e => e.stopPropagation()} className="text-right px-0">
+                <TableCell onClick={e => e.stopPropagation()} className="text-center px-0">
                   <ProcessActionButtons processId={process.id} moveProcessToPreviousDepartment={moveProcessToPreviousDepartment} moveProcessToNextDepartment={moveProcessToNextDepartment} isFirstDepartment={process.currentDepartment === sortedDepartments[0]?.id} isLastDepartment={process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id} setIsEditing={() => {}} isEditing={false} status={process.status} startProcess={startProcess} />
                 </TableCell>
               </TableRow>)}
