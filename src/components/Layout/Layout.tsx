@@ -1,7 +1,7 @@
 
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 
 const Layout = () => {
   const { user, isLoading } = useAuth();

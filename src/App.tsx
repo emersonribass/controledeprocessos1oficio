@@ -8,6 +8,21 @@ import { ProcessesProvider } from "@/hooks/useProcesses";
 import { NotificationsProvider } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/auth";
 
+// Importações necessárias para resolver os erros
+import Layout from "@/components/Layout/Layout";
+import Index from "@/pages/Index";
+import LoginPage from "@/pages/LoginPage";
+import Dashboard from "@/pages/Dashboard";
+import ProcessesPage from "@/pages/ProcessesPage";
+import ProcessDetailsPage from "@/pages/ProcessDetailsPage";
+import UsersPage from "@/pages/UsersPage";
+import SettingsPage from "@/pages/SettingsPage";
+import AdminUsersPage from "@/pages/AdminUsersPage";
+import AdminDepartmentsPage from "@/pages/AdminDepartmentsPage";
+import AdminProcessSettingsPage from "@/pages/AdminProcessSettingsPage";
+import AdminProcessTypesPage from "@/pages/AdminProcessTypesPage";
+import NotFound from "@/pages/NotFound";
+
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: { children: React.ReactNode, adminOnly?: boolean, needsProcesses?: boolean }) => {

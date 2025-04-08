@@ -1,4 +1,3 @@
-
 import { useParams } from "react-router-dom";
 import { useProcesses } from "@/hooks/useProcesses";
 import ProcessHeader from "./ProcessHeader";
@@ -7,6 +6,7 @@ import ProcessHistory from "./ProcessHistory";
 import ProcessNotFound from "./ProcessNotFound";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/auth";
 
 const ProcessDetails = () => {
   // Adicionando console log para debug

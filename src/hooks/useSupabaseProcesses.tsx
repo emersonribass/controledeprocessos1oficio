@@ -1,11 +1,10 @@
-
 import { useProcessesFetch } from "@/hooks/useProcessesFetch";
 import { useProcessMovement } from "@/hooks/useProcessMovement";
 import { useProcessUpdate } from "@/hooks/useProcessUpdate";
 import { useDepartmentsData } from "@/hooks/useDepartmentsData";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 
 export const useSupabaseProcesses = () => {
   const { 
@@ -28,7 +27,6 @@ export const useSupabaseProcesses = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Este hook agora orquestra os hooks específicos
   const handleMoveProcessToNextDepartment = async (processId: string) => {
     const success = await moveProcessToNextDepartment(processId);
     if (success) {
@@ -65,7 +63,6 @@ export const useSupabaseProcesses = () => {
   
   const startProcess = async (processId: string) => {
     try {
-      // Encontrar o primeiro departamento (setor de atendimento)
       const firstDept = departments.find(d => d.order === 1);
       
       if (!firstDept) {
@@ -74,18 +71,16 @@ export const useSupabaseProcesses = () => {
       
       const now = new Date().toISOString();
       
-      // Verificar se o usuário está logado
       if (!user || !user.id) {
         throw new Error("Usuário não autenticado");
       }
       
-      // 1. Atualizar o processo para setor de atendimento, status "Em andamento" e definir a data de início
       const { error: updateError } = await supabase
         .from('processos')
         .update({ 
           setor_atual: firstDept.id,
           status: "Em andamento",
-          data_inicio: now,  // Definir a data de início apenas quando o processo é iniciado
+          data_inicio: now,
           updated_at: now
         })
         .eq('id', processId);
@@ -94,7 +89,6 @@ export const useSupabaseProcesses = () => {
         throw updateError;
       }
       
-      // 2. Criar registro no histórico com o ID do usuário logado
       const { error: historyError } = await supabase
         .from('processos_historico')
         .insert({
@@ -102,7 +96,7 @@ export const useSupabaseProcesses = () => {
           setor_id: firstDept.id,
           data_entrada: now,
           data_saida: null,
-          usuario_id: user.id  // Adicionando o ID do usuário logado
+          usuario_id: user.id
         });
         
       if (historyError) {
@@ -114,7 +108,6 @@ export const useSupabaseProcesses = () => {
         description: `Processo iniciado e movido para ${firstDept.name}`
       });
       
-      // Atualizar a lista de processos
       await fetchProcesses();
       
     } catch (error) {

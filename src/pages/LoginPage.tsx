@@ -1,23 +1,20 @@
-
 import LoginForm from "@/components/Auth/LoginForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 
 const LoginPage = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Se o usuário já estiver autenticado, redirecione para o dashboard
   useEffect(() => {
     if (!isLoading && user) {
       navigate("/dashboard");
     }
   }, [user, isLoading, navigate]);
 
-  // Se ainda estiver carregando, mostre um indicador de carregamento
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30">
