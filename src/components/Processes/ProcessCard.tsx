@@ -1,4 +1,3 @@
-
 import { Process } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -6,15 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, User } from "lucide-react";
 import ProcessStatusBadge from "./ProcessStatusBadge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 type ProcessCardProps = {
   process: Process;
   getProcessTypeName: (id: string) => string;
@@ -23,17 +14,15 @@ type ProcessCardProps = {
   moveProcessToPreviousDepartment: (processId: string) => void;
   responsibleUserName?: string;
 };
-
 const ProcessCard = ({
   process,
   getProcessTypeName,
   getDepartmentName,
   moveProcessToNextDepartment,
   moveProcessToPreviousDepartment,
-  responsibleUserName,
+  responsibleUserName
 }: ProcessCardProps) => {
-  return (
-    <Card className="md:col-span-2">
+  return <Card className="md:col-span-2">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Protocolo: {process.protocolNumber}</span>
@@ -58,7 +47,9 @@ const ProcessCard = ({
               Data de Início
             </h3>
             <p className="font-medium">
-              {format(new Date(process.startDate), "dd/MM/yyyy", { locale: ptBR })}
+              {format(new Date(process.startDate), "dd/MM/yyyy", {
+              locale: ptBR
+            })}
             </p>
           </div>
           <div>
@@ -66,7 +57,9 @@ const ProcessCard = ({
               Tempo de Processamento
             </h3>
             <p className="font-medium">
-              {formatDistanceToNow(new Date(process.startDate), { locale: ptBR })}
+              {formatDistanceToNow(new Date(process.startDate), {
+              locale: ptBR
+            })}
             </p>
           </div>
           <div>
@@ -74,40 +67,31 @@ const ProcessCard = ({
               Previsão de Conclusão
             </h3>
             <p className="font-medium">
-              {format(new Date(process.expectedEndDate), "dd/MM/yyyy", { locale: ptBR })}
+              {format(new Date(process.expectedEndDate), "dd/MM/yyyy", {
+              locale: ptBR
+            })}
             </p>
           </div>
-          {responsibleUserName && (
-            <div className="col-span-2">
+          {responsibleUserName && <div className="col-span-2">
               <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
                 <User className="h-4 w-4 mr-1" /> Responsável
               </h3>
               <p className="font-medium">
                 {responsibleUserName}
               </p>
-            </div>
-          )}
+            </div>}
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button
-          variant="outline"
-          onClick={() => moveProcessToPreviousDepartment(process.id)}
-          disabled={process.currentDepartment === "1"}
-        >
+        <Button variant="outline" onClick={() => moveProcessToPreviousDepartment(process.id)} disabled={process.currentDepartment === "1"} className="text-white bg-green-700 hover:bg-green-600 gap-0">
           <MoveLeft className="mr-2 h-4 w-4" />
           Departamento Anterior
         </Button>
-        <Button
-          onClick={() => moveProcessToNextDepartment(process.id)}
-          disabled={process.currentDepartment === "10"}
-        >
+        <Button onClick={() => moveProcessToNextDepartment(process.id)} disabled={process.currentDepartment === "10"} className="gap-0">
           Próximo Departamento
           <MoveRight className="ml-2 h-4 w-4" />
         </Button>
       </CardFooter>
-    </Card>
-  );
+    </Card>;
 };
-
 export default ProcessCard;
