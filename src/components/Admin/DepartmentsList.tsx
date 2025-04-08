@@ -35,7 +35,6 @@ const DepartmentsList = ({
         <TableRow className="h-10">
           <TableHead>ID</TableHead>
           <TableHead>Nome</TableHead>
-          <TableHead>Ordem</TableHead>
           <TableHead>Prazo (dias)</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
@@ -43,7 +42,7 @@ const DepartmentsList = ({
       <TableBody>
         {departments.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={5} className="text-center py-6">
+            <TableCell colSpan={4} className="text-center py-6">
               Nenhum setor encontrado.
             </TableCell>
           </TableRow>
@@ -52,7 +51,6 @@ const DepartmentsList = ({
             <TableRow key={department.id} className="h-8 py-1">
               <TableCell className="py-1">{department.id}</TableCell>
               <TableCell className="font-medium py-1">{department.name}</TableCell>
-              <TableCell className="py-1">{department.order}</TableCell>
               <TableCell className="py-1">{department.timeLimit}</TableCell>
               <TableCell className="text-right py-1">
                 <div className="flex justify-end space-x-2">

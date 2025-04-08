@@ -13,7 +13,6 @@ import { useToast } from "@/hooks/use-toast";
 // Schema de validação para o formulário
 const departmentSchema = z.object({
   name: z.string().min(2, "O nome do setor deve ter pelo menos 2 caracteres."),
-  order: z.coerce.number().int().min(1, "A ordem deve ser um número inteiro maior que 0."),
   timeLimit: z.coerce.number().int().min(0, "O prazo deve ser um número inteiro maior ou igual a 0.")
 });
 
@@ -35,7 +34,6 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
     resolver: zodResolver(departmentSchema),
     defaultValues: {
       name: department?.name || "",
-      order: department?.order || getNextAvailableOrder(),
       timeLimit: department?.timeLimit || 0
     }
   });
@@ -44,7 +42,6 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
   useEffect(() => {
     form.reset({
       name: department?.name || "",
-      order: department?.order || getNextAvailableOrder(),
       timeLimit: department?.timeLimit || 0
     });
   }, [department, form]);
@@ -55,22 +52,8 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
     return Math.max(...existingDepartments.map(d => d.order)) + 1;
   }
 
-  // Função para verificar se a ordem já existe
-  function orderExists(order: number): boolean {
-    return existingDepartments.some(d => d.order === order && (department ? Number(d.id) !== Number(department.id) : true));
-  }
-
   // Manipular o envio do formulário
   const onSubmit = async (data: FormValues) => {
-    // Verificar se a ordem já existe
-    if (orderExists(data.order)) {
-      form.setError("order", { 
-        type: "manual", 
-        message: "Esta ordem já está em uso por outro setor." 
-      });
-      return;
-    }
-    
     setIsSubmitting(true);
     
     try {
@@ -80,7 +63,6 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
           .from('setores')
           .update({
             name: data.name,
-            order_num: data.order,
             time_limit: data.timeLimit,
             updated_at: new Date().toISOString()
           })
@@ -93,12 +75,13 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
           description: "Setor atualizado com sucesso."
         });
       } else {
-        // Inserção de novo departamento
+        // Inserção de novo departamento - definindo a ordem automaticamente
+        const nextOrder = getNextAvailableOrder();
         const { error } = await supabase
           .from('setores')
           .insert({
             name: data.name,
-            order_num: data.order,
+            order_num: nextOrder,
             time_limit: data.timeLimit
           });
 
@@ -137,23 +120,6 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
               </FormControl>
               <FormDescription>
                 Nome que identifica o setor no sistema.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="order"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Ordem</FormLabel>
-              <FormControl>
-                <Input type="number" min="1" {...field} />
-              </FormControl>
-              <FormDescription>
-                Posição do setor no fluxo de processos.
               </FormDescription>
               <FormMessage />
             </FormItem>

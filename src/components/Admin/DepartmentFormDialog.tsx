@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Department } from "@/types";
 import DepartmentForm from "@/components/Admin/DepartmentForm";
