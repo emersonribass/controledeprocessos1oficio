@@ -46,10 +46,13 @@ const ProcessTableRow = ({
     .filter(dept => dept.name !== "Concluído(a)")
     .sort((a, b) => a.order - b.order);
 
-  // Função para obter a data de entrada de um departamento do histórico
-  const getDepartmentEntryDate = (departmentId: string): string | null => {
-    const historyEntry = process.history.find(h => h.departmentId === departmentId);
-    return historyEntry ? historyEntry.entryDate : null;
+  // Função para obter a data de entrada mais recente para um departamento
+  const getMostRecentEntryDate = (departmentId: string): string | null => {
+    const departmentEntries = process.history
+      .filter(h => h.departmentId === departmentId)
+      .sort((a, b) => new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime());
+    
+    return departmentEntries.length > 0 ? departmentEntries[0].entryDate : null;
   };
 
   // Verifica se o processo já passou pelo departamento
@@ -76,7 +79,7 @@ const ProcessTableRow = ({
     const dept = departments.find(d => d.id === departmentId);
     if (!dept || dept.timeLimit <= 0) return false;
     
-    const entryDate = getDepartmentEntryDate(departmentId);
+    const entryDate = getMostRecentEntryDate(departmentId);
     if (!entryDate) return false;
     
     const entryDateTime = new Date(entryDate).getTime();
@@ -115,7 +118,7 @@ const ProcessTableRow = ({
       
       {/* Células para cada departamento */}
       {sortedDepartments.map((dept) => {
-        const entryDate = getDepartmentEntryDate(dept.id);
+        const entryDate = getMostRecentEntryDate(dept.id);
         const isPastDept = hasPassedDepartment(dept.id) && isPreviousDepartment(dept.id);
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id);

@@ -36,16 +36,26 @@ export const useProcessFormatter = () => {
       } else {
         // Verificar o prazo do departamento atual (prioridade máxima)
         let isDepartmentOverdue = false;
-        const currentDeptHistory = process.processos_historico?.find(
-          (h: any) => h.setor_id === process.setor_atual && h.data_saida === null
-        );
+        
+        // Buscar TODAS as entradas do histórico para o departamento atual
+        const currentDeptEntries = process.processos_historico?.filter(
+          (h: any) => h.setor_id === process.setor_atual
+        ) || [];
+        
+        // Ordenar do mais recente para o mais antigo
+        currentDeptEntries.sort((a: any, b: any) => {
+          return new Date(b.data_entrada).getTime() - new Date(a.data_entrada).getTime();
+        });
+        
+        // Pegar a entrada mais recente sem data de saída (entrada atual)
+        const currentDeptHistory = currentDeptEntries.find((h: any) => h.data_saida === null);
         
         if (currentDeptHistory) {
           const entryDate = new Date(currentDeptHistory.data_entrada);
           const departmentTimeLimit = process.setor_info?.time_limit || 0;
           
           if (departmentTimeLimit > 0) {
-            // Calcular data limite para o departamento atual
+            // Calcular data limite para o departamento atual usando a data de entrada mais recente
             const deptDeadline = new Date(entryDate);
             deptDeadline.setDate(deptDeadline.getDate() + departmentTimeLimit);
             
