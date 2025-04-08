@@ -21,6 +21,7 @@ export const useAuthProvider = () => {
         
         // Primeiro verificar se há uma sessão existente
         const { data: sessionData } = await supabase.auth.getSession();
+        console.log("Sessão inicial:", sessionData.session ? "Existe" : "Não existe");
         setSession(sessionData.session);
         
         if (sessionData.session?.user) {
@@ -109,6 +110,7 @@ export const useAuthProvider = () => {
         throw new Error(error.message);
       }
 
+      // O usuário será definido pelo listener onAuthStateChange
       toast.success("Login realizado com sucesso!");
     } catch (error) {
       if (error instanceof Error) {
@@ -119,6 +121,7 @@ export const useAuthProvider = () => {
       setIsLoading(false); // Garantir que isLoading volta para false em caso de erro
       throw error;
     }
+    // Não precisamos mais definir setIsLoading(false) aqui, pois isso é feito pelo listener onAuthStateChange
   };
 
   const logout = async () => {

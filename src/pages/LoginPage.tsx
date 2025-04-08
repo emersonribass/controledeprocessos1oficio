@@ -1,3 +1,4 @@
+
 import LoginForm from "@/components/Auth/LoginForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
@@ -11,7 +12,8 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (!isLoading && user) {
-      navigate("/dashboard");
+      console.log("LoginPage: Usuário já autenticado, redirecionando para /dashboard");
+      navigate("/dashboard", { replace: true });
     }
   }, [user, isLoading, navigate]);
 

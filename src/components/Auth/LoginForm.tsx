@@ -27,7 +27,8 @@ const LoginForm = () => {
     setError(null);
     try {
       await login(email, password);
-      navigate("/");
+      console.log("Login bem-sucedido, redirecionando para /dashboard");
+      navigate("/dashboard");
     } catch (error) {
       // Erro já é tratado pelo hook useAuth, mas podemos exibir mensagem específica aqui
       if (error instanceof Error) {

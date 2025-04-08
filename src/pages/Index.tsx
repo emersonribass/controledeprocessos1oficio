@@ -10,13 +10,18 @@ const Index = () => {
 
   useEffect(() => {
     // Se ainda estiver carregando, não faça nada
-    if (isLoading) return;
+    if (isLoading) {
+      console.log("Index: Autenticação carregando...");
+      return;
+    }
     
     // Após determinar o estado de autenticação, redirecione adequadamente
     if (user) {
-      navigate("/dashboard");
+      console.log("Index: Usuário autenticado, redirecionando para /dashboard");
+      navigate("/dashboard", { replace: true });
     } else {
-      navigate("/login");
+      console.log("Index: Usuário não autenticado, redirecionando para /login");
+      navigate("/login", { replace: true });
     }
   }, [user, isLoading, navigate]);
 
