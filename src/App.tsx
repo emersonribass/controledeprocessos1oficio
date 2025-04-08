@@ -129,15 +129,15 @@ const App = () => {
   console.log("Renderizando App");
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <NotificationsProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+          <NotificationsProvider>
             <AppRoutes />
-          </TooltipProvider>
-        </NotificationsProvider>
-      </AuthProvider>
+          </NotificationsProvider>
+        </AuthProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 };
