@@ -1,28 +1,12 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider } from "@/hooks/auth";
 import { ProcessesProvider } from "@/hooks/useProcesses";
 import { NotificationsProvider } from "@/hooks/useNotifications";
-import { useAuth } from "@/hooks/useAuth";
-
-import Layout from "@/components/Layout/Layout";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import ProcessesPage from "./pages/ProcessesPage";
-import ProcessDetailsPage from "./pages/ProcessDetailsPage";
-import LoginPage from "./pages/LoginPage";
-import UsersPage from "./pages/UsersPage";
-import SettingsPage from "./pages/SettingsPage";
-import NotFound from "./pages/NotFound";
-
-import AdminUsersPage from "./pages/AdminUsersPage";
-import AdminDepartmentsPage from "./pages/AdminDepartmentsPage";
-import AdminProcessSettingsPage from "./pages/AdminProcessSettingsPage";
-import AdminProcessTypesPage from "./pages/AdminProcessTypesPage";
+import { useAuth } from "@/hooks/auth";
 
 const queryClient = new QueryClient();
 
@@ -45,7 +29,6 @@ const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: 
     return <Navigate to="/dashboard" replace />;
   }
   
-  // Apenas envolve com ProcessesProvider se necessário
   if (needsProcesses) {
     return (
       <ProcessesProvider>
