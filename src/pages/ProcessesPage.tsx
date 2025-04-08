@@ -32,7 +32,7 @@ const ProcessesPage = () => {
             Gerencie e acompanhe o andamento de todos os processos.
           </p>
         </div>
-        {(isAdmin(user?.email || "") || user?.departments?.length === 0) && <Button onClick={() => navigate("/admin/process-settings")} className="flex items-center gap-1 px-[10px] text-sm text-center rounded-lg text-white bg-blue-700 hover:bg-blue-600 font-medium">
+        {(isAdmin(user?.email || "") || user?.departments?.length === 0) && <Button onClick={() => navigate("/admin/process-settings")} className="flex items-center gap-1 px-[10px] text-sm text-center text-white bg-blue-700 hover:bg-blue-600 font-medium rounded">
             <PlusCircle className="h-5 w-5" />
             Novo Processo
           </Button>}
