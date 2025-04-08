@@ -4,10 +4,12 @@ import ProcessList from "@/components/Processes/ProcessList";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const ProcessesPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAdmin } = useAuth();
   const [initialFilters, setInitialFilters] = useState({});
   
   useEffect(() => {
@@ -31,13 +33,15 @@ const ProcessesPage = () => {
             Gerencie e acompanhe o andamento de todos os processos.
           </p>
         </div>
-        <Button 
-          onClick={() => navigate("/admin/process-settings")}
-          className="flex items-center gap-2"
-        >
-          <PlusCircle className="h-5 w-5" />
-          Novo Processo
-        </Button>
+        {(isAdmin(user?.email || "") || (user?.departments?.length === 0)) && (
+          <Button 
+            onClick={() => navigate("/admin/process-settings")}
+            className="flex items-center gap-2"
+          >
+            <PlusCircle className="h-5 w-5" />
+            Novo Processo
+          </Button>
+        )}
       </div>
 
       <ProcessList initialFilters={initialFilters} />

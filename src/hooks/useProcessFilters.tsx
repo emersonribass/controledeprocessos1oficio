@@ -1,7 +1,10 @@
 
 import { Process } from "@/types";
+import { useAuth } from "@/hooks/useAuth";
 
 export const useProcessFilters = (processes: Process[]) => {
+  const { user, isAdmin } = useAuth();
+  
   const filterProcesses = (
     filters: {
       department?: string;
@@ -15,6 +18,17 @@ export const useProcessFilters = (processes: Process[]) => {
     const listToFilter = processesToFilter || processes;
     
     return listToFilter.filter((process) => {
+      // Verificar se o usuário tem permissão para ver este processo
+      // Se não for admin e tiver departamentos atribuídos, só mostrar processos do seu departamento
+      if (
+        user && 
+        !isAdmin(user.email) && 
+        user.departments?.length > 0 &&
+        !user.departments.includes(process.currentDepartment)
+      ) {
+        return false;
+      }
+
       // Verificar filtro de departamento
       if (filters.department && process.currentDepartment !== filters.department) {
         return false;

@@ -5,6 +5,7 @@ import { Process } from "@/types";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProcessListProps {
   initialFilters?: {
@@ -31,6 +32,8 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     startProcess
   } = useProcesses();
 
+  const { user, isAdmin } = useAuth();
+  
   const [filters, setFilters] = useState<{
     department?: string;
     status?: string;
@@ -92,9 +95,18 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     );
   }
 
+  // Filtrar departamentos disponíveis para o usuário
+  const availableDepartments = isAdmin(user?.email || "") || !user?.departments?.length 
+    ? departments 
+    : departments.filter(dept => user?.departments.includes(dept.id));
+
   return (
     <div>
-      <ProcessFilters filters={filters} setFilters={setFilters} />
+      <ProcessFilters 
+        filters={filters} 
+        setFilters={setFilters} 
+        availableDepartments={availableDepartments}
+      />
 
       {processes.length === 0 ? (
         <div className="flex justify-center items-center h-64 border rounded-md p-6 mt-4 bg-gray-50">

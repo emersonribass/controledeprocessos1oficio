@@ -20,14 +20,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const adminEmails = ["admin@nottar.com", "emerson.ribas@live.com"];
 
 // Helper function to convert Supabase user to our User type
-const convertSupabaseUser = (supabaseUser: SupabaseUser | null): User | null => {
+const convertSupabaseUser = async (supabaseUser: SupabaseUser | null): Promise<User | null> => {
   if (!supabaseUser) return null;
+  
+  // Buscar informações adicionais do usuário na tabela usuarios
+  const { data: userData, error: userError } = await supabase
+    .from('usuarios')
+    .select('setores_atribuidos, perfil')
+    .eq('email', supabaseUser.email)
+    .single();
+  
+  if (userError && userError.code !== 'PGRST116') {
+    console.error('Erro ao buscar dados do usuário:', userError);
+  }
   
   return {
     id: supabaseUser.id,
     email: supabaseUser.email || "",
     name: supabaseUser.user_metadata?.nome || supabaseUser.user_metadata?.full_name || "Usuário",
-    departments: [],
+    departments: userData?.setores_atribuidos || [],
     createdAt: supabaseUser.created_at,
   };
 };
@@ -79,17 +90,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setSession(session);
-        setUser(convertSupabaseUser(session?.user ?? null));
+        const user = await convertSupabaseUser(session?.user ?? null);
+        setUser(user);
         setIsLoading(false);
       }
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
-      setUser(convertSupabaseUser(session?.user ?? null));
+      const user = await convertSupabaseUser(session?.user ?? null);
+      setUser(user);
       setIsLoading(false);
     });
 
