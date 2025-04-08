@@ -43,10 +43,10 @@ const DepartmentsList = ({
               <TableCell className="py-1">{department.timeLimit}</TableCell>
               <TableCell className="text-right py-1">
                 <div className="flex justify-end space-x-2">
-                  <Button variant="outline" size="icon" onClick={() => onMoveUp(department)} disabled={departments[0].id === department.id} title="Mover para cima" className="hover:text-blue-600 hover:border-blue-200 bg-sky-400 hover:bg-sky-300">
+                  <Button variant="outline" size="icon" onClick={() => onMoveUp(department)} disabled={departments[0].id === department.id} title="Mover para cima" className="hover:border-blue-200 bg-green-700 hover:bg-green-600 text-black">
                     <ArrowUp className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="icon" onClick={() => onMoveDown(department)} disabled={departments[departments.length - 1].id === department.id} title="Mover para baixo" className="hover:text-blue-600 hover:border-blue-200 bg-sky-400 hover:bg-sky-300">
+                  <Button variant="outline" size="icon" onClick={() => onMoveDown(department)} disabled={departments[departments.length - 1].id === department.id} title="Mover para baixo" className="hover:border-blue-200 bg-green-700 hover:bg-green-600 text-black">
                     <ArrowDown className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="icon" onClick={() => onEdit(department)} title="Editar" className="hover:text-amber-600 hover:border-amber-200 bg-amber-400 hover:bg-amber-300">
