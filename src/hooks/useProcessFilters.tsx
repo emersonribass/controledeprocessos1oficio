@@ -1,6 +1,5 @@
-
 import { Process } from "@/types";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 
 export const useProcessFilters = (processes: Process[]) => {
   const { user, isAdmin } = useAuth();

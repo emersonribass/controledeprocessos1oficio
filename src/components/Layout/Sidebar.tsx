@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, ClipboardList, Users, Settings, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 
 type SidebarLink = {
   title: string;
@@ -13,8 +12,6 @@ type SidebarLink = {
   icon: React.ReactNode;
 };
 
-// Este componente não está sendo usado na navegação principal,
-// mantido no projeto para possível uso futuro em outras seções
 const Sidebar = () => {
   const { pathname } = useLocation();
   const [collapsed, setCollapsed] = useState(false);
@@ -33,7 +30,6 @@ const Sidebar = () => {
     },
   ];
 
-  // Admin-only links
   const adminLinks: SidebarLink[] = [
     {
       title: "Usuários",
@@ -47,7 +43,6 @@ const Sidebar = () => {
     },
   ];
 
-  // Check if user has admin access
   const isAdmin = user?.email === "admin@nottar.com";
 
   return (

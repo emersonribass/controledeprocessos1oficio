@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useProcesses } from "@/hooks/useProcesses";
 import { Process } from "@/types";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 
 interface ProcessListProps {
   initialFilters?: {
@@ -44,17 +43,14 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const [sortField, setSortField] = useState<keyof Process>("protocolNumber");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-  // Aplicar filtros iniciais
   useEffect(() => {
     if (Object.keys(initialFilters).length > 0) {
       setFilters(initialFilters);
     }
   }, [initialFilters]);
 
-  // Filtrar processos de acordo com os status
   const filteredProcesses = filterProcesses(filters, processes);
 
-  // Sort processes
   const sortedProcesses = [...filteredProcesses].sort((a, b) => {
     if (sortField === "startDate" || sortField === "expectedEndDate") {
       const dateA = new Date(a[sortField]).getTime();
@@ -63,7 +59,6 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     }
 
     if (sortField === "protocolNumber") {
-      // Extrair números dos protocolos para ordenação numérica
       const numA = parseInt(a.protocolNumber.replace(/\D/g, ""));
       const numB = parseInt(b.protocolNumber.replace(/\D/g, ""));
       return sortDirection === "asc" ? numA - numB : numB - numA;
@@ -95,7 +90,6 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     );
   }
 
-  // Filtrar departamentos disponíveis para o usuário
   const availableDepartments = isAdmin(user?.email || "") || !user?.departments?.length 
     ? departments 
     : departments.filter(dept => user?.departments.includes(dept.id));

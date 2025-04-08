@@ -1,4 +1,3 @@
-
 import { ProcessHistory as ProcessHistoryType } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -10,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import AcceptProcessButton from "./AcceptProcessButton";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 
 type ProcessHistoryProps = {
   history: ProcessHistoryType[];

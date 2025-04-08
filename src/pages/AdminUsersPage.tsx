@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProcesses } from "@/hooks/useProcesses";
@@ -8,7 +7,7 @@ import { UserFormDialog } from "@/components/Admin/UserFormDialog";
 import { UsersPageHeader } from "@/components/Admin/UsersPageHeader";
 import { useUsuarios } from "@/hooks/useUsuarios";
 import { UsuarioSupabase } from "@/types/usuario";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 
 const AdminUsersPage = () => {
   const [openDialog, setOpenDialog] = useState(false);

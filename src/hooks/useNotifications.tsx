@@ -1,8 +1,7 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Notification } from "@/types";
 import { mockNotifications } from "@/lib/mockData";
-import { useAuth } from "./useAuth";
+import { useAuth } from "@/hooks/auth";
 
 type NotificationsContextType = {
   notifications: Notification[];

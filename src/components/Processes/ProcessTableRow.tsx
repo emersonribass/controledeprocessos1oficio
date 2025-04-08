@@ -7,7 +7,7 @@ import ProcessStatusBadge from "./ProcessStatusBadge";
 import ProcessTypePicker from "./ProcessTypePicker";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProcessTableRowProps {
