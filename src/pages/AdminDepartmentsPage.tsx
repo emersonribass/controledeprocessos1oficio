@@ -5,20 +5,22 @@ import { Plus } from "lucide-react";
 import { useDepartments } from "@/hooks/useDepartments";
 import DepartmentsList from "@/components/Admin/DepartmentsList";
 import DeleteDepartmentDialog from "@/components/Admin/DeleteDepartmentDialog";
-import DepartmentFormSheet from "@/components/Admin/DepartmentFormSheet";
+import DepartmentFormDialog from "@/components/Admin/DepartmentFormDialog";
 
 const AdminDepartmentsPage = () => {
   const {
     departments,
     isLoading,
-    openSheet,
-    setOpenSheet,
+    openDialog,
+    setOpenDialog,
     openDeleteDialog,
     setOpenDeleteDialog,
     selectedDepartment,
     handleAddDepartment,
     handleEditDepartment,
     handleDeleteDepartment,
+    handleMoveUp,
+    handleMoveDown,
     confirmDelete,
     onDepartmentSaved
   } = useDepartments();
@@ -50,7 +52,9 @@ const AdminDepartmentsPage = () => {
             departments={departments} 
             isLoading={isLoading} 
             onEdit={handleEditDepartment} 
-            onDelete={handleDeleteDepartment} 
+            onDelete={handleDeleteDepartment}
+            onMoveUp={handleMoveUp}
+            onMoveDown={handleMoveDown}
           />
         </CardContent>
       </Card>
@@ -63,10 +67,10 @@ const AdminDepartmentsPage = () => {
         onConfirm={confirmDelete} 
       />
 
-      {/* Sheet lateral para adicionar/editar departamento */}
-      <DepartmentFormSheet 
-        open={openSheet} 
-        onOpenChange={setOpenSheet} 
+      {/* Dialog para adicionar/editar departamento */}
+      <DepartmentFormDialog 
+        open={openDialog} 
+        onOpenChange={setOpenDialog} 
         department={selectedDepartment} 
         onSave={onDepartmentSaved} 
         departments={departments} 

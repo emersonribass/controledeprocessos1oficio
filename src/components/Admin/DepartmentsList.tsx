@@ -1,6 +1,5 @@
 
-import { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Department } from "@/types";
@@ -10,9 +9,18 @@ interface DepartmentsListProps {
   isLoading: boolean;
   onEdit: (department: Department) => void;
   onDelete: (department: Department) => void;
+  onMoveUp: (department: Department) => void;
+  onMoveDown: (department: Department) => void;
 }
 
-const DepartmentsList = ({ departments, isLoading, onEdit, onDelete }: DepartmentsListProps) => {
+const DepartmentsList = ({ 
+  departments, 
+  isLoading, 
+  onEdit, 
+  onDelete,
+  onMoveUp,
+  onMoveDown
+}: DepartmentsListProps) => {
   if (isLoading) {
     return (
       <div className="flex justify-center p-4">
@@ -51,7 +59,26 @@ const DepartmentsList = ({ departments, isLoading, onEdit, onDelete }: Departmen
                   <Button
                     variant="outline"
                     size="icon"
+                    onClick={() => onMoveUp(department)}
+                    disabled={departments[0].id === department.id}
+                    title="Mover para cima"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onMoveDown(department)}
+                    disabled={departments[departments.length - 1].id === department.id}
+                    title="Mover para baixo"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
                     onClick={() => onEdit(department)}
+                    title="Editar"
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -59,6 +86,7 @@ const DepartmentsList = ({ departments, isLoading, onEdit, onDelete }: Departmen
                     variant="outline"
                     size="icon"
                     onClick={() => onDelete(department)}
+                    title="Excluir"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

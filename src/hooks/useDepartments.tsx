@@ -7,7 +7,7 @@ import { Department } from "@/types";
 export const useDepartments = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [openSheet, setOpenSheet] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
   const { toast } = useToast();
@@ -51,17 +51,109 @@ export const useDepartments = () => {
 
   const handleAddDepartment = () => {
     setSelectedDepartment(null);
-    setOpenSheet(true);
+    setOpenDialog(true);
   };
 
   const handleEditDepartment = (department: Department) => {
     setSelectedDepartment(department);
-    setOpenSheet(true);
+    setOpenDialog(true);
   };
 
   const handleDeleteDepartment = (department: Department) => {
     setSelectedDepartment(department);
     setOpenDeleteDialog(true);
+  };
+
+  // Nova função para mover um departamento para cima na ordem
+  const handleMoveUp = async (department: Department) => {
+    const currentIndex = departments.findIndex(d => d.id === department.id);
+    if (currentIndex <= 0) return; // Já está no topo
+
+    const prevDepartment = departments[currentIndex - 1];
+    
+    try {
+      // Atualizar a ordem no banco de dados
+      const batch = [];
+      
+      // Atualizar o departamento atual para a ordem anterior
+      batch.push(
+        supabase
+          .from('setores')
+          .update({ order_num: prevDepartment.order })
+          .eq('id', Number(department.id))
+      );
+      
+      // Atualizar o departamento anterior para a ordem atual
+      batch.push(
+        supabase
+          .from('setores')
+          .update({ order_num: department.order })
+          .eq('id', Number(prevDepartment.id))
+      );
+      
+      await Promise.all(batch);
+      
+      toast({
+        title: "Sucesso",
+        description: "Ordem dos setores atualizada."
+      });
+      
+      // Atualizar a lista local
+      fetchDepartments();
+    } catch (error) {
+      console.error('Erro ao reordenar setores:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível reordenar os setores.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Nova função para mover um departamento para baixo na ordem
+  const handleMoveDown = async (department: Department) => {
+    const currentIndex = departments.findIndex(d => d.id === department.id);
+    if (currentIndex >= departments.length - 1) return; // Já está no fim
+    
+    const nextDepartment = departments[currentIndex + 1];
+    
+    try {
+      // Atualizar a ordem no banco de dados
+      const batch = [];
+      
+      // Atualizar o departamento atual para a ordem seguinte
+      batch.push(
+        supabase
+          .from('setores')
+          .update({ order_num: nextDepartment.order })
+          .eq('id', Number(department.id))
+      );
+      
+      // Atualizar o departamento seguinte para a ordem atual
+      batch.push(
+        supabase
+          .from('setores')
+          .update({ order_num: department.order })
+          .eq('id', Number(nextDepartment.id))
+      );
+      
+      await Promise.all(batch);
+      
+      toast({
+        title: "Sucesso",
+        description: "Ordem dos setores atualizada."
+      });
+      
+      // Atualizar a lista local
+      fetchDepartments();
+    } catch (error) {
+      console.error('Erro ao reordenar setores:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível reordenar os setores.",
+        variant: "destructive"
+      });
+    }
   };
 
   const confirmDelete = async () => {
@@ -97,20 +189,22 @@ export const useDepartments = () => {
 
   const onDepartmentSaved = () => {
     fetchDepartments();
-    setOpenSheet(false);
+    setOpenDialog(false);
   };
 
   return {
     departments,
     isLoading,
-    openSheet,
-    setOpenSheet,
+    openDialog,
+    setOpenDialog,
     openDeleteDialog,
     setOpenDeleteDialog,
     selectedDepartment,
     handleAddDepartment,
     handleEditDepartment,
     handleDeleteDepartment,
+    handleMoveUp,
+    handleMoveDown,
     confirmDelete,
     onDepartmentSaved
   };
