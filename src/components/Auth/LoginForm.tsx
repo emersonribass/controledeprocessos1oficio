@@ -26,16 +26,21 @@ const LoginForm = () => {
     setIsSubmitting(true);
     setError(null);
     try {
-      await login(email, password);
+      const result = await login(email, password);
       console.log("Login bem-sucedido, redirecionando para /dashboard");
       
-      // Adicionar um pequeno atraso para garantir que a sessão seja processada corretamente
-      // antes de redirecionar
-      setTimeout(() => {
-        navigate("/dashboard", { replace: true });
+      // Verificar se o login foi bem-sucedido antes de redirecionar
+      if (result.session) {
+        // Adicionar um pequeno atraso para garantir que a sessão seja processada corretamente
+        // antes de redirecionar
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+          setIsSubmitting(false);
+        }, 100);
+      } else {
+        setError("Não foi possível obter uma sessão válida");
         setIsSubmitting(false);
-      }, 100);
-      
+      }
     } catch (error) {
       // Erro já é tratado pelo hook useAuth, mas podemos exibir mensagem específica aqui
       if (error instanceof Error) {

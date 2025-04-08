@@ -5,6 +5,7 @@ import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { convertSupabaseUser, syncAuthWithUsuarios } from "./utils";
 import { toast } from "sonner";
+import { LoginResult } from "./types";
 
 export const useAuthProvider = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -88,7 +89,7 @@ export const useAuthProvider = () => {
     };
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<LoginResult> => {
     setIsLoading(true);
     try {
       // Primeiro, verificar se o usuário existe na tabela usuarios
@@ -127,14 +128,11 @@ export const useAuthProvider = () => {
         throw new Error(error.message);
       }
 
-      // Atualize o estado diretamente para uma resposta mais rápida ao usuário
-      // O listener onAuthStateChange também atualizará, mas isso melhora a UX
-      if (data && data.user) {
-        // Não atualizamos a sessão e o usuário aqui para evitar condições de corrida
-        // O listener onAuthStateChange será responsável por isso
-        toast.success("Login realizado com sucesso!");
-        return data;
-      }
+      // Exibe mensagem de sucesso
+      toast.success("Login realizado com sucesso!");
+      
+      // Retorna os dados da autenticação
+      return data;
       
     } catch (error) {
       if (error instanceof Error) {
