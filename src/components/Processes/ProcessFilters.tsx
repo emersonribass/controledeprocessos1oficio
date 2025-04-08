@@ -1,6 +1,5 @@
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -12,7 +11,8 @@ import {
 import { useDepartments } from "@/hooks/useDepartments";
 import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { Department } from "@/types";
-import { X } from "lucide-react";
+import { X, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ProcessFiltersProps {
   filters: {
@@ -29,31 +29,55 @@ interface ProcessFiltersProps {
       search?: string;
     }>
   >;
-  availableDepartments?: Department[]; // Nova prop para departamentos disponíveis
+  availableDepartments?: Department[];
 }
 
 const ProcessFilters = ({ filters, setFilters, availableDepartments }: ProcessFiltersProps) => {
   const { departments } = useDepartments();
   const { processTypes } = useProcessTypes();
   const [search, setSearch] = useState("");
-
-  const deptsToShow = availableDepartments || departments;
-
-  // Reset search when filters change
+  
+  // Atualiza o estado local de busca quando os filtros mudam externamente
   useEffect(() => {
     setSearch(filters.search || "");
   }, [filters.search]);
-
-  const handleSearch = () => {
-    setFilters((prev) => ({
-      ...prev,
-      search,
-    }));
+  
+  // Função de debounce para evitar muitas requisições enquanto o usuário digita
+  const debounce = (func: Function, delay: number) => {
+    let timeoutId: NodeJS.Timeout;
+    return function(...args: any[]) {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func(...args);
+      }, delay);
+    };
+  };
+  
+  // Aplicar debounce na função de busca (300ms)
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      setFilters((prev) => ({
+        ...prev,
+        search: value.trim() === "" ? undefined : value,
+      }));
+    }, 300),
+    [setFilters]
+  );
+  
+  // Atualiza a busca quando o usuário digita
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearch(value);
+    debouncedSearch(value);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      handleSearch();
+      // Aplicar a busca imediatamente sem debounce ao pressionar Enter
+      setFilters((prev) => ({
+        ...prev,
+        search: search.trim() === "" ? undefined : search,
+      }));
     }
   };
 
@@ -69,20 +93,23 @@ const ProcessFilters = ({ filters, setFilters, availableDepartments }: ProcessFi
     }));
   };
 
-  const hasActiveFilters =
-    Object.values(filters).some((v) => v !== undefined) || search;
+  const deptsToShow = availableDepartments || departments;
+  const hasActiveFilters = Object.values(filters).some((v) => v !== undefined) || search;
 
   return (
     <div className="space-y-3">
       <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
-        <div className="flex gap-2 col-span-1 md:col-span-2">
-          <Input
-            placeholder="Buscar por número de protocolo"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <Button onClick={handleSearch}>Buscar</Button>
+        <div className="relative col-span-1 md:col-span-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-5 w-5 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por número de protocolo"
+              value={search}
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
+              className="pl-10"
+            />
+          </div>
         </div>
 
         <Select

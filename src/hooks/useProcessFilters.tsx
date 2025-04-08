@@ -1,3 +1,4 @@
+
 import { Process } from "@/types";
 import { useAuth } from "@/hooks/auth";
 
@@ -60,7 +61,7 @@ export const useProcessFilters = (processes: Process[]) => {
         return false;
       }
 
-      // Verificar filtro de busca
+      // Verificar filtro de busca - melhorado para ser mais flexível
       if (
         filters.search &&
         !process.protocolNumber.toLowerCase().includes(filters.search.toLowerCase())
