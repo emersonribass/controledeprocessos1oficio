@@ -133,7 +133,7 @@ const ProcessFilters = ({
           </SelectContent>
         </Select>
 
-        {hasActiveFilters && <Button variant="outline" onClick={handleClearFilters} className="flex items-center gap-1 w-fit h-fit bg-green-600 hover:bg-green-500 text-inherit px-[10px]">
+        {hasActiveFilters && <Button variant="outline" onClick={handleClearFilters} className="flex items-center gap-1 w-fit h-fit bg-green-600 hover:bg-green-500 px-[10px] text-white">
             <X className="h-4 w-4" />
             Limpar filtros
           </Button>}
