@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useProcesses } from "@/hooks/useProcesses";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const RecentProcessList = () => {
   const navigate = useNavigate();
@@ -37,6 +38,14 @@ const RecentProcessList = () => {
     }
   };
 
+  // Função para obter a cor de fundo baseada no status
+  const getItemBackgroundColor = (status: string) => {
+    if (status === "completed") return "bg-green-300";
+    if (status === "overdue") return "bg-red-300";
+    if (status === "pending") return "bg-blue-300";
+    return "";
+  };
+
   return (
     <Card className="col-span-2">
       <CardHeader>
@@ -54,7 +63,10 @@ const RecentProcessList = () => {
           recentProcesses.map(process => (
             <div 
               key={process.id} 
-              className={`flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0 ${process.status === "completed" ? "bg-green-300 rounded-md p-2" : ""}`}
+              className={cn(
+                "flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0 rounded-md p-2", 
+                getItemBackgroundColor(process.status)
+              )}
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">

@@ -6,6 +6,7 @@ import ProcessTypePicker from "./ProcessTypePicker";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 interface ProcessTableProps {
   processes: Process[];
@@ -58,6 +59,14 @@ const ProcessTable = ({
     
   // Obter o departamento "Concluído(a)" para referência
   const concludedDept = departments.find(dept => dept.name === "Concluído(a)");
+
+  // Função para definir a cor de fundo com base no status
+  const getRowBackgroundColor = (status: string) => {
+    if (status === "completed") return "bg-green-300";
+    if (status === "overdue") return "bg-red-300";
+    if (status === "pending") return "bg-blue-300";
+    return "";
+  };
   
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -79,7 +88,10 @@ const ProcessTable = ({
             processes.map(process => (
               <TableRow 
                 key={process.id} 
-                className={`cursor-pointer hover:bg-gray-100 ${process.status === "completed" ? "bg-green-300" : ""}`}
+                className={cn(
+                  "cursor-pointer hover:bg-gray-100",
+                  getRowBackgroundColor(process.status)
+                )}
                 onClick={() => handleRowClick(process.id)}
               >
                 <TableCell className="font-medium">

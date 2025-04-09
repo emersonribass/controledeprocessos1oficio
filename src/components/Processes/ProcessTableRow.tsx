@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Department, Process, ProcessType } from "@/types";
@@ -39,6 +40,8 @@ const ProcessTableRow = ({
 
   const isNotStarted = process.status === "not_started";
   const isCompleted = process.status === "completed";
+  const isOverdue = process.status === "overdue";
+  const isPending = process.status === "pending";
   const isProcessStarted = !isNotStarted;
 
   const sortedDepartments = [...departments]
@@ -91,12 +94,18 @@ const ProcessTableRow = ({
   
   const isLastVisibleDepartment = lastVisibleDept && process.currentDepartment === lastVisibleDept.id && !concludedDept;
 
+  // Define a cor de fundo com base no status do processo
+  const getRowBackgroundColor = () => {
+    if (isCompleted) return "bg-green-300";
+    if (isOverdue) return "bg-red-300";
+    if (isPending) return "bg-blue-300";
+    return "";
+  };
+
   return (
     <TableRow
       key={process.id}
-      className={cn(
-        process.status === "completed" ? "bg-green-300" : "",
-      )}
+      className={cn(getRowBackgroundColor())}
     >
       <TableCell className="font-medium">
         {process.protocolNumber}
