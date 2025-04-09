@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Department, Process, ProcessType } from "@/types";
@@ -40,19 +39,16 @@ const ProcessTableRow = ({
 
   const isNotStarted = process.status === "not_started";
   const isCompleted = process.status === "completed";
+  const isProcessStarted = !isNotStarted;
 
-  // Ordenar departamentos por ordem e filtrar o departamento "Concluído"
   const sortedDepartments = [...departments]
     .filter(dept => dept.name !== "Concluído(a)")
     .sort((a, b) => a.order - b.order);
 
-  // Pegar o último departamento visível
   const lastVisibleDept = sortedDepartments[sortedDepartments.length - 1];
   
-  // Obter o departamento "Concluído(a)" para referência
   const concludedDept = departments.find(dept => dept.name === "Concluído(a)");
 
-  // Função para obter a data de entrada mais recente para um departamento
   const getMostRecentEntryDate = (departmentId: string): string | null => {
     const departmentEntries = process.history
       .filter(h => h.departmentId === departmentId)
@@ -61,24 +57,20 @@ const ProcessTableRow = ({
     return departmentEntries.length > 0 ? departmentEntries[0].entryDate : null;
   };
 
-  // Verifica se o processo já passou pelo departamento
   const hasPassedDepartment = (departmentId: string): boolean => {
     return process.history.some(h => h.departmentId === departmentId);
   };
 
-  // Verifica se o processo está atualmente no departamento
   const isCurrentDepartment = (departmentId: string): boolean => {
     return process.currentDepartment === departmentId;
   };
 
-  // Determina se um departamento é anterior ao departamento atual
   const isPreviousDepartment = (departmentId: string): boolean => {
     const deptOrder = departments.find(d => d.id === departmentId)?.order || 0;
     const currentDeptOrder = departments.find(d => d.id === process.currentDepartment)?.order || 0;
     return deptOrder < currentDeptOrder;
   };
 
-  // Verifica se o departamento está com prazo expirado
   const isDepartmentOverdue = (departmentId: string): boolean => {
     if (departmentId !== process.currentDepartment || !isProcessStarted) return false;
     
@@ -95,11 +87,8 @@ const ProcessTableRow = ({
     return currentTime > deadlineTime;
   };
 
-  // Verifica se é o primeiro departamento
   const isFirstDepartment = process.currentDepartment === sortedDepartments[0]?.id;
   
-  // Verifica se é o último departamento visível (antes de Concluído)
-  // Modificamos para considerar que não é o último se existir o departamento Concluído
   const isLastVisibleDepartment = lastVisibleDept && process.currentDepartment === lastVisibleDept.id && !concludedDept;
 
   return (
@@ -122,7 +111,6 @@ const ProcessTableRow = ({
         />
       </TableCell>
       
-      {/* Células para cada departamento */}
       {sortedDepartments.map((dept) => {
         const entryDate = getMostRecentEntryDate(dept.id);
         const isPastDept = hasPassedDepartment(dept.id) && isPreviousDepartment(dept.id);
