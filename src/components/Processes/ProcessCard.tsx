@@ -1,3 +1,4 @@
+
 import { Process } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -22,6 +23,10 @@ const ProcessCard = ({
   moveProcessToPreviousDepartment,
   responsibleUserName
 }: ProcessCardProps) => {
+  // Verificar se o processo está no último departamento usando o ID 10
+  const isLastDepartment = process.currentDepartment === "10";
+  const isFirstDepartment = process.currentDepartment === "1";
+
   return <Card className="md:col-span-2">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
@@ -83,11 +88,11 @@ const ProcessCard = ({
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={() => moveProcessToPreviousDepartment(process.id)} disabled={process.currentDepartment === "1"} className="text-white gap-0 bg-green-600 hover:bg-green-500">
+        <Button variant="outline" onClick={() => moveProcessToPreviousDepartment(process.id)} disabled={isFirstDepartment} className="text-white gap-0 bg-green-600 hover:bg-green-500">
           <MoveLeft className="mr-2 h-4 w-4" />
           Departamento Anterior
         </Button>
-        <Button onClick={() => moveProcessToNextDepartment(process.id)} disabled={process.currentDepartment === "10"} className="gap-0">
+        <Button onClick={() => moveProcessToNextDepartment(process.id)} disabled={isLastDepartment} className="gap-0">
           Próximo Departamento
           <MoveRight className="ml-2 h-4 w-4" />
         </Button>
