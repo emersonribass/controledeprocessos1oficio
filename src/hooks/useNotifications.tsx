@@ -4,6 +4,7 @@ import { Notification } from "@/types";
 import { useAuth } from "@/hooks/auth";
 import { useNotificationsService } from "@/hooks/useNotificationsService";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 type NotificationsContextType = {
   notifications: Notification[];
@@ -16,6 +17,7 @@ const NotificationsContext = createContext<NotificationsContextType | undefined>
 
 export const NotificationsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { 
     fetchUserNotifications, 
@@ -100,13 +102,46 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     // Atualizar todas as notificações no banco de dados
     if (user) {
       try {
-        const promises = notifications
-          .filter(notification => !notification.read)
-          .map(notification => markNotificationAsRead(notification.id));
+        const unreadNotifications = notifications.filter(notification => !notification.read);
         
-        await Promise.all(promises);
+        if (unreadNotifications.length === 0) {
+          return; // Nenhuma notificação não lida para atualizar
+        }
+        
+        // Atualizar cada notificação não lida no banco de dados
+        const promises = unreadNotifications.map(notification => 
+          markNotificationAsRead(notification.id)
+        );
+        
+        const results = await Promise.allSettled(promises);
+        
+        // Verificar se houve erros e mostrar toast apropriado
+        const failures = results.filter(result => result.status === 'rejected').length;
+        
+        if (failures > 0) {
+          console.error(`${failures} notificações não puderam ser marcadas como lidas`);
+          toast({
+            title: "Aviso",
+            description: `${failures} notificações não puderam ser marcadas como lidas.`,
+            variant: "warning"
+          });
+        } else if (unreadNotifications.length > 0) {
+          toast({
+            title: "Sucesso",
+            description: "Todas as notificações foram marcadas como lidas.",
+            variant: "default"
+          });
+        }
+        
+        // Recarregar notificações para garantir sincronização
+        await loadNotifications();
       } catch (error) {
         console.error("Erro ao marcar todas notificações como lidas:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível marcar todas as notificações como lidas.",
+          variant: "destructive"
+        });
         // Reverter alterações locais em caso de erro
         await loadNotifications();
       }

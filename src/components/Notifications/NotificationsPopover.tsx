@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useToast } from "@/hooks/use-toast";
 
 interface NotificationsPopoverProps {
   children: ReactNode;
@@ -16,7 +17,21 @@ interface NotificationsPopoverProps {
 }
 
 const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPopoverProps) => {
-  const { notifications, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotifications();
+  const { toast } = useToast();
+
+  const handleMarkAllAsRead = async () => {
+    if (unreadCount === 0) {
+      toast({
+        title: "Informação",
+        description: "Não há notificações não lidas.",
+        variant: "default"
+      });
+      return;
+    }
+    
+    await markAllAsRead();
+  };
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
@@ -29,7 +44,7 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
               variant="ghost"
               size="sm"
               className="h-auto p-0 text-xs text-primary"
-              onClick={markAllAsRead}
+              onClick={handleMarkAllAsRead}
             >
               <CheckCheck className="mr-1 h-3 w-3" />
               Marcar todas como lidas

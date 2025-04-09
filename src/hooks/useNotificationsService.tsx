@@ -52,10 +52,10 @@ export const useNotificationsService = () => {
   // Marcar notificação como lida
   const markNotificationAsRead = async (notificationId: string): Promise<boolean> => {
     try {
-      // Usando a notação de string para evitar problemas de tipo
+      // Corrigido: removendo o campo updated_at que estava causando o erro
       const { error } = await supabase
         .from('notificacoes')
-        .update({ lida: true } as any)
+        .update({ lida: true })
         .eq('id', notificationId);
 
       if (error) {
@@ -76,10 +76,10 @@ export const useNotificationsService = () => {
   // Marcar notificação como respondida
   const markNotificationAsResponded = async (notificationId: string): Promise<boolean> => {
     try {
-      // Usando a notação de string para evitar problemas de tipo
+      // Corrigido: removendo o campo updated_at que estava causando o erro
       const { error } = await supabase
         .from('notificacoes')
-        .update({ respondida: true } as any)
+        .update({ respondida: true })
         .eq('id', notificationId);
 
       if (error) {
@@ -115,7 +115,7 @@ export const useNotificationsService = () => {
           tipo: type,
           lida: false,
           respondida: false
-        } as any);
+        });
 
       if (error) {
         throw error;
