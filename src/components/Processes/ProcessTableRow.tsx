@@ -109,7 +109,7 @@ const ProcessTableRow = ({
       className={cn(
         process.status === "overdue" ? "bg-destructive/5" : "",
         isNotStarted ? "bg-blue-50" : "",
-        isCompleted ? "bg-green-50" : "",
+        isCompleted ? "bg-green-300" : "",
       )}
     >
       <TableCell className="font-medium">

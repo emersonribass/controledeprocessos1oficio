@@ -54,7 +54,7 @@ const RecentProcessList = () => {
           recentProcesses.map(process => (
             <div 
               key={process.id} 
-              className={`flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0 ${process.status === "completed" ? "bg-green-50 rounded-md p-2" : ""}`}
+              className={`flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0 ${process.status === "completed" ? "bg-green-300 rounded-md p-2" : ""}`}
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">

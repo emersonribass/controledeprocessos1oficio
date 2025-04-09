@@ -79,7 +79,7 @@ const ProcessTable = ({
             processes.map(process => (
               <TableRow 
                 key={process.id} 
-                className={`cursor-pointer hover:bg-gray-100 ${process.status === "completed" ? "bg-green-50" : ""}`}
+                className={`cursor-pointer hover:bg-gray-100 ${process.status === "completed" ? "bg-green-300" : ""}`}
                 onClick={() => handleRowClick(process.id)}
               >
                 <TableCell className="font-medium">
