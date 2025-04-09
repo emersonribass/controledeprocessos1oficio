@@ -36,14 +36,7 @@ const ProcessDepartmentCell = ({
   }
 
   return (
-    <div 
-      className={cn(
-        "text-center",
-        hasPassedDepartment ? "bg-green-50" : "",
-        isCurrentDepartment && !isDepartmentOverdue && isProcessStarted ? "bg-blue-50 font-medium" : "",
-        isCurrentDepartment && isDepartmentOverdue && isProcessStarted ? "bg-red-50 font-medium" : ""
-      )}
-    >
+    <div className="text-center">
       {showDate && entryDate && (
         <div className="text-xs text-gray-600">
           {format(new Date(entryDate), "dd/MM/yyyy", { locale: ptBR })}

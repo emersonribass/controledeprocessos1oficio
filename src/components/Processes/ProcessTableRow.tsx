@@ -39,7 +39,6 @@ const ProcessTableRow = ({
   const { toast } = useToast();
 
   const isNotStarted = process.status === "not_started";
-  const isProcessStarted = !isNotStarted;
   const isCompleted = process.status === "completed";
 
   // Ordenar departamentos por ordem e filtrar o departamento "Concluído"
@@ -107,9 +106,7 @@ const ProcessTableRow = ({
     <TableRow
       key={process.id}
       className={cn(
-        process.status === "overdue" ? "bg-destructive/5" : "",
-        isNotStarted ? "bg-blue-50" : "",
-        isCompleted ? "bg-green-300" : "",
+        process.status === "completed" ? "bg-green-300" : "",
       )}
     >
       <TableCell className="font-medium">
