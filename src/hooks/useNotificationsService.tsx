@@ -52,7 +52,7 @@ export const useNotificationsService = () => {
   // Marcar notificação como lida
   const markNotificationAsRead = async (notificationId: string): Promise<boolean> => {
     try {
-      // Corrigido: removendo o campo updated_at que estava causando o erro
+      // Removendo qualquer referência ao campo updated_at que estava causando o erro
       const { error } = await supabase
         .from('notificacoes')
         .update({ lida: true })
@@ -76,7 +76,7 @@ export const useNotificationsService = () => {
   // Marcar notificação como respondida
   const markNotificationAsResponded = async (notificationId: string): Promise<boolean> => {
     try {
-      // Corrigido: removendo o campo updated_at que estava causando o erro
+      // Removendo qualquer referência ao campo updated_at que estava causando o erro
       const { error } = await supabase
         .from('notificacoes')
         .update({ respondida: true })
