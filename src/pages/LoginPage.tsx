@@ -31,16 +31,11 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30">
       <div className="mb-8 text-center">
-        <img 
-          src="/Logo Nottar vertical.svg" 
-          alt="Nottar Logo" 
-          className="mx-auto mb-2 h-24 w-auto" 
-          onError={(e) => {
-            console.error("Erro ao carregar logo:", e);
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = "/placeholder.svg";
-          }}
-        />
+          <img 
+            src="/Logo Nottar vertical.png" 
+            alt="Logo Nottar" 
+            className="h-12 mr-0 object-scale-down" 
+          />
         <p className="text-muted-foreground">Sistema de Gestão de Processos</p>
       </div>
       
