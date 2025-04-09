@@ -4,16 +4,37 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardCheck, AlertTriangle, BarChart, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/auth";
+import { Process } from "@/types";
 
 const DashboardSummary = () => {
-  const { processes } = useProcesses();
+  const { processes, filterProcesses } = useProcesses();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Filtrar apenas os processos do setor do usuário atual
+  const userProcesses = filterProcesses({});
+  
   // Calculate summary statistics
-  const totalProcesses = processes.length;
-  const completedProcesses = processes.filter(p => p.status === "completed").length;
-  const overdueProcesses = processes.filter(p => p.status === "overdue").length;
-  const pendingProcesses = processes.filter(p => p.status === "pending").length;
+  const totalProcesses = userProcesses.length;
+  
+  // Processos em andamento: aqueles que estão no setor atual do usuário
+  const pendingProcesses = userProcesses.filter(p => p.status === "pending").length;
+  
+  // Processos atrasados: aqueles com status "overdue" no setor atual
+  const overdueProcesses = userProcesses.filter(p => p.status === "overdue").length;
+  
+  // Processos concluídos: aqueles que foram processados pelo setor do usuário
+  // (têm uma entrada no histórico com o setor do usuário e data de saída não nula)
+  const completedProcesses = userProcesses.filter(process => {
+    if (!user?.departments?.length) return false;
+    
+    // Verificar se existe alguma entrada no histórico com o setor do usuário e data de saída não nula
+    return process.history.some(historyItem => 
+      user.departments.includes(historyItem.departmentId) && 
+      historyItem.exitDate !== null
+    );
+  }).length;
   
   // Calculate completion rate
   const completionRate = totalProcesses > 0 
@@ -40,7 +61,7 @@ const DashboardSummary = () => {
         <CardContent>
           <div className="text-2xl font-bold">{totalProcesses}</div>
           <p className="text-xs text-muted-foreground mt-1">
-            Em todos os departamentos
+            No seu setor
           </p>
         </CardContent>
       </Card>
@@ -58,7 +79,7 @@ const DashboardSummary = () => {
         <CardContent>
           <div className="text-2xl font-bold text-green-600">{completedProcesses}</div>
           <p className="text-xs text-muted-foreground mt-1">
-            Taxa de conclusão: {completionRate}%
+            Enviados para próximo setor: {completionRate}%
           </p>
         </CardContent>
       </Card>
@@ -76,7 +97,7 @@ const DashboardSummary = () => {
         <CardContent>
           <div className="text-2xl font-bold text-yellow-600">{pendingProcesses}</div>
           <p className="text-xs text-muted-foreground mt-1">
-            Aguardando processamento
+            Aguardando processamento no seu setor
           </p>
         </CardContent>
       </Card>
@@ -94,7 +115,7 @@ const DashboardSummary = () => {
         <CardContent>
           <div className="text-2xl font-bold text-red-600">{overdueProcesses}</div>
           <p className="text-xs text-muted-foreground mt-1">
-            Necessitam atenção imediata
+            Com prazo expirado no seu setor
           </p>
         </CardContent>
       </Card>
