@@ -79,36 +79,44 @@ const LoginForm = () => {
     setShowPassword(!showPassword);
   };
 
-  return <Card className="w-[380px] shadow-lg">
-      <CardHeader className="space-y-1 pb-2">
-        <CardTitle className="text-2xl font-bold text-center">Bem-vindo</CardTitle>
-        <CardDescription className="text-center">
-          Acesse o sistema de controle de processos
-        </CardDescription>
-      </CardHeader>
+  return (
+    <Card className="w-[380px] shadow-lg">
+      <CardContent className="pt-6 px-6">
+        <div className="flex flex-col items-center mb-6">
+          <img 
+            src="/Logo Nottar vertical.png" 
+            alt="Logo Nottar" 
+            className="h-24 w-auto"
+          />
+          <h1 className="text-xl font-bold text-center mt-4">Controle de Processos</h1>
+          <CardDescription className="text-center mt-1">
+            Entre com suas credenciais para acessar o sistema
+          </CardDescription>
+        </div>
 
-      <form onSubmit={handleLogin}>
-        <CardContent className="space-y-4 pt-2">
-          {error && <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>}
-          
-          {connectionError && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                {connectionError}
-                <p className="text-xs mt-1">
-                  Verifique se o projeto Supabase não está pausado ou se houve
-                  alguma alteração nas credenciais de acesso.
-                </p>
-              </AlertDescription>
-            </Alert>
-          )}
-          
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        
+        {connectionError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {connectionError}
+              <p className="text-xs mt-1">
+                Verifique se o projeto Supabase não está pausado ou se houve
+                alguma alteração nas credenciais de acesso.
+              </p>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">E-mail</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input 
@@ -125,9 +133,7 @@ const LoginForm = () => {
           </div>
           
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Senha</Label>
-            </div>
+            <Label htmlFor="password">Senha</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input 
@@ -151,18 +157,23 @@ const LoginForm = () => {
               </button>
             </div>
           </div>
-        </CardContent>
-        
-        <CardFooter>
-          <Button className="w-full bg-primary hover:bg-primary/90" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <span className="flex items-center gap-2">
+          
+          <Button className="w-full bg-blue-500 hover:bg-blue-600" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <span className="flex items-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
                 Entrando...
-              </span> : "Entrar"}
+              </span>
+            ) : "Entrar"}
           </Button>
-        </CardFooter>
-      </form>
-    </Card>;
+        </form>
+
+        <div className="mt-6 text-sm text-center text-muted-foreground">
+          Sistema de Controle de Processos
+        </div>
+      </CardContent>
+    </Card>
+  );
 };
 
 export default LoginForm;
