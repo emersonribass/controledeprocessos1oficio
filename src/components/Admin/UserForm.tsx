@@ -44,7 +44,7 @@ export function UserForm({
         </div>
 
         <DialogFooter className="pt-2">
-          <Button variant="outline" type="button" onClick={onCancel} className="mr-2 bg-yellow-600 hover:bg-yellow-500 text-white">
+          <Button variant="outline" type="button" onClick={onCancel} className="mr-2 text-white bg-green-600 hover:bg-green-500">
             Cancelar
           </Button>
           <Button type="submit">Salvar</Button>
