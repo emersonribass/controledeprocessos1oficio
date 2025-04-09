@@ -28,14 +28,27 @@ const ProcessActionButtons = ({
       {isNotStarted ? <Button variant="outline" size="sm" onClick={() => startProcess && startProcess(processId)} title="Iniciar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300">
           Iniciar
         </Button> : <>
-          <Button variant="ghost" size="icon" onClick={() => moveProcessToPreviousDepartment(processId)} disabled={isFirstDepartment} title="Mover para departamento anterior" 
-            className={isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}>
-            <MoveLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => moveProcessToNextDepartment(processId)} disabled={isLastDepartment} title="Mover para próximo departamento"
-            className={isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}>
-            <MoveRight className="h-4 w-4" />
-          </Button>
+          {isFirstDepartment ? (
+            <Button variant="ghost" size="icon" disabled title="Mover para departamento anterior" 
+              className="text-gray-300 opacity-50 cursor-not-allowed">
+              <MoveLeft className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button variant="ghost" size="icon" onClick={() => moveProcessToPreviousDepartment(processId)} title="Mover para departamento anterior">
+              <MoveLeft className="h-4 w-4" />
+            </Button>
+          )}
+          
+          {isLastDepartment ? (
+            <Button variant="ghost" size="icon" disabled title="Mover para próximo departamento"
+              className="text-gray-300 opacity-50 cursor-not-allowed">
+              <MoveRight className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button variant="ghost" size="icon" onClick={() => moveProcessToNextDepartment(processId)} title="Mover para próximo departamento">
+              <MoveRight className="h-4 w-4" />
+            </Button>
+          )}
         </>}
     </div>;
 };

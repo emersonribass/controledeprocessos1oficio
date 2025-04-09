@@ -88,16 +88,32 @@ const ProcessCard = ({
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={() => moveProcessToPreviousDepartment(process.id)} disabled={isFirstDepartment} 
-          className={`text-white gap-0 bg-green-600 hover:bg-green-500 ${isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}`}>
-          <MoveLeft className="mr-2 h-4 w-4" />
-          Departamento Anterior
-        </Button>
-        <Button onClick={() => moveProcessToNextDepartment(process.id)} disabled={isLastDepartment} 
-          className={`gap-0 ${isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}`}>
-          Próximo Departamento
-          <MoveRight className="ml-2 h-4 w-4" />
-        </Button>
+        {isFirstDepartment ? (
+          <Button variant="outline" disabled 
+            className="text-gray-300 opacity-50 cursor-not-allowed border-gray-200">
+            <MoveLeft className="mr-2 h-4 w-4" />
+            Departamento Anterior
+          </Button>
+        ) : (
+          <Button variant="outline" onClick={() => moveProcessToPreviousDepartment(process.id)}
+            className="text-white gap-0 bg-green-600 hover:bg-green-500">
+            <MoveLeft className="mr-2 h-4 w-4" />
+            Departamento Anterior
+          </Button>
+        )}
+        
+        {isLastDepartment ? (
+          <Button disabled 
+            className="bg-gray-100 text-gray-300 opacity-50 cursor-not-allowed gap-0">
+            Próximo Departamento
+            <MoveRight className="ml-2 h-4 w-4" />
+          </Button>
+        ) : (
+          <Button onClick={() => moveProcessToNextDepartment(process.id)} className="gap-0">
+            Próximo Departamento
+            <MoveRight className="ml-2 h-4 w-4" />
+          </Button>
+        )}
       </CardFooter>
     </Card>;
 };
