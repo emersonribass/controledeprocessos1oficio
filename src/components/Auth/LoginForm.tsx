@@ -86,7 +86,7 @@ const LoginForm = () => {
           <img 
             src="/Logo Nottar vertical.png" 
             alt="Logo Nottar" 
-            className="h-24 w-auto"
+            className="h-32 w-auto"
           />
           <h1 className="text-xl font-bold text-center mt-4">Controle de Processos</h1>
           <CardDescription className="text-center mt-1">
