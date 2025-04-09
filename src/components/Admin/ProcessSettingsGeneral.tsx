@@ -56,7 +56,7 @@ const ProcessSettingsGeneral = () => {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/processes/${process.id}`)} className="rounded-lg text-white bg-amber-600 hover:bg-amber-500">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/processes/${process.id}`)} className="rounded-lg text-white bg-green-600 hover:bg-green-500">
                     Detalhes
                   </Button>
                   <Button size="sm" onClick={() => handleStartProcess(process.id)} className="gap-0 text-white text-center font-medium rounded-lg">
