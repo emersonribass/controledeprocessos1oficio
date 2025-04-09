@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -15,19 +14,23 @@ const departmentSchema = z.object({
   name: z.string().min(2, "O nome do setor deve ter pelo menos 2 caracteres."),
   timeLimit: z.coerce.number().int().min(0, "O prazo deve ser um número inteiro maior ou igual a 0.")
 });
-
 type DepartmentFormProps = {
   department: Department | null;
   onSave: () => void;
   onCancel: () => void;
   existingDepartments: Department[];
 };
-
 type FormValues = z.infer<typeof departmentSchema>;
-
-const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: DepartmentFormProps) => {
+const DepartmentForm = ({
+  department,
+  onSave,
+  onCancel,
+  existingDepartments
+}: DepartmentFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
 
   // Inicializar o formulário com valores default ou do departamento existente
   const form = useForm<FormValues>({
@@ -55,21 +58,17 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
   // Manipular o envio do formulário
   const onSubmit = async (data: FormValues) => {
     setIsSubmitting(true);
-    
     try {
       if (department) {
         // Atualização de departamento existente
-        const { error } = await supabase
-          .from('setores')
-          .update({
-            name: data.name,
-            time_limit: data.timeLimit,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', Number(department.id));
-
+        const {
+          error
+        } = await supabase.from('setores').update({
+          name: data.name,
+          time_limit: data.timeLimit,
+          updated_at: new Date().toISOString()
+        }).eq('id', Number(department.id));
         if (error) throw error;
-        
         toast({
           title: "Sucesso",
           description: "Setor atualizado com sucesso."
@@ -77,22 +76,19 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
       } else {
         // Inserção de novo departamento - definindo a ordem automaticamente
         const nextOrder = getNextAvailableOrder();
-        const { error } = await supabase
-          .from('setores')
-          .insert({
-            name: data.name,
-            order_num: nextOrder,
-            time_limit: data.timeLimit
-          });
-
+        const {
+          error
+        } = await supabase.from('setores').insert({
+          name: data.name,
+          order_num: nextOrder,
+          time_limit: data.timeLimit
+        });
         if (error) throw error;
-        
         toast({
           title: "Sucesso",
           description: "Novo setor criado com sucesso."
         });
       }
-      
       onSave();
     } catch (error) {
       console.error('Erro ao salvar setor:', error);
@@ -105,15 +101,11 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
       setIsSubmitting(false);
     }
   };
-
-  return (
-    <Form {...form}>
+  return <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
+        <FormField control={form.control} name="name" render={({
+        field
+      }) => <FormItem>
               <FormLabel>Nome do Setor</FormLabel>
               <FormControl>
                 <Input placeholder="Digite o nome do setor" {...field} />
@@ -122,15 +114,11 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
                 Nome que identifica o setor no sistema.
               </FormDescription>
               <FormMessage />
-            </FormItem>
-          )}
-        />
+            </FormItem>} />
         
-        <FormField
-          control={form.control}
-          name="timeLimit"
-          render={({ field }) => (
-            <FormItem>
+        <FormField control={form.control} name="timeLimit" render={({
+        field
+      }) => <FormItem>
               <FormLabel>Prazo (dias)</FormLabel>
               <FormControl>
                 <Input type="number" min="0" {...field} />
@@ -139,28 +127,20 @@ const DepartmentForm = ({ department, onSave, onCancel, existingDepartments }: D
                 Número de dias que um processo pode permanecer neste setor.
               </FormDescription>
               <FormMessage />
-            </FormItem>
-          )}
-        />
+            </FormItem>} />
         
         <div className="flex justify-end space-x-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} className="bg-green-600 hover:bg-green-500 text-white">
             Cancelar
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? (
-              <>
+            {isSubmitting ? <>
                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent"></div>
                 Salvando...
-              </>
-            ) : (
-              'Salvar'
-            )}
+              </> : 'Salvar'}
           </Button>
         </div>
       </form>
-    </Form>
-  );
+    </Form>;
 };
-
 export default DepartmentForm;
