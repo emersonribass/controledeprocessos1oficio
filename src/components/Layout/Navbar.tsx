@@ -27,10 +27,20 @@ const Navbar = () => {
   } = useNotifications();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Erro no processo de logout:", error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const navLinks = [{
@@ -155,9 +165,13 @@ const Navbar = () => {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+            <DropdownMenuItem 
+              onClick={handleLogout} 
+              className="cursor-pointer"
+              disabled={isLoggingOut}
+            >
               <LogOut className="mr-2 h-4 w-4" />
-              <span>Sair</span>
+              <span>{isLoggingOut ? "Saindo..." : "Sair"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

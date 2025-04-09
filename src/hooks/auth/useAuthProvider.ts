@@ -158,20 +158,37 @@ export const useAuthProvider = () => {
   const logout = async () => {
     try {
       setIsLoading(true);
+
+      // Verifica se existe uma sessão antes de tentar fazer logout
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData.session) {
+        // Se não há sessão, apenas limpa o estado local
+        setUser(null);
+        setSession(null);
+        toast.info("Sessão encerrada");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Se existe sessão, faz logout normalmente
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        throw error;
+        console.error("Erro ao fazer logout:", error);
+        toast.error("Erro ao encerrar sessão");
+      } else {
+        // Limpar o estado local mesmo se houver erro no supabase.auth.signOut()
+        setUser(null);
+        setSession(null);
+        toast.info("Sessão encerrada");
       }
-      
-      // Não atualizamos os estados aqui para evitar conflitos com o listener
-      // O listener onAuthStateChange será responsável por limpar a sessão e o usuário
-      toast.info("Sessão encerrada");
       
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
       toast.error("Erro ao encerrar sessão");
-      setIsLoading(false); // Garantir que isLoading volta para false em caso de erro
+    } finally {
+      setIsLoading(false); // Garantir que isLoading volta para false em qualquer caso
     }
   };
 
