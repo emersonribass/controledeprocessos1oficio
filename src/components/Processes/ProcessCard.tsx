@@ -83,7 +83,7 @@ const ProcessCard = ({
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={() => moveProcessToPreviousDepartment(process.id)} disabled={process.currentDepartment === "1"} className="text-white bg-green-700 hover:bg-green-600 gap-0">
+        <Button variant="outline" onClick={() => moveProcessToPreviousDepartment(process.id)} disabled={process.currentDepartment === "1"} className="text-white gap-0 bg-green-600 hover:bg-green-500">
           <MoveLeft className="mr-2 h-4 w-4" />
           Departamento Anterior
         </Button>
