@@ -132,11 +132,56 @@ export const useNotificationsService = () => {
     }
   };
 
+  // Nova função para notificar todos os usuários de um departamento
+  const notifyDepartmentUsers = async (
+    processId: string,
+    departmentId: string,
+    message: string,
+    type: string = 'movimento'
+  ): Promise<boolean> => {
+    try {
+      // Primeiro, buscar todos os usuários associados ao departamento
+      const { data: users, error: usersError } = await supabase
+        .from('usuarios')
+        .select('id')
+        .filter('setores_atribuidos', 'cs', `{${departmentId}}`);
+      
+      if (usersError) {
+        throw usersError;
+      }
+
+      // Se não houver usuários no departamento, não há notificações para enviar
+      if (!users || users.length === 0) {
+        console.log(`Nenhum usuário encontrado para o setor ${departmentId}`);
+        return true;
+      }
+
+      // Criar notificações para cada usuário do departamento
+      const notificationPromises = users.map(user => 
+        createNotification(processId, user.id, message, type)
+      );
+      
+      // Aguardar todas as notificações serem criadas
+      await Promise.all(notificationPromises);
+      
+      return true;
+    } catch (error) {
+      console.error('Erro ao notificar usuários do departamento:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar notificações para os usuários do setor.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   return {
     fetchUserNotifications,
     markNotificationAsRead,
     markNotificationAsResponded,
     createNotification,
+    notifyDepartmentUsers,
     isLoading
   };
 };
