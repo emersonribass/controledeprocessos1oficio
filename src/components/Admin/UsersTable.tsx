@@ -92,10 +92,10 @@ export function UsersTable({
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end space-x-2">
-                    <Button variant="ghost" size="icon" onClick={() => onToggleActive(usuario)} title={usuario.ativo ? "Desativar usuário" : "Ativar usuário"} className="bg-green-700 hover:bg-green-600 text-white">
+                    <Button variant="ghost" size="icon" onClick={() => onToggleActive(usuario)} title={usuario.ativo ? "Desativar usuário" : "Ativar usuário"} className="text-white bg-green-600 hover:bg-green-500">
                       {usuario.ativo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(usuario)} title="Editar usuário" className="bg-amber-600 hover:bg-amber-500 text-white">
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(usuario)} title="Editar usuário" className="text-white bg-yellow-600 hover:bg-yellow-500">
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => onDelete(usuario)} title="Excluir usuário" className="bg-red-600 hover:bg-red-500 text-white">
