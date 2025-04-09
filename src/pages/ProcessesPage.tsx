@@ -43,7 +43,7 @@ const ProcessesPage = () => {
           </Button>
           
           {/* Botão para criar novo processo - apenas para admin ou usuários sem departamento atribuído */}
-          {(isAdmin(user?.email || "") || user?.departments?.length === 0) && <Button onClick={() => navigate("/admin/process-settings")} className="flex items-center gap-1 px-[10px] text-sm text-center text-white bg-blue-600 hover:bg-blue-500 font-medium rounded">
+          {(isAdmin(user?.email || "") || user?.departments?.length === 0) && <Button onClick={() => navigate("/admin/process-settings")} className="flex items-center gap-1 px-[10px] text-sm text-center bg-blue-600 hover:bg-blue-500 font-medium rounded text-white">
               <PlusCircle className="h-5 w-5" />
               Novo Processo
             </Button>}
