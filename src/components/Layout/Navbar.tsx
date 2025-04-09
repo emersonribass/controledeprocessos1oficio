@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { UserCircle, BellIcon, LogOut, Home, ClipboardList, Settings } from "lucide-react";
@@ -43,7 +44,8 @@ const Navbar = () => {
 
   const userIsAdmin = user && isAdmin(user.email);
 
-  return <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
+  return (
+    <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
       <div className="flex items-center">
         <Link to="/" className="flex items-center mr-6">
           <div className="flex items-center">
@@ -54,12 +56,22 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden md:flex items-center space-x-1">
-          {navLinks.map(link => <Link key={link.href} to={link.href} className={cn("flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors", pathname === link.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary")}>
+          {navLinks.map(link => (
+            <Link 
+              key={link.href} 
+              to={link.href} 
+              className={cn(
+                "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors", 
+                pathname === link.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary"
+              )}
+            >
               {link.icon}
               <span>{link.title}</span>
-            </Link>)}
+            </Link>
+          ))}
           
-          {userIsAdmin && <Menubar className="border-none bg-transparent p-0">
+          {userIsAdmin && (
+            <Menubar className="border-none bg-transparent p-0">
               <MenubarMenu>
                 <MenubarTrigger className={cn("flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors", pathname.startsWith("/admin") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary")}>
                   <Settings className="h-4 w-4 mr-1" />
@@ -88,7 +100,8 @@ const Navbar = () => {
                   </MenubarItem>
                 </MenubarContent>
               </MenubarMenu>
-            </Menubar>}
+            </Menubar>
+          )}
         </div>
       </div>
 
@@ -96,9 +109,11 @@ const Navbar = () => {
         <NotificationsPopover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
           <Button variant="ghost" size="icon" className="relative" onClick={() => setNotificationsOpen(true)}>
             <BellIcon className="h-5 w-5" />
-            {unreadCount > 0 && <span className="absolute -top-1 -right-1 bg-destructive text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-destructive text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {unreadCount}
-              </span>}
+              </span>
+            )}
           </Button>
         </NotificationsPopover>
 
@@ -137,7 +152,8 @@ const Navbar = () => {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </nav>;
+    </nav>
+  );
 };
 
 export default Navbar;
