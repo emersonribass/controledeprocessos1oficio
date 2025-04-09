@@ -34,8 +34,12 @@ const LoginPage = () => {
         <img 
           src="/Logo Nottar vertical.svg" 
           alt="Nottar Logo" 
-          className="mx-auto mb-2" 
-          style={{ width: '100px', height: 'auto' }} 
+          className="mx-auto mb-2 h-24 w-auto" 
+          onError={(e) => {
+            console.error("Erro ao carregar logo:", e);
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "/placeholder.svg";
+          }}
         />
         <p className="text-muted-foreground">Sistema de Gestão de Processos</p>
       </div>
