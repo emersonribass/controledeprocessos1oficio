@@ -128,8 +128,11 @@ export const useAuthProvider = () => {
         throw new Error(error.message);
       }
 
-      // Exibe mensagem de sucesso
-      toast.success("Login realizado com sucesso!");
+      // Exibe mensagem de sucesso com toast estilizado
+      toast.success("Login realizado com sucesso!", {
+        duration: 3000,
+        important: true,
+      });
       
       // Converte o usuário do Supabase para o formato do nosso aplicativo
       let appUser = null;
@@ -146,9 +149,15 @@ export const useAuthProvider = () => {
       
     } catch (error) {
       if (error instanceof Error) {
-        toast.error(error.message);
+        toast.error(error.message, {
+          duration: 4000,
+          important: true,
+        });
       } else {
-        toast.error("Erro ao realizar login");
+        toast.error("Erro ao realizar login", {
+          duration: 4000,
+          important: true,
+        });
       }
       setIsLoading(false); // Garantir que isLoading volta para false em caso de erro
       throw error;
@@ -166,7 +175,10 @@ export const useAuthProvider = () => {
         // Se não há sessão, apenas limpa o estado local
         setUser(null);
         setSession(null);
-        toast.info("Sessão encerrada");
+        toast.info("Sessão encerrada", {
+          duration: 3000,
+          important: true,
+        });
         setIsLoading(false);
         return;
       }
@@ -176,17 +188,26 @@ export const useAuthProvider = () => {
       
       if (error) {
         console.error("Erro ao fazer logout:", error);
-        toast.error("Erro ao encerrar sessão");
+        toast.error("Erro ao encerrar sessão", {
+          duration: 4000,
+          important: true,
+        });
       } else {
         // Limpar o estado local mesmo se houver erro no supabase.auth.signOut()
         setUser(null);
         setSession(null);
-        toast.info("Sessão encerrada");
+        toast.info("Sessão encerrada com sucesso", {
+          duration: 3000,
+          important: true,
+        });
       }
       
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
-      toast.error("Erro ao encerrar sessão");
+      toast.error("Erro ao encerrar sessão", {
+        duration: 4000,
+        important: true,
+      });
     } finally {
       setIsLoading(false); // Garantir que isLoading volta para false em qualquer caso
     }
