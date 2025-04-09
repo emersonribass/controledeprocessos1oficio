@@ -118,7 +118,7 @@ const AdminProcessTypesPage = () => {
                             <Button onClick={cancelEdit} size="sm" variant="ghost">
                               <X className="h-4 w-4" />
                             </Button>
-                          </div> : <Button onClick={() => startEdit(type.id, type.name)} size="sm" variant="ghost">
+                          </div> : <Button onClick={() => startEdit(type.id, type.name)} size="sm" variant="ghost" className="text-white bg-green-600 hover:bg-green-500">
                             <Pencil className="h-4 w-4" />
                           </Button>}
                       </TableCell>
