@@ -43,13 +43,13 @@ const DepartmentsList = ({
               <TableCell className="py-1">{department.timeLimit}</TableCell>
               <TableCell className="text-right py-1">
                 <div className="flex justify-end space-x-2">
-                  <Button variant="outline" size="icon" onClick={() => onMoveUp(department)} disabled={departments[0].id === department.id} title="Mover para cima" className="hover:border-blue-200 bg-green-700 hover:bg-green-600 text-white">
+                  <Button variant="outline" size="icon" onClick={() => onMoveUp(department)} disabled={departments[0].id === department.id} title="Mover para cima" className="hover:border-blue-200 text-white bg-green-600 hover:bg-green-500">
                     <ArrowUp className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="icon" onClick={() => onMoveDown(department)} disabled={departments[departments.length - 1].id === department.id} title="Mover para baixo" className="hover:border-blue-200 bg-green-700 hover:bg-green-600 text-white">
+                  <Button variant="outline" size="icon" onClick={() => onMoveDown(department)} disabled={departments[departments.length - 1].id === department.id} title="Mover para baixo" className="hover:border-blue-200 text-white bg-green-600 hover:bg-green-500">
                     <ArrowDown className="h-4 w-4" />
                   </Button>
-                  <Button variant="outline" size="icon" onClick={() => onEdit(department)} title="Editar" className="hover:border-amber-200 bg-amber-400 hover:bg-amber-300 text-white">
+                  <Button variant="outline" size="icon" onClick={() => onEdit(department)} title="Editar" className="hover:border-amber-200 text-white bg-amber-400 hover:bg-amber-300">
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button variant="outline" size="icon" onClick={() => onDelete(department)} title="Excluir" className="hover:border-red-200 bg-red-400 hover:bg-red-300 text-white">
