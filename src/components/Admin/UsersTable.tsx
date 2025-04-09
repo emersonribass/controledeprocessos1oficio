@@ -1,17 +1,10 @@
-
 import { format } from "date-fns";
 import { UserCheck, UserX, Pencil, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Department } from "@/types";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 type UsuarioSupabase = {
   id: string;
   nome: string;
@@ -23,7 +16,6 @@ type UsuarioSupabase = {
   created_at: string;
   updated_at: string;
 };
-
 type UsersTableProps = {
   usuarios: UsuarioSupabase[];
   isLoading: boolean;
@@ -32,34 +24,27 @@ type UsersTableProps = {
   onEdit: (usuario: UsuarioSupabase) => void;
   onDelete: (usuario: UsuarioSupabase) => void;
 };
-
 export function UsersTable({
   usuarios,
   isLoading,
   departments,
   onToggleActive,
   onEdit,
-  onDelete,
+  onDelete
 }: UsersTableProps) {
   const getDepartmentName = (id: string) => {
-    const department = departments.find((d) => d.id === id);
+    const department = departments.find(d => d.id === id);
     return department ? department.name : "Desconhecido";
   };
-
   const getSetoresNames = (setorIds: string[]) => {
     return setorIds.map(id => getDepartmentName(id)).join(", ");
   };
-
   if (isLoading) {
-    return (
-      <div className="flex justify-center p-4">
+    return <div className="flex justify-center p-4">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <TooltipProvider>
+  return <TooltipProvider>
       <Table>
         <TableHeader>
           <TableRow>
@@ -73,15 +58,11 @@ export function UsersTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {usuarios.length === 0 ? (
-            <TableRow>
+          {usuarios.length === 0 ? <TableRow>
               <TableCell colSpan={7} className="text-center py-6">
                 Nenhum usuário encontrado.
               </TableCell>
-            </TableRow>
-          ) : (
-            usuarios.map((usuario) => (
-              <TableRow key={usuario.id}>
+            </TableRow> : usuarios.map(usuario => <TableRow key={usuario.id}>
                 <TableCell className="font-medium">{usuario.nome}</TableCell>
                 <TableCell>{usuario.email}</TableCell>
                 <TableCell>
@@ -111,38 +92,19 @@ export function UsersTable({
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end space-x-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => onToggleActive(usuario)}
-                      title={usuario.ativo ? "Desativar usuário" : "Ativar usuário"}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => onToggleActive(usuario)} title={usuario.ativo ? "Desativar usuário" : "Ativar usuário"} className="bg-green-700 hover:bg-green-600">
                       {usuario.ativo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => onEdit(usuario)}
-                      title="Editar usuário"
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(usuario)} title="Editar usuário" className="bg-amber-600 hover:bg-amber-500">
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="text-destructive"
-                      onClick={() => onDelete(usuario)}
-                      title="Excluir usuário"
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => onDelete(usuario)} title="Excluir usuário" className="bg-red-600 hover:bg-red-500 text-inherit">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
-              </TableRow>
-            ))
-          )}
+              </TableRow>)}
         </TableBody>
       </Table>
-    </TooltipProvider>
-  );
+    </TooltipProvider>;
 }
