@@ -2,7 +2,7 @@
 import { createContext, useContext, ReactNode } from "react";
 import { AuthContextType } from "./types";
 import { useAuthProvider } from "./useAuthProvider";
-import { isAdmin } from "./utils";
+import { isAdmin } from "./permissions";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

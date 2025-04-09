@@ -1,7 +1,8 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { convertSupabaseUser, syncAuthWithUsuarios } from "./utils";
+import { convertSupabaseUser } from "./userConverter";
+import { syncAuthWithUsuarios } from "./syncAuth";
 import { toast } from "sonner";
 import { LoginResult } from "./types";
 import { User } from "@/types";

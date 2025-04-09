@@ -1,4 +1,4 @@
 
 export { AuthProvider, useAuth } from "./AuthProvider";
-export { isAdmin } from "./utils";
+export { isAdmin } from "./permissions";
 export type { AuthContextType } from "./types";
