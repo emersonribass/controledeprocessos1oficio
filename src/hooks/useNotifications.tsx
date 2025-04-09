@@ -123,7 +123,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
           toast({
             title: "Aviso",
             description: `${failures} notificações não puderam ser marcadas como lidas.`,
-            variant: "warning"
+            variant: "destructive"
           });
         } else if (unreadNotifications.length > 0) {
           toast({
