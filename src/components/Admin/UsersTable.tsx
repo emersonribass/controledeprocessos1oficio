@@ -95,10 +95,10 @@ export function UsersTable({
                     <Button variant="ghost" size="icon" onClick={() => onToggleActive(usuario)} title={usuario.ativo ? "Desativar usuário" : "Ativar usuário"} className="text-white bg-green-600 hover:bg-green-500">
                       {usuario.ativo ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onEdit(usuario)} title="Editar usuário" className="text-white bg-yellow-600 hover:bg-yellow-500">
+                    <Button variant="ghost" size="icon" onClick={() => onEdit(usuario)} title="Editar usuário" className="text-white bg-amber-400 hover:bg-amber-300">
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => onDelete(usuario)} title="Excluir usuário" className="bg-red-600 hover:bg-red-500 text-white">
+                    <Button variant="ghost" size="icon" onClick={() => onDelete(usuario)} title="Excluir usuário" className="text-white bg-red-400 hover:bg-red-300">
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
