@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const LoginForm = () => {
@@ -15,6 +15,7 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   
   const {
     login
@@ -52,16 +53,20 @@ const LoginForm = () => {
     }
   };
 
-  return <Card className="w-[380px]">
-      <CardHeader>
-        <CardTitle className="text-2xl text-center">Nottar</CardTitle>
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  return <Card className="w-[380px] shadow-lg">
+      <CardHeader className="space-y-1 pb-2">
+        <CardTitle className="text-2xl font-bold text-center">Bem-vindo</CardTitle>
         <CardDescription className="text-center">
           Acesse o sistema de controle de processos
         </CardDescription>
       </CardHeader>
 
       <form onSubmit={handleLogin}>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-2">
           {error && <Alert variant="destructive" className="mb-4">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>{error}</AlertDescription>
@@ -69,17 +74,50 @@ const LoginForm = () => {
           
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} required />
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="seu@email.com" 
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                className="pl-10" 
+                required 
+              />
+            </div>
           </div>
+          
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Senha</Label>
             </div>
-            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
+            <div className="relative">
+              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input 
+                id="password" 
+                type={showPassword ? "text" : "password"} 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+                className="pl-10" 
+                required 
+              />
+              <button 
+                type="button" 
+                onClick={togglePasswordVisibility} 
+                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? 
+                  <EyeOff className="h-4 w-4" /> : 
+                  <Eye className="h-4 w-4" />
+                }
+              </button>
+            </div>
           </div>
         </CardContent>
+        
         <CardFooter>
-          <Button className="w-full" type="submit" disabled={isSubmitting}>
+          <Button className="w-full bg-primary hover:bg-primary/90" type="submit" disabled={isSubmitting}>
             {isSubmitting ? <span className="flex items-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
                 Entrando...
