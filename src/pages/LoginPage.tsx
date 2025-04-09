@@ -34,7 +34,7 @@ const LoginPage = () => {
           <img 
             src="/Logo Nottar vertical.png" 
             alt="Logo Nottar" 
-            className="h-12 mr-0 object-scale-down" 
+            className="mx-auto mb-2 h-24 w-auto"
           />
         <p className="text-muted-foreground">Sistema de Gestão de Processos</p>
       </div>
