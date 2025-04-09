@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
-import { MoveLeft, MoveRight } from "lucide-react";
+import { MoveLeft, MoveRight, Play } from "lucide-react";
+
 interface ProcessActionButtonsProps {
   processId: string;
   moveProcessToPreviousDepartment: (processId: string) => void;
@@ -12,6 +13,7 @@ interface ProcessActionButtonsProps {
   status: string;
   startProcess?: (processId: string) => Promise<void>;
 }
+
 const ProcessActionButtons = ({
   processId,
   moveProcessToPreviousDepartment,
@@ -24,10 +26,22 @@ const ProcessActionButtons = ({
   startProcess
 }: ProcessActionButtonsProps) => {
   const isNotStarted = status === "not_started";
-  return <div className="flex justify-center gap-2">
-      {isNotStarted ? <Button variant="outline" size="sm" onClick={() => startProcess && startProcess(processId)} title="Iniciar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300">
+  
+  return (
+    <div className="flex justify-center gap-2">
+      {isNotStarted ? (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => startProcess && startProcess(processId)} 
+          title="Iniciar processo" 
+          className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1"
+        >
+          <Play className="h-3 w-3" />
           Iniciar
-        </Button> : <>
+        </Button>
+      ) : (
+        <>
           <Button 
             variant="ghost" 
             size="icon" 
@@ -48,7 +62,10 @@ const ProcessActionButtons = ({
           >
             <MoveRight className="h-4 w-4" />
           </Button>
-        </>}
-    </div>;
+        </>
+      )}
+    </div>
+  );
 };
+
 export default ProcessActionButtons;

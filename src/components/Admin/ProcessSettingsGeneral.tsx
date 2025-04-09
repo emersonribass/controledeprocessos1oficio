@@ -1,12 +1,14 @@
+
 import { useState, useEffect } from "react";
 import { useProcesses } from "@/hooks/useProcesses";
 import { Process } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowRight } from "lucide-react";
+import { Loader2, ArrowRight, Play } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
+
 const ProcessSettingsGeneral = () => {
   const {
     processes,
@@ -15,11 +17,13 @@ const ProcessSettingsGeneral = () => {
   } = useProcesses();
   const [notStartedProcesses, setNotStartedProcesses] = useState<Process[]>([]);
   const navigate = useNavigate();
+  
   useEffect(() => {
     // Filtrar apenas processos não iniciados
     const filteredProcesses = processes.filter(p => p.status === 'not_started');
     setNotStartedProcesses(filteredProcesses);
   }, [processes]);
+  
   const handleStartProcess = async (processId: string) => {
     try {
       await updateProcessStatus(processId, "Em andamento");
@@ -27,12 +31,17 @@ const ProcessSettingsGeneral = () => {
       console.error("Erro ao iniciar processo:", error);
     }
   };
+  
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">
+    return (
+      <div className="flex justify-center items-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>;
+      </div>
+    );
   }
-  return <Card>
+  
+  return (
+    <Card>
       <CardHeader>
         <CardTitle>Processos Não Iniciados</CardTitle>
         <CardDescription>
@@ -40,33 +49,50 @@ const ProcessSettingsGeneral = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {notStartedProcesses.length === 0 ? <div className="text-center py-10">
+        {notStartedProcesses.length === 0 ? (
+          <div className="text-center py-10">
             <p className="text-muted-foreground">
               Não há processos aguardando início
             </p>
-          </div> : <div className="space-y-4">
-            {notStartedProcesses.map(process => <div key={process.id} className="flex items-center justify-between p-4 border rounded-md">
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {notStartedProcesses.map(process => (
+              <div key={process.id} className="flex items-center justify-between p-4 border rounded-md">
                 <div>
                   <h4 className="font-medium">{process.protocolNumber}</h4>
                   <p className="text-sm text-muted-foreground">
                     Cadastrado {formatDistanceToNow(new Date(process.startDate), {
-                addSuffix: true,
-                locale: ptBR
-              })}
+                      addSuffix: true,
+                      locale: ptBR
+                    })}
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/processes/${process.id}`)} className="rounded-lg text-white bg-green-600 hover:bg-green-500">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => navigate(`/processes/${process.id}`)} 
+                    className="rounded-lg text-white bg-green-600 hover:bg-green-500"
+                  >
                     Detalhes
                   </Button>
-                  <Button size="sm" onClick={() => handleStartProcess(process.id)} className="gap-0 text-white text-center font-medium rounded-lg">
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleStartProcess(process.id)} 
+                    className="gap-1 text-white text-center font-medium rounded-lg"
+                  >
+                    <Play className="h-4 w-4" />
                     Iniciar
-                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
-              </div>)}
-          </div>}
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export default ProcessSettingsGeneral;
