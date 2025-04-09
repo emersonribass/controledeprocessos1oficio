@@ -55,8 +55,7 @@ export const useNotificationsService = () => {
       const { error } = await supabase
         .from('notificacoes')
         .update({ lida: true })
-        .eq('id', notificationId)
-        .select();
+        .eq('id', notificationId);
 
       if (error) {
         throw error;
@@ -79,8 +78,7 @@ export const useNotificationsService = () => {
       const { error } = await supabase
         .from('notificacoes')
         .update({ respondida: true })
-        .eq('id', notificationId)
-        .select();
+        .eq('id', notificationId);
 
       if (error) {
         throw error;

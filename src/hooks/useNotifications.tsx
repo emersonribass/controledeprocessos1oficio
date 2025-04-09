@@ -84,7 +84,11 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     // Atualizar no banco de dados
     if (user) {
       try {
-        await markNotificationAsRead(id);
+        const success = await markNotificationAsRead(id);
+        if (!success) {
+          // Reverter alteração local em caso de erro
+          await loadNotifications();
+        }
       } catch (error) {
         console.error("Erro ao marcar notificação como lida:", error);
         // Reverter alteração local em caso de erro
@@ -125,6 +129,9 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
             description: `${failures} notificações não puderam ser marcadas como lidas.`,
             variant: "destructive"
           });
+          
+          // Recarregar notificações para garantir sincronização
+          await loadNotifications();
         } else if (unreadNotifications.length > 0) {
           toast({
             title: "Sucesso",
@@ -132,9 +139,6 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
             variant: "default"
           });
         }
-        
-        // Recarregar notificações para garantir sincronização
-        await loadNotifications();
       } catch (error) {
         console.error("Erro ao marcar todas notificações como lidas:", error);
         toast({

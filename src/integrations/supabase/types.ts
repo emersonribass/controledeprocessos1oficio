@@ -18,6 +18,7 @@ export type Database = {
           processo_id: string
           respondida: boolean
           tipo: string
+          updated_at: string
           usuario_id: string
         }
         Insert: {
@@ -28,6 +29,7 @@ export type Database = {
           processo_id: string
           respondida?: boolean
           tipo?: string
+          updated_at?: string
           usuario_id: string
         }
         Update: {
@@ -38,6 +40,7 @@ export type Database = {
           processo_id?: string
           respondida?: boolean
           tipo?: string
+          updated_at?: string
           usuario_id?: string
         }
         Relationships: [
