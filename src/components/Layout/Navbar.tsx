@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { LockKeyhole, LogOut, Home, ClipboardList, Settings, BellIcon } from "lucide-react";
@@ -64,10 +63,9 @@ const Navbar = () => {
               src={logoError ? "/placeholder.svg" : "/Logo Nottar horizontal.svg"} 
               alt="Logo Nottar" 
               className="h-12 mr-0 object-scale-down" 
-              onError={(e) => {
-                console.error("Erro ao carregar logo na navbar:", e);
+              onError={() => {
+                console.error("Erro ao carregar logo na navbar");
                 setLogoError(true);
-                e.currentTarget.onerror = null;
               }}
             />
             <Separator orientation="vertical" className="h-8 mx-2" />
