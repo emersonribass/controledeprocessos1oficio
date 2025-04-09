@@ -92,7 +92,8 @@ const ProcessTableRow = ({
 
   const isFirstDepartment = process.currentDepartment === sortedDepartments[0]?.id;
   
-  const isLastVisibleDepartment = lastVisibleDept && process.currentDepartment === lastVisibleDept.id && !concludedDept;
+  // Atualizando a verificação para o último departamento
+  const isLastDepartment = process.currentDepartment === concludedDept?.id;
 
   // Define a cor de fundo com base no status do processo
   const getRowBackgroundColor = () => {
@@ -149,7 +150,7 @@ const ProcessTableRow = ({
           moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
           moveProcessToNextDepartment={moveProcessToNextDepartment}
           isFirstDepartment={isFirstDepartment}
-          isLastDepartment={isLastVisibleDepartment}
+          isLastDepartment={isLastDepartment}
           setIsEditing={() => {}}
           isEditing={false}
           status={process.status}
