@@ -6,6 +6,7 @@ import { useDepartmentsData } from "@/hooks/useDepartmentsData";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
+import { useEffect } from "react";
 
 export const useSupabaseProcesses = () => {
   const { 
@@ -27,6 +28,29 @@ export const useSupabaseProcesses = () => {
   const { departments } = useDepartmentsData();
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Configurar a assinatura em tempo real para atualizações de processos
+  useEffect(() => {
+    // Ativa o canal Realtime para processos
+    const processChannel = supabase
+      .channel('public:processos')
+      .on('postgres_changes', 
+        {
+          event: '*',
+          schema: 'public',
+          table: 'processos'
+        }, 
+        () => {
+          // Quando um processo for atualizado, recarregar a lista
+          fetchProcesses();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(processChannel);
+    };
+  }, [fetchProcesses]);
 
   const handleMoveProcessToNextDepartment = async (processId: string) => {
     const success = await moveProcessToNextDepartment(processId);

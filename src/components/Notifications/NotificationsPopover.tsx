@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
+import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 interface NotificationsPopoverProps {
   children: ReactNode;
@@ -16,20 +18,37 @@ interface NotificationsPopoverProps {
 }
 
 const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPopoverProps) => {
-  const { notifications, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotifications();
+  const navigate = useNavigate();
+
+  const handleNotificationClick = (notificationId: string, processId?: string) => {
+    markAsRead(notificationId);
+    
+    // Se tiver um ID de processo, navegar para a página de detalhes do processo
+    if (processId) {
+      navigate(`/processes/${processId}`);
+    }
+  };
 
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="w-[380px] p-0" align="end">
         <div className="flex items-center justify-between p-4">
-          <h3 className="font-semibold">Notificações</h3>
+          <h3 className="font-semibold">
+            Notificações
+            {unreadCount > 0 && (
+              <Badge variant="secondary" className="ml-2 bg-primary text-primary-foreground">
+                {unreadCount}
+              </Badge>
+            )}
+          </h3>
           {notifications.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
               className="h-auto p-0 text-xs text-primary"
-              onClick={markAllAsRead}
+              onClick={() => markAllAsRead()}
             >
               <CheckCheck className="mr-1 h-3 w-3" />
               Marcar todas como lidas
@@ -51,13 +70,20 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 ${!notification.read ? "bg-primary/5" : ""}`}
-                  onClick={() => markAsRead(notification.id)}
+                  className={`p-4 cursor-pointer transition-colors hover:bg-muted/50 ${!notification.read ? "bg-primary/5" : ""}`}
+                  onClick={() => handleNotificationClick(notification.id, notification.processId)}
                 >
                   <p className="text-sm">{notification.message}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {format(new Date(notification.createdAt), "dd MMM, HH:mm", { locale: ptBR })}
-                  </p>
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(notification.createdAt), "dd MMM, HH:mm", { locale: ptBR })}
+                    </p>
+                    {!notification.read && (
+                      <Badge variant="secondary" className="text-[10px] bg-primary text-primary-foreground h-5">
+                        Nova
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
