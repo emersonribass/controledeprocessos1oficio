@@ -47,7 +47,7 @@ const Navbar = () => {
       <div className="flex items-center">
         <Link to="/" className="flex items-center mr-6">
           <div className="flex items-center">
-            <img src="/Logo Nottar.svg" alt="Logo Nottar" className="h-12 mr-0 object-scale-down" />
+            <img src="/Logo Nottar horizontal.svg" alt="Logo Nottar" className="h-12 mr-0 object-scale-down" />
             <Separator orientation="vertical" className="h-8 mx-2" />
             <span className="text-amber-950 text-lg font-semibold">Controle de Processos</span>
           </div>
