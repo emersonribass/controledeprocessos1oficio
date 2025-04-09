@@ -1,3 +1,4 @@
+
 import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,14 +9,14 @@ import NotificationsPopover from "@/components/Notifications/NotificationsPopove
 import { useNotifications } from "@/hooks/useNotifications";
 
 const Navbar = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   // Adicionar o useNotifications para obter a contagem de não lidas
   const { unreadCount } = useNotifications();
 
   const handleSignOut = async () => {
-    await signOut();
+    await logout();
     navigate('/login');
   };
 
