@@ -71,7 +71,7 @@ const AdminProcessTypesPage = () => {
         <CardContent>
           {isAdding && <div className="mb-4 flex items-center space-x-2">
               <Input value={newTypeName} onChange={e => setNewTypeName(e.target.value)} placeholder="Nome do tipo de processo" className="max-w-sm" />
-              <Button onClick={handleAddNew} variant="default" className="gap-0 bg-green-700 hover:bg-green-600 text-white">
+              <Button onClick={handleAddNew} variant="default" className="gap-0 bg-green-600 hover:bg-green-500 text-white">
                 <Save className="mr-2 h-4 w-4" />
                 Salvar
               </Button>
