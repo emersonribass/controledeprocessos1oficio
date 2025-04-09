@@ -100,7 +100,8 @@ const ProcessTableRow = ({
   const isFirstDepartment = process.currentDepartment === sortedDepartments[0]?.id;
   
   // Verifica se é o último departamento visível (antes de Concluído)
-  const isLastVisibleDepartment = lastVisibleDept && process.currentDepartment === lastVisibleDept.id;
+  // Modificamos para considerar que não é o último se existir o departamento Concluído
+  const isLastVisibleDepartment = lastVisibleDept && process.currentDepartment === lastVisibleDept.id && !concludedDept;
 
   return (
     <TableRow
@@ -154,7 +155,7 @@ const ProcessTableRow = ({
           moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
           moveProcessToNextDepartment={moveProcessToNextDepartment}
           isFirstDepartment={isFirstDepartment}
-          isLastDepartment={isLastVisibleDepartment && !concludedDept}
+          isLastDepartment={isLastVisibleDepartment}
           setIsEditing={() => {}}
           isEditing={false}
           status={process.status}
