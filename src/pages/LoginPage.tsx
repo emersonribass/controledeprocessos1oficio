@@ -27,7 +27,7 @@ const LoginPage = () => {
   }
   return <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30">
       <div className="mb-8 text-center">
-          <img src="/Logo Nottar vertical.png" alt="Logo Nottar" className="mx-auto mb-02 h-40 w-auto object-scale-down" />
+          <img src="/Logo Nottar vertical.png" alt="Logo Nottar" className="mx-auto mb-3 h-40 w-auto object-scale-down" />
         <p className="text-muted-foreground">Sistema de Gestão de Processos</p>
       </div>
       
