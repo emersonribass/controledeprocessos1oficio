@@ -79,7 +79,7 @@ const ProcessTable = ({
             processes.map(process => (
               <TableRow 
                 key={process.id} 
-                className="cursor-pointer hover:bg-gray-100" 
+                className={`cursor-pointer hover:bg-gray-100 ${process.status === "completed" ? "bg-green-50" : ""}`}
                 onClick={() => handleRowClick(process.id)}
               >
                 <TableCell className="font-medium">
@@ -135,8 +135,11 @@ const ProcessTable = ({
                     processId={process.id} 
                     moveProcessToPreviousDepartment={moveProcessToPreviousDepartment} 
                     moveProcessToNextDepartment={moveProcessToNextDepartment} 
-                    isFirstDepartment={process.currentDepartment === sortedDepartments[0]?.id} 
-                    isLastDepartment={process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id && !concludedDept}
+                    isFirstDepartment={process.currentDepartment === sortedDepartments[0]?.id}
+                    isLastDepartment={
+                      process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id && 
+                      !concludedDept
+                    }
                     setIsEditing={() => {}} 
                     isEditing={false} 
                     status={process.status}
