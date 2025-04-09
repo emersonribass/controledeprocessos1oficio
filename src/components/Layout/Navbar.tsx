@@ -10,7 +10,6 @@ import { useAuth } from "@/hooks/auth";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationsPopover from "../Notifications/NotificationsPopover";
 import { cn } from "@/lib/utils";
-
 const Navbar = () => {
   const {
     user,
@@ -27,10 +26,8 @@ const Navbar = () => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
   const handleLogout = async () => {
     if (isLoggingOut) return;
-    
     try {
       setIsLoggingOut(true);
       await logout();
@@ -41,7 +38,6 @@ const Navbar = () => {
       setIsLoggingOut(false);
     }
   };
-
   const navLinks = [{
     title: "Dashboard",
     href: "/dashboard",
@@ -51,41 +47,24 @@ const Navbar = () => {
     href: "/processes",
     icon: <ClipboardList className="h-4 w-4 mr-1" />
   }];
-
   const userIsAdmin = user && isAdmin(user.email);
-
-  return (
-    <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
+  return <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
       <div className="flex items-center">
         <Link to="/" className="flex items-center mr-6">
           <div className="flex items-center">
-             <img 
-                src="/Logo Nottar horizontal.png" 
-                alt="Logo Nottar" 
-                className="h-12 mr-0 object-scale-down" 
-              />
+             <img src="/Logo Nottar horizontal.png" alt="Logo Nottar" className="h-14 mr-0 object-scale-down" />
             <Separator orientation="vertical" className="h-8 mx-2" />
             <span className="text-amber-950 text-lg font-semibold">Controle de Processos</span>
           </div>
         </Link>
 
         <div className="hidden md:flex items-center space-x-1">
-          {navLinks.map(link => (
-            <Link 
-              key={link.href} 
-              to={link.href} 
-              className={cn(
-                "flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors", 
-                pathname === link.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary"
-              )}
-            >
+          {navLinks.map(link => <Link key={link.href} to={link.href} className={cn("flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors", pathname === link.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary")}>
               {link.icon}
               <span>{link.title}</span>
-            </Link>
-          ))}
+            </Link>)}
           
-          {userIsAdmin && (
-            <Menubar className="border-none bg-transparent p-0">
+          {userIsAdmin && <Menubar className="border-none bg-transparent p-0">
               <MenubarMenu>
                 <MenubarTrigger className={cn("flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors", pathname.startsWith("/admin") ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary")}>
                   <Settings className="h-4 w-4 mr-1" />
@@ -114,8 +93,7 @@ const Navbar = () => {
                   </MenubarItem>
                 </MenubarContent>
               </MenubarMenu>
-            </Menubar>
-          )}
+            </Menubar>}
         </div>
       </div>
 
@@ -123,11 +101,9 @@ const Navbar = () => {
         <NotificationsPopover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
           <Button variant="ghost" size="icon" className="relative" onClick={() => setNotificationsOpen(true)}>
             <BellIcon className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-destructive text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+            {unreadCount > 0 && <span className="absolute -top-1 -right-1 bg-destructive text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {unreadCount}
-              </span>
-            )}
+              </span>}
           </Button>
         </NotificationsPopover>
 
@@ -159,19 +135,13 @@ const Navbar = () => {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={handleLogout} 
-              className="cursor-pointer"
-              disabled={isLoggingOut}
-            >
+            <DropdownMenuItem onClick={handleLogout} className="cursor-pointer" disabled={isLoggingOut}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>{isLoggingOut ? "Saindo..." : "Sair"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </nav>
-  );
+    </nav>;
 };
-
 export default Navbar;
