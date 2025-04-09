@@ -12,6 +12,20 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
 
+  // Limpar localStorage de autenticação ao montar o componente de login
+  useEffect(() => {
+    const clearLocalStorageAuth = () => {
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('supabase.auth.refreshToken');
+      localStorage.removeItem('sb-drkhksdohtndsbbnxbfv-auth-token');
+      localStorage.removeItem('sb-refresh-token');
+      localStorage.removeItem('supabase.auth.expires_at');
+      console.log("Login: Tokens de autenticação limpos ao montar componente");
+    };
+    
+    clearLocalStorageAuth();
+  }, []);
+
   useEffect(() => {
     // Evitar redirecionamentos múltiplos
     if (hasRedirected) return;
@@ -32,7 +46,7 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-muted/40 to-background">
-      <div className="flex flex-col items-center mb-10">
+      <div className="flex flex-col items-center mb-6">
         <img 
           src="/Logo Nottar vertical.png" 
           alt="Logo Nottar" 
