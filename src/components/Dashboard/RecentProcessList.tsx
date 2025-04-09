@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -8,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useProcesses } from "@/hooks/useProcesses";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+
 const RecentProcessList = () => {
   const navigate = useNavigate();
   const {
@@ -19,6 +21,7 @@ const RecentProcessList = () => {
 
   // Get the most recent processes
   const recentProcesses = [...processes].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).slice(0, limit);
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "completed":
@@ -27,11 +30,15 @@ const RecentProcessList = () => {
         return <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-100">Atrasado</Badge>;
       case "pending":
         return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Em andamento</Badge>;
+      case "not_started":
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100">Não iniciado</Badge>;
       default:
         return <Badge variant="outline">Desconhecido</Badge>;
     }
   };
-  return <Card className="col-span-2">
+
+  return (
+    <Card className="col-span-2">
       <CardHeader>
         <CardTitle>Processos Recentes</CardTitle>
         <CardDescription>
@@ -39,9 +46,16 @@ const RecentProcessList = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {recentProcesses.length === 0 ? <p className="text-muted-foreground text-center py-6">
+        {recentProcesses.length === 0 ? (
+          <p className="text-muted-foreground text-center py-6">
             Nenhum processo cadastrado
-          </p> : recentProcesses.map(process => <div key={process.id} className="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0">
+          </p>
+        ) : (
+          recentProcesses.map(process => (
+            <div 
+              key={process.id} 
+              className={`flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0 ${process.status === "completed" ? "bg-green-50 rounded-md p-2" : ""}`}
+            >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h4 className="font-medium">{process.protocolNumber}</h4>
@@ -52,22 +66,34 @@ const RecentProcessList = () => {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Iniciado {formatDistanceToNow(new Date(process.startDate), {
-              addSuffix: true,
-              locale: ptBR
-            })}
+                    addSuffix: true,
+                    locale: ptBR
+                  })}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => navigate(`/processes/${process.id}`)}>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate(`/processes/${process.id}`)}
+              >
                 <ExternalLink className="h-4 w-4" />
               </Button>
-            </div>)}
+            </div>
+          ))
+        )}
       </CardContent>
       <CardFooter>
-        <Button variant="outline" onClick={() => navigate("/processes")} className="w-full bg-green-600 hover:bg-green-500 text-white">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate("/processes")} 
+          className="w-full bg-green-600 hover:bg-green-500 text-white"
+        >
           Ver todos os processos
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </CardFooter>
-    </Card>;
+    </Card>
+  );
 };
+
 export default RecentProcessList;

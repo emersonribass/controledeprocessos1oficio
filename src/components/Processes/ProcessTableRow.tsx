@@ -40,11 +40,18 @@ const ProcessTableRow = ({
 
   const isNotStarted = process.status === "not_started";
   const isProcessStarted = !isNotStarted;
+  const isCompleted = process.status === "completed";
 
   // Ordenar departamentos por ordem e filtrar o departamento "Concluído"
   const sortedDepartments = [...departments]
     .filter(dept => dept.name !== "Concluído(a)")
     .sort((a, b) => a.order - b.order);
+
+  // Pegar o último departamento visível
+  const lastVisibleDept = sortedDepartments[sortedDepartments.length - 1];
+  
+  // Obter o departamento "Concluído(a)" para referência
+  const concludedDept = departments.find(dept => dept.name === "Concluído(a)");
 
   // Função para obter a data de entrada mais recente para um departamento
   const getMostRecentEntryDate = (departmentId: string): string | null => {
@@ -92,8 +99,8 @@ const ProcessTableRow = ({
   // Verifica se é o primeiro departamento
   const isFirstDepartment = process.currentDepartment === sortedDepartments[0]?.id;
   
-  // Verifica se é o último departamento
-  const isLastDepartment = process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id;
+  // Verifica se é o último departamento visível (antes de Concluído)
+  const isLastVisibleDepartment = lastVisibleDept && process.currentDepartment === lastVisibleDept.id;
 
   return (
     <TableRow
@@ -101,6 +108,7 @@ const ProcessTableRow = ({
       className={cn(
         process.status === "overdue" ? "bg-destructive/5" : "",
         isNotStarted ? "bg-blue-50" : "",
+        isCompleted ? "bg-green-50" : "",
       )}
     >
       <TableCell className="font-medium">
@@ -146,7 +154,7 @@ const ProcessTableRow = ({
           moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
           moveProcessToNextDepartment={moveProcessToNextDepartment}
           isFirstDepartment={isFirstDepartment}
-          isLastDepartment={isLastDepartment}
+          isLastDepartment={isLastVisibleDepartment && !concludedDept}
           setIsEditing={() => {}}
           isEditing={false}
           status={process.status}
