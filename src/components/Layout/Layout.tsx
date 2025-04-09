@@ -2,6 +2,7 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import { useAuth } from "@/hooks/auth";
+import { NotificationsProvider } from "@/hooks/useNotifications";
 
 const Layout = () => {
   const { user, isLoading } = useAuth();
@@ -19,12 +20,14 @@ const Layout = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      <Navbar />
-      <main className="flex-1 overflow-y-auto bg-background p-6">
-        <Outlet />
-      </main>
-    </div>
+    <NotificationsProvider>
+      <div className="h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 overflow-y-auto bg-background p-6">
+          <Outlet />
+        </main>
+      </div>
+    </NotificationsProvider>
   );
 };
 

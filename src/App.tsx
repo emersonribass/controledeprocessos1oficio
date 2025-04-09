@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth";
 import { ProcessesProvider } from "@/hooks/useProcesses";
-import { NotificationsProvider } from "@/hooks/useNotifications";
 import { useAuth } from "@/hooks/auth";
 
 // Importações necessárias para resolver os erros
@@ -133,9 +133,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <AuthProvider>
-          <NotificationsProvider>
-            <AppRoutes />
-          </NotificationsProvider>
+          <AppRoutes />
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
