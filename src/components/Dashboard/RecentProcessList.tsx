@@ -40,9 +40,9 @@ const RecentProcessList = () => {
 
   // Função para obter a cor de fundo baseada no status
   const getItemBackgroundColor = (status: string) => {
-    if (status === "completed") return "bg-green-300";
-    if (status === "overdue") return "bg-red-300";
-    if (status === "pending") return "bg-blue-300";
+    if (status === "completed") return "bg-green-200";
+    if (status === "overdue") return "bg-red-200";
+    if (status === "pending") return "bg-blue-200";
     return "";
   };
 
