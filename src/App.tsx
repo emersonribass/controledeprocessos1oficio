@@ -22,6 +22,7 @@ import AdminDepartmentsPage from "@/pages/AdminDepartmentsPage";
 import AdminProcessSettingsPage from "@/pages/AdminProcessSettingsPage";
 import AdminProcessTypesPage from "@/pages/AdminProcessTypesPage";
 import NotFound from "@/pages/NotFound";
+import ChangePasswordPage from "@/pages/ChangePasswordPage";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +92,12 @@ const AppRoutes = () => {
           <Route path="settings" element={
             <ProtectedRoute>
               <SettingsPage />
+            </ProtectedRoute>
+          } />
+
+          <Route path="alterar-senha" element={
+            <ProtectedRoute needsProcesses={false}>
+              <ChangePasswordPage />
             </ProtectedRoute>
           } />
 

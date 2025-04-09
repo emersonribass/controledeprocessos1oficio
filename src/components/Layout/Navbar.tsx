@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { UserCircle, BellIcon, LogOut, Home, ClipboardList, Settings } from "lucide-react";
+import { LockKeyhole, LogOut, Home, ClipboardList, Settings, BellIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -149,9 +149,9 @@ const Navbar = () => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/profile" className="cursor-pointer">
-                <UserCircle className="mr-2 h-4 w-4" />
-                <span>Perfil</span>
+              <Link to="/alterar-senha" className="cursor-pointer">
+                <LockKeyhole className="mr-2 h-4 w-4" />
+                <span>Alterar Senha</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
