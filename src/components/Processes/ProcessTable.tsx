@@ -149,8 +149,8 @@ const ProcessTable = ({
                     moveProcessToNextDepartment={moveProcessToNextDepartment} 
                     isFirstDepartment={process.currentDepartment === sortedDepartments[0]?.id}
                     isLastDepartment={
-                      process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id && 
-                      !concludedDept
+                      process.currentDepartment === concludedDept?.id || 
+                      process.currentDepartment === sortedDepartments[sortedDepartments.length - 1]?.id
                     }
                     setIsEditing={() => {}} 
                     isEditing={false} 
