@@ -30,10 +30,12 @@ const DashboardSummary = () => {
     if (!user?.departments?.length) return false;
     
     // Verificar se existe alguma entrada no histórico com o setor do usuário e data de saída não nula
-    return process.history.some(historyItem => 
-      user.departments.includes(historyItem.departmentId) && 
-      historyItem.exitDate !== null
-    );
+    return process.history.some(historyItem => {
+      // Convertendo ambos para string para garantir comparação correta
+      const userDepartmentsAsStrings = user.departments.map(dept => String(dept));
+      return userDepartmentsAsStrings.includes(String(historyItem.departmentId)) && 
+        historyItem.exitDate !== null;
+    });
   }).length;
   
   // Calculate completion rate
