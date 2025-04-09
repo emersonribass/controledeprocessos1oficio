@@ -21,9 +21,12 @@ export const useNextDepartment = (departments: Department[]) => {
       // Encontrar o próximo departamento na ordem
       const nextDept = departments.find((d) => d.order === currentDept.order + 1);
       
-      // Se não houver próximo departamento, simplesmente retornar falso
-      // sem mostrar o toast de aviso
       if (!nextDept) {
+        toast({
+          title: "Aviso",
+          description: "Não há próximo setor disponível",
+          variant: "destructive"
+        });
         return false;
       }
 
