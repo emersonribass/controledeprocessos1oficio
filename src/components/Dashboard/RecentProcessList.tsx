@@ -16,12 +16,18 @@ const RecentProcessList = () => {
   const {
     processes,
     getDepartmentName,
-    getProcessTypeName
+    getProcessTypeName,
+    filterProcesses
   } = useProcesses();
   const [limit, setLimit] = useState(5);
 
+  // Aplicar filtros por departamento e status conforme a permissão do usuário
+  const filteredProcesses = filterProcesses({});
+  
   // Get the most recent processes
-  const recentProcesses = [...processes].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).slice(0, limit);
+  const recentProcesses = [...filteredProcesses]
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+    .slice(0, limit);
 
   const getStatusBadge = (status: string) => {
     switch (status) {

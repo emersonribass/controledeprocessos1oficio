@@ -13,16 +13,18 @@ const ProcessSettingsGeneral = () => {
   const {
     processes,
     isLoading,
-    updateProcessStatus
+    updateProcessStatus,
+    filterProcesses
   } = useProcesses();
   const [notStartedProcesses, setNotStartedProcesses] = useState<Process[]>([]);
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Filtrar apenas processos não iniciados
-    const filteredProcesses = processes.filter(p => p.status === 'not_started');
-    setNotStartedProcesses(filteredProcesses);
-  }, [processes]);
+    // Usar filterProcesses para aplicar as regras de permissão e então filtrar os não iniciados
+    const filteredProcesses = filterProcesses({});
+    const notStarted = filteredProcesses.filter(p => p.status === 'not_started');
+    setNotStartedProcesses(notStarted);
+  }, [processes, filterProcesses]);
   
   const handleStartProcess = async (processId: string) => {
     try {
