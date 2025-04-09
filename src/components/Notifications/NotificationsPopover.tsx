@@ -51,7 +51,7 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 ${!notification.read ? "bg-primary/5" : ""}`}
+                  className={`p-4 ${!notification.read ? "bg-primary/5" : ""} cursor-pointer`}
                   onClick={() => markAsRead(notification.id)}
                 >
                   <p className="text-sm">{notification.message}</p>

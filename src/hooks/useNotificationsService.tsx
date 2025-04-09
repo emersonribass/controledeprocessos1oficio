@@ -49,34 +49,6 @@ export const useNotificationsService = () => {
     }
   };
 
-  // Criar uma nova notificação
-  const createNotification = async (
-    processId: string, 
-    userId: string, 
-    message: string,
-    type: string = 'movimento'
-  ): Promise<boolean> => {
-    try {
-      // Usando a notação de string para evitar problemas de tipo
-      const { error } = await supabase
-        .from('notificacoes')
-        .insert({
-          processo_id: processId,
-          usuario_id: userId,
-          mensagem: message,
-          tipo: type
-        } as any);
-
-      if (error) {
-        throw error;
-      }
-      return true;
-    } catch (error) {
-      console.error('Erro ao criar notificação:', error);
-      return false;
-    }
-  };
-
   // Marcar notificação como lida
   const markNotificationAsRead = async (notificationId: string): Promise<boolean> => {
     try {
@@ -92,6 +64,11 @@ export const useNotificationsService = () => {
       return true;
     } catch (error) {
       console.error('Erro ao marcar notificação como lida:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível marcar a notificação como lida.",
+        variant: "destructive"
+      });
       return false;
     }
   };
@@ -111,75 +88,55 @@ export const useNotificationsService = () => {
       return true;
     } catch (error) {
       console.error('Erro ao marcar notificação como respondida:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível marcar a notificação como respondida.",
+        variant: "destructive"
+      });
       return false;
     }
   };
 
-  // Buscar usuários de um departamento específico
-  const getDepartmentUsers = async (departmentId: string): Promise<string[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('id')
-        .filter('setores_atribuidos', 'cs', `{${departmentId}}`)
-        .eq('ativo', true);
-
-      if (error) {
-        throw error;
-      }
-
-      return data.map(user => user.id);
-    } catch (error) {
-      console.error('Erro ao buscar usuários do departamento:', error);
-      return [];
-    }
-  };
-
-  // Notificar todos os usuários de um departamento
-  const notifyDepartmentUsers = async (
+  // Criar uma nova notificação
+  const createNotification = async (
     processId: string, 
-    departmentId: string, 
-    message: string
+    userId: string, 
+    message: string,
+    type: string = 'movimento'
   ): Promise<boolean> => {
     try {
-      const userIds = await getDepartmentUsers(departmentId);
-      
-      if (userIds.length === 0) {
-        console.warn('Nenhum usuário encontrado para o departamento:', departmentId);
-        return false;
-      }
-
-      // Preparar notificações para todos os usuários
-      const notificationsData = userIds.map(userId => ({
-        processo_id: processId,
-        usuario_id: userId,
-        mensagem: message,
-        tipo: 'movimento'
-      }));
-
-      // Inserir as notificações usando .from('string') para evitar problemas de tipo
+      // Usando a notação de string para evitar problemas de tipo
       const { error } = await supabase
         .from('notificacoes')
-        .insert(notificationsData as any);
+        .insert({
+          processo_id: processId,
+          usuario_id: userId,
+          mensagem: message,
+          tipo: type,
+          lida: false,
+          respondida: false
+        } as any);
 
       if (error) {
         throw error;
       }
-
       return true;
     } catch (error) {
-      console.error('Erro ao notificar usuários do departamento:', error);
+      console.error('Erro ao criar notificação:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível criar a notificação.",
+        variant: "destructive"
+      });
       return false;
     }
   };
 
   return {
     fetchUserNotifications,
-    createNotification,
     markNotificationAsRead,
     markNotificationAsResponded,
-    getDepartmentUsers,
-    notifyDepartmentUsers,
+    createNotification,
     isLoading
   };
 };
