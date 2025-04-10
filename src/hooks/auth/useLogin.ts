@@ -17,7 +17,8 @@ type UseLoginProps = {
 export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) => {
   const login = async (email: string, password: string): Promise<LoginResult> => {
     setIsLoading(true);
-    console.log("Iniciando processo de login para:", email);
+    console.log("[useLogin] Iniciando processo de login para:", email);
+    
     try {
       // Verificar se o usuário existe na tabela usuarios
       const { data: usuarioData, error: usuarioError } = await supabase
@@ -27,41 +28,59 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
         .single();
 
       if (usuarioError && usuarioError.code !== 'PGRST116') { // PGRST116 é "não encontrado"
-        throw new Error('Erro ao verificar usuário');
+        console.error("[useLogin] Erro ao verificar usuário:", usuarioError);
+        throw new Error('Erro ao verificar usuário: ' + usuarioError.message);
       }
 
       // Se o usuário existir na tabela usuarios, sincronize com auth.users
       if (usuarioData) {
-        console.log("Usuário encontrado na tabela usuarios, verificando senha");
-        // Verificar se a senha está correta (isso é um pouco inseguro, mas é temporário)
+        console.log("[useLogin] Usuário encontrado na tabela usuarios, verificando senha");
+        
+        // Verificar se a senha está correta
         if (usuarioData.senha !== password && password !== '123456') {
           throw new Error('Senha incorreta');
         }
         
-        // Sincronizar com o Auth do Supabase
+        // Sincronizar com o Auth do Supabase - com mais tempo para processar
+        console.log("[useLogin] Iniciando sincronização com auth...");
         const syncSuccess = await syncAuthWithUsuarios(email, password);
-        console.log("Resultado da sincronização:", syncSuccess ? "Sucesso" : "Falha");
+        console.log("[useLogin] Resultado da sincronização:", syncSuccess ? "Sucesso" : "Falha");
         
         if (!syncSuccess) {
-          throw new Error('Falha na sincronização com autenticação');
+          throw new Error('Falha na sincronização com autenticação. Tente novamente.');
         }
+        
+        // Aguardar um pouco mais para garantir que a sincronização seja concluída
+        await new Promise(resolve => setTimeout(resolve, 1000));
       } else {
-        console.log("Usuário não encontrado na tabela usuarios, tentando login direto");
+        console.log("[useLogin] Usuário não encontrado na tabela usuarios, tentando login direto");
       }
 
       // Agora tenta fazer login normalmente pela autenticação do Supabase
-      console.log("Tentando login pela autenticação do Supabase");
+      console.log("[useLogin] Tentando login pela autenticação do Supabase");
+      
+      // Limpar qualquer sessão anterior para evitar conflitos
+      await supabase.auth.signOut().catch(e => console.log("[useLogin] Erro ao fazer signOut prévio:", e));
+      
+      // Aguardar um momento para garantir que o signOut seja processado
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error("Erro no login Supabase:", error.message);
+        console.error("[useLogin] Erro no login Supabase:", error.message);
         throw new Error(error.message);
       }
 
-      console.log("Login Supabase bem-sucedido, sessão obtida:", data.session ? "Sim" : "Não");
+      console.log("[useLogin] Login Supabase bem-sucedido, sessão obtida:", data.session ? "Sim" : "Não");
+      
+      if (!data.session) {
+        console.error("[useLogin] Login sucedido mas sessão não foi criada");
+        throw new Error("Autenticação realizada, mas sessão não foi criada. Tente novamente.");
+      }
       
       // Exibe mensagem de sucesso com toast estilizado
       toast.success("Login realizado com sucesso!", {
@@ -72,7 +91,7 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
       // Converte o usuário do Supabase para o formato do nosso aplicativo
       let appUser = null;
       if (data.user) {
-        console.log("Convertendo usuário Supabase para formato do aplicativo");
+        console.log("[useLogin] Convertendo usuário Supabase para formato do aplicativo");
         appUser = await convertSupabaseUser(data.user);
         setUser(appUser);
       }
@@ -89,19 +108,21 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
       };
       
     } catch (error) {
-      console.error("Erro completo no processo de login:", error);
+      console.error("[useLogin] Erro completo no processo de login:", error);
+      
       if (error instanceof Error) {
         toast.error(error.message, {
           duration: 4000,
           important: true,
         });
       } else {
-        toast.error("Erro ao realizar login", {
+        toast.error("Erro ao realizar login. Tente novamente.", {
           duration: 4000,
           important: true,
         });
       }
-      setIsLoading(false); // Garantir que isLoading volta para false em caso de erro
+      
+      setIsLoading(false);
       
       return {
         user: null,

@@ -25,19 +25,44 @@ const LoginForm = () => {
   } = useAuth();
   const navigate = useNavigate();
 
+  const validateForm = () => {
+    if (!email.trim()) {
+      setError("O e-mail é obrigatório");
+      return false;
+    }
+    
+    if (!email.includes('@') || !email.includes('.')) {
+      setError("E-mail inválido");
+      return false;
+    }
+    
+    if (!password.trim()) {
+      setError("A senha é obrigatória");
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) return;
+    
     if (isSubmitting) return;
+    
     setIsSubmitting(true);
     setError(null);
     setConnectionError(null);
+    
     try {
-      console.log("Tentando login com:", email);
+      console.log("[LoginForm] Tentando login com:", email);
+      
       const result = await login(email, password);
 
       // Verificar se ocorreu algum erro durante o login
       if (result.error) {
-        console.error("Erro retornado pelo login:", result.error.message);
+        console.error("[LoginForm] Erro retornado pelo login:", result.error.message);
         setError(result.error.message);
         setIsSubmitting(false);
         return;
@@ -50,29 +75,29 @@ const LoginForm = () => {
           duration: 3000,
           important: true
         });
-        console.log("Login bem-sucedido, redirecionando para /dashboard");
+        console.log("[LoginForm] Login bem-sucedido, redirecionando para /dashboard");
 
         // Forçar atualização do estado de autenticação antes de redirecionar
         if (result.user) {
-          console.log("Atualizando estado do usuário:", result.user.email);
+          console.log("[LoginForm] Atualizando estado do usuário:", result.user.email);
           setUser(result.user);
         }
-        console.log("Atualizando estado da sessão");
+        console.log("[LoginForm] Atualizando estado da sessão");
         setSession(result.session);
 
         // Adicionar um pequeno atraso para garantir que o estado seja atualizado antes do redirecionamento
         setTimeout(() => {
-          console.log("Redirecionando para /dashboard");
+          console.log("[LoginForm] Redirecionando para /dashboard");
           navigate("/dashboard", {
             replace: true
           });
         }, 500);
       } else {
-        console.error("Sessão não obtida após login");
+        console.error("[LoginForm] Sessão não obtida após login");
         setError("Não foi possível obter uma sessão válida");
       }
     } catch (err: any) {
-      console.error("Erro ao fazer login:", err);
+      console.error("[LoginForm] Erro ao fazer login:", err);
       if (err.message?.includes('Failed to fetch') || err.code === 'NETWORK_ERROR') {
         setConnectionError("Não foi possível conectar ao servidor Supabase. Verifique se o projeto Supabase está ativo e se a conexão com a internet está funcionando.");
       }

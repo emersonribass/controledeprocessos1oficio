@@ -14,11 +14,15 @@ const LoginPage = () => {
   } = useAuth();
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
+  const [clearingAuth, setClearingAuth] = useState(true);
 
   // Limpar localStorage de autenticação e estados ao montar o componente de login
   useEffect(() => {
     const clearAuthentication = async () => {
       try {
+        setClearingAuth(true);
+        console.log("[LoginPage] Iniciando limpeza de autenticação");
+        
         // Limpar localStorage e cookies relacionados ao Supabase
         localStorage.removeItem('supabase.auth.token');
         localStorage.removeItem('supabase.auth.refreshToken');
@@ -29,17 +33,20 @@ const LoginPage = () => {
         // Tentar fazer logout no Supabase (ignorando erros se não houver sessão)
         try {
           await supabase.auth.signOut();
+          console.log("[LoginPage] Logout Supabase realizado com sucesso");
         } catch (error) {
-          console.log("Erro ao tentar signOut do Supabase (ignorando):", error);
+          console.log("[LoginPage] Erro ao tentar signOut do Supabase (ignorando):", error);
         }
         
         // Limpar estados de autenticação no contexto
         setUser?.(null);
         setSession?.(null);
         
-        console.log("Login: Autenticação limpa ao montar componente");
+        console.log("[LoginPage] Autenticação limpa ao montar componente");
       } catch (error) {
-        console.error("Erro ao limpar autenticação:", error);
+        console.error("[LoginPage] Erro ao limpar autenticação:", error);
+      } finally {
+        setClearingAuth(false);
       }
     };
     
@@ -47,11 +54,13 @@ const LoginPage = () => {
   }, [setUser, setSession]);
 
   useEffect(() => {
-    // Evitar redirecionamentos múltiplos
-    if (hasRedirected) return;
+    // Evitar redirecionamentos múltiplos e só redirecionar após limpeza de auth
+    if (hasRedirected || clearingAuth) return;
+    
     if (!isLoading && user) {
-      console.log("LoginPage: Usuário já autenticado, redirecionando para /dashboard");
+      console.log("[LoginPage] Usuário já autenticado, redirecionando para /dashboard");
       setHasRedirected(true);
+      
       // Adicionar um pequeno atraso para garantir que o estado seja atualizado antes do redirecionamento
       setTimeout(() => {
         navigate("/dashboard", {
@@ -59,11 +68,14 @@ const LoginPage = () => {
         });
       }, 500);
     }
-  }, [user, isLoading, navigate, hasRedirected]);
+  }, [user, isLoading, navigate, hasRedirected, clearingAuth]);
 
-  if (isLoading) {
+  if (isLoading || clearingAuth) {
     return <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <p className="mt-4 text-muted-foreground">
+          {clearingAuth ? "Preparando ambiente de login..." : "Carregando..."}
+        </p>
       </div>;
   }
 
