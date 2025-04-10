@@ -10,7 +10,6 @@ import { useAuth } from "@/hooks/auth";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationsPopover from "../Notifications/NotificationsPopover";
 import { cn } from "@/lib/utils";
-
 const Navbar = () => {
   const {
     user,
@@ -24,12 +23,10 @@ const Navbar = () => {
   const {
     unreadCount
   } = useNotifications();
-  
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [userIsAdmin, setUserIsAdmin] = useState(false);
-  
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (user && user.email) {
@@ -44,27 +41,27 @@ const Navbar = () => {
         setUserIsAdmin(false);
       }
     };
-    
     checkAdminStatus();
   }, [user, isAdmin]);
-  
   const handleLogout = async () => {
     if (isLoggingOut) return;
-    
     try {
       setIsLoggingOut(true);
       await logout();
       setTimeout(() => {
-        navigate("/login", { replace: true });
+        navigate("/login", {
+          replace: true
+        });
       }, 100);
     } catch (error) {
       console.error("Erro no processo de logout:", error);
-      navigate("/login", { replace: true });
+      navigate("/login", {
+        replace: true
+      });
     } finally {
       setIsLoggingOut(false);
     }
   };
-  
   const navLinks = [{
     title: "Dashboard",
     href: "/dashboard",
@@ -74,12 +71,11 @@ const Navbar = () => {
     href: "/processes",
     icon: <ClipboardList className="h-4 w-4 mr-1" />
   }];
-  
   return <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
       <div className="flex items-center">
         <Link to="/" className="flex items-center mr-6">
           <div className="flex items-center">
-             <img src="/Logo Nottar horizontal.png" alt="Logo Nottar" className="h-14 mr-0 object-scale-down" />
+             <img src="/Logo Nottar horizontal.png" alt="Logo Nottar" className="h-12 mr-0 object-scale-down" />
             <Separator orientation="vertical" className="h-8 mx-2" />
             <span className="text-amber-950 text-lg font-semibold">Controle de Processos</span>
           </div>
@@ -171,5 +167,4 @@ const Navbar = () => {
       </div>
     </nav>;
 };
-
 export default Navbar;
