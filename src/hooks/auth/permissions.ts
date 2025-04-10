@@ -1,5 +1,7 @@
 
 // Lista de emails de administradores
+import { supabase } from "@/integrations/supabase/client";
+
 export const adminEmails = ["admin@nottar.com", "emerson.ribas@live.com", "werbster@1oficio.com.br"];
 
 // Função para verificar se um email pertence a um administrador da lista fixa
@@ -34,4 +36,3 @@ export const isAdmin = async (email: string): Promise<boolean> => {
     return false;
   }
 };
-
