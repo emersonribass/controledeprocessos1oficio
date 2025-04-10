@@ -14,8 +14,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       ...auth, 
       isAdmin,
       // Garantir que os setters estão disponíveis para uso em outros componentes
-      setUser: auth.setUser,
-      setSession: auth.setSession
+      setUser: auth.setUser!,
+      setSession: auth.setSession!
     }}>
       {children}
     </AuthContext.Provider>

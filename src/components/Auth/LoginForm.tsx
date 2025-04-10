@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
@@ -8,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AlertCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+
 const LoginForm = () => {
   // Login state
   const [email, setEmail] = useState("");
@@ -16,16 +18,22 @@ const LoginForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  
   const {
-    login
+    login,
+    setUser,
+    setSession
   } = useAuth();
+  
   const navigate = useNavigate();
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
     setError(null);
     setConnectionError(null);
+    
     try {
       console.log("Tentando login com:", email);
       const result = await login(email, password);
@@ -38,17 +46,18 @@ const LoginForm = () => {
           important: true
         });
 
-        // Adicionar um pequeno atraso para garantir que a sessão seja processada corretamente
-        // antes de redirecionar
-        setTimeout(() => {
-          navigate("/dashboard", {
-            replace: true
-          });
-          setIsSubmitting(false);
-        }, 100);
+        console.log("Login bem-sucedido, redirecionando para /dashboard");
+        
+        // Forçar atualização do estado de autenticação antes de redirecionar
+        if (result.user) {
+          setUser(result.user);
+        }
+        setSession(result.session);
+        
+        // Redirecionar imediatamente
+        navigate("/dashboard", { replace: true });
       } else {
         setError("Não foi possível obter uma sessão válida");
-        setIsSubmitting(false);
       }
     } catch (err: any) {
       console.error("Erro ao fazer login:", err);
@@ -62,12 +71,15 @@ const LoginForm = () => {
       } else {
         setError("Ocorreu um erro ao tentar fazer login. Tente novamente.");
       }
+    } finally {
       setIsSubmitting(false);
     }
   };
+  
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+  
   return <Card className="w-[380px] shadow-lg">
       <CardContent className="pt-6 px-6 py-0">
         <div className="flex flex-col items-center mb-6">
@@ -128,4 +140,5 @@ const LoginForm = () => {
       </CardContent>
     </Card>;
 };
+
 export default LoginForm;

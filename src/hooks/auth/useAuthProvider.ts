@@ -13,6 +13,9 @@ export const useAuthProvider = () => {
     session,
     isLoading,
     login,
-    logout
+    logout,
+    setUser,
+    setSession,
+    setIsLoading
   };
 };

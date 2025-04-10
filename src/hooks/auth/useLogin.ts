@@ -64,7 +64,11 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
       let appUser = null;
       if (data.user) {
         appUser = await convertSupabaseUser(data.user);
+        setUser(appUser);
       }
+      
+      // Atualiza a sessão imediatamente para evitar problemas de redirecionamento
+      setSession(data.session);
       
       // Retorna os dados da autenticação no formato esperado
       return {
@@ -87,6 +91,8 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
       }
       setIsLoading(false); // Garantir que isLoading volta para false em caso de erro
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
