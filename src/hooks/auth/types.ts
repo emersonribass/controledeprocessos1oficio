@@ -1,23 +1,16 @@
 
-import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { User } from "@/types";
+import { Session } from "@supabase/supabase-js";
 
-// Adicionando o tipo para o retorno da função login
-export type LoginResult = {
+export interface AuthContextType {
   user: User | null;
   session: Session | null;
-  weakPassword?: any | null;
-};
-
-export type AuthContextType = {
-  user: User | null;
-  login: (email: string, password: string) => Promise<LoginResult>;
-  logout: () => void;
   isLoading: boolean;
-  session: Session | null;
+  login: (email: string, password: string) => Promise<{ session: Session | null; error: Error | null }>;
+  logout: () => Promise<void>;
   isAdmin: (email: string) => Promise<boolean>;
-};
-
-// Lista de emails de administradores
-export const adminEmails = ["admin@nottar.com", "emerson.ribas@live.com"];
-
+  // Novos métodos para manipulação direta do estado
+  setUser?: (user: User | null) => void;
+  setSession?: (session: Session | null) => void;
+  setIsLoading?: (isLoading: boolean) => void;
+}

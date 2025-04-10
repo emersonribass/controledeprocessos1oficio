@@ -50,12 +50,16 @@ const Navbar = () => {
   
   const handleLogout = async () => {
     if (isLoggingOut) return;
+    
     try {
       setIsLoggingOut(true);
       await logout();
-      navigate("/login");
+      setTimeout(() => {
+        navigate("/login", { replace: true });
+      }, 100);
     } catch (error) {
       console.error("Erro no processo de logout:", error);
+      navigate("/login", { replace: true });
     } finally {
       setIsLoggingOut(false);
     }

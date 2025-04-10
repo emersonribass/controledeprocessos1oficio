@@ -3,28 +3,48 @@ import LoginForm from "@/components/Auth/LoginForm";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const LoginPage = () => {
   const {
     user,
-    isLoading
+    isLoading,
+    setUser,
+    setSession
   } = useAuth();
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
 
-  // Limpar localStorage de autenticação ao montar o componente de login
+  // Limpar localStorage de autenticação e estados ao montar o componente de login
   useEffect(() => {
-    const clearLocalStorageAuth = () => {
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.removeItem('supabase.auth.refreshToken');
-      localStorage.removeItem('sb-drkhksdohtndsbbnxbfv-auth-token');
-      localStorage.removeItem('sb-refresh-token');
-      localStorage.removeItem('supabase.auth.expires_at');
-      console.log("Login: Tokens de autenticação limpos ao montar componente");
+    const clearAuthentication = async () => {
+      try {
+        // Limpar localStorage e cookies relacionados ao Supabase
+        localStorage.removeItem('supabase.auth.token');
+        localStorage.removeItem('supabase.auth.refreshToken');
+        localStorage.removeItem('sb-vwijryhqngyzgpgekgek-auth-token');
+        localStorage.removeItem('sb-refresh-token');
+        localStorage.removeItem('supabase.auth.expires_at');
+        
+        // Tentar fazer logout no Supabase (ignorando erros se não houver sessão)
+        try {
+          await supabase.auth.signOut();
+        } catch (error) {
+          console.log("Erro ao tentar signOut do Supabase (ignorando):", error);
+        }
+        
+        // Limpar estados de autenticação no contexto
+        setUser?.(null);
+        setSession?.(null);
+        
+        console.log("Login: Autenticação limpa ao montar componente");
+      } catch (error) {
+        console.error("Erro ao limpar autenticação:", error);
+      }
     };
     
-    clearLocalStorageAuth();
-  }, []);
+    clearAuthentication();
+  }, [setUser, setSession]);
 
   useEffect(() => {
     // Evitar redirecionamentos múltiplos
