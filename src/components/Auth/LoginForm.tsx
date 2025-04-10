@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
@@ -9,7 +8,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AlertCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-
 const LoginForm = () => {
   // Login state
   const [email, setEmail] = useState("");
@@ -18,22 +16,18 @@ const LoginForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  
   const {
     login,
     setUser,
     setSession
   } = useAuth();
-  
   const navigate = useNavigate();
-  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
     setError(null);
     setConnectionError(null);
-    
     try {
       console.log("Tentando login com:", email);
       const result = await login(email, password);
@@ -52,17 +46,18 @@ const LoginForm = () => {
           duration: 3000,
           important: true
         });
-
         console.log("Login bem-sucedido, redirecionando para /dashboard");
-        
+
         // Forçar atualização do estado de autenticação antes de redirecionar
         if (result.user) {
           setUser(result.user);
         }
         setSession(result.session);
-        
+
         // Redirecionar imediatamente
-        navigate("/dashboard", { replace: true });
+        navigate("/dashboard", {
+          replace: true
+        });
       } else {
         setError("Não foi possível obter uma sessão válida");
       }
@@ -82,11 +77,9 @@ const LoginForm = () => {
       setIsSubmitting(false);
     }
   };
-  
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-  
   return <Card className="w-[380px] shadow-lg">
       <CardContent className="pt-6 px-6 py-0">
         <div className="flex flex-col items-center mb-6">
@@ -141,11 +134,10 @@ const LoginForm = () => {
           </Button>
         </form>
 
-        <div className="mt-6 text-sm text-center text-muted-foreground my-[6px]">
+        <div className="mt-6 text-sm text-center text-muted-foreground my-[3px]">
           Sistema de Controle de Processos
         </div>
       </CardContent>
     </Card>;
 };
-
 export default LoginForm;
