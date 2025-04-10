@@ -52,9 +52,12 @@ const LoginPage = () => {
     if (!isLoading && user) {
       console.log("LoginPage: Usuário já autenticado, redirecionando para /dashboard");
       setHasRedirected(true);
-      navigate("/dashboard", {
-        replace: true
-      });
+      // Adicionar um pequeno atraso para garantir que o estado seja atualizado antes do redirecionamento
+      setTimeout(() => {
+        navigate("/dashboard", {
+          replace: true
+        });
+      }, 500);
     }
   }, [user, isLoading, navigate, hasRedirected]);
 

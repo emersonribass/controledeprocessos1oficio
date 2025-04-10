@@ -18,6 +18,10 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
     }
     
     console.log("Sincronização com autenticação concluída com sucesso:", data);
+    
+    // Aguardar um momento para garantir que a autenticação seja processada
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     return true;
   } catch (error) {
     console.error('Erro ao sincronizar com autenticação:', error);

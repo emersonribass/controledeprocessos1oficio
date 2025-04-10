@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
@@ -8,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AlertCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+
 const LoginForm = () => {
   // Login state
   const [email, setEmail] = useState("");
@@ -22,6 +24,7 @@ const LoginForm = () => {
     setSession
   } = useAuth();
   const navigate = useNavigate();
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -34,6 +37,7 @@ const LoginForm = () => {
 
       // Verificar se ocorreu algum erro durante o login
       if (result.error) {
+        console.error("Erro retornado pelo login:", result.error.message);
         setError(result.error.message);
         setIsSubmitting(false);
         return;
@@ -50,15 +54,21 @@ const LoginForm = () => {
 
         // Forçar atualização do estado de autenticação antes de redirecionar
         if (result.user) {
+          console.log("Atualizando estado do usuário:", result.user.email);
           setUser(result.user);
         }
+        console.log("Atualizando estado da sessão");
         setSession(result.session);
 
-        // Redirecionar imediatamente
-        navigate("/dashboard", {
-          replace: true
-        });
+        // Adicionar um pequeno atraso para garantir que o estado seja atualizado antes do redirecionamento
+        setTimeout(() => {
+          console.log("Redirecionando para /dashboard");
+          navigate("/dashboard", {
+            replace: true
+          });
+        }, 500);
       } else {
+        console.error("Sessão não obtida após login");
         setError("Não foi possível obter uma sessão válida");
       }
     } catch (err: any) {
@@ -77,9 +87,11 @@ const LoginForm = () => {
       setIsSubmitting(false);
     }
   };
+  
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+  
   return <Card className="w-[380px] shadow-lg">
       <CardContent className="pt-6 px-6 py-[12px]">
         <div className="flex flex-col items-center mb-6">
@@ -133,9 +145,8 @@ const LoginForm = () => {
               </span> : "Entrar"}
           </Button>
         </form>
-
-        
       </CardContent>
     </Card>;
 };
+
 export default LoginForm;
