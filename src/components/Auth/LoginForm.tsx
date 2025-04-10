@@ -122,7 +122,7 @@ const LoginForm = () => {
           </Button>
         </form>
 
-        <div className="mt-6 text-sm text-center text-muted-foreground">
+        <div className="mt-6 text-sm text-center text-muted-foreground my-[6px]">
           Sistema de Controle de Processos
         </div>
       </CardContent>
