@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,21 +7,26 @@ import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { Department } from "@/types";
 import { X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+
 interface ProcessFiltersProps {
   filters: {
     department?: string;
     status?: string;
     processType?: string;
     search?: string;
+    excludeCompleted?: boolean;
   };
   setFilters: React.Dispatch<React.SetStateAction<{
     department?: string;
     status?: string;
     processType?: string;
     search?: string;
+    excludeCompleted?: boolean;
   }>>;
   availableDepartments?: Department[];
 }
+
 const ProcessFilters = ({
   filters,
   setFilters,
@@ -64,6 +70,7 @@ const ProcessFilters = ({
     setSearch(value);
     debouncedSearch(value);
   };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       // Aplicar a busca imediatamente sem debounce ao pressionar Enter
@@ -73,18 +80,29 @@ const ProcessFilters = ({
       }));
     }
   };
+
   const handleClearFilters = () => {
-    setFilters({});
+    setFilters({ excludeCompleted: filters.excludeCompleted });
     setSearch("");
   };
+
   const handleSelectChange = (key: string, value: string) => {
     setFilters(prev => ({
       ...prev,
       [key]: value === "all" ? undefined : value
     }));
   };
+
+  const toggleExcludeCompleted = () => {
+    setFilters(prev => ({
+      ...prev,
+      excludeCompleted: !prev.excludeCompleted
+    }));
+  };
+
   const deptsToShow = availableDepartments || departments;
-  const hasActiveFilters = Object.values(filters).some(v => v !== undefined) || search;
+  const hasActiveFilters = (Object.keys(filters).filter(k => k !== 'excludeCompleted').some(k => filters[k as keyof typeof filters] !== undefined)) || search;
+
   return <div className="space-y-3">
       <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
         <div className="relative col-span-1 md:col-span-2">
@@ -133,6 +151,20 @@ const ProcessFilters = ({
           </SelectContent>
         </Select>
 
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="excludeCompleted"
+            checked={filters.excludeCompleted}
+            onCheckedChange={toggleExcludeCompleted}
+          />
+          <label
+            htmlFor="excludeCompleted"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Ocultar processos concluídos
+          </label>
+        </div>
+
         {hasActiveFilters && <Button variant="outline" onClick={handleClearFilters} className="flex items-center gap-1 w-fit h-fit bg-green-600 hover:bg-green-500 px-[10px] text-white">
             <X className="h-4 w-4" />
             Limpar filtros
@@ -140,4 +172,5 @@ const ProcessFilters = ({
       </div>
     </div>;
 };
+
 export default ProcessFilters;
