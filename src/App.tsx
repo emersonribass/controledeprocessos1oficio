@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/auth";
 import { ProcessesProvider } from "@/hooks/useProcesses";
 import { useAuth } from "@/hooks/auth";
+import { useEffect, useState } from "react";
 
 // Importações necessárias para resolver os erros
 import Layout from "@/components/Layout/Layout";
@@ -28,8 +28,35 @@ const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: { children: React.ReactNode, adminOnly?: boolean, needsProcesses?: boolean }) => {
   const { user, isLoading, isAdmin } = useAuth();
+  const [isUserAdmin, setIsUserAdmin] = useState<boolean>(false);
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState<boolean>(true);
   
-  if (isLoading) {
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user && user.email) {
+        try {
+          const adminStatus = await isAdmin(user.email);
+          setIsUserAdmin(adminStatus);
+        } catch (error) {
+          console.error("Erro ao verificar status de administrador:", error);
+          setIsUserAdmin(false);
+        } finally {
+          setIsCheckingAdmin(false);
+        }
+      } else {
+        setIsUserAdmin(false);
+        setIsCheckingAdmin(false);
+      }
+    };
+    
+    if (user) {
+      checkAdminStatus();
+    } else {
+      setIsCheckingAdmin(false);
+    }
+  }, [user, isAdmin]);
+  
+  if (isLoading || (adminOnly && isCheckingAdmin)) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -41,7 +68,7 @@ const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: 
     return <Navigate to="/login" replace />;
   }
 
-  if (adminOnly && !isAdmin(user.email)) {
+  if (adminOnly && !isUserAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
   

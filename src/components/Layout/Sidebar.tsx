@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, ClipboardList, Users, Settings, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,26 @@ type SidebarLink = {
 const Sidebar = () => {
   const { pathname } = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user && user.email) {
+        try {
+          const adminStatus = await isAdmin(user.email);
+          setUserIsAdmin(adminStatus);
+        } catch (error) {
+          console.error("Erro ao verificar status de administrador:", error);
+          setUserIsAdmin(false);
+        }
+      } else {
+        setUserIsAdmin(false);
+      }
+    };
+    
+    checkAdminStatus();
+  }, [user, isAdmin]);
 
   const links: SidebarLink[] = [
     {
@@ -42,8 +62,6 @@ const Sidebar = () => {
       icon: <Settings className="h-5 w-5" />,
     },
   ];
-
-  const isAdmin = user?.email === "admin@nottar.com";
 
   return (
     <aside
@@ -86,7 +104,7 @@ const Sidebar = () => {
               </Link>
             ))}
 
-            {isAdmin && (
+            {userIsAdmin && (
               <>
                 <Separator orientation="vertical" className="h-8 mx-2" />
                 {adminLinks.map((link) => (

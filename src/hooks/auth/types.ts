@@ -15,8 +15,9 @@ export type AuthContextType = {
   logout: () => void;
   isLoading: boolean;
   session: Session | null;
-  isAdmin: (email: string) => boolean;
+  isAdmin: (email: string) => Promise<boolean>;
 };
 
 // Lista de emails de administradores
 export const adminEmails = ["admin@nottar.com", "emerson.ribas@live.com"];
+

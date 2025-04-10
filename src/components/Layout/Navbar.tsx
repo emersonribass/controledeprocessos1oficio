@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { LockKeyhole, LogOut, Home, ClipboardList, Settings, BellIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/auth";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationsPopover from "../Notifications/NotificationsPopover";
 import { cn } from "@/lib/utils";
+
 const Navbar = () => {
   const {
     user,
@@ -23,9 +24,30 @@ const Navbar = () => {
   const {
     unreadCount
   } = useNotifications();
+  
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
+  
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user && user.email) {
+        try {
+          const adminStatus = await isAdmin(user.email);
+          setUserIsAdmin(adminStatus);
+        } catch (error) {
+          console.error("Erro ao verificar status de administrador:", error);
+          setUserIsAdmin(false);
+        }
+      } else {
+        setUserIsAdmin(false);
+      }
+    };
+    
+    checkAdminStatus();
+  }, [user, isAdmin]);
+  
   const handleLogout = async () => {
     if (isLoggingOut) return;
     try {
@@ -38,6 +60,7 @@ const Navbar = () => {
       setIsLoggingOut(false);
     }
   };
+  
   const navLinks = [{
     title: "Dashboard",
     href: "/dashboard",
@@ -47,7 +70,7 @@ const Navbar = () => {
     href: "/processes",
     icon: <ClipboardList className="h-4 w-4 mr-1" />
   }];
-  const userIsAdmin = user && isAdmin(user.email);
+  
   return <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
       <div className="flex items-center">
         <Link to="/" className="flex items-center mr-6">
@@ -144,4 +167,5 @@ const Navbar = () => {
       </div>
     </nav>;
 };
+
 export default Navbar;
