@@ -9,83 +9,79 @@ export const useSession = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authInitialized, setAuthInitialized] = useState(false);
 
   useEffect(() => {
-    console.log("Inicializando AuthProvider");
+    if (authInitialized) return; // Execute apenas uma vez
     
-    // Função para obter sessão inicial e configurar listener
-    const initAuth = async () => {
-      try {
-        setIsLoading(true);
+    console.log("[useSession] Inicializando gerenciamento de sessão");
+    
+    // Primeiro configurar listener para mudanças de estado de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        console.log("[useSession] Evento de autenticação:", event);
         
-        // Primeiro configurar listener para mudanças de estado de autenticação
-        // Isso deve ser feito antes de verificar a sessão atual
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (_event, currentSession) => {
-            console.log("Evento de autenticação:", _event);
-            
-            // Atualizar o estado da sessão
-            setSession(currentSession);
-            
-            // Processar dados do usuário de forma síncrona
-            if (currentSession?.user) {
-              // Usar setTimeout para evitar bloqueios na atualização do estado
-              setTimeout(async () => {
-                try {
-                  const userData = await convertSupabaseUser(currentSession.user);
-                  setUser(userData);
-                } catch (error) {
-                  console.error("Erro ao converter dados do usuário:", error);
-                } finally {
-                  setIsLoading(false);
-                }
-              }, 0);
-            } else {
-              setUser(null);
-              setIsLoading(false);
-            }
+        // Atualizar o estado da sessão
+        setSession(currentSession);
+        
+        // Processar dados do usuário
+        if (currentSession?.user) {
+          try {
+            const userData = await convertSupabaseUser(currentSession.user);
+            console.log("[useSession] Usuário autenticado:", userData.email);
+            setUser(userData);
+          } catch (error) {
+            console.error("[useSession] Erro ao converter dados do usuário:", error);
+            setUser(null);
           }
-        );
-        
-        // Depois verificar se há uma sessão existente
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error("Erro ao obter sessão:", sessionError);
-          setIsLoading(false);
-          return () => subscription.unsubscribe();
+        } else {
+          console.log("[useSession] Nenhum usuário na sessão");
+          setUser(null);
         }
         
-        console.log("Sessão inicial:", sessionData.session ? "Existe" : "Não existe");
-        
-        // Não atualizamos o estado aqui diretamente para evitar conflitos com o listener
-        // O listener será responsável por atualizar o estado quando receber o evento INITIAL_SESSION
-        
-        return () => subscription.unsubscribe();
-      } catch (error) {
-        console.error("Erro ao inicializar autenticação:", error);
         setIsLoading(false);
-        return () => {}; // Retorna uma função vazia em caso de erro
+      }
+    );
+    
+    // Verificar sessão existente
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("[useSession] Erro ao buscar sessão:", error);
+          setIsLoading(false);
+          return;
+        }
+        
+        if (data.session) {
+          console.log("[useSession] Sessão existente encontrada");
+          setSession(data.session);
+          
+          try {
+            const userData = await convertSupabaseUser(data.session.user);
+            console.log("[useSession] Dados do usuário carregados:", userData.email);
+            setUser(userData);
+          } catch (error) {
+            console.error("[useSession] Erro ao converter dados do usuário:", error);
+          }
+        } else {
+          console.log("[useSession] Nenhuma sessão existente");
+        }
+      } catch (error) {
+        console.error("[useSession] Erro ao verificar sessão:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    // Inicializa a autenticação e armazena a função de limpeza
-    let cleanupFunction = () => {};
+    checkSession();
+    setAuthInitialized(true);
     
-    // Executa a inicialização de forma assíncrona
-    initAuth().then(cleanup => {
-      if (cleanup && typeof cleanup === 'function') {
-        cleanupFunction = cleanup;
-      }
-    }).catch(error => {
-      console.error("Erro durante inicialização da autenticação:", error);
-    });
-    
-    // Retorna a função de limpeza para useEffect
     return () => {
-      cleanupFunction();
+      subscription.unsubscribe();
     };
-  }, []);
+  }, [authInitialized]);
 
   return {
     user,

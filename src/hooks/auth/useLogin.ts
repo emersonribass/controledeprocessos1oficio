@@ -59,12 +59,6 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
       // Agora tenta fazer login normalmente pela autenticação do Supabase
       console.log("[useLogin] Tentando login pela autenticação do Supabase");
       
-      // Limpar qualquer sessão anterior para evitar conflitos
-      await supabase.auth.signOut().catch(e => console.log("[useLogin] Erro ao fazer signOut prévio:", e));
-      
-      // Aguardar um momento para garantir que o signOut seja processado
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,

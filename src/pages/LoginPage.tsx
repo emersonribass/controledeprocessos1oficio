@@ -14,7 +14,7 @@ const LoginPage = () => {
   } = useAuth();
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
-  const [clearingAuth, setClearingAuth] = useState(true);
+  const [clearingAuth, setClearingAuth] = useState(false); // Iniciamos como false
   const [isLoginAttemptActive, setIsLoginAttemptActive] = useState(false);
 
   // Esta função é exportada para ser chamada pelo LoginForm antes de iniciar o login
@@ -24,12 +24,18 @@ const LoginPage = () => {
   };
 
   // Limpar localStorage de autenticação e estados ao montar o componente de login,
-  // mas apenas se não estiver no meio de uma tentativa de login
+  // mas apenas se não estiver no meio de uma tentativa de login e se não houver usuário
   useEffect(() => {
     // Se estamos no meio de uma tentativa de login, não limpe a autenticação
     if (isLoginAttemptActive) {
-      setClearingAuth(false);
       console.log("[LoginPage] Tentativa de login ativa, pulando limpeza de autenticação");
+      return;
+    }
+
+    // Se já existe um usuário autenticado, não limpe a autenticação
+    if (user) {
+      console.log("[LoginPage] Usuário já autenticado, pulando limpeza");
+      setClearingAuth(false);
       return;
     }
 
@@ -65,8 +71,9 @@ const LoginPage = () => {
       }
     };
     
+    // Só limpar autenticação se não houver login em andamento
     clearAuthentication();
-  }, [setUser, setSession, isLoginAttemptActive]);
+  }, [setUser, setSession, isLoginAttemptActive, user]);
 
   useEffect(() => {
     // Evitar redirecionamentos múltiplos e só redirecionar após limpeza de auth

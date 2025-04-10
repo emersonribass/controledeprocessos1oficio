@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
   const { user, isLoading } = useAuth();
@@ -15,17 +14,17 @@ const Index = () => {
     
     // Se ainda estiver carregando, não faça nada
     if (isLoading) {
-      console.log("Index: Autenticação carregando...");
+      console.log("[Index] Autenticação carregando...");
       return;
     }
     
     // Após determinar o estado de autenticação, redirecione adequadamente
     if (user) {
-      console.log("Index: Usuário autenticado, redirecionando para /dashboard");
+      console.log("[Index] Usuário autenticado, redirecionando para /dashboard");
       setHasRedirected(true);
       navigate("/dashboard", { replace: true });
     } else {
-      console.log("Index: Usuário não autenticado, redirecionando para /login");
+      console.log("[Index] Usuário não autenticado, redirecionando para /login");
       setHasRedirected(true);
       navigate("/login", { replace: true });
     }
