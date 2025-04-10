@@ -1,14 +1,20 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-const LoginForm = () => {
+
+interface LoginFormProps {
+  onLoginAttempt?: (isAttempting: boolean) => void;
+}
+
+const LoginForm = ({ onLoginAttempt }: LoginFormProps) => {
   // Login state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,20 +28,29 @@ const LoginForm = () => {
     setSession
   } = useAuth();
   const navigate = useNavigate();
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
+    
     setIsSubmitting(true);
     setError(null);
     setConnectionError(null);
+    
+    // Sinalizar início da tentativa de login
+    onLoginAttempt?.(true);
+    console.log("[LoginForm] Sinalizando tentativa de login ativa");
+    
     try {
-      console.log("Tentando login com:", email);
+      console.log("[LoginForm] Tentando login com:", email);
       const result = await login(email, password);
 
       // Verificar se ocorreu algum erro durante o login
       if (result.error) {
         setError(result.error.message);
         setIsSubmitting(false);
+        onLoginAttempt?.(false); // Sinalizar fim da tentativa de login com erro
+        console.log("[LoginForm] Erro retornado pelo login:", result.error.message);
         return;
       }
 
@@ -46,23 +61,27 @@ const LoginForm = () => {
           duration: 3000,
           important: true
         });
-        console.log("Login bem-sucedido, redirecionando para /dashboard");
+        console.log("[LoginForm] Login bem-sucedido, redirecionando para /dashboard");
 
         // Forçar atualização do estado de autenticação antes de redirecionar
         if (result.user) {
           setUser(result.user);
         }
         setSession(result.session);
-
+        
         // Redirecionar imediatamente
-        navigate("/dashboard", {
-          replace: true
-        });
+        setTimeout(() => {
+          console.log("[LoginForm] Redirecionando para /dashboard");
+          navigate("/dashboard", {
+            replace: true
+          });
+        }, 100);
       } else {
         setError("Não foi possível obter uma sessão válida");
+        onLoginAttempt?.(false); // Sinalizar fim da tentativa de login com erro
       }
     } catch (err: any) {
-      console.error("Erro ao fazer login:", err);
+      console.error("[LoginForm] Erro ao fazer login:", err);
       if (err.message?.includes('Failed to fetch') || err.code === 'NETWORK_ERROR') {
         setConnectionError("Não foi possível conectar ao servidor Supabase. Verifique se o projeto Supabase está ativo e se a conexão com a internet está funcionando.");
       }
@@ -73,13 +92,17 @@ const LoginForm = () => {
       } else {
         setError("Ocorreu um erro ao tentar fazer login. Tente novamente.");
       }
+      
+      onLoginAttempt?.(false); // Sinalizar fim da tentativa de login com erro
     } finally {
       setIsSubmitting(false);
     }
   };
+  
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+  
   return <Card className="w-[380px] shadow-lg">
       <CardContent className="pt-6 px-6 py-[12px]">
         <div className="flex flex-col items-center mb-6">
@@ -133,9 +156,8 @@ const LoginForm = () => {
               </span> : "Entrar"}
           </Button>
         </form>
-
-        
       </CardContent>
     </Card>;
 };
+
 export default LoginForm;

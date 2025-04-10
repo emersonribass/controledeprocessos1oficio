@@ -14,11 +14,20 @@ const LoginPage = () => {
   } = useAuth();
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
+  const [isLoginAttempt, setIsLoginAttempt] = useState(false);
 
   // Limpar localStorage de autenticação e estados ao montar o componente de login
   useEffect(() => {
+    // Não limpar autenticação se estiver em uma tentativa de login
+    if (isLoginAttempt) {
+      console.log("LoginPage: Tentativa de login em andamento, não limpando autenticação");
+      return;
+    }
+
     const clearAuthentication = async () => {
       try {
+        console.log("LoginPage: Iniciando limpeza de autenticação");
+        
         // Limpar localStorage e cookies relacionados ao Supabase
         localStorage.removeItem('supabase.auth.token');
         localStorage.removeItem('supabase.auth.refreshToken');
@@ -29,22 +38,23 @@ const LoginPage = () => {
         // Tentar fazer logout no Supabase (ignorando erros se não houver sessão)
         try {
           await supabase.auth.signOut();
+          console.log("LoginPage: Logout Supabase realizado com sucesso");
         } catch (error) {
-          console.log("Erro ao tentar signOut do Supabase (ignorando):", error);
+          console.log("LoginPage: Erro ao tentar signOut do Supabase (ignorando):", error);
         }
         
         // Limpar estados de autenticação no contexto
         setUser?.(null);
         setSession?.(null);
         
-        console.log("Login: Autenticação limpa ao montar componente");
+        console.log("LoginPage: Autenticação limpa ao montar componente");
       } catch (error) {
-        console.error("Erro ao limpar autenticação:", error);
+        console.error("LoginPage: Erro ao limpar autenticação:", error);
       }
     };
     
     clearAuthentication();
-  }, [setUser, setSession]);
+  }, [setUser, setSession, isLoginAttempt]);
 
   useEffect(() => {
     // Evitar redirecionamentos múltiplos
@@ -66,7 +76,7 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-muted/40 to-background">
-      <LoginForm />
+      <LoginForm onLoginAttempt={setIsLoginAttempt} />
     </div>
   );
 };

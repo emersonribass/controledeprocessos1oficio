@@ -5,13 +5,22 @@ import { useAuth } from "@/hooks/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, authInitialized } = useAuth();
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
     // Evitar redirecionamentos múltiplos
-    if (hasRedirected) return;
+    if (hasRedirected) {
+      console.log("Index: Já redirecionou, ignorando");
+      return;
+    }
+    
+    // Aguardar a inicialização completa da autenticação
+    if (!authInitialized) {
+      console.log("Index: Autenticação ainda não inicializada");
+      return;
+    }
     
     // Se ainda estiver carregando, não faça nada
     if (isLoading) {
@@ -23,13 +32,17 @@ const Index = () => {
     if (user) {
       console.log("Index: Usuário autenticado, redirecionando para /dashboard");
       setHasRedirected(true);
-      navigate("/dashboard", { replace: true });
+      setTimeout(() => {
+        navigate("/dashboard", { replace: true });
+      }, 100);
     } else {
       console.log("Index: Usuário não autenticado, redirecionando para /login");
       setHasRedirected(true);
-      navigate("/login", { replace: true });
+      setTimeout(() => {
+        navigate("/login", { replace: true });
+      }, 100);
     }
-  }, [user, isLoading, navigate, hasRedirected]);
+  }, [user, isLoading, navigate, hasRedirected, authInitialized]);
 
   // Mostrar tela de carregamento enquanto verifica autenticação
   return (

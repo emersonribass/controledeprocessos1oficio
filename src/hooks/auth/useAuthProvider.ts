@@ -4,7 +4,7 @@ import { useLogin } from "./useLogin";
 import { useLogout } from "./useLogout";
 
 export const useAuthProvider = () => {
-  const { user, session, isLoading, setUser, setSession, setIsLoading } = useSession();
+  const { user, session, isLoading, authInitialized, setUser, setSession, setIsLoading } = useSession();
   const { login } = useLogin({ setUser, setSession, setIsLoading });
   const { logout } = useLogout({ setUser, setSession, setIsLoading });
 
@@ -12,6 +12,7 @@ export const useAuthProvider = () => {
     user,
     session,
     isLoading,
+    authInitialized,
     login,
     logout,
     setUser,
