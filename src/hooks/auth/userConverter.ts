@@ -14,15 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const convertSupabaseUser = async (authUser: AuthUser): Promise<User> => {
   try {
-    // Verificar se o usuário existe na tabela customizada
-    const { data: usuarioData, error: usuarioError } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('id', authUser.id)
-      .maybeSingle();
-      
-    // Usuário básico com dados do auth
-    const user: User = {
+    // Criar o usuário base com os dados obrigatórios
+    const baseUser: User = {
       id: authUser.id,
       email: authUser.email || '',
       name: authUser.user_metadata?.name || authUser.email || '',
@@ -30,32 +23,36 @@ export const convertSupabaseUser = async (authUser: AuthUser): Promise<User> => 
       createdAt: new Date().toISOString() // Data atual como padrão
     };
     
+    // Verificar se o usuário existe na tabela customizada
+    const { data: usuarioData, error: usuarioError } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('id', authUser.id)
+      .maybeSingle();
+      
     // Se encontrado na tabela de usuários, complementar as informações
     if (!usuarioError && usuarioData) {
-      user.name = usuarioData.nome;
+      console.log('[userConverter] Encontrado usuário na tabela usuarios:', usuarioData.nome);
       
-      // Mapear perfil para o campo role do User, se existir na interface
-      if (usuarioData.perfil === 'administrador') {
-        user.role = 'admin';
-      } else {
-        user.role = 'user';
-      }
+      // Atualizar nome se disponível na tabela de usuários
+      baseUser.name = usuarioData.nome;
       
       // Mapear setores atribuídos para departments
-      user.departments = usuarioData.setores_atribuidos || [];
-      
-      // Mapear campo ativo para isActive se existir na interface
-      user.isActive = usuarioData.ativo;
+      baseUser.departments = usuarioData.setores_atribuidos || [];
       
       // Se houver data de criação, usar ela
       if (usuarioData.created_at) {
-        user.createdAt = usuarioData.created_at;
+        baseUser.createdAt = usuarioData.created_at;
       }
     } else {
-      console.log('[userConverter] Usuário não encontrado na tabela usuarios ou erro:', usuarioError);
+      if (usuarioError && usuarioError.code !== 'PGRST116') { // PGRST116: objeto não encontrado
+        console.error('[userConverter] Erro ao buscar usuário na tabela usuarios:', usuarioError);
+      } else {
+        console.log('[userConverter] Usuário não encontrado na tabela usuarios');
+      }
     }
     
-    return user;
+    return baseUser;
   } catch (error) {
     console.error('[userConverter] Erro ao converter usuário:', error);
     // Retornar ao menos os dados básicos disponíveis no auth

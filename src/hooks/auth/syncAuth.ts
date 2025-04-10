@@ -18,37 +18,19 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
   try {
     console.log("[syncAuth] Iniciando sincronização com autenticação para:", email);
     
-    // Verificar se o usuário já existe no auth.users através da função RPC
+    // Verificar se o usuário já existe no auth.users
     let userExists = false;
     
     try {
-      // Tentamos primeiro verificar se o usuário existe no auth usando a verificação direta
-      const { data: authUserData, error: authCheckError } = await supabase.auth.admin
-        .getUserByEmail(email)
-        .catch(() => ({ data: null, error: null }));
+      // Verificar usando a API Admin do Supabase via RPC
+      const { data: existingAuthUser, error: rpcError } = await supabase.rpc('sync_user_ids', {
+        usuario_email: email
+      });
       
-      if (!authCheckError && authUserData) {
-        console.log("[syncAuth] Usuário encontrado no auth pela verificação direta");
-        userExists = true;
-      } else {
-        // Se não conseguimos acessar a API admin, tentamos a função RPC
-        try {
-          const { data: existingAuthUser } = await supabase.rpc('sync_user_ids', {
-            usuario_email: email
-          });
-          
-          // Se a função não lançou erro, assume que o usuário existe
-          userExists = !!existingAuthUser;
-          console.log("[syncAuth] Verificação de existência via RPC:", userExists ? "existe" : "não existe");
-        } catch (rpcError) {
-          console.log("[syncAuth] Erro ao verificar via RPC, assumindo que usuário não existe");
-          userExists = false;
-        }
-      }
-    } catch (verifyError) {
-      console.warn("[syncAuth] Erro ao verificar existência do usuário:", verifyError);
-      // Em caso de erro na verificação, vamos assumir que o usuário não existe
-      // e deixar a operação de criação lidar com isso
+      userExists = !!existingAuthUser;
+      console.log("[syncAuth] Verificação de existência via RPC:", userExists ? "existe" : "não existe");
+    } catch (rpcError) {
+      console.log("[syncAuth] Erro ao verificar via RPC, assumindo que usuário não existe");
       userExists = false;
     }
     
