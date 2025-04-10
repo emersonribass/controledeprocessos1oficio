@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
@@ -9,12 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AlertCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-
-interface LoginFormProps {
-  onBeforeLogin?: () => void;
-}
-
-const LoginForm = ({ onBeforeLogin }: LoginFormProps) => {
+const LoginForm = () => {
   // Login state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,50 +22,18 @@ const LoginForm = ({ onBeforeLogin }: LoginFormProps) => {
     setSession
   } = useAuth();
   const navigate = useNavigate();
-
-  const validateForm = () => {
-    if (!email.trim()) {
-      setError("O e-mail é obrigatório");
-      return false;
-    }
-    
-    if (!email.includes('@') || !email.includes('.')) {
-      setError("E-mail inválido");
-      return false;
-    }
-    
-    if (!password.trim()) {
-      setError("A senha é obrigatória");
-      return false;
-    }
-    
-    return true;
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
-    
     if (isSubmitting) return;
-    
-    // Notificar o LoginPage que estamos iniciando uma tentativa de login
-    if (onBeforeLogin) {
-      onBeforeLogin();
-    }
-    
     setIsSubmitting(true);
     setError(null);
     setConnectionError(null);
-    
     try {
-      console.log("[LoginForm] Tentando login com:", email);
-      
+      console.log("Tentando login com:", email);
       const result = await login(email, password);
 
       // Verificar se ocorreu algum erro durante o login
       if (result.error) {
-        console.error("[LoginForm] Erro retornado pelo login:", result.error.message);
         setError(result.error.message);
         setIsSubmitting(false);
         return;
@@ -84,29 +46,23 @@ const LoginForm = ({ onBeforeLogin }: LoginFormProps) => {
           duration: 3000,
           important: true
         });
-        console.log("[LoginForm] Login bem-sucedido, redirecionando para /dashboard");
+        console.log("Login bem-sucedido, redirecionando para /dashboard");
 
         // Forçar atualização do estado de autenticação antes de redirecionar
         if (result.user) {
-          console.log("[LoginForm] Atualizando estado do usuário:", result.user.email);
           setUser(result.user);
         }
-        console.log("[LoginForm] Atualizando estado da sessão");
         setSession(result.session);
 
-        // Adicionar um pequeno atraso para garantir que o estado seja atualizado antes do redirecionamento
-        setTimeout(() => {
-          console.log("[LoginForm] Redirecionando para /dashboard");
-          navigate("/dashboard", {
-            replace: true
-          });
-        }, 500);
+        // Redirecionar imediatamente
+        navigate("/dashboard", {
+          replace: true
+        });
       } else {
-        console.error("[LoginForm] Sessão não obtida após login");
         setError("Não foi possível obter uma sessão válida");
       }
     } catch (err: any) {
-      console.error("[LoginForm] Erro ao fazer login:", err);
+      console.error("Erro ao fazer login:", err);
       if (err.message?.includes('Failed to fetch') || err.code === 'NETWORK_ERROR') {
         setConnectionError("Não foi possível conectar ao servidor Supabase. Verifique se o projeto Supabase está ativo e se a conexão com a internet está funcionando.");
       }
@@ -121,11 +77,9 @@ const LoginForm = ({ onBeforeLogin }: LoginFormProps) => {
       setIsSubmitting(false);
     }
   };
-  
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-  
   return <Card className="w-[380px] shadow-lg">
       <CardContent className="pt-6 px-6 py-[12px]">
         <div className="flex flex-col items-center mb-6">
@@ -179,8 +133,9 @@ const LoginForm = ({ onBeforeLogin }: LoginFormProps) => {
               </span> : "Entrar"}
           </Button>
         </form>
+
+        
       </CardContent>
     </Card>;
 };
-
 export default LoginForm;

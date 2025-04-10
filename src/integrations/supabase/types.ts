@@ -204,7 +204,7 @@ export type Database = {
           created_at?: string
           email: string
           email_verificado?: boolean | null
-          id: string
+          id?: string
           nome: string
           perfil?: string
           senha: string
