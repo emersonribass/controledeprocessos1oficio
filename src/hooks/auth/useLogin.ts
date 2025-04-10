@@ -89,6 +89,10 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
       console.log("[useLogin] Atualizando sessão no estado global");
       setSession(data.session);
       
+      // Define isLoading como false antes de retornar para garantir que outros componentes 
+      // que dependem deste estado possam reagir apropriadamente
+      setIsLoading(false);
+      
       // Retorna os dados da autenticação no formato esperado
       return {
         user: appUser,
@@ -111,6 +115,7 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
           important: true,
         });
       }
+      
       setIsLoading(false); // Garantir que isLoading volta para false em caso de erro
       
       return {
@@ -121,7 +126,7 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
       };
     } finally {
       console.log("[useLogin] Finalizando processo de login");
-      setIsLoading(false);
+      setIsLoading(false); // Garante que isLoading é resetado sempre
     }
   };
 

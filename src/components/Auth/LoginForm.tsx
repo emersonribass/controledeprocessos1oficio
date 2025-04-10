@@ -12,9 +12,10 @@ import { toast } from "sonner";
 
 interface LoginFormProps {
   onLoginAttempt?: (isAttempting: boolean) => void;
+  onLoginSuccess?: () => void;
 }
 
-const LoginForm = ({ onLoginAttempt }: LoginFormProps) => {
+const LoginForm = ({ onLoginAttempt, onLoginSuccess }: LoginFormProps) => {
   // Login state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -69,13 +70,14 @@ const LoginForm = ({ onLoginAttempt }: LoginFormProps) => {
         }
         setSession(result.session);
         
-        // Redirecionar imediatamente
-        setTimeout(() => {
-          console.log("[LoginForm] Redirecionando para /dashboard");
-          navigate("/dashboard", {
-            replace: true
-          });
-        }, 100);
+        // Sinalizar sucesso no login para evitar limpeza de autenticação
+        onLoginSuccess?.();
+        
+        // Aguardar um instante para garantir que os estados foram atualizados
+        console.log("[LoginForm] Redirecionando para /dashboard");
+        navigate("/dashboard", {
+          replace: true
+        });
       } else {
         setError("Não foi possível obter uma sessão válida");
         onLoginAttempt?.(false); // Sinalizar fim da tentativa de login com erro

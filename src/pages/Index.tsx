@@ -32,15 +32,11 @@ const Index = () => {
     if (user) {
       console.log("Index: Usuário autenticado, redirecionando para /dashboard");
       setHasRedirected(true);
-      setTimeout(() => {
-        navigate("/dashboard", { replace: true });
-      }, 100);
+      navigate("/dashboard", { replace: true });
     } else {
       console.log("Index: Usuário não autenticado, redirecionando para /login");
       setHasRedirected(true);
-      setTimeout(() => {
-        navigate("/login", { replace: true });
-      }, 100);
+      navigate("/login", { replace: true });
     }
   }, [user, isLoading, navigate, hasRedirected, authInitialized]);
 
