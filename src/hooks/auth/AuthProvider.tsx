@@ -9,14 +9,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const auth = useAuthProvider();
 
+  // Criando um valor compatível com o tipo AuthContextType
+  const authContextValue: AuthContextType = {
+    ...auth,
+    isAdmin,
+    // Garantir que os setters estão disponíveis para uso em outros componentes
+    setUser: auth.setUser!,
+    setSession: auth.setSession!
+  };
+
   return (
-    <AuthContext.Provider value={{ 
-      ...auth, 
-      isAdmin,
-      // Garantir que os setters estão disponíveis para uso em outros componentes
-      setUser: auth.setUser!,
-      setSession: auth.setSession!
-    }}>
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );

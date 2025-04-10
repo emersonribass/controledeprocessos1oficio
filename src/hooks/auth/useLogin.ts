@@ -74,7 +74,8 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
       return {
         user: appUser,
         session: data.session,
-        weakPassword: data.user?.user_metadata?.weakPassword || null
+        weakPassword: data.user?.user_metadata?.weakPassword || null,
+        error: null
       };
       
     } catch (error) {
@@ -90,7 +91,13 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
         });
       }
       setIsLoading(false); // Garantir que isLoading volta para false em caso de erro
-      throw error;
+      
+      return {
+        user: null,
+        session: null,
+        weakPassword: null,
+        error: error instanceof Error ? error : new Error("Erro desconhecido ao fazer login")
+      };
     } finally {
       setIsLoading(false);
     }

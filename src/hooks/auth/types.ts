@@ -6,7 +6,7 @@ export interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ session: Session | null; error: Error | null }>;
+  login: (email: string, password: string) => Promise<LoginResult>;
   logout: () => Promise<void>;
   isAdmin: (email: string) => Promise<boolean>;
   // Novos métodos para manipulação direta do estado
@@ -19,4 +19,5 @@ export interface LoginResult {
   user: User | null;
   session: Session | null;
   weakPassword: boolean | null;
+  error: Error | null;
 }

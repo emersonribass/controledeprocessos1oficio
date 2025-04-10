@@ -38,6 +38,13 @@ const LoginForm = () => {
       console.log("Tentando login com:", email);
       const result = await login(email, password);
 
+      // Verificar se ocorreu algum erro durante o login
+      if (result.error) {
+        setError(result.error.message);
+        setIsSubmitting(false);
+        return;
+      }
+
       // Verificar se o login foi bem-sucedido antes de redirecionar
       if (result.session) {
         toast.success("Login efetuado com sucesso", {
