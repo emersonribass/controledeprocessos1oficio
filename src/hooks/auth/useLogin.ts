@@ -68,11 +68,8 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
 
       console.log("[useLogin] Login bem-sucedido pela autenticação do Supabase");
       
-      // Exibe mensagem de sucesso com toast estilizado
-      toast.success("Login realizado com sucesso!", {
-        duration: 3000,
-        important: true,
-      });
+      // Exibe mensagem de sucesso com toast estilizado (removido o toast duplicado)
+      // O toast foi removido daqui pois está sendo exibido no componente LoginForm
       
       // Converte o usuário do Supabase para o formato do nosso aplicativo
       let appUser = null;

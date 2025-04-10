@@ -57,11 +57,13 @@ const LoginForm = ({ onLoginAttempt, onLoginSuccess }: LoginFormProps) => {
 
       // Verificar se o login foi bem-sucedido antes de redirecionar
       if (result.session) {
-        toast.success("Login efetuado com sucesso", {
+        // Única mensagem de toast para sucesso
+        toast.success("Login realizado com sucesso", {
           description: "Bem-vindo de volta!",
           duration: 3000,
           important: true
         });
+        
         console.log("[LoginForm] Login bem-sucedido, redirecionando para /dashboard");
 
         // Forçar atualização do estado de autenticação antes de redirecionar
