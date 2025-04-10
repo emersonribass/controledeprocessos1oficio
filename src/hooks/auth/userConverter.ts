@@ -16,8 +16,7 @@ export const convertSupabaseUser = async (authUser: AuthUser): Promise<User> => 
     const user: User = {
       id: authUser.id,
       email: authUser.email || '',
-      name: authUser.user_metadata?.name || authUser.email || '',
-      role: 'user'
+      name: authUser.user_metadata?.name || authUser.email || ''
     };
     
     // Se encontrado na tabela de usuários, complementar as informações
@@ -37,8 +36,7 @@ export const convertSupabaseUser = async (authUser: AuthUser): Promise<User> => 
     return {
       id: authUser.id,
       email: authUser.email || '',
-      name: authUser.user_metadata?.name || authUser.email || '',
-      role: 'user'
+      name: authUser.user_metadata?.name || authUser.email || ''
     };
   }
 };

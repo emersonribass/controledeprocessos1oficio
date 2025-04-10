@@ -7,26 +7,20 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
     console.log("[syncAuth] Iniciando sincronização com autenticação para:", email);
     
     // Verificar se o usuário já existe no auth.users
-    // Vamos usar uma consulta direta em vez da função RPC que ainda não existe
-    const { data: authUser, error: authCheckError } = await supabase
-      .from('auth.users')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle()
-      .then(result => {
-        return result;
-      })
-      .catch(e => {
-        console.log("[syncAuth] Erro ao verificar usuário no auth:", e);
-        return { data: null, error: e };
-      });
+    // Como não podemos acessar diretamente auth.users via API, vamos verificar de outra forma
+    const { data: existingAuthUser, error: existingUserError } = await supabase.rpc('check_user_exists', {
+      user_email: email
+    }).maybeSingle();
     
-    if (authCheckError) {
-      console.log("[syncAuth] Erro ao verificar se usuário existe no auth:", authCheckError);
+    if (existingUserError) {
+      console.log("[syncAuth] Erro ao verificar se usuário existe:", existingUserError);
+      // Continuar mesmo com erro, pois a função RPC pode não existir
     }
     
+    const userExists = existingAuthUser?.exists || false;
+    
     // Verificar se há um usuário autenticado
-    if (authUser) {
+    if (userExists) {
       console.log("[syncAuth] Usuário já existe no auth, sincronizando IDs");
       // Se o usuário já existe no auth, apenas sincronize os IDs
       const { data: syncData, error: syncError } = await supabase.rpc('sync_user_ids', {
