@@ -3,7 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UsuarioSupabase, FormUsuario } from "@/types/usuario";
-import { syncAuthWithUsuarios } from "@/hooks/auth/utils";
+import { syncAuthWithUsuarios } from "@/hooks/auth/syncAuth";
 
 export function useUsuarios() {
   const [usuarios, setUsuarios] = useState<UsuarioSupabase[]>([]);
@@ -147,7 +147,7 @@ export function useUsuarios() {
           toast({
             title: "Aviso",
             description: "Usuário criado, mas houve falha na sincronização com sistema de autenticação.",
-            variant: "warning",
+            variant: "default",
           });
         }
 
