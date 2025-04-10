@@ -9,6 +9,17 @@ import { BasicInfoFields } from "./UserFormFields/BasicInfoFields";
 import { ProfileFields } from "./UserFormFields/ProfileFields";
 import { DepartmentsSelection } from "./UserFormFields/DepartmentsSelection";
 import { useState } from "react";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const usuarioFormSchema = z.object({
+  nome: z.string().min(3, { message: "Nome deve ter pelo menos 3 caracteres" }),
+  email: z.string().email({ message: "E-mail inválido" }),
+  senha: z.string().min(1, { message: "Senha é obrigatória" }).or(z.string().optional()),
+  ativo: z.boolean(),
+  setores_atribuidos: z.array(z.string()),
+  perfil: z.enum(["administrador", "usuario"])
+});
 
 type UserFormProps = {
   usuarioAtual: UsuarioSupabase | null;
@@ -25,7 +36,16 @@ export function UserForm({
 }: UserFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   
+  const isEditMode = !!usuarioAtual;
+  
+  const formSchema = isEditMode
+    ? usuarioFormSchema.extend({
+        senha: z.string().optional(), // Senha opcional em modo de edição
+      })
+    : usuarioFormSchema; // Em modo de criação, senha é obrigatória
+  
   const form = useForm<FormUsuario>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       nome: usuarioAtual?.nome || "",
       email: usuarioAtual?.email || "",
@@ -35,8 +55,6 @@ export function UserForm({
       perfil: usuarioAtual?.perfil || "usuario"
     }
   });
-  
-  const isEditMode = !!usuarioAtual;
   
   const handleSubmit = async (data: FormUsuario) => {
     setIsSaving(true);
@@ -65,7 +83,7 @@ export function UserForm({
             variant="outline" 
             type="button" 
             onClick={onCancel} 
-            className="mr-2 text-white bg-green-600 hover:bg-green-500"
+            className="mr-2"
             disabled={isSaving}
           >
             Cancelar

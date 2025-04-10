@@ -2,25 +2,24 @@
 // Esta função é usada para sincronizar dados entre o usuário na tabela usuarios e o auth
 import { supabase } from "@/integrations/supabase/client";
 
-export const syncAuthWithUsuarios = async (email: string, password: string): Promise<boolean> => {
+export const syncAuthWithUsuarios = async (email: string, password: string): Promise<string | boolean> => {
   try {
     console.log("[syncAuth] Iniciando sincronização com autenticação para:", email);
     
     // Verificar se o usuário já existe no auth.users
-    const { data, error: authCheckError } = await supabase.auth.getUser()
-      .catch(e => {
-        console.log("[syncAuth] Erro ao verificar usuário no auth:", e);
-        return { data: null, error: e };
-      });
+    const { data: authData, error: authCheckError } = await supabase.rpc('check_auth_user_exists', {
+      user_email: email
+    }).catch(e => {
+      console.log("[syncAuth] Erro ao verificar usuário no auth:", e);
+      return { data: null, error: e };
+    });
     
     if (authCheckError) {
       console.log("[syncAuth] Erro ao verificar se usuário existe no auth:", authCheckError);
     }
     
     // Verificar se há um usuário autenticado
-    const authUser = data?.user;
-    
-    if (authUser) {
+    if (authData) {
       console.log("[syncAuth] Usuário já existe no auth, sincronizando IDs");
       // Se o usuário já existe no auth, apenas sincronize os IDs
       const { data: syncData, error: syncError } = await supabase.rpc('sync_user_ids', {
@@ -33,7 +32,7 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
       }
       
       console.log("[syncAuth] Sincronização de IDs concluída:", syncData);
-      return true;
+      return syncData;
     }
     
     // Se não existir, chama a função de migração no Supabase
@@ -53,7 +52,7 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
     // Aguardar um momento para garantir que a autenticação seja processada
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    return true;
+    return migrateData;
   } catch (error) {
     console.error('[syncAuth] Erro ao sincronizar com autenticação:', error);
     return false;
