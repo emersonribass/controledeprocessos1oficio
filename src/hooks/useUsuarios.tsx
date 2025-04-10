@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UsuarioSupabase, FormUsuario } from "@/types/usuario";
+import { syncAuthWithUsuarios } from "@/hooks/auth/utils";
 
 export function useUsuarios() {
   const [usuarios, setUsuarios] = useState<UsuarioSupabase[]>([]);
@@ -114,22 +115,41 @@ export function useUsuarios() {
 
         if (error) throw error;
 
+        // Sincronizar com auth.users se a senha foi alterada
+        if (data.senha) {
+          const syncResult = await syncAuthWithUsuarios(data.email, data.senha);
+          if (!syncResult) {
+            console.warn("Aviso: Falha na sincronização do usuário com autenticação");
+          }
+        }
+
         toast({
           title: "Sucesso",
           description: "Usuário atualizado com sucesso!",
         });
       } else {
         // Criar novo usuário
-        const { error } = await supabase.from("usuarios").insert({
+        const { error, data: newUser } = await supabase.from("usuarios").insert({
           nome: data.nome,
           email: data.email,
           senha: data.senha,
           ativo: data.ativo,
           setores_atribuidos: data.setores_atribuidos,
           perfil: data.perfil,
-        });
+        }).select().single();
 
         if (error) throw error;
+
+        // Sincronizar com auth.users para novo usuário
+        const syncResult = await syncAuthWithUsuarios(data.email, data.senha);
+        if (!syncResult) {
+          console.warn("Aviso: Falha na sincronização do usuário com autenticação");
+          toast({
+            title: "Aviso",
+            description: "Usuário criado, mas houve falha na sincronização com sistema de autenticação.",
+            variant: "warning",
+          });
+        }
 
         toast({
           title: "Sucesso",

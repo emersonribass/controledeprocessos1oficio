@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const syncAuthWithUsuarios = async (email: string, password: string): Promise<boolean> => {
   try {
+    console.log("Iniciando sincronização com autenticação para:", email);
+    
     // Chama a função de migração no Supabase
     const { data, error } = await supabase.rpc('migrate_usuario_to_auth', {
       usuario_email: email, 
@@ -15,10 +17,10 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
       return false;
     }
     
+    console.log("Sincronização com autenticação concluída com sucesso:", data);
     return true;
   } catch (error) {
     console.error('Erro ao sincronizar com autenticação:', error);
     return false;
   }
 };
-
