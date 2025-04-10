@@ -1,14 +1,13 @@
 
 // Esta função é usada para sincronizar dados entre o usuário na tabela usuarios e o auth
 import { supabase } from "@/integrations/supabase/client";
-import { v4 as uuidv4 } from '@supabase/supabase-js';
 
 export const syncAuthWithUsuarios = async (email: string, password: string): Promise<boolean> => {
   try {
     console.log("[syncAuth] Iniciando sincronização com autenticação para:", email);
     
-    // Verificar se o usuário já existe no auth.users usando getUser (em vez de getUserByEmail)
-    const { data: authUser, error: authCheckError } = await supabase.auth.admin.getUser(email)
+    // Verificar se o usuário já existe no auth.users
+    const { data: authUser, error: authCheckError } = await supabase.auth.getUser()
       .catch(e => {
         console.log("[syncAuth] Erro ao verificar usuário no auth:", e);
         return { data: null, error: e };
