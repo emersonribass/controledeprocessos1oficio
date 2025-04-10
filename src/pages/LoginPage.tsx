@@ -15,9 +15,24 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
   const [clearingAuth, setClearingAuth] = useState(true);
+  const [isLoginAttemptActive, setIsLoginAttemptActive] = useState(false);
 
-  // Limpar localStorage de autenticação e estados ao montar o componente de login
+  // Esta função é exportada para ser chamada pelo LoginForm antes de iniciar o login
+  const signalLoginAttempt = () => {
+    console.log("[LoginPage] Sinalizando tentativa de login ativa");
+    setIsLoginAttemptActive(true);
+  };
+
+  // Limpar localStorage de autenticação e estados ao montar o componente de login,
+  // mas apenas se não estiver no meio de uma tentativa de login
   useEffect(() => {
+    // Se estamos no meio de uma tentativa de login, não limpe a autenticação
+    if (isLoginAttemptActive) {
+      setClearingAuth(false);
+      console.log("[LoginPage] Tentativa de login ativa, pulando limpeza de autenticação");
+      return;
+    }
+
     const clearAuthentication = async () => {
       try {
         setClearingAuth(true);
@@ -51,11 +66,14 @@ const LoginPage = () => {
     };
     
     clearAuthentication();
-  }, [setUser, setSession]);
+  }, [setUser, setSession, isLoginAttemptActive]);
 
   useEffect(() => {
     // Evitar redirecionamentos múltiplos e só redirecionar após limpeza de auth
     if (hasRedirected || clearingAuth) return;
+    
+    // Se estivermos durante uma tentativa de login, não faça o redirecionamento
+    if (isLoginAttemptActive) return;
     
     if (!isLoading && user) {
       console.log("[LoginPage] Usuário já autenticado, redirecionando para /dashboard");
@@ -68,7 +86,7 @@ const LoginPage = () => {
         });
       }, 500);
     }
-  }, [user, isLoading, navigate, hasRedirected, clearingAuth]);
+  }, [user, isLoading, navigate, hasRedirected, clearingAuth, isLoginAttemptActive]);
 
   if (isLoading || clearingAuth) {
     return <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30">
@@ -81,7 +99,7 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-muted/40 to-background">
-      <LoginForm />
+      <LoginForm onBeforeLogin={signalLoginAttempt} />
     </div>
   );
 };

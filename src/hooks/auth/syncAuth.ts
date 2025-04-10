@@ -7,7 +7,7 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
     console.log("[syncAuth] Iniciando sincronização com autenticação para:", email);
     
     // Verificar se o usuário já existe no auth.users
-    const { data: authUser, error: authCheckError } = await supabase.auth.getUser()
+    const { data, error: authCheckError } = await supabase.auth.getUser()
       .catch(e => {
         console.log("[syncAuth] Erro ao verificar usuário no auth:", e);
         return { data: null, error: e };
@@ -16,6 +16,9 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
     if (authCheckError) {
       console.log("[syncAuth] Erro ao verificar se usuário existe no auth:", authCheckError);
     }
+    
+    // Verificar se há um usuário autenticado
+    const authUser = data?.user;
     
     if (authUser) {
       console.log("[syncAuth] Usuário já existe no auth, sincronizando IDs");
@@ -35,7 +38,7 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
     
     // Se não existir, chama a função de migração no Supabase
     console.log("[syncAuth] Usuário não encontrado no auth, criando novo...");
-    const { data, error } = await supabase.rpc('migrate_usuario_to_auth', {
+    const { data: migrateData, error } = await supabase.rpc('migrate_usuario_to_auth', {
       usuario_email: email, 
       usuario_senha: password
     });
@@ -45,7 +48,7 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
       return false;
     }
     
-    console.log("[syncAuth] Sincronização com autenticação concluída com sucesso:", data);
+    console.log("[syncAuth] Sincronização com autenticação concluída com sucesso:", migrateData);
     
     // Aguardar um momento para garantir que a autenticação seja processada
     await new Promise(resolve => setTimeout(resolve, 800));

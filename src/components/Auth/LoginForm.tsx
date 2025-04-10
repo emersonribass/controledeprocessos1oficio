@@ -10,7 +10,11 @@ import { AlertCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
-const LoginForm = () => {
+interface LoginFormProps {
+  onBeforeLogin?: () => void;
+}
+
+const LoginForm = ({ onBeforeLogin }: LoginFormProps) => {
   // Login state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,6 +54,11 @@ const LoginForm = () => {
     if (!validateForm()) return;
     
     if (isSubmitting) return;
+    
+    // Notificar o LoginPage que estamos iniciando uma tentativa de login
+    if (onBeforeLogin) {
+      onBeforeLogin();
+    }
     
     setIsSubmitting(true);
     setError(null);
