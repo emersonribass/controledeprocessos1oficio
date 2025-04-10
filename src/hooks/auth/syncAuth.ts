@@ -62,7 +62,8 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
         return false;
       }
       
-      // Tente atualizar a senha do usuário no auth para garantir consistência
+      // Como a função update_user_password não está disponível, vamos apenas verificar a autenticação
+      // sem tentar atualizar a senha
       try {
         // Primeiro tente fazer login com a senha atual para ver se já está correta
         const { error: authError } = await supabase.auth.signInWithPassword({
@@ -70,25 +71,13 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
           password,
         });
         
-        // Se houver erro de login, considere atualizar a senha
+        // Se houver erro de login, registre o problema mas continue
         if (authError) {
-          console.log("[syncAuth] Senha atual não está funcionando, tentando atualizar...");
-          
-          // Chame a função RPC para atualizar a senha do usuário
-          const { data: updateResult, error: updateError } = await supabase.rpc('update_user_password', {
-            usuario_email: email,
-            nova_senha: password
-          });
-          
-          if (updateError) {
-            console.error("[syncAuth] Erro ao atualizar senha:", updateError);
-            // Continue mesmo se a senha não puder ser atualizada
-          } else {
-            console.log("[syncAuth] Senha atualizada com sucesso");
-          }
+          console.log("[syncAuth] Senha atual não está funcionando, mas continuando...");
+          // Não podemos atualizar a senha diretamente por aqui sem a função RPC adequada
         }
       } catch (passwordError) {
-        console.error("[syncAuth] Erro ao verificar/atualizar senha:", passwordError);
+        console.error("[syncAuth] Erro ao verificar senha:", passwordError);
         // Continue mesmo se ocorrer um erro
       }
       

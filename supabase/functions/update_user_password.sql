@@ -1,7 +1,6 @@
 
 -- Função para atualizar a senha de um usuário existente
 -- Esta função deve ser adicionada ao banco de dados Supabase usando o SQL Editor
-/*
 CREATE OR REPLACE FUNCTION public.update_user_password(
   usuario_email TEXT,
   nova_senha TEXT
@@ -37,4 +36,3 @@ BEGIN
   END;
 END;
 $$;
-*/

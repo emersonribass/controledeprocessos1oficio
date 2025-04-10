@@ -53,45 +53,49 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
         // Aguardar um pouco mais para garantir que a sincronização seja concluída
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Após a sincronização bem-sucedida, tentar login diretamente usando a senha
+        // Após a sincronização bem-sucedida, tentar várias estratégias de login
+        let authResult;
+        
         try {
-          console.log("[useLogin] Tentando login após sincronização com a senha fornecida");
+          console.log("[useLogin] Tentando login pela autenticação do Supabase");
           
-          const { data, error } = await supabase.auth.signInWithPassword({
+          // Estratégia 1: Tentar com a senha fornecida
+          authResult = await supabase.auth.signInWithPassword({
             email,
             password,
           });
-
-          if (error) {
-            console.error("[useLogin] Erro no login direto:", error.message);
+          
+          if (authResult.error) {
+            console.error("[useLogin] Erro no login Supabase:", authResult.error.message);
             
-            // Se falhar com a senha fornecida, tentar com a senha padrão '123456'
-            if (password !== '123456') {
+            // Estratégia 2: Tentar com a senha armazenada na tabela usuarios
+            if (usuarioData.senha && usuarioData.senha !== password) {
+              console.log("[useLogin] Tentando login com senha armazenada na tabela usuarios");
+              authResult = await supabase.auth.signInWithPassword({
+                email,
+                password: usuarioData.senha,
+              });
+            }
+            
+            // Estratégia 3: Tentar com senha padrão '123456'
+            if (authResult.error && password !== '123456') {
               console.log("[useLogin] Tentando login com senha padrão '123456'");
-              const { data: defaultData, error: defaultError } = await supabase.auth.signInWithPassword({
+              authResult = await supabase.auth.signInWithPassword({
                 email,
                 password: '123456',
               });
-              
-              if (defaultError) {
-                console.error("[useLogin] Erro no login com senha padrão:", defaultError.message);
-                throw new Error("Falha na autenticação. Verifique suas credenciais.");
-              }
-              
-              // Se o login com senha padrão funcionar, usar esses dados
-              if (defaultData.session) {
-                console.log("[useLogin] Login com senha padrão bem-sucedido");
-                return handleSuccessfulLogin(defaultData, email);
-              }
-            } else {
-              throw new Error(error.message);
+            }
+            
+            // Se todas as estratégias falharem
+            if (authResult.error) {
+              console.error("[useLogin] Todas as estratégias de login falharam");
+              throw new Error(authResult.error.message);
             }
           }
-
-          // Se chegou aqui, o login com a senha fornecida foi bem-sucedido
-          if (data.session) {
-            console.log("[useLogin] Login bem-sucedido com senha fornecida");
-            return handleSuccessfulLogin(data, email);
+          
+          // Se tiver sessão, o login foi bem-sucedido
+          if (authResult.data.session) {
+            return handleSuccessfulLogin(authResult.data, email);
           } else {
             throw new Error("Autenticação realizada, mas sessão não foi criada.");
           }
