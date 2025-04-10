@@ -122,31 +122,38 @@ export function useUsuarios() {
           
           console.log("Usuário criado na autenticação, obtendo ID:", authResult);
           
-          // 2. Buscar o ID gerado pelo auth
-          const { data: userData, error: userError } = await supabase.auth.getUser();
+          // 2. Buscar o ID gerado pelo auth usando uma consulta direta
+          // em vez de usar a função RPC que ainda não existe
+          let userId: string | null = null;
           
-          if (userError) {
-            console.error("Erro ao obter ID do usuário após criação:", userError);
-            throw new Error("Erro ao obter ID do usuário criado");
-          }
-          
-          // 3. Obter o ID do usuário autenticado ou buscar pelo email
-          let userId;
-          
-          if (userData?.user?.id) {
-            userId = userData.user.id;
+          if (typeof authResult === 'string') {
+            userId = authResult;
           } else {
-            // Buscar o ID pelo email na tabela auth.users
-            const { data: authUsers, error: authUsersError } = await supabase.rpc('get_auth_user_id_by_email', { 
-              user_email: data.email 
-            });
+            // Tentar buscar o usuário atual da sessão
+            const { data: userData, error: userError } = await supabase.auth.getUser();
             
-            if (authUsersError || !authUsers) {
-              console.error("Erro ao buscar ID do usuário pelo email:", authUsersError);
+            if (userError) {
+              console.error("Erro ao obter ID do usuário após criação:", userError);
               throw new Error("Erro ao obter ID do usuário criado");
             }
             
-            userId = authUsers;
+            if (userData?.user?.id) {
+              userId = userData.user.id;
+            } else {
+              // Buscar o ID pelo email diretamente da tabela auth.users
+              const { data: authUserData, error: authUserError } = await supabase
+                .from('auth.users')
+                .select('id')
+                .eq('email', data.email)
+                .maybeSingle();
+                
+              if (authUserError || !authUserData) {
+                console.error("Erro ao buscar ID do usuário pelo email:", authUserError);
+                throw new Error("Erro ao obter ID do usuário criado");
+              }
+              
+              userId = authUserData.id;
+            }
           }
           
           console.log("ID do usuário para inserção na tabela usuarios:", userId);

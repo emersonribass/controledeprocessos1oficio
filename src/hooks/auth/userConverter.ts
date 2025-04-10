@@ -1,28 +1,44 @@
 
-import { User as SupabaseUser } from "@supabase/supabase-js";
-import { User } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
+import { AuthUser } from '@supabase/supabase-js';
+import { User } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
-// Função para converter usuário do Supabase para nosso tipo User
-export const convertSupabaseUser = async (supabaseUser: SupabaseUser | null): Promise<User | null> => {
-  if (!supabaseUser) return null;
-  
-  // Buscar informações adicionais do usuário na tabela usuarios
-  const { data: userData, error: userError } = await supabase
-    .from('usuarios')
-    .select('setores_atribuidos, perfil')
-    .eq('email', supabaseUser.email)
-    .single();
-  
-  if (userError && userError.code !== 'PGRST116') {
-    console.error('Erro ao buscar dados do usuário:', userError);
+export const convertSupabaseUser = async (authUser: AuthUser): Promise<User> => {
+  try {
+    // Verificar se o usuário existe na tabela customizada
+    const { data: usuarioData, error: usuarioError } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('id', authUser.id)
+      .maybeSingle();
+      
+    // Usuário básico com dados do auth
+    const user: User = {
+      id: authUser.id,
+      email: authUser.email || '',
+      name: authUser.user_metadata?.name || authUser.email || '',
+      role: 'user'
+    };
+    
+    // Se encontrado na tabela de usuários, complementar as informações
+    if (!usuarioError && usuarioData) {
+      user.name = usuarioData.nome;
+      user.role = usuarioData.perfil === 'administrador' ? 'admin' : 'user';
+      user.departments = usuarioData.setores_atribuidos;
+      user.isActive = usuarioData.ativo;
+    } else {
+      console.log('[userConverter] Usuário não encontrado na tabela usuarios ou erro:', usuarioError);
+    }
+    
+    return user;
+  } catch (error) {
+    console.error('[userConverter] Erro ao converter usuário:', error);
+    // Retornar ao menos os dados básicos disponíveis no auth
+    return {
+      id: authUser.id,
+      email: authUser.email || '',
+      name: authUser.user_metadata?.name || authUser.email || '',
+      role: 'user'
+    };
   }
-  
-  return {
-    id: supabaseUser.id,
-    email: supabaseUser.email || "",
-    name: supabaseUser.user_metadata?.nome || supabaseUser.user_metadata?.full_name || "Usuário",
-    departments: userData?.setores_atribuidos || [],
-    createdAt: supabaseUser.created_at,
-  };
 };
