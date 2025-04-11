@@ -1,4 +1,3 @@
-
 import { HistoryEntry } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -9,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import AcceptProcessButton from "./AcceptProcessButton";
+import AcceptProcessButton from "./ProcessButtons/AcceptProcessButton";
 import { useAuth } from "@/hooks/auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,7 +42,6 @@ const ProcessHistory = ({
   const [historyWithResponsibles, setHistoryWithResponsibles] = useState<HistoryEntryWithSectorResponsible[]>([]);
 
   useEffect(() => {
-    // Buscar os dados completos do histórico, incluindo responsáveis de setor
     const fetchHistoryWithResponsibles = async () => {
       try {
         const { data, error } = await supabase
@@ -56,7 +54,6 @@ const ProcessHistory = ({
           return;
         }
 
-        // Mapear os dados do banco para o formato de HistoryEntry
         const completeHistory = data.map(item => ({
           id: item.id,
           processId: item.processo_id,
@@ -77,7 +74,6 @@ const ProcessHistory = ({
     fetchHistoryWithResponsibles();
   }, [processId, getUserName, history]);
   
-  // Verificar se o usuário está no departamento atual
   const currentDeptEntry = history.find(entry => !entry.exitDate);
   const isUserInCurrentDept = user && user.departments.includes(currentDeptEntry?.departmentId || "");
   
@@ -92,9 +88,8 @@ const ProcessHistory = ({
           <AcceptProcessButton 
             processId={processId}
             protocolNumber={protocolNumber}
-            hasResponsibleUser={hasResponsibleUser}
+            currentDepartmentId={currentDepartmentId}
             onAccept={onProcessAccepted}
-            departmentId={currentDepartmentId}
           />
         )}
       </CardHeader>
