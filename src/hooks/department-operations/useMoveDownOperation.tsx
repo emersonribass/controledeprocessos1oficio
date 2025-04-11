@@ -5,7 +5,7 @@ import { Department } from "@/types";
 
 export const useMoveDownOperation = () => {
   // Função para mover um departamento para baixo na ordem
-  const handleMoveDown = async (department: Department) => {
+  const handleMoveDown = async (department: Department, onOptimisticUpdate?: (departments: Department[]) => void) => {
     try {
       console.log(`Iniciando movimento para baixo do setor: ${department.name} (${department.id})`);
       
@@ -55,6 +55,29 @@ export const useMoveDownOperation = () => {
       
       console.log(`Movendo setor para baixo: ${department.name} (${department.id}) da posição ${currentOrderValue} para ${nextOrderValue}`);
       console.log(`Próximo setor: ${nextDepartment.name} (${nextDepartment.id}) da posição ${nextOrderValue} para ${currentOrderValue}`);
+      
+      // Criar uma cópia otimista dos departamentos para atualização da UI
+      if (onOptimisticUpdate) {
+        const optimisticDepartments = [...departments];
+        
+        // Trocar as posições dos departamentos para atualização otimista
+        const currentDept = {...optimisticDepartments[currentIndex]};
+        const nextDept = {...optimisticDepartments[currentIndex + 1]};
+        
+        // Trocar as ordens
+        currentDept.order = nextOrderValue;
+        nextDept.order = currentOrderValue;
+        
+        // Atualizar a lista
+        optimisticDepartments[currentIndex] = currentDept;
+        optimisticDepartments[currentIndex + 1] = nextDept;
+        
+        // Ordenar a lista atualizada
+        optimisticDepartments.sort((a, b) => a.order - b.order);
+        
+        // Atualizar a UI imediatamente
+        onOptimisticUpdate(optimisticDepartments);
+      }
       
       // Primeiro, atualize o departamento seguinte para a ordem atual
       console.log(`Atualizando setor ${nextDepartment.id} para ordem ${currentOrderValue}`);

@@ -5,7 +5,7 @@ import { Department } from "@/types";
 
 export const useMoveUpOperation = () => {
   // Função para mover um departamento para cima na ordem
-  const handleMoveUp = async (department: Department) => {
+  const handleMoveUp = async (department: Department, onOptimisticUpdate?: (departments: Department[]) => void) => {
     try {
       console.log(`Iniciando movimento para cima do setor: ${department.name} (${department.id})`);
       
@@ -48,6 +48,29 @@ export const useMoveUpOperation = () => {
       
       console.log(`Movendo setor para cima: ${department.name} (${department.id}) da posição ${currentOrderValue} para ${prevOrderValue}`);
       console.log(`Setor anterior: ${prevDepartment.name} (${prevDepartment.id}) da posição ${prevOrderValue} para ${currentOrderValue}`);
+      
+      // Criar uma cópia otimista dos departamentos para atualização da UI
+      if (onOptimisticUpdate) {
+        const optimisticDepartments = [...departments];
+        
+        // Trocar as posições dos departamentos para atualização otimista
+        const currentDept = {...optimisticDepartments[currentIndex]};
+        const prevDept = {...optimisticDepartments[currentIndex - 1]};
+        
+        // Trocar as ordens
+        currentDept.order = prevOrderValue;
+        prevDept.order = currentOrderValue;
+        
+        // Atualizar a lista
+        optimisticDepartments[currentIndex] = currentDept;
+        optimisticDepartments[currentIndex - 1] = prevDept;
+        
+        // Ordenar a lista atualizada
+        optimisticDepartments.sort((a, b) => a.order - b.order);
+        
+        // Atualizar a UI imediatamente
+        onOptimisticUpdate(optimisticDepartments);
+      }
       
       // Primeiro, atualize o departamento anterior para a ordem atual
       const { error: updatePrevError } = await supabase
