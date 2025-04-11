@@ -7,6 +7,8 @@ import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProcessTableProps {
   processes: Process[];
@@ -40,6 +42,38 @@ const ProcessTable = ({
   startProcess
 }: ProcessTableProps) => {
   const navigate = useNavigate();
+  const [processResponsibles, setProcessResponsibles] = useState<Record<string, string | null>>({});
+
+  // Efeito para buscar responsáveis dos processos
+  useEffect(() => {
+    const fetchResponsibles = async () => {
+      try {
+        if (processes.length === 0) return;
+        
+        const { data, error } = await supabase
+          .from('processos')
+          .select('id, usuario_responsavel')
+          .in('id', processes.map(p => p.id));
+          
+        if (error) {
+          console.error("Erro ao buscar responsáveis dos processos:", error);
+          return;
+        }
+        
+        const responsibles: Record<string, string | null> = {};
+        data.forEach(p => {
+          responsibles[p.id] = p.usuario_responsavel;
+        });
+        
+        setProcessResponsibles(responsibles);
+      } catch (error) {
+        console.error("Erro ao processar responsáveis dos processos:", error);
+      }
+    };
+    
+    fetchResponsibles();
+  }, [processes]);
+
   const handleRowClick = (processId: string) => {
     navigate(`/processes/${processId}`);
   };
@@ -66,6 +100,10 @@ const ProcessTable = ({
     if (status === "overdue") return "bg-red-200";
     if (status === "pending") return "bg-blue-200";
     return "";
+  };
+
+  const hasProcessResponsible = (processId: string): boolean => {
+    return !!processResponsibles[processId];
   };
   
   return (
@@ -153,6 +191,13 @@ const ProcessTable = ({
                     isEditing={false} 
                     status={process.status}
                     startProcess={startProcess}
+                    protocolNumber={process.protocolNumber}
+                    hasResponsibleUser={hasProcessResponsible(process.id)}
+                    onAccept={() => {
+                      const newResponsibles = {...processResponsibles};
+                      newResponsibles[process.id] = "accepted"; // qualquer valor não-nulo funciona aqui
+                      setProcessResponsibles(newResponsibles);
+                    }}
                   />
                 </TableCell>
               </TableRow>

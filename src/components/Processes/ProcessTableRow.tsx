@@ -9,6 +9,8 @@ import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -37,6 +39,35 @@ const ProcessTableRow = ({
 }: ProcessTableRowProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [hasResponsibleUser, setHasResponsibleUser] = useState(!!process.responsibleUserId);
+
+  // Efeito para buscar informações atualizadas sobre o responsável do processo
+  useEffect(() => {
+    const checkProcessResponsible = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('processos')
+          .select('usuario_responsavel')
+          .eq('id', process.id)
+          .single();
+        
+        if (error) {
+          console.error("Erro ao buscar responsável do processo:", error);
+          return;
+        }
+        
+        setHasResponsibleUser(!!data.usuario_responsavel);
+      } catch (error) {
+        console.error("Erro ao verificar responsável do processo:", error);
+      }
+    };
+    
+    checkProcessResponsible();
+  }, [process.id]);
+
+  const handleProcessAccepted = () => {
+    setHasResponsibleUser(true);
+  };
 
   const isNotStarted = process.status === "not_started";
   const isCompleted = process.status === "completed";
@@ -155,6 +186,9 @@ const ProcessTableRow = ({
           isEditing={false}
           status={process.status}
           startProcess={startProcess}
+          protocolNumber={process.protocolNumber}
+          hasResponsibleUser={hasResponsibleUser}
+          onAccept={handleProcessAccepted}
         />
       </TableCell>
     </TableRow>
