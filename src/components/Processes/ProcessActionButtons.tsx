@@ -83,6 +83,22 @@ const ProcessActionButtons = ({
       );
     }
   }
+
+  // Se o processo está concluído, mas não é o último departamento,
+  // mostrar botões de navegação
+  if (status === PROCESS_STATUS.COMPLETED && !isLastDepartment) {
+    return (
+      <div className="flex justify-center gap-2">
+        <NavigationButtons 
+          processId={processId}
+          isFirstDepartment={isFirstDepartment}
+          isLastDepartment={isLastDepartment}
+          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+          moveProcessToNextDepartment={moveProcessToNextDepartment}
+        />
+      </div>
+    );
+  }
   
   // Caso não caia em nenhum dos casos acima, não mostra nenhum botão
   return null;
