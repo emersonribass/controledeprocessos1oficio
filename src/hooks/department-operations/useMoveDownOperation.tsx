@@ -60,7 +60,7 @@ export const useMoveDownOperation = () => {
       console.log(`Atualizando setor ${nextDepartment.id} para ordem ${currentOrderValue}`);
       const { error: updateNextError } = await supabase
         .from('setores')
-        .update({ order_num: currentOrderValue })
+        .update({ order_num: currentOrderValue, updated_at: new Date().toISOString() })
         .eq('id', parseInt(nextDepartment.id));
       
       if (updateNextError) {
@@ -74,7 +74,7 @@ export const useMoveDownOperation = () => {
       console.log(`Atualizando setor ${department.id} para ordem ${nextOrderValue}`);
       const { error: updateCurrentError } = await supabase
         .from('setores')
-        .update({ order_num: nextOrderValue })
+        .update({ order_num: nextOrderValue, updated_at: new Date().toISOString() })
         .eq('id', parseInt(department.id));
       
       if (updateCurrentError) {

@@ -52,7 +52,7 @@ export const useMoveUpOperation = () => {
       // Primeiro, atualize o departamento anterior para a ordem atual
       const { error: updatePrevError } = await supabase
         .from('setores')
-        .update({ order_num: currentOrderValue })
+        .update({ order_num: currentOrderValue, updated_at: new Date().toISOString() })
         .eq('id', parseInt(prevDepartment.id));
       
       if (updatePrevError) {
@@ -65,7 +65,7 @@ export const useMoveUpOperation = () => {
       // Depois, atualize o departamento atual para a ordem anterior
       const { error: updateCurrentError } = await supabase
         .from('setores')
-        .update({ order_num: prevOrderValue })
+        .update({ order_num: prevOrderValue, updated_at: new Date().toISOString() })
         .eq('id', parseInt(department.id));
       
       if (updateCurrentError) {
