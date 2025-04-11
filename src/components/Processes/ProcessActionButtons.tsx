@@ -1,10 +1,11 @@
-
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
 import { useAuth } from "@/hooks/auth";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { PROCESS_STATUS } from "@/types";
 
 interface ProcessActionButtonsProps {
   processId: string;
@@ -35,7 +36,6 @@ const ProcessActionButtons = ({
   hasResponsibleUser = false,
   onAccept
 }: ProcessActionButtonsProps) => {
-  const isNotStarted = status === "not_started";
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -119,8 +119,8 @@ const ProcessActionButtons = ({
     }
   };
   
-  // Se o processo não foi iniciado, mostrar botão de iniciar
-  if (isNotStarted) {
+  // Se o processo não foi iniciado, mostrar apenas botão de iniciar
+  if (status === PROCESS_STATUS.NOT_STARTED) {
     return (
       <div className="flex justify-center gap-2">
         <Button 
