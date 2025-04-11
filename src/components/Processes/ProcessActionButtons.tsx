@@ -148,50 +148,53 @@ const ProcessActionButtons = ({
     );
   }
   
-  // Se o usuário é o responsável principal ou responsável pelo setor, mostrar botões de movimento
-  if (isMainResponsible || isSectorResponsible) {
-    return (
-      <div className="flex justify-center gap-2">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => moveProcessToPreviousDepartment(processId)} 
-          disabled={isFirstDepartment} 
-          title="Mover para departamento anterior"
-          className={isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}
-        >
-          <MoveLeft className="h-4 w-4" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => moveProcessToNextDepartment(processId)} 
-          disabled={isLastDepartment} 
-          title="Mover para próximo departamento"
-          className={isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}
-        >
-          <MoveRight className="h-4 w-4" />
-        </Button>
-      </div>
-    );
-  }
-  
-  // Se o processo já foi iniciado, mas o usuário atual não é responsável,
-  // e o setor atual não tem um responsável, mostrar botão de aceitar
-  if (!hasResponsibleUser) {
-    return (
-      <div className="flex justify-center gap-2">
-        <Button
-          onClick={handleAcceptProcess}
-          disabled={isLoading || !user}
-          className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
-          size="sm"
-        >
-          <CheckCircle className="h-4 w-4" />
-          {isLoading ? "Processando..." : "Aceitar Processo"}
-        </Button>
-      </div>
-    );
+  // Se o processo está em andamento
+  if (status === PROCESS_STATUS.PENDING) {
+    // Se o usuário é o responsável principal ou responsável pelo setor, mostrar botões de movimento
+    if (isMainResponsible || isSectorResponsible) {
+      return (
+        <div className="flex justify-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => moveProcessToPreviousDepartment(processId)} 
+            disabled={isFirstDepartment} 
+            title="Mover para departamento anterior"
+            className={isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}
+          >
+            <MoveLeft className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => moveProcessToNextDepartment(processId)} 
+            disabled={isLastDepartment} 
+            title="Mover para próximo departamento"
+            className={isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}
+          >
+            <MoveRight className="h-4 w-4" />
+          </Button>
+        </div>
+      );
+    }
+    
+    // Se o processo já foi iniciado, mas o usuário atual não é responsável,
+    // e o setor atual não tem um responsável, mostrar botão de aceitar
+    if (!hasResponsibleUser) {
+      return (
+        <div className="flex justify-center gap-2">
+          <Button
+            onClick={handleAcceptProcess}
+            disabled={isLoading || !user}
+            className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
+            size="sm"
+          >
+            <CheckCircle className="h-4 w-4" />
+            {isLoading ? "Processando..." : "Aceitar Processo"}
+          </Button>
+        </div>
+      );
+    }
   }
   
   // Caso não caia em nenhum dos casos acima, não mostra nenhum botão
