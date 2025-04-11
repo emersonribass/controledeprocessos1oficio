@@ -12,7 +12,10 @@ type ProcessCardProps = {
   getDepartmentName: (id: string) => string;
   moveProcessToNextDepartment: (processId: string) => void;
   moveProcessToPreviousDepartment: (processId: string) => void;
-  responsibleUserName?: string;
+  mainResponsibleUserName?: string;
+  sectorResponsibleUserName?: string;
+  isMainResponsible?: boolean;
+  isSectorResponsible?: boolean;
 };
 
 const ProcessCard = ({
@@ -21,13 +24,16 @@ const ProcessCard = ({
   getDepartmentName,
   moveProcessToNextDepartment,
   moveProcessToPreviousDepartment,
-  responsibleUserName
+  mainResponsibleUserName,
+  sectorResponsibleUserName,
+  isMainResponsible = false,
+  isSectorResponsible = false
 }: ProcessCardProps) => {
-  const [hasResponsibleUser, setHasResponsibleUser] = useState(!!responsibleUserName);
+  const [hasResponsibleUser, setHasResponsibleUser] = useState(!!mainResponsibleUserName || !!sectorResponsibleUserName);
 
   useEffect(() => {
-    setHasResponsibleUser(!!responsibleUserName);
-  }, [responsibleUserName]);
+    setHasResponsibleUser(!!mainResponsibleUserName || !!sectorResponsibleUserName);
+  }, [mainResponsibleUserName, sectorResponsibleUserName]);
   
   // Verificar se o processo está no setor "Concluído(a)" usando o ID 10
   const isLastDepartment = process.currentDepartment === "10";
@@ -48,7 +54,8 @@ const ProcessCard = ({
         startDate={process.startDate}
         expectedEndDate={process.expectedEndDate}
         currentDepartmentName={getDepartmentName(process.currentDepartment)}
-        responsibleUserName={responsibleUserName}
+        mainResponsibleUserName={mainResponsibleUserName}
+        sectorResponsibleUserName={sectorResponsibleUserName}
       />
       <ProcessCardFooter
         processId={process.id}
@@ -59,6 +66,10 @@ const ProcessCard = ({
         moveProcessToNextDepartment={moveProcessToNextDepartment}
         moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
         onProcessAccepted={handleProcessAccepted}
+        isMainResponsible={isMainResponsible}
+        isSectorResponsible={isSectorResponsible}
+        currentDepartmentId={process.currentDepartment}
+        status={process.status}
       />
     </Card>
   );

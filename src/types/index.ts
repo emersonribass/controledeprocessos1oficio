@@ -1,4 +1,3 @@
-
 export interface Department {
   id: string;
   name: string;
@@ -22,6 +21,7 @@ export interface HistoryEntry {
   entryDate: string;
   exitDate?: string;
   comments?: string;
+  usuario_responsavel_setor?: string | null;
 }
 
 // Constants for process status

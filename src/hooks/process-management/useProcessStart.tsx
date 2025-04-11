@@ -9,6 +9,11 @@ export const useProcessStart = () => {
 
   const startProcess = async (processId: string) => {
     try {
+      // Verificar se o usuário está autenticado
+      if (!user || !user.id) {
+        throw new Error("Usuário não autenticado");
+      }
+
       // Buscar o primeiro departamento (ordem = 1)
       const { data: departments, error: deptError } = await supabase
         .from('setores')
@@ -22,18 +27,15 @@ export const useProcessStart = () => {
       const firstDept = departments[0];
       const now = new Date().toISOString();
       
-      if (!user || !user.id) {
-        throw new Error("Usuário não autenticado");
-      }
-      
-      // Atualizar o processo
+      // Atualizar o processo com o usuário responsável principal e mudar para o primeiro setor
       const { error: updateError } = await supabase
         .from('processos')
         .update({ 
           setor_atual: firstDept.id.toString(),
           status: "Em andamento",
           data_inicio: now,
-          updated_at: now
+          updated_at: now,
+          usuario_responsavel: user.id // Define o usuário que iniciou como responsável principal
         })
         .eq('id', processId);
         

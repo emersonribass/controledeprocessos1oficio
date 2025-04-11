@@ -30,6 +30,19 @@ export const usePreviousDepartment = (departments: Department[]) => {
       
       if (!prevDept) return false;
 
+      // Buscar o responsável principal do processo
+      const { data: processData, error: processError } = await supabase
+        .from('processos')
+        .select('usuario_responsavel')
+        .eq('id', process.id)
+        .single();
+
+      if (processError) {
+        throw processError;
+      }
+
+      const mainResponsibleUser = processData.usuario_responsavel;
+
       // Atualizar saída no histórico atual
       const now = new Date().toISOString();
       
@@ -66,21 +79,22 @@ export const usePreviousDepartment = (departments: Department[]) => {
           setor_id: prevDept.id,
           data_entrada: now,
           data_saida: null,
-          usuario_id: process.userId || "1" // Usuário atual (placeholder)
+          usuario_id: mainResponsibleUser || process.userId || "1", // Usar o responsável principal
+          usuario_responsavel_setor: null // Sem responsável de setor ainda
         });
 
       if (newHistoryError) {
         throw newHistoryError;
       }
 
-      // Atualizar o processo, resetando o usuário responsável
+      // Atualizar o processo, mantendo o usuário responsável principal
       const { error: updateProcessError } = await supabase
         .from('processos')
         .update({ 
           setor_atual: prevDept.id,
           status: "Em andamento", // Sempre será "Em andamento" ao voltar
-          updated_at: now,
-          usuario_responsavel: null // Resetar o usuário responsável ao mudar de departamento
+          updated_at: now
+          // Mantém o usuário responsável principal inalterado
         })
         .eq('id', process.id);
 

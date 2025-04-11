@@ -10,10 +10,14 @@ interface ProcessDetailsContentProps {
   moveProcessToNextDepartment: (processId: string) => void;
   moveProcessToPreviousDepartment: (processId: string) => void;
   getUserName: (userId: string) => string;
-  responsibleUserName?: string;
+  mainResponsibleUserName?: string;
+  sectorResponsibleUserName?: string;
   isRefreshing: boolean;
   onProcessAccepted: () => void;
   hasResponsibleUser: boolean;
+  isMainResponsible: boolean;
+  isSectorResponsible: boolean;
+  currentDepartmentId?: string;
 }
 
 const ProcessDetailsContent = ({
@@ -23,10 +27,14 @@ const ProcessDetailsContent = ({
   moveProcessToNextDepartment,
   moveProcessToPreviousDepartment,
   getUserName,
-  responsibleUserName,
+  mainResponsibleUserName,
+  sectorResponsibleUserName,
   isRefreshing,
   onProcessAccepted,
-  hasResponsibleUser
+  hasResponsibleUser,
+  isMainResponsible,
+  isSectorResponsible,
+  currentDepartmentId
 }: ProcessDetailsContentProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -36,7 +44,10 @@ const ProcessDetailsContent = ({
         getProcessTypeName={getProcessTypeName}
         moveProcessToNextDepartment={moveProcessToNextDepartment}
         moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-        responsibleUserName={responsibleUserName}
+        mainResponsibleUserName={mainResponsibleUserName}
+        sectorResponsibleUserName={sectorResponsibleUserName}
+        isMainResponsible={isMainResponsible}
+        isSectorResponsible={isSectorResponsible}
       />
 
       <ProcessHistory 
@@ -47,6 +58,7 @@ const ProcessDetailsContent = ({
         protocolNumber={process.protocolNumber}
         hasResponsibleUser={hasResponsibleUser}
         onProcessAccepted={onProcessAccepted}
+        currentDepartmentId={currentDepartmentId}
       />
     </div>
   );

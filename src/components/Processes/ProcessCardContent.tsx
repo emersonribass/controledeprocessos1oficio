@@ -2,20 +2,22 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CardContent } from "@/components/ui/card";
-import { User } from "lucide-react";
+import { User, Users } from "lucide-react";
 
 type ProcessCardContentProps = {
   startDate: string;
   expectedEndDate: string;
   currentDepartmentName: string;
-  responsibleUserName?: string;
+  mainResponsibleUserName?: string;
+  sectorResponsibleUserName?: string;
 };
 
 const ProcessCardContent = ({
   startDate,
   expectedEndDate,
   currentDepartmentName,
-  responsibleUserName,
+  mainResponsibleUserName,
+  sectorResponsibleUserName,
 }: ProcessCardContentProps) => {
   return (
     <CardContent className="space-y-4">
@@ -56,12 +58,22 @@ const ProcessCardContent = ({
             })}
           </p>
         </div>
-        {responsibleUserName && (
+        
+        {mainResponsibleUserName && (
           <div className="col-span-2">
             <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
-              <User className="h-4 w-4 mr-1" /> Responsável
+              <User className="h-4 w-4 mr-1" /> Responsável Principal
             </h3>
-            <p className="font-medium">{responsibleUserName}</p>
+            <p className="font-medium">{mainResponsibleUserName}</p>
+          </div>
+        )}
+        
+        {sectorResponsibleUserName && (
+          <div className="col-span-2">
+            <h3 className="text-sm font-medium text-muted-foreground mb-1 flex items-center">
+              <Users className="h-4 w-4 mr-1" /> Responsável no Setor
+            </h3>
+            <p className="font-medium">{sectorResponsibleUserName}</p>
           </div>
         )}
       </div>

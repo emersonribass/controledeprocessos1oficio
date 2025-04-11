@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
@@ -20,6 +21,8 @@ interface ProcessActionButtonsProps {
   protocolNumber?: string;
   hasResponsibleUser?: boolean;
   onAccept?: () => void;
+  currentDepartmentId?: string;
+  isMainResponsible?: boolean;
 }
 
 const ProcessActionButtons = ({
@@ -34,7 +37,9 @@ const ProcessActionButtons = ({
   startProcess,
   protocolNumber = "",
   hasResponsibleUser = false,
-  onAccept
+  onAccept,
+  currentDepartmentId,
+  isMainResponsible = false
 }: ProcessActionButtonsProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -53,36 +58,40 @@ const ProcessActionButtons = ({
     setIsLoading(true);
 
     try {
-      // Verificar se o processo já tem um responsável
-      const { data: processData, error: processError } = await supabase
-        .from('processos')
+      // Verificar se o processo já tem um responsável de setor
+      const { data: historico, error: historicoError } = await supabase
+        .from('processos_historico')
         .select('*')
-        .eq('id', processId)
-        .single();
+        .eq('processo_id', processId)
+        .eq('setor_id', currentDepartmentId || '')
+        .is('data_saida', null)
+        .maybeSingle();
 
-      if (processError) {
-        throw processError;
+      if (historicoError) {
+        console.error("Erro ao buscar histórico do processo:", historicoError);
       }
 
-      if (processData.usuario_responsavel) {
+      if (historico && historico.usuario_responsavel_setor) {
         toast({
           title: "Aviso",
-          description: "Este processo já possui um responsável.",
+          description: "Este processo já possui um responsável neste setor.",
           variant: "destructive",
         });
         return;
       }
 
-      // Atualizar o processo com o usuário responsável
-      const { error: updateError } = await supabase
-        .from('processos')
-        .update({ 
-          usuario_responsavel: user.id 
-        } as any)
-        .eq('id', processId);
+      // Atualizar o histórico do processo com o responsável do setor atual
+      if (historico) {
+        const { error: updateError } = await supabase
+          .from('processos_historico')
+          .update({ 
+            usuario_responsavel_setor: user.id 
+          })
+          .eq('id', historico.id);
 
-      if (updateError) {
-        throw updateError;
+        if (updateError) {
+          throw updateError;
+        }
       }
 
       // Marcar notificações como respondidas
@@ -100,7 +109,7 @@ const ProcessActionButtons = ({
 
       toast({
         title: "Sucesso",
-        description: `Você aceitou a responsabilidade pelo processo ${protocolNumber}.`,
+        description: `Você aceitou a responsabilidade pelo processo ${protocolNumber} neste setor.`,
       });
 
       // Chamar o callback de atualização
@@ -137,45 +146,45 @@ const ProcessActionButtons = ({
     );
   }
   
-  // Se o processo não tem responsável, mostrar botão de aceitar
-  if (!hasResponsibleUser) {
+  // Se o usuário é o responsável principal ou responsável pelo setor, mostrar botões de movimento
+  if (isMainResponsible || hasResponsibleUser) {
     return (
       <div className="flex justify-center gap-2">
-        <Button
-          onClick={handleAcceptProcess}
-          disabled={isLoading || !user}
-          className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
-          size="sm"
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => moveProcessToPreviousDepartment(processId)} 
+          disabled={isFirstDepartment} 
+          title="Mover para departamento anterior"
+          className={isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}
         >
-          <CheckCircle className="h-4 w-4" />
-          {isLoading ? "Processando..." : "Aceitar Processo"}
+          <MoveLeft className="h-4 w-4" />
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => moveProcessToNextDepartment(processId)} 
+          disabled={isLastDepartment} 
+          title="Mover para próximo departamento"
+          className={isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}
+        >
+          <MoveRight className="h-4 w-4" />
         </Button>
       </div>
     );
   }
   
-  // Se o processo já tem responsável, mostrar botões de movimento
+  // Se o processo ainda não tem responsável no setor atual, mostrar botão de aceitar
   return (
     <div className="flex justify-center gap-2">
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        onClick={() => moveProcessToPreviousDepartment(processId)} 
-        disabled={isFirstDepartment} 
-        title="Mover para departamento anterior"
-        className={isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}
+      <Button
+        onClick={handleAcceptProcess}
+        disabled={isLoading || !user}
+        className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
+        size="sm"
       >
-        <MoveLeft className="h-4 w-4" />
-      </Button>
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        onClick={() => moveProcessToNextDepartment(processId)} 
-        disabled={isLastDepartment} 
-        title="Mover para próximo departamento"
-        className={isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}
-      >
-        <MoveRight className="h-4 w-4" />
+        <CheckCircle className="h-4 w-4" />
+        {isLoading ? "Processando..." : "Aceitar Processo"}
       </Button>
     </div>
   );

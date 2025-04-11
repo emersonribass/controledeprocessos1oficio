@@ -11,13 +11,15 @@ type AcceptProcessButtonProps = {
   protocolNumber: string;
   hasResponsibleUser: boolean;
   onAccept: () => void;
+  departmentId?: string;
 }
 
 const AcceptProcessButton = ({
   processId,
   protocolNumber,
   hasResponsibleUser,
-  onAccept
+  onAccept,
+  departmentId
 }: AcceptProcessButtonProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -36,36 +38,41 @@ const AcceptProcessButton = ({
     setIsLoading(true);
 
     try {
-      // Verificar se o processo já tem um responsável
-      const { data: processData, error: processError } = await supabase
-        .from('processos')
+      // Verificar se o processo já tem um responsável no setor atual
+      const { data: historico, error: historicoError } = await supabase
+        .from('processos_historico')
         .select('*')
-        .eq('id', processId)
+        .eq('processo_id', processId)
+        .eq('setor_id', departmentId || '')
+        .is('data_saida', null)
         .single();
 
-      if (processError) {
-        throw processError;
+      if (historicoError) {
+        console.error("Erro ao buscar histórico do processo:", historicoError);
       }
 
-      if (processData.usuario_responsavel) {
+      if (historico && historico.usuario_responsavel_setor) {
         toast({
           title: "Aviso",
-          description: "Este processo já possui um responsável.",
+          description: "Este processo já possui um responsável neste setor.",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 
-      // Atualizar o processo com o usuário responsável
-      const { error: updateError } = await supabase
-        .from('processos')
-        .update({ 
-          usuario_responsavel: user.id 
-        } as any)
-        .eq('id', processId);
+      // Atualizar o histórico do processo com o responsável do setor atual
+      if (historico) {
+        const { error: updateHistoricoError } = await supabase
+          .from('processos_historico')
+          .update({ 
+            usuario_responsavel_setor: user.id 
+          })
+          .eq('id', historico.id);
 
-      if (updateError) {
-        throw updateError;
+        if (updateHistoricoError) {
+          throw updateHistoricoError;
+        }
       }
 
       // Marcar notificações como respondidas
@@ -73,7 +80,7 @@ const AcceptProcessButton = ({
         .from('notificacoes')
         .update({ 
           respondida: true 
-        } as any)
+        })
         .eq('processo_id', processId)
         .eq('usuario_id', user.id);
 
@@ -83,7 +90,7 @@ const AcceptProcessButton = ({
 
       toast({
         title: "Sucesso",
-        description: `Você aceitou a responsabilidade pelo processo ${protocolNumber}.`,
+        description: `Você aceitou a responsabilidade pelo processo ${protocolNumber} no setor atual.`,
       });
 
       // Chamar o callback de atualização
@@ -102,7 +109,7 @@ const AcceptProcessButton = ({
     }
   };
 
-  // Se o processo já tem responsável, não mostrar o botão
+  // Se o processo já tem responsável no setor, não mostrar o botão
   if (hasResponsibleUser) {
     return null;
   }
