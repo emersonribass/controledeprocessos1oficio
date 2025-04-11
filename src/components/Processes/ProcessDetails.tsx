@@ -13,7 +13,7 @@ import ProcessNotFound from "./ProcessNotFound";
 const ProcessDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { processes, getDepartmentName, getProcessTypeName, moveProcessToNextDepartment, moveProcessToPreviousDepartment, isLoading, fetchProcesses } = useProcesses();
+  const { processes, getDepartmentName, getProcessTypeName, moveProcessToNextDepartment, moveProcessToPreviousDepartment, isLoading, refreshProcesses } = useProcesses();
   
   const {
     userNames,
@@ -31,7 +31,7 @@ const ProcessDetails = () => {
     if (!id) return;
     
     const loadProcess = async () => {
-      await fetchProcesses();
+      await refreshProcesses();
       await fetchResponsibleUser(id);
     };
     
@@ -67,7 +67,7 @@ const ProcessDetails = () => {
     if (isRefreshing) return;
     
     setIsRefreshing(true);
-    await fetchProcesses();
+    await refreshProcesses();
     if (id) {
       await fetchResponsibleUser(id);
     }
