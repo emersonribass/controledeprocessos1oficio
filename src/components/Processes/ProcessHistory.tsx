@@ -1,3 +1,4 @@
+
 import { HistoryEntry } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -84,7 +85,7 @@ const ProcessHistory = ({
           <Clock className="mr-2 h-5 w-5" />
           Histórico do Processo
         </CardTitle>
-        {isUserInCurrentDept && (
+        {isUserInCurrentDept && !hasResponsibleUser && (
           <AcceptProcessButton 
             processId={processId}
             protocolNumber={protocolNumber}
