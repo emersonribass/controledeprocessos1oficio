@@ -16,6 +16,7 @@ type ProcessCardProps = {
   sectorResponsibleUserName?: string;
   isMainResponsible?: boolean;
   isSectorResponsible?: boolean;
+  showLabels?: boolean;
 };
 
 const ProcessCard = ({
@@ -27,7 +28,8 @@ const ProcessCard = ({
   mainResponsibleUserName,
   sectorResponsibleUserName,
   isMainResponsible = false,
-  isSectorResponsible = false
+  isSectorResponsible = false,
+  showLabels = false
 }: ProcessCardProps) => {
   const [hasResponsibleUser, setHasResponsibleUser] = useState(!!mainResponsibleUserName || !!sectorResponsibleUserName);
 
@@ -70,6 +72,7 @@ const ProcessCard = ({
         isSectorResponsible={isSectorResponsible}
         currentDepartmentId={process.currentDepartment}
         status={process.status}
+        showLabels={showLabels}
       />
     </Card>
   );

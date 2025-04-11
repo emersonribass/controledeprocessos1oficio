@@ -16,6 +16,7 @@ type ProcessCardFooterProps = {
   isSectorResponsible?: boolean;
   currentDepartmentId?: string;
   status: string;
+  showLabels?: boolean;
 };
 
 const ProcessCardFooter = ({
@@ -30,7 +31,8 @@ const ProcessCardFooter = ({
   isMainResponsible = false,
   isSectorResponsible = false,
   currentDepartmentId,
-  status
+  status,
+  showLabels = false
 }: ProcessCardFooterProps) => {
   const { startProcess } = useProcesses();
   
@@ -52,6 +54,7 @@ const ProcessCardFooter = ({
         currentDepartmentId={currentDepartmentId}
         status={status}
         startProcess={startProcess}
+        showLabels={showLabels}
       />
     </CardFooter>
   );
