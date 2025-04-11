@@ -13,6 +13,7 @@ interface ProcessListProps {
     status?: string;
     processType?: string;
     search?: string;
+    showCompleted?: boolean;
   };
 }
 
@@ -39,14 +40,15 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     status?: string;
     processType?: string;
     search?: string;
-  }>(initialFilters);
+    showCompleted?: boolean;
+  }>({ ...initialFilters, showCompleted: false });
 
   const [sortField, setSortField] = useState<keyof Process>("protocolNumber");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
     if (Object.keys(initialFilters).length > 0) {
-      setFilters(initialFilters);
+      setFilters({ ...initialFilters, showCompleted: initialFilters.showCompleted ?? false });
     }
   }, [initialFilters]);
 

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,21 +7,26 @@ import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { Department } from "@/types";
 import { X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+
 interface ProcessFiltersProps {
   filters: {
     department?: string;
     status?: string;
     processType?: string;
     search?: string;
+    showCompleted?: boolean;
   };
   setFilters: React.Dispatch<React.SetStateAction<{
     department?: string;
     status?: string;
     processType?: string;
     search?: string;
+    showCompleted?: boolean;
   }>>;
   availableDepartments?: Department[];
 }
+
 const ProcessFilters = ({
   filters,
   setFilters,
@@ -64,6 +70,7 @@ const ProcessFilters = ({
     setSearch(value);
     debouncedSearch(value);
   };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       // Aplicar a busca imediatamente sem debounce ao pressionar Enter
@@ -73,28 +80,50 @@ const ProcessFilters = ({
       }));
     }
   };
+
   const handleClearFilters = () => {
-    setFilters({});
+    setFilters({showCompleted: false});
     setSearch("");
   };
+
   const handleSelectChange = (key: string, value: string) => {
     setFilters(prev => ({
       ...prev,
       [key]: value === "all" ? undefined : value
     }));
   };
+
+  const handleShowCompletedChange = (checked: boolean) => {
+    setFilters(prev => ({
+      ...prev,
+      showCompleted: checked
+    }));
+  };
+
   const deptsToShow = availableDepartments || departments;
-  const hasActiveFilters = Object.values(filters).some(v => v !== undefined) || search;
-  return <div className="space-y-3">
+  const hasActiveFilters = (Object.values(filters).some(v => v !== undefined && v !== false) || search) &&
+                          !(Object.keys(filters).length === 1 && filters.showCompleted === false);
+
+  return (
+    <div className="space-y-3">
       <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
         <div className="relative col-span-1 md:col-span-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-5 w-5 text-muted-foreground" />
-            <Input placeholder="Buscar por número de protocolo" value={search} onChange={handleSearchChange} onKeyDown={handleKeyDown} className="pl-10" />
+            <Input
+              placeholder="Buscar por número de protocolo"
+              value={search}
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
+              className="pl-10"
+            />
           </div>
         </div>
 
-        <Select value={filters.status || "all"} onValueChange={value => handleSelectChange("status", value)}>
+        <Select
+          value={filters.status || "all"}
+          onValueChange={value => handleSelectChange("status", value)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -107,37 +136,69 @@ const ProcessFilters = ({
           </SelectContent>
         </Select>
 
-        <Select value={filters.department || "all"} onValueChange={value => handleSelectChange("department", value)}>
+        <Select
+          value={filters.department || "all"}
+          onValueChange={value => handleSelectChange("department", value)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Setor" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {deptsToShow.map(department => <SelectItem key={department.id} value={department.id}>
+            {deptsToShow.map(department => (
+              <SelectItem key={department.id} value={department.id}>
                 {department.name}
-              </SelectItem>)}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
       <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
-        <Select value={filters.processType || "all"} onValueChange={value => handleSelectChange("processType", value)}>
+        <Select
+          value={filters.processType || "all"}
+          onValueChange={value => handleSelectChange("processType", value)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Tipo de Processo" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {processTypes.map(type => <SelectItem key={type.id} value={type.id}>
+            {processTypes.map(type => (
+              <SelectItem key={type.id} value={type.id}>
                 {type.name}
-              </SelectItem>)}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
-        {hasActiveFilters && <Button variant="outline" onClick={handleClearFilters} className="flex items-center gap-1 w-fit h-fit bg-green-600 hover:bg-green-500 px-[10px] text-white">
+        <div className="flex items-center space-x-2">
+          <Checkbox 
+            id="show-completed" 
+            checked={filters.showCompleted || false}
+            onCheckedChange={handleShowCompletedChange}
+          />
+          <label 
+            htmlFor="show-completed" 
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Exibir processos concluídos
+          </label>
+        </div>
+
+        {hasActiveFilters && (
+          <Button
+            variant="outline"
+            onClick={handleClearFilters}
+            className="flex items-center gap-1 w-fit h-fit bg-green-600 hover:bg-green-500 px-[10px] text-white"
+          >
             <X className="h-4 w-4" />
             Limpar filtros
-          </Button>}
+          </Button>
+        )}
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default ProcessFilters;

@@ -11,6 +11,7 @@ export const useProcessFilters = (processes: Process[]) => {
       status?: string;
       processType?: string;
       search?: string;
+      showCompleted?: boolean;
     },
     processesToFilter?: Process[]
   ) => {
@@ -31,6 +32,11 @@ export const useProcessFilters = (processes: Process[]) => {
         else if (!user.departments.includes(process.currentDepartment)) {
           return false;
         }
+      }
+
+      // Ocultar processos concluídos se showCompleted for false
+      if (filters.showCompleted === false && process.status === 'completed') {
+        return false;
       }
 
       // Verificar filtro de departamento
