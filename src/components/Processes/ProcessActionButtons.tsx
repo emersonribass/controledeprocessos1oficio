@@ -51,7 +51,8 @@ const ProcessActionButtons = ({
     );
   }
   
-  // Mostra botões de navegação se o usuário é responsável (principal ou setor)
+  // Sempre mostrar botões de navegação se o usuário é responsável (principal ou setor),
+  // independente do status do processo
   if (isMainResponsible || isSectorResponsible) {
     return (
       <div className="flex justify-center gap-2">
@@ -66,7 +67,8 @@ const ProcessActionButtons = ({
     );
   }
   
-  // Se o processo está em andamento e não tem responsável, mostrar botão de aceitar
+  // Se o processo está em andamento (não é concluído) e não tem responsável, 
+  // mostrar botão de aceitar
   if (status === PROCESS_STATUS.PENDING && !hasResponsibleUser) {
     return (
       <div className="flex justify-center gap-2">
