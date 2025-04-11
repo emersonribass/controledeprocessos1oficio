@@ -15,23 +15,17 @@ export const useLogout = ({ setUser, setSession, setIsLoading }: UseLogoutProps)
     try {
       setIsLoading(true);
 
-      // Verificar se existe uma sessão antes de tentar fazer logout
+      // Verifica se existe uma sessão antes de tentar fazer logout
       const { data: sessionData } = await supabase.auth.getSession();
       
-      // Independentemente de haver sessão válida ou não, limpa o estado local primeiro
-      setUser(null);
-      setSession(null);
-      
       if (!sessionData.session) {
-        // Se não há sessão, apenas limpar qualquer vestígio de autenticação
-        localStorage.removeItem('supabase.auth.token');
-        localStorage.removeItem('sb-vwijryhqngyzgpgekgek-auth-token');
-        
+        // Se não há sessão, apenas limpa o estado local
+        setUser(null);
+        setSession(null);
         toast.info("Sessão encerrada", {
           duration: 3000,
           important: true,
         });
-        
         setIsLoading(false);
         return;
       }
@@ -41,17 +35,14 @@ export const useLogout = ({ setUser, setSession, setIsLoading }: UseLogoutProps)
       
       if (error) {
         console.error("Erro ao fazer logout:", error);
-        
-        // Mesmo com erro, limpar o localStorage para garantir que o usuário seja deslogado
-        localStorage.removeItem('supabase.auth.token');
-        localStorage.removeItem('sb-vwijryhqngyzgpgekgek-auth-token');
-        
-        toast.warning("Logout realizado com notificação de erro", {
-          description: "Sua sessão foi encerrada, mas ocorreu um erro no processo.",
+        toast.error("Erro ao encerrar sessão", {
           duration: 4000,
           important: true,
         });
       } else {
+        // Limpar o estado local mesmo se houver erro no supabase.auth.signOut()
+        setUser(null);
+        setSession(null);
         toast.info("Sessão encerrada com sucesso", {
           duration: 3000,
           important: true,
@@ -60,15 +51,7 @@ export const useLogout = ({ setUser, setSession, setIsLoading }: UseLogoutProps)
       
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
-      
-      // Mesmo com erro, limpar o estado e localStorage para garantir logout efetivo
-      setUser(null);
-      setSession(null);
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.removeItem('sb-vwijryhqngyzgpgekgek-auth-token');
-      
-      toast.warning("Sessão encerrada com erro", {
-        description: "Sua sessão foi encerrada, mas ocorreu um erro no processo.",
+      toast.error("Erro ao encerrar sessão", {
         duration: 4000,
         important: true,
       });

@@ -1,11 +1,9 @@
-
 import { useEffect, useState } from "react";
 import ProcessList from "@/components/Processes/ProcessList";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, ArrowUpRight, Clock } from "lucide-react";
+import { PlusCircle, ArrowUpRight } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
-
 const ProcessesPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -14,7 +12,6 @@ const ProcessesPage = () => {
     isAdmin
   } = useAuth();
   const [initialFilters, setInitialFilters] = useState({});
-
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const statusParam = searchParams.get('status');
@@ -23,22 +20,13 @@ const ProcessesPage = () => {
         status: statusParam
       });
     } else {
-      // Por padrão, excluir os processos concluídos
-      setInitialFilters({
-        excludeCompleted: true
-      });
+      // Quando não há status na URL, resetamos os filtros
+      setInitialFilters({});
     }
   }, [location.search]);
-
   const handleViewNonStarted = () => {
     navigate("/processes?status=not_started");
   };
-
-  const handleViewInProgress = () => {
-    // Limpa filtros específicos e mantém apenas excludeCompleted
-    navigate("/processes");
-  };
-
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
@@ -48,13 +36,7 @@ const ProcessesPage = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          {/* Botão para visualizar processos em andamento */}
-          <Button onClick={handleViewInProgress} variant="outline" className="flex items-center gap-1 px-[10px] text-sm text-center bg-blue-600 hover:bg-blue-500 text-white">
-            <Clock className="h-5 w-5" />
-            Processos em andamento
-          </Button>
-          
-          {/* Botão para visualizar processos não iniciados */}
+          {/* Botão para visualizar processos não iniciados - disponível para todos os usuários */}
           <Button onClick={handleViewNonStarted} variant="outline" className="flex items-center gap-1 px-[10px] text-sm text-center bg-green-600 hover:bg-green-500 text-white">
             <ArrowUpRight className="h-5 w-5" />
             Processos não iniciados
@@ -71,5 +53,4 @@ const ProcessesPage = () => {
       <ProcessList initialFilters={initialFilters} />
     </div>;
 };
-
 export default ProcessesPage;

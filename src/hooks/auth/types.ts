@@ -1,23 +1,23 @@
 
+import { User as SupabaseUser, Session } from "@supabase/supabase-js";
 import { User } from "@/types";
-import { Session } from "@supabase/supabase-js";
 
+// Adicionando o tipo para o retorno da função login
 export type LoginResult = {
   user: User | null;
   session: Session | null;
-  weakPassword: string | null;
-  error: Error | null;
+  weakPassword?: any | null;
 };
 
 export type AuthContextType = {
   user: User | null;
-  session: Session | null;
-  isLoading: boolean;
-  authInitialized: boolean;
-  isAdmin: (email: string) => Promise<boolean>;
   login: (email: string, password: string) => Promise<LoginResult>;
-  logout: () => Promise<void>;
-  setUser: (user: User | null) => void;
-  setSession: (session: Session | null) => void;
-  setIsLoading: (isLoading: boolean) => void;
+  logout: () => void;
+  isLoading: boolean;
+  session: Session | null;
+  isAdmin: (email: string) => Promise<boolean>;
 };
+
+// Lista de emails de administradores
+export const adminEmails = ["admin@nottar.com", "emerson.ribas@live.com"];
+

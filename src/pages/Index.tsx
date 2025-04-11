@@ -5,22 +5,13 @@ import { useAuth } from "@/hooks/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
-  const { user, isLoading, authInitialized } = useAuth();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
     // Evitar redirecionamentos múltiplos
-    if (hasRedirected) {
-      console.log("Index: Já redirecionou, ignorando");
-      return;
-    }
-    
-    // Aguardar a inicialização completa da autenticação
-    if (!authInitialized) {
-      console.log("Index: Autenticação ainda não inicializada");
-      return;
-    }
+    if (hasRedirected) return;
     
     // Se ainda estiver carregando, não faça nada
     if (isLoading) {
@@ -38,15 +29,19 @@ const Index = () => {
       setHasRedirected(true);
       navigate("/login", { replace: true });
     }
-  }, [user, isLoading, navigate, hasRedirected, authInitialized]);
+  }, [user, isLoading, navigate, hasRedirected]);
 
   // Mostrar tela de carregamento enquanto verifica autenticação
-  return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
-      <p className="text-muted-foreground">Carregando...</p>
-    </div>
-  );
+  if (isLoading || !hasRedirected) {
+    return (
+      <div className="h-screen w-screen flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mb-4"></div>
+        <p className="text-muted-foreground">Carregando...</p>
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default Index;

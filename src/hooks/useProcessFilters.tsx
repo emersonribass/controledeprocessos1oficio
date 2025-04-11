@@ -11,7 +11,6 @@ export const useProcessFilters = (processes: Process[]) => {
       status?: string;
       processType?: string;
       search?: string;
-      excludeCompleted?: boolean;
     },
     processesToFilter?: Process[]
   ) => {
@@ -19,16 +18,8 @@ export const useProcessFilters = (processes: Process[]) => {
     const listToFilter = processesToFilter || processes;
     
     return listToFilter.filter((process) => {
-      // Excluir processos concluídos se o filtro excludeCompleted estiver ativo
-      if (filters.excludeCompleted && process.status === 'completed') {
-        return false;
-      }
-
       // Verificar se o usuário tem permissão para ver este processo
-      // Administradores podem ver todos os processos
-      if (user && user.email && isAdmin(user.email)) {
-        // Administrador pode ver tudo, apenas aplica os filtros específicos
-      } else if (user && !isAdmin(user.email) && user.departments?.length > 0) {
+      if (user && !isAdmin(user.email) && user.departments?.length > 0) {
         // Para processos não iniciados, apenas usuários do setor 1 (Atendimento) podem ver
         if (process.status === 'not_started') {
           // Se o usuário não tem o setor 1 em seus setores atribuídos, não mostrar
