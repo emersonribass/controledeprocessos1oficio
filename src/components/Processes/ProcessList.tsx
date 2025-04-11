@@ -34,6 +34,11 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
 
   const { user, isAdmin } = useAuth();
   
+  // Log para debug
+  console.log("ProcessList - Usuário atual:", user?.email);
+  console.log("ProcessList - É admin?", user?.email ? isAdmin(user.email) : false);
+  console.log("ProcessList - Total de processos disponíveis:", processes.length);
+  
   const [filters, setFilters] = useState<{
     department?: string;
     status?: string;
@@ -51,6 +56,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   }, [initialFilters]);
 
   const filteredProcesses = filterProcesses(filters, processes);
+  console.log("ProcessList - Processos filtrados:", filteredProcesses.length);
 
   const sortedProcesses = [...filteredProcesses].sort((a, b) => {
     // Primeiro, ordenar por status: processos iniciados (não 'not_started') vêm primeiro
@@ -100,9 +106,12 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     );
   }
 
-  const availableDepartments = isAdmin(user?.email || "") || !user?.departments?.length 
+  // Ajuste para garantir que administradores vejam todos os departamentos
+  const availableDepartments = user?.email && isAdmin(user.email) 
     ? departments 
-    : departments.filter(dept => user?.departments.includes(dept.id));
+    : user?.departments?.length 
+      ? departments.filter(dept => user?.departments.includes(dept.id))
+      : [];
 
   return (
     <div>
