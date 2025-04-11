@@ -5,7 +5,7 @@ import { ClipboardCheck, AlertTriangle, BarChart, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/auth";
-import { Process } from "@/types";
+import { Process, PROCESS_STATUS } from "@/types";
 
 const DashboardSummary = () => {
   const { processes, filterProcesses } = useProcesses();
@@ -19,10 +19,10 @@ const DashboardSummary = () => {
   const totalProcesses = userProcesses.length;
   
   // Processos em andamento: aqueles que estão no setor atual do usuário
-  const pendingProcesses = userProcesses.filter(p => p.status === "pending").length;
+  const pendingProcesses = userProcesses.filter(p => p.status === PROCESS_STATUS.PENDING).length;
   
   // Processos atrasados: aqueles com status "overdue" no setor atual
-  const overdueProcesses = userProcesses.filter(p => p.status === "overdue").length;
+  const overdueProcesses = userProcesses.filter(p => p.status === PROCESS_STATUS.OVERDUE).length;
   
   // Processos concluídos: aqueles que foram processados pelo setor do usuário
   // (têm uma entrada no histórico com o setor do usuário e data de saída não nula)

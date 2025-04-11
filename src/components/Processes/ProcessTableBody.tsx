@@ -1,7 +1,7 @@
 
 import { TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { Department, Process, ProcessType } from "@/types";
+import { Department, Process, ProcessType, PROCESS_STATUS } from "@/types";
 import ProcessTypePicker from "./ProcessTypePicker";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
@@ -54,9 +54,9 @@ const ProcessTableBody = ({
 
   // Função para definir a cor de fundo com base no status
   const getRowBackgroundColor = (status: string) => {
-    if (status === "completed") return "bg-green-200";
-    if (status === "overdue") return "bg-red-200";
-    if (status === "pending") return "bg-blue-200";
+    if (status === PROCESS_STATUS.COMPLETED) return "bg-green-200";
+    if (status === PROCESS_STATUS.OVERDUE) return "bg-red-200";
+    if (status === PROCESS_STATUS.PENDING) return "bg-blue-200";
     return "";
   };
 
@@ -110,7 +110,7 @@ const ProcessTableBody = ({
 
             // Verifica se o departamento está com prazo expirado
             let isOverdue = false;
-            if (isActive && process.status !== "not_started") {
+            if (isActive && process.status !== PROCESS_STATUS.NOT_STARTED) {
               if (dept.timeLimit > 0 && entryDate) {
                 const entryDateTime = new Date(entryDate).getTime();
                 const deadlineTime = entryDateTime + dept.timeLimit * 24 * 60 * 60 * 1000;
@@ -129,7 +129,7 @@ const ProcessTableBody = ({
                   showDate={isActive || isPastDept}
                   isDepartmentOverdue={isActive && isOverdue}
                   departmentTimeLimit={dept.timeLimit}
-                  isProcessStarted={process.status !== "not_started"}
+                  isProcessStarted={process.status !== PROCESS_STATUS.NOT_STARTED}
                 />
               </TableCell>
             );

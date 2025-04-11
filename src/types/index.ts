@@ -1,3 +1,4 @@
+
 export interface Department {
   id: string;
   name: string;
@@ -8,6 +9,8 @@ export interface Department {
 export interface ProcessType {
   id: string;
   name: string;
+  description?: string;
+  active?: boolean;
 }
 
 export interface HistoryEntry {
@@ -21,6 +24,16 @@ export interface HistoryEntry {
   comments?: string;
 }
 
+// Constants for process status
+export const PROCESS_STATUS = {
+  NOT_STARTED: "Não iniciado",
+  PENDING: "Em andamento",
+  COMPLETED: "Concluído",
+  OVERDUE: "Atrasado"
+} as const;
+
+export type ProcessStatus = typeof PROCESS_STATUS[keyof typeof PROCESS_STATUS];
+
 export interface Process {
   id: string;
   protocolNumber: string;
@@ -28,11 +41,12 @@ export interface Process {
   currentDepartment: string;
   startDate: string;
   expectedEndDate: string;
-  status: 'Não iniciado' | 'Em andamento' | 'Concluído' | 'Atrasado';
+  status: ProcessStatus;
   description?: string;
   history: HistoryEntry[];
   attachments?: string[];
   responsibleUser?: string | null;
+  userId?: string;
 }
 
 export interface User {
@@ -41,4 +55,14 @@ export interface User {
   email: string;
   departments: string[];
   isAdmin: boolean;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  processId: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  respondida?: boolean;
 }

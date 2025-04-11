@@ -1,4 +1,5 @@
-import { ProcessHistory as ProcessHistoryType } from "@/types";
+
+import { HistoryEntry } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Clock, User } from "lucide-react";
@@ -12,7 +13,7 @@ import AcceptProcessButton from "./AcceptProcessButton";
 import { useAuth } from "@/hooks/auth";
 
 type ProcessHistoryProps = {
-  history: ProcessHistoryType[];
+  history: HistoryEntry[];
   getDepartmentName: (id: string) => string;
   getUserName?: (id: string) => string;
   processId: string;

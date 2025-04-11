@@ -1,175 +1,65 @@
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useState, useEffect } from "react";
+import { useNotificationsService } from "@/hooks/useNotificationsService";
 import { Notification } from "@/types";
 import { useAuth } from "@/hooks/auth";
-import { useNotificationsService } from "@/hooks/useNotificationsService";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
-type NotificationsContextType = {
-  notifications: Notification[];
-  unreadCount: number;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
-};
-
-const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
-
-export const NotificationsProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const { 
-    fetchUserNotifications, 
-    markNotificationAsRead,
-    isLoading 
-  } = useNotificationsService();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const { fetchNotifications, markAsRead, markAllAsRead } = useNotificationsService();
+  const { user } = useAuth();
 
-  // Função para buscar notificações do usuário atual
   const loadNotifications = async () => {
-    if (user && user.id) {
-      try {
-        const userNotifications = await fetchUserNotifications(user.id);
-        setNotifications(userNotifications);
-      } catch (error) {
-        console.error("Erro ao carregar notificações:", error);
-      }
+    setIsLoading(true);
+    try {
+      const data = await fetchNotifications();
+      setNotifications(data);
+      setUnreadCount(data.filter(n => !n.read).length);
+    } catch (error) {
+      console.error("Erro ao carregar notificações:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Carregar notificações quando o usuário estiver autenticado
   useEffect(() => {
     if (user) {
       loadNotifications();
-
-      // Configurar canal de tempo real para atualizações de notificações
-      const channel = supabase
-        .channel('notificacoes-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'notificacoes',
-            filter: `usuario_id=eq.${user.id}`
-          },
-          () => {
-            // Recarregar notificações quando houver mudanças
-            loadNotifications();
-          }
-        )
-        .subscribe();
-
-      // Limpar inscrição ao desmontar
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    } else {
-      setNotifications([]);
+      
+      // Atualizar notificações a cada 5 minutos
+      const interval = setInterval(loadNotifications, 5 * 60 * 1000);
+      return () => clearInterval(interval);
     }
   }, [user]);
 
-  const unreadCount = notifications.filter((notification) => !notification.read).length;
-
-  const markAsRead = async (id: string) => {
-    // Atualizar localmente para uma resposta imediata da UI
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === id
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
-
-    // Atualizar no banco de dados
-    if (user) {
-      try {
-        const success = await markNotificationAsRead(id);
-        if (!success) {
-          // Reverter alteração local em caso de erro
-          await loadNotifications();
-        }
-      } catch (error) {
-        console.error("Erro ao marcar notificação como lida:", error);
-        // Reverter alteração local em caso de erro
-        await loadNotifications();
-      }
+  const handleMarkAsRead = async (id: string) => {
+    const success = await markAsRead(id);
+    if (success) {
+      setNotifications(prev => 
+        prev.map(n => n.id === id ? { ...n, read: true } : n)
+      );
+      setUnreadCount(prev => prev - 1);
     }
   };
 
-  const markAllAsRead = async () => {
-    // Atualizar localmente para uma resposta imediata da UI
-    setNotifications((prev) =>
-      prev.map((notification) => ({ ...notification, read: true }))
-    );
-
-    // Atualizar todas as notificações no banco de dados
-    if (user) {
-      try {
-        const unreadNotifications = notifications.filter(notification => !notification.read);
-        
-        if (unreadNotifications.length === 0) {
-          return; // Nenhuma notificação não lida para atualizar
-        }
-        
-        // Atualizar cada notificação não lida no banco de dados
-        const promises = unreadNotifications.map(notification => 
-          markNotificationAsRead(notification.id)
-        );
-        
-        const results = await Promise.allSettled(promises);
-        
-        // Verificar se houve erros e mostrar toast apropriado
-        const failures = results.filter(result => result.status === 'rejected').length;
-        
-        if (failures > 0) {
-          console.error(`${failures} notificações não puderam ser marcadas como lidas`);
-          toast({
-            title: "Aviso",
-            description: `${failures} notificações não puderam ser marcadas como lidas.`,
-            variant: "destructive"
-          });
-          
-          // Recarregar notificações para garantir sincronização
-          await loadNotifications();
-        } else if (unreadNotifications.length > 0) {
-          toast({
-            title: "Sucesso",
-            description: "Todas as notificações foram marcadas como lidas.",
-            variant: "default"
-          });
-        }
-      } catch (error) {
-        console.error("Erro ao marcar todas notificações como lidas:", error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível marcar todas as notificações como lidas.",
-          variant: "destructive"
-        });
-        // Reverter alterações locais em caso de erro
-        await loadNotifications();
-      }
+  const handleMarkAllAsRead = async () => {
+    const success = await markAllAsRead();
+    if (success) {
+      setNotifications(prev => 
+        prev.map(n => ({ ...n, read: true }))
+      );
+      setUnreadCount(0);
     }
   };
 
-  return (
-    <NotificationsContext.Provider
-      value={{ 
-        notifications, 
-        unreadCount, 
-        markAsRead, 
-        markAllAsRead 
-      }}
-    >
-      {children}
-    </NotificationsContext.Provider>
-  );
-};
-
-export const useNotifications = () => {
-  const context = useContext(NotificationsContext);
-  if (context === undefined) {
-    throw new Error("useNotifications must be used within a NotificationsProvider");
-  }
-  return context;
+  return {
+    notifications,
+    unreadCount,
+    isLoading,
+    refresh: loadNotifications,
+    markAsRead: handleMarkAsRead,
+    markAllAsRead: handleMarkAllAsRead
+  };
 };

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useProcesses } from "@/hooks/useProcesses";
-import { Process } from "@/types";
+import { Process, PROCESS_STATUS } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import ProcessNotStartedList from "./ProcessNotStartedList";
@@ -26,7 +26,7 @@ const ProcessSettingsGeneral = () => {
   useEffect(() => {
     // Usar filterProcesses para aplicar as regras de permissão e então filtrar os não iniciados
     const filteredProcesses = filterProcesses({});
-    const notStarted = filteredProcesses.filter(p => p.status === 'not_started');
+    const notStarted = filteredProcesses.filter(p => p.status === PROCESS_STATUS.NOT_STARTED);
     setNotStartedProcesses(notStarted);
   }, [processes, filterProcesses]);
   

@@ -1,185 +1,110 @@
 
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/auth";
 import { Notification } from "@/types";
 
 export const useNotificationsService = () => {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
-  // Buscar notificações para um usuário específico
-  const fetchUserNotifications = async (userId: string): Promise<Notification[]> => {
-    setIsLoading(true);
+  const fetchNotifications = async (): Promise<Notification[]> => {
     try {
-      // Aqui usamos a notação de string para a tabela que não está no types.ts do Supabase
+      if (!user) return [];
+
       const { data, error } = await supabase
         .from('notificacoes')
         .select('*')
-        .eq('usuario_id', userId)
+        .eq('usuario_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        throw error;
-      }
-
-      // Mapear os dados para o nosso tipo Notification
-      const notifications: Notification[] = data.map(n => ({
-        id: n.id,
-        userId: n.usuario_id,
-        processId: n.processo_id,
-        message: n.mensagem,
-        read: n.lida,
-        createdAt: n.created_at,
-        type: n.tipo,
-        responded: n.respondida
-      }));
-
-      return notifications;
+      if (error) throw error;
+      
+      return data || [];
+      
     } catch (error) {
       console.error('Erro ao buscar notificações:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar as notificações.",
-        variant: "destructive"
-      });
       return [];
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Marcar notificação como lida
-  const markNotificationAsRead = async (notificationId: string): Promise<boolean> => {
+  const markAsRead = async (notificationId: string) => {
     try {
       const { error } = await supabase
         .from('notificacoes')
         .update({ lida: true })
         .eq('id', notificationId);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
+      
       return true;
     } catch (error) {
       console.error('Erro ao marcar notificação como lida:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível marcar a notificação como lida.",
-        variant: "destructive"
-      });
       return false;
     }
   };
 
-  // Marcar notificação como respondida
-  const markNotificationAsResponded = async (notificationId: string): Promise<boolean> => {
+  const markAllAsRead = async () => {
     try {
+      if (!user) return false;
+
       const { error } = await supabase
         .from('notificacoes')
-        .update({ respondida: true })
-        .eq('id', notificationId);
+        .update({ lida: true })
+        .eq('usuario_id', user.id)
+        .eq('lida', false);
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
+      
       return true;
     } catch (error) {
-      console.error('Erro ao marcar notificação como respondida:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível marcar a notificação como respondida.",
-        variant: "destructive"
-      });
+      console.error('Erro ao marcar todas notificações como lidas:', error);
       return false;
     }
   };
 
-  // Criar uma nova notificação
-  const createNotification = async (
-    processId: string, 
-    userId: string, 
-    message: string,
-    type: string = 'movimento'
-  ): Promise<boolean> => {
+  const notifyDepartmentUsers = async (processId: string, departmentId: string, message: string) => {
     try {
-      // Usando a notação de string para evitar problemas de tipo
-      const { error } = await supabase
-        .from('notificacoes')
-        .insert({
-          processo_id: processId,
-          usuario_id: userId,
-          mensagem: message,
-          tipo: type,
-          lida: false,
-          respondida: false
-        });
-
-      if (error) {
-        throw error;
-      }
-      return true;
-    } catch (error) {
-      console.error('Erro ao criar notificação:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível criar a notificação.",
-        variant: "destructive"
-      });
-      return false;
-    }
-  };
-
-  // Nova função para notificar todos os usuários de um departamento
-  const notifyDepartmentUsers = async (
-    processId: string,
-    departmentId: string,
-    message: string,
-    type: string = 'movimento'
-  ): Promise<boolean> => {
-    try {
-      // Primeiro, buscar todos os usuários associados ao departamento
+      // Buscar todos os usuários do departamento
       const { data: users, error: usersError } = await supabase
         .from('usuarios')
         .select('id')
         .filter('setores_atribuidos', 'cs', `{${departmentId}}`);
-      
-      if (usersError) {
-        throw usersError;
-      }
 
-      // Se não houver usuários no departamento, não há notificações para enviar
+      if (usersError) throw usersError;
+      
       if (!users || users.length === 0) {
-        console.log(`Nenhum usuário encontrado para o setor ${departmentId}`);
+        console.warn(`Nenhum usuário encontrado para o departamento ${departmentId}`);
         return true;
       }
 
       // Criar notificações para cada usuário do departamento
-      const notificationPromises = users.map(user => 
-        createNotification(processId, user.id, message, type)
-      );
-      
-      // Aguardar todas as notificações serem criadas
-      await Promise.all(notificationPromises);
-      
+      const notifications = users.map(user => ({
+        usuario_id: user.id,
+        processo_id: processId,
+        mensagem: message,
+        tipo: 'movimento',
+        lida: false,
+        respondida: false
+      }));
+
+      const { error: notificationsError } = await supabase
+        .from('notificacoes')
+        .insert(notifications);
+
+      if (notificationsError) throw notificationsError;
+
       return true;
     } catch (error) {
-      console.error('Erro ao notificar usuários do departamento:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar notificações para os usuários do setor.",
-        variant: "destructive"
-      });
+      console.error('Erro ao enviar notificações:', error);
       return false;
     }
   };
 
   return {
-    fetchUserNotifications,
-    markNotificationAsRead,
-    markNotificationAsResponded,
-    createNotification,
-    notifyDepartmentUsers,
-    isLoading
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+    notifyDepartmentUsers
   };
 };

@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Process } from "@/types";
+import { Process, PROCESS_STATUS } from "@/types";
 import { Department } from "@/types";
 import { useNotificationsService } from "@/hooks/useNotificationsService";
 

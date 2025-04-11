@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useProcesses } from "@/hooks/useProcesses";
-import { Process } from "@/types";
+import { Process, PROCESS_STATUS } from "@/types";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
 import { Loader2 } from "lucide-react";
@@ -66,11 +66,11 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const filteredProcesses = filterProcesses(filters, processes);
 
   const sortedProcesses = [...filteredProcesses].sort((a, b) => {
-    // Primeiro, ordenar por status: processos iniciados (não 'not_started') vêm primeiro
-    if (a.status === 'not_started' && b.status !== 'not_started') {
+    // Primeiro, ordenar por status: processos iniciados (não 'Não iniciado') vêm primeiro
+    if (a.status === PROCESS_STATUS.NOT_STARTED && b.status !== PROCESS_STATUS.NOT_STARTED) {
       return 1; // a (não iniciado) vem depois
     }
-    if (a.status !== 'not_started' && b.status === 'not_started') {
+    if (a.status !== PROCESS_STATUS.NOT_STARTED && b.status === PROCESS_STATUS.NOT_STARTED) {
       return -1; // a (iniciado) vem antes
     }
     

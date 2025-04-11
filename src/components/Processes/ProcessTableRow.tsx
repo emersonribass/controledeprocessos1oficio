@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { Department, Process, ProcessType } from "@/types";
+import { Department, Process, ProcessType, PROCESS_STATUS } from "@/types";
 import { cn } from "@/lib/utils";
 import ProcessStatusBadge from "./ProcessStatusBadge";
 import ProcessTypePicker from "./ProcessTypePicker";
@@ -39,7 +39,7 @@ const ProcessTableRow = ({
 }: ProcessTableRowProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [hasResponsibleUser, setHasResponsibleUser] = useState(!!process.responsibleUserId);
+  const [hasResponsibleUser, setHasResponsibleUser] = useState(!!process.responsibleUser);
 
   // Efeito para buscar informações atualizadas sobre o responsável do processo
   useEffect(() => {
@@ -69,10 +69,10 @@ const ProcessTableRow = ({
     setHasResponsibleUser(true);
   };
 
-  const isNotStarted = process.status === "not_started";
-  const isCompleted = process.status === "completed";
-  const isOverdue = process.status === "overdue";
-  const isPending = process.status === "pending";
+  const isNotStarted = process.status === PROCESS_STATUS.NOT_STARTED;
+  const isCompleted = process.status === PROCESS_STATUS.COMPLETED;
+  const isOverdue = process.status === PROCESS_STATUS.OVERDUE;
+  const isPending = process.status === PROCESS_STATUS.PENDING;
   const isProcessStarted = !isNotStarted;
 
   const sortedDepartments = [...departments]
