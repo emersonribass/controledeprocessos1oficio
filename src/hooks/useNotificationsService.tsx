@@ -20,7 +20,16 @@ export const useNotificationsService = () => {
 
       if (error) throw error;
       
-      return data || [];
+      // Mapeando corretamente os campos da tabela para o tipo Notification
+      return data ? data.map(item => ({
+        id: item.id,
+        userId: item.usuario_id,
+        processId: item.processo_id,
+        message: item.mensagem,
+        read: item.lida,
+        createdAt: item.created_at,
+        respondida: item.respondida
+      })) : [];
       
     } catch (error) {
       console.error('Erro ao buscar notificações:', error);

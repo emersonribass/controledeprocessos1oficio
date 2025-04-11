@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Process, Department } from "@/types";
+import { Process, Department, PROCESS_STATUS, HistoryEntry } from "@/types";
 import { toast } from "sonner";
 
 export const useProcessOperations = (
@@ -39,21 +39,25 @@ export const useProcessOperations = (
             };
           }
           
+          // Adicionando as propriedades faltantes processId e userName
           history.push({
+            processId: process.id,
             departmentId: nextDept.id,
             entryDate: new Date().toISOString(),
-            exitDate: null,
+            exitDate: undefined,
             userId: "1",
+            userName: "Sistema"
           });
           
           toast.success(`Processo movido para ${nextDept.name}`);
           
           const isCompleted = nextDept.name === "Concluído(a)";
+          const newStatus = isCompleted ? PROCESS_STATUS.COMPLETED : process.status;
           
           return {
             ...process,
             currentDepartment: nextDept.id,
-            status: isCompleted ? "completed" : process.status,
+            status: newStatus,
             history,
           };
         }
@@ -93,19 +97,25 @@ export const useProcessOperations = (
             };
           }
           
+          // Adicionando as propriedades faltantes processId e userName
           history.push({
+            processId: process.id,
             departmentId: prevDept.id,
             entryDate: new Date().toISOString(),
-            exitDate: null,
+            exitDate: undefined,
             userId: "1",
+            userName: "Sistema"
           });
           
           toast.success(`Processo devolvido para ${prevDept.name}`);
           
+          // Verificando o status usando PROCESS_STATUS ao invés de string direta
+          const newStatus = process.status === PROCESS_STATUS.COMPLETED ? PROCESS_STATUS.PENDING : process.status;
+          
           return {
             ...process,
             currentDepartment: prevDept.id,
-            status: process.status === "completed" ? "pending" : process.status,
+            status: newStatus,
             history,
           };
         }

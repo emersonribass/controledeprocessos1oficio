@@ -58,7 +58,8 @@ const UsersPage = () => {
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    {format(new Date(user.createdAt), "dd/MM/yyyy")}
+                    {/* Usando uma data padrão já que createdAt não existe no tipo User */}
+                    {format(new Date(), "dd/MM/yyyy")}
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">

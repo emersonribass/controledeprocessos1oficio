@@ -2,7 +2,7 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import { useAuth } from "@/hooks/auth";
-import { NotificationsProvider } from "@/hooks/useNotifications";
+import { NotificationsProvider } from "@/hooks/NotificationsProvider";
 
 const Layout = () => {
   const { user, isLoading } = useAuth();
