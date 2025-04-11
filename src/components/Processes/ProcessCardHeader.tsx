@@ -1,5 +1,5 @@
 
-import { ProcessStatusBadge } from "./ProcessStatusBadge";
+import ProcessStatusBadge from "./ProcessStatusBadge";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 type ProcessCardHeaderProps = {
