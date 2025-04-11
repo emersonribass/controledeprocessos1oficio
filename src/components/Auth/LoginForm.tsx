@@ -69,7 +69,7 @@ const LoginForm = () => {
     setShowPassword(!showPassword);
   };
   return <Card className="w-[380px] shadow-lg">
-      <CardContent className="pt-6 px-6 py-0">
+      <CardContent className="pt-6 px-6 py-[14px]">
         <div className="flex flex-col items-center mb-6">
           <img src="/Logo Nottar vertical.png" alt="Logo Nottar" className="h-32 w-auto" />
           <h1 className="text-xl font-bold text-center mt-4">Controle de Processos</h1>
@@ -122,9 +122,7 @@ const LoginForm = () => {
           </Button>
         </form>
 
-        <div className="mt-6 text-sm text-center text-muted-foreground my-[6px]">
-          Sistema de Controle de Processos
-        </div>
+        
       </CardContent>
     </Card>;
 };
