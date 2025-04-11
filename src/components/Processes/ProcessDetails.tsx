@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProcesses } from "@/hooks/useProcesses";
@@ -45,17 +44,14 @@ const ProcessDetails = () => {
     setProcess(foundProcess || null);
     
     if (foundProcess) {
-      // Extrair IDs de usuários do histórico
       const userIds = foundProcess.history
         .map(h => h.userId)
         .filter(userId => userId && userId.length > 0);
       
-      // Adicionar o ID do usuário responsável, se existir
       if (responsibleUser) {
         userIds.push(responsibleUser);
       }
       
-      // Remover duplicatas e buscar nomes de usuários
       const uniqueUserIds = [...new Set(userIds)];
       if (uniqueUserIds.length > 0) {
         fetchUserNames(uniqueUserIds);
