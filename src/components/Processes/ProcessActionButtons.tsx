@@ -51,42 +51,8 @@ const ProcessActionButtons = ({
     );
   }
   
-  // Se o processo está em andamento
-  if (status === PROCESS_STATUS.PENDING) {
-    // Se o usuário é o responsável principal ou responsável pelo setor, mostrar botões de movimento
-    if (isMainResponsible || isSectorResponsible) {
-      return (
-        <div className="flex justify-center gap-2">
-          <NavigationButtons 
-            processId={processId}
-            isFirstDepartment={isFirstDepartment}
-            isLastDepartment={isLastDepartment}
-            moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-            moveProcessToNextDepartment={moveProcessToNextDepartment}
-          />
-        </div>
-      );
-    }
-    
-    // Se o processo já foi iniciado, mas o usuário atual não é responsável,
-    // e o setor atual não tem um responsável, mostrar botão de aceitar
-    if (!hasResponsibleUser) {
-      return (
-        <div className="flex justify-center gap-2">
-          <AcceptProcessButton
-            processId={processId}
-            protocolNumber={protocolNumber}
-            currentDepartmentId={currentDepartmentId}
-            onAccept={onAccept}
-          />
-        </div>
-      );
-    }
-  }
-
-  // Se o processo está concluído, mas não é o último departamento,
-  // mostrar botões de navegação
-  if (status === PROCESS_STATUS.COMPLETED && !isLastDepartment) {
+  // Mostra botões de navegação se o usuário é responsável (principal ou setor)
+  if (isMainResponsible || isSectorResponsible) {
     return (
       <div className="flex justify-center gap-2">
         <NavigationButtons 
@@ -95,6 +61,20 @@ const ProcessActionButtons = ({
           isLastDepartment={isLastDepartment}
           moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
           moveProcessToNextDepartment={moveProcessToNextDepartment}
+        />
+      </div>
+    );
+  }
+  
+  // Se o processo está em andamento e não tem responsável, mostrar botão de aceitar
+  if (status === PROCESS_STATUS.PENDING && !hasResponsibleUser) {
+    return (
+      <div className="flex justify-center gap-2">
+        <AcceptProcessButton
+          processId={processId}
+          protocolNumber={protocolNumber}
+          currentDepartmentId={currentDepartmentId}
+          onAccept={onAccept}
         />
       </div>
     );
