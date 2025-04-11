@@ -79,11 +79,9 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
       
       toast({
         title: "Sucesso",
-        description: "Ordem dos setores atualizada."
+        description: `${department.name} movido para cima`
       });
       
-      // Atualizar a lista local
-      await fetchDepartments();
     } catch (error) {
       console.error('Erro ao reordenar setores:', error);
       toast({
@@ -176,11 +174,9 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
       
       toast({
         title: "Sucesso",
-        description: "Ordem dos setores atualizada."
+        description: `${department.name} movido para baixo`
       });
       
-      // Atualizar a lista local
-      await fetchDepartments();
     } catch (error) {
       console.error('Erro ao reordenar setores:', error);
       toast({
@@ -209,7 +205,6 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
         description: `Setor "${selectedDepartment.name}" removido com sucesso.`
       });
 
-      fetchDepartments();
       return true;
     } catch (error) {
       console.error('Erro ao excluir setor:', error);

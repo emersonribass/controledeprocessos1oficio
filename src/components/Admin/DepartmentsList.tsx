@@ -22,7 +22,7 @@ const DepartmentsList = ({
   onMoveUp,
   onMoveDown
 }: DepartmentsListProps) => {
-  const [isMoving, setIsMoving] = useState(false);
+  const [movingDepartmentId, setMovingDepartmentId] = useState<string | null>(null);
 
   if (isLoading) {
     return <div className="flex justify-center p-4">
@@ -31,19 +31,19 @@ const DepartmentsList = ({
   }
   
   const handleMoveUp = async (department: Department) => {
-    if (isMoving) return;
-    setIsMoving(true);
+    if (movingDepartmentId) return;
+    setMovingDepartmentId(department.id);
     console.log(`Clicou em mover para cima: ${department.name} (${department.id})`);
     await onMoveUp(department);
-    setTimeout(() => setIsMoving(false), 1000);
+    setMovingDepartmentId(null);
   };
   
   const handleMoveDown = async (department: Department) => {
-    if (isMoving) return;
-    setIsMoving(true);
+    if (movingDepartmentId) return;
+    setMovingDepartmentId(department.id);
     console.log(`Clicou em mover para baixo: ${department.name} (${department.id})`);
     await onMoveDown(department);
-    setTimeout(() => setIsMoving(false), 1000);
+    setMovingDepartmentId(null);
   };
 
   // Reordenar os departamentos pelo campo order antes de verificar primeiro/último
@@ -85,7 +85,7 @@ const DepartmentsList = ({
                     variant="outline" 
                     size="icon" 
                     onClick={() => handleMoveUp(department)} 
-                    disabled={isFirstDepartment(department) || isMoving} 
+                    disabled={isFirstDepartment(department) || movingDepartmentId !== null} 
                     title="Mover para cima" 
                     className="hover:border-blue-200 text-white bg-green-600 hover:bg-green-500"
                   >
@@ -95,7 +95,7 @@ const DepartmentsList = ({
                     variant="outline" 
                     size="icon" 
                     onClick={() => handleMoveDown(department)} 
-                    disabled={isLastDepartment(department) || isMoving} 
+                    disabled={isLastDepartment(department) || movingDepartmentId !== null} 
                     title="Mover para baixo" 
                     className="hover:border-blue-200 text-white bg-green-600 hover:bg-green-500"
                   >
