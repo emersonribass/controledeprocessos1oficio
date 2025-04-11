@@ -32,6 +32,7 @@ const ProcessDetails = () => {
   const [currentSectorResponsible, setCurrentSectorResponsible] = useState<string | null>(null);
   const [isMainResponsible, setIsMainResponsible] = useState(false);
   const [isSectorResponsible, setIsSectorResponsible] = useState(false);
+  const [hasResponsibleInCurrentDepartment, setHasResponsibleInCurrentDepartment] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -76,6 +77,11 @@ const ProcessDetails = () => {
         if (data && data.usuario_responsavel_setor) {
           setCurrentSectorResponsible(data.usuario_responsavel_setor);
           setIsSectorResponsible(data.usuario_responsavel_setor === user.id);
+          setHasResponsibleInCurrentDepartment(true); // Define que já existe um responsável no setor atual
+        } else {
+          setCurrentSectorResponsible(null);
+          setIsSectorResponsible(false);
+          setHasResponsibleInCurrentDepartment(false); // Define que não existe responsável no setor atual
         }
       } catch (error) {
         console.error('Erro ao processar responsável do setor:', error);
@@ -118,6 +124,7 @@ const ProcessDetails = () => {
   const handleProcessAccepted = () => {
     if (id && process) {
       fetchResponsibleUser(id);
+      setHasResponsibleInCurrentDepartment(true); // Atualiza o estado após aceitar o processo
     }
   };
 
@@ -133,7 +140,6 @@ const ProcessDetails = () => {
     return <ProcessNotFound />;
   }
 
-  const hasResponsibleUser = !!currentSectorResponsible;
   const mainResponsibleUserName = responsibleUser ? getUserName(responsibleUser) : undefined;
   const sectorResponsibleUserName = currentSectorResponsible ? getUserName(currentSectorResponsible) : undefined;
 
@@ -156,7 +162,7 @@ const ProcessDetails = () => {
         sectorResponsibleUserName={sectorResponsibleUserName}
         isRefreshing={isRefreshing}
         onProcessAccepted={handleProcessAccepted}
-        hasResponsibleUser={hasResponsibleUser}
+        hasResponsibleUser={hasResponsibleInCurrentDepartment} // Passamos o novo estado aqui
         isMainResponsible={isMainResponsible}
         isSectorResponsible={isSectorResponsible}
         currentDepartmentId={process.currentDepartment}
