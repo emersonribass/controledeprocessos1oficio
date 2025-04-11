@@ -1,53 +1,44 @@
-
-export type User = {
-  id: string;
-  email: string;
-  name: string;
-  departments: string[];
-  createdAt: string;
-};
-
-export type Department = {
+export interface Department {
   id: string;
   name: string;
   order: number;
-  timeLimit: number; // in days
-};
+  timeLimit: number;
+}
 
-export type ProcessType = {
+export interface ProcessType {
   id: string;
   name: string;
-  active?: boolean; // Adicionando propriedade 'active'
-  description?: string; // Adicionando propriedade opcional 'description'
-};
+}
 
-export type Process = {
+export interface HistoryEntry {
+  id?: string;
+  processId: string;
+  departmentId: string;
+  userId: string;
+  userName: string;
+  entryDate: string;
+  exitDate?: string;
+  comments?: string;
+}
+
+export interface Process {
   id: string;
   protocolNumber: string;
   processType: string;
   currentDepartment: string;
   startDate: string;
   expectedEndDate: string;
-  status: 'pending' | 'completed' | 'overdue' | 'not_started';
-  history: ProcessHistory[];
-  userId?: string; // Adicionando o ID do usuário responsável
-  responsibleUserId?: string; // Adicionando o ID do usuário que aceitou o processo
-};
+  status: 'Não iniciado' | 'Em andamento' | 'Concluído' | 'Atrasado';
+  description?: string;
+  history: HistoryEntry[];
+  attachments?: string[];
+  responsibleUser?: string | null;
+}
 
-export type ProcessHistory = {
-  departmentId: string;
-  entryDate: string;
-  exitDate: string | null;
-  userId: string;
-};
-
-export type Notification = {
+export interface User {
   id: string;
-  userId: string;
-  processId: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
-  type?: string;
-  responded?: boolean;
-};
+  name: string;
+  email: string;
+  departments: string[];
+  isAdmin: boolean;
+}

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { LoginResult } from "./types";
 import { User } from "@/types";
 import { Session } from "@supabase/supabase-js";
+import { isAdmin } from "./permissions";
 
 type UseLoginProps = {
   setUser: (user: User | null) => void;
@@ -64,6 +65,18 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
       let appUser = null;
       if (data.user) {
         appUser = await convertSupabaseUser(data.user);
+        
+        // Verificar e armazenar status de administrador no momento do login
+        if (appUser && appUser.email) {
+          console.log("Verificando status administrativo no login para:", appUser.email);
+          try {
+            const adminStatus = await isAdmin(appUser.email);
+            // Status já será automaticamente cacheado pela função isAdmin
+            console.log("Status administrativo no login:", adminStatus ? "É administrador" : "Não é administrador");
+          } catch (error) {
+            console.error("Erro ao verificar status administrativo:", error);
+          }
+        }
       }
       
       // Retorna os dados da autenticação no formato esperado

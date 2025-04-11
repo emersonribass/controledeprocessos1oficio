@@ -11,8 +11,8 @@ const adminStatusCache: Record<string, {
   timestamp: number;
 }> = {};
 
-// Tempo de expiração do cache em milissegundos (5 minutos)
-const CACHE_EXPIRATION = 5 * 60 * 1000;
+// Tempo de expiração do cache em milissegundos (30 minutos)
+const CACHE_EXPIRATION = 30 * 60 * 1000;
 
 // Função para verificar se um email pertence a um administrador da lista fixa
 export const isAdminByEmail = (email: string): boolean => {
@@ -32,6 +32,8 @@ const cleanExpiredCache = () => {
 // Função para verificar se um usuário é administrador
 // Verifica tanto a lista fixa quanto o perfil do usuário na tabela
 export const isAdmin = async (email: string): Promise<boolean> => {
+  if (!email) return false;
+  
   // Primeiro, verificar se existe no cache e se não está expirado
   const now = Date.now();
   if (adminStatusCache[email] && (now - adminStatusCache[email].timestamp < CACHE_EXPIRATION)) {
@@ -60,6 +62,7 @@ export const isAdmin = async (email: string): Promise<boolean> => {
 
     if (error) {
       console.error('Erro ao verificar perfil do usuário:', error);
+      adminStatusCache[email] = { status: false, timestamp: now };
       return false;
     }
 
@@ -75,6 +78,8 @@ export const isAdmin = async (email: string): Promise<boolean> => {
     return isAdminUser;
   } catch (error) {
     console.error('Erro ao verificar se usuário é administrador:', error);
+    // Em caso de erro, cachear como não administrador para evitar consultas repetidas
+    adminStatusCache[email] = { status: false, timestamp: now };
     return false;
   }
 };

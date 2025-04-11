@@ -33,7 +33,10 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     startProcess
   } = useProcesses();
 
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
+  
+  // Estado para armazenar o status admin do usuário atual
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
   
   const [filters, setFilters] = useState<{
     department?: string;
@@ -51,6 +54,14 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
       setFilters({ ...initialFilters, showCompleted: initialFilters.showCompleted ?? false });
     }
   }, [initialFilters]);
+  
+  // Verificar os departamentos do usuário no carregamento do componente
+  useEffect(() => {
+    // Aqui utilizamos o status admin já cacheado
+    if (user && user.isAdmin !== undefined) {
+      setUserIsAdmin(user.isAdmin);
+    }
+  }, [user]);
 
   const filteredProcesses = filterProcesses(filters, processes);
 
@@ -102,7 +113,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     );
   }
 
-  const availableDepartments = isAdmin(user?.email || "") || !user?.departments?.length 
+  const availableDepartments = userIsAdmin || !user?.departments?.length 
     ? departments 
     : departments.filter(dept => user?.departments.includes(dept.id));
 

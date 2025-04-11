@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Department } from "@/types";
@@ -8,8 +8,16 @@ export const useDepartmentsFetch = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const hasFetchedRef = useRef(false);
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = async (forceRefresh = false) => {
+    // Evitar consulta repetida se já tivermos os departamentos e não for forçada uma atualização
+    if (hasFetchedRef.current && departments.length > 0 && !forceRefresh) {
+      console.log("Usando departamentos em cache, evitando consulta desnecessária.");
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
       console.log("Buscando setores do banco de dados...");
@@ -39,6 +47,7 @@ export const useDepartmentsFetch = () => {
 
       console.log('Setores atualizados:', formattedDepartments);
       setDepartments(formattedDepartments);
+      hasFetchedRef.current = true;
     } catch (error) {
       console.error('Erro ao buscar setores:', error);
       toast({
