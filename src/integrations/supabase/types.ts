@@ -101,6 +101,7 @@ export type Database = {
           processo_id: string
           setor_id: string
           usuario_id: string | null
+          usuario_responsavel_setor: string | null
         }
         Insert: {
           created_at?: string | null
@@ -110,6 +111,7 @@ export type Database = {
           processo_id: string
           setor_id: string
           usuario_id?: string | null
+          usuario_responsavel_setor?: string | null
         }
         Update: {
           created_at?: string | null
@@ -119,6 +121,7 @@ export type Database = {
           processo_id?: string
           setor_id?: string
           usuario_id?: string | null
+          usuario_responsavel_setor?: string | null
         }
         Relationships: [
           {

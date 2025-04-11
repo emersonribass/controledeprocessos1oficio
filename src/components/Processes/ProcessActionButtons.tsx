@@ -23,6 +23,7 @@ interface ProcessActionButtonsProps {
   onAccept?: () => void;
   currentDepartmentId?: string;
   isMainResponsible?: boolean;
+  isSectorResponsible?: boolean;
 }
 
 const ProcessActionButtons = ({
@@ -39,7 +40,8 @@ const ProcessActionButtons = ({
   hasResponsibleUser = false,
   onAccept,
   currentDepartmentId,
-  isMainResponsible = false
+  isMainResponsible = false,
+  isSectorResponsible = false
 }: ProcessActionButtonsProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -99,7 +101,7 @@ const ProcessActionButtons = ({
         .from('notificacoes')
         .update({ 
           respondida: true 
-        } as any)
+        })
         .eq('processo_id', processId)
         .eq('usuario_id', user.id);
 
@@ -147,7 +149,7 @@ const ProcessActionButtons = ({
   }
   
   // Se o usuário é o responsável principal ou responsável pelo setor, mostrar botões de movimento
-  if (isMainResponsible || hasResponsibleUser) {
+  if (isMainResponsible || isSectorResponsible) {
     return (
       <div className="flex justify-center gap-2">
         <Button 

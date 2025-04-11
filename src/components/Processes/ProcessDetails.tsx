@@ -62,7 +62,7 @@ const ProcessDetails = () => {
       try {
         const { data, error } = await supabase
           .from('processos_historico')
-          .select('usuario_responsavel_setor')
+          .select('*')
           .eq('processo_id', id)
           .eq('setor_id', foundProcess.currentDepartment)
           .is('data_saida', null)
