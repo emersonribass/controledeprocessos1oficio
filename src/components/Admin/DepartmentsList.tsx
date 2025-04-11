@@ -3,6 +3,7 @@ import { Pencil, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Department } from "@/types";
+
 interface DepartmentsListProps {
   departments: Department[];
   isLoading: boolean;
@@ -11,6 +12,7 @@ interface DepartmentsListProps {
   onMoveUp: (department: Department) => void;
   onMoveDown: (department: Department) => void;
 }
+
 const DepartmentsList = ({
   departments,
   isLoading,
@@ -24,6 +26,17 @@ const DepartmentsList = ({
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
       </div>;
   }
+  
+  const handleMoveUp = (department: Department) => {
+    console.log(`Clicou em mover para cima: ${department.name} (${department.id})`);
+    onMoveUp(department);
+  };
+  
+  const handleMoveDown = (department: Department) => {
+    console.log(`Clicou em mover para baixo: ${department.name} (${department.id})`);
+    onMoveDown(department);
+  };
+  
   return <Table className="w-full">
       <TableHeader>
         <TableRow className="h-10">
@@ -47,7 +60,7 @@ const DepartmentsList = ({
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    onClick={() => onMoveUp(department)} 
+                    onClick={() => handleMoveUp(department)} 
                     disabled={departments[0].id === department.id} 
                     title="Mover para cima" 
                     className="hover:border-blue-200 text-white bg-green-600 hover:bg-green-500"
@@ -57,7 +70,7 @@ const DepartmentsList = ({
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    onClick={() => onMoveDown(department)} 
+                    onClick={() => handleMoveDown(department)} 
                     disabled={departments[departments.length - 1].id === department.id} 
                     title="Mover para baixo" 
                     className="hover:border-blue-200 text-white bg-green-600 hover:bg-green-500"
@@ -88,4 +101,5 @@ const DepartmentsList = ({
       </TableBody>
     </Table>;
 };
+
 export default DepartmentsList;

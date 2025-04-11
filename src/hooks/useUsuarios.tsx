@@ -119,8 +119,11 @@ export function useUsuarios() {
           description: "Usuário atualizado com sucesso!",
         });
       } else {
-        // Criar novo usuário
+        // Criar novo usuário - corrigido para gerar um UUID para o id
+        const newId = crypto.randomUUID();
+        
         const { error } = await supabase.from("usuarios").insert({
+          id: newId,
           nome: data.nome,
           email: data.email,
           senha: data.senha,

@@ -29,6 +29,7 @@ export const useDepartmentsFetch = () => {
         timeLimit: dept.time_limit
       }));
 
+      console.log('Setores atualizados:', formattedDepartments);
       setDepartments(formattedDepartments);
     } catch (error) {
       console.error('Erro ao buscar setores:', error);
