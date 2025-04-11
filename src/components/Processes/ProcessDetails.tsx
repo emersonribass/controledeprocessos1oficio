@@ -1,18 +1,20 @@
 
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useProcesses } from "@/hooks/useProcesses";
+import { useProcessUserManager } from "@/components/Processes/ProcessUserManager";
+import { ProcessAutoRefresher } from "@/components/Processes/ProcessAutoRefresher";
+import ProcessDetailsContent from "@/components/Processes/ProcessDetailsContent";
+import { Loader2 } from "lucide-react";
+import { Process } from "@/types";
 import ProcessHeader from "./ProcessHeader";
 import ProcessNotFound from "./ProcessNotFound";
-import { useState, useEffect } from "react";
-import { useProcessUserManager } from "./ProcessUserManager";
-import ProcessDetailsContent from "./ProcessDetailsContent";
-import { ProcessAutoRefresher } from "./ProcessAutoRefresher";
 
 const ProcessDetails = () => {
-  const { id } = useParams<{ id: string }>();
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { processes, getDepartmentName, getProcessTypeName, moveProcessToNextDepartment, moveProcessToPreviousDepartment, isLoading, fetchProcesses } = useProcesses();
   
-  // Gerenciamento de usuários
   const {
     userNames,
     responsibleUser,
@@ -22,73 +24,104 @@ const ProcessDetails = () => {
     setResponsibleUser
   } = useProcessUserManager();
 
-  // Função para lidar com a aceitação do processo
-  const handleProcessAccepted = () => {
-    if (id) {
-      setIsRefreshing(true);
-      fetchResponsibleUser(id).finally(() => setIsRefreshing(false));
+  const [process, setProcess] = useState<Process | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    
+    const loadProcess = async () => {
+      await fetchProcesses();
+      await fetchResponsibleUser(id);
+    };
+    
+    loadProcess();
+  }, [id]);
+
+  useEffect(() => {
+    if (!processes.length || !id) return;
+    
+    const foundProcess = processes.find(p => p.id === id);
+    setProcess(foundProcess || null);
+    
+    if (foundProcess) {
+      // Extrair IDs de usuários do histórico
+      const userIds = foundProcess.history
+        .map(h => h.userId)
+        .filter(userId => userId && userId.length > 0);
+      
+      // Adicionar o ID do usuário responsável, se existir
+      if (responsibleUser) {
+        userIds.push(responsibleUser);
+      }
+      
+      // Remover duplicatas e buscar nomes de usuários
+      const uniqueUserIds = [...new Set(userIds)];
+      if (uniqueUserIds.length > 0) {
+        fetchUserNames(uniqueUserIds);
+      }
     }
+  }, [processes, id, responsibleUser]);
+
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    
+    setIsRefreshing(true);
+    await fetchProcesses();
+    if (id) {
+      await fetchResponsibleUser(id);
+    }
+    setIsRefreshing(false);
   };
   
-  // Verificando se o hook useProcesses está funcionando
-  try {
-    const {
-      processes,
-      getDepartmentName,
-      getProcessTypeName,
-      moveProcessToNextDepartment,
-      moveProcessToPreviousDepartment,
-      refreshProcesses,
-    } = useProcesses();
-    
-    console.log("Hook useProcesses carregado com sucesso", processes.length);
-    
-    const process = processes.find((p) => p.id === id);
-    console.log("Processo encontrado:", process);
-
-    // Efeito para buscar nomes de usuários quando o processo é carregado
-    useEffect(() => {
-      if (process) {
-        // Extrair IDs de usuários únicos do histórico
-        const userIds = process.history
-          .filter(h => h.userId)
-          .map(h => h.userId)
-          .filter((id, index, self) => self.indexOf(id) === index);
-          
-        fetchUserNames(userIds);
-        fetchResponsibleUser(process.id);
-      }
-    }, [process?.id]);
-
-    if (!process) {
-      return <ProcessNotFound />;
+  const handleProcessAccepted = () => {
+    if (id && process) {
+      fetchResponsibleUser(id);
     }
+  };
 
+  if (isLoading && !process) {
     return (
-      <div className="space-y-6">
-        <ProcessHeader title="Detalhes do Processo" />
-        
-        {/* Componente de atualização automática */}
-        <ProcessAutoRefresher refreshFunction={refreshProcesses} />
-        
-        <ProcessDetailsContent 
-          process={process}
-          getDepartmentName={getDepartmentName}
-          getProcessTypeName={getProcessTypeName}
-          moveProcessToNextDepartment={moveProcessToNextDepartment}
-          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-          getUserName={getUserName}
-          responsibleUserName={responsibleUser ? userNames[responsibleUser] : undefined}
-          isRefreshing={isRefreshing}
-          onProcessAccepted={handleProcessAccepted}
-          hasResponsibleUser={!!responsibleUser}
-        />
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
-  } catch (error) {
-    console.error("Erro ao usar hook useProcesses:", error);
-    return <div>Erro ao carregar detalhes do processo. Tente novamente mais tarde.</div>;
   }
+
+  if (!process) {
+    return <ProcessNotFound />;
+  }
+
+  const hasResponsibleUser = !!responsibleUser;
+  const responsibleUserName = responsibleUser ? getUserName(responsibleUser) : undefined;
+
+  return (
+    <div className="space-y-6">
+      <ProcessHeader 
+        protocolNumber={process.protocolNumber} 
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
+      />
+
+      <ProcessDetailsContent 
+        process={process}
+        getDepartmentName={getDepartmentName}
+        getProcessTypeName={getProcessTypeName}
+        moveProcessToNextDepartment={moveProcessToNextDepartment}
+        moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+        getUserName={getUserName}
+        responsibleUserName={responsibleUserName}
+        isRefreshing={isRefreshing}
+        onProcessAccepted={handleProcessAccepted}
+        hasResponsibleUser={hasResponsibleUser}
+      />
+
+      <ProcessAutoRefresher 
+        refreshFunction={handleRefresh} 
+        intervalSeconds={30}
+      />
+    </div>
+  );
 };
 
 export default ProcessDetails;
