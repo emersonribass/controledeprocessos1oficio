@@ -36,24 +36,36 @@ const DepartmentsList = ({
     console.log(`Clicou em mover para baixo: ${department.name} (${department.id})`);
     onMoveDown(department);
   };
+
+  const isFirstDepartment = (dept: Department) => {
+    if (!departments.length) return false;
+    return departments[0].id === dept.id;
+  };
+
+  const isLastDepartment = (dept: Department) => {
+    if (!departments.length) return false;
+    return departments[departments.length - 1].id === dept.id;
+  };
   
   return <Table className="w-full">
       <TableHeader>
         <TableRow className="h-10">
           <TableHead>ID</TableHead>
           <TableHead>Nome</TableHead>
+          <TableHead>Ordem</TableHead>
           <TableHead>Prazo (dias)</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {departments.length === 0 ? <TableRow>
-            <TableCell colSpan={4} className="text-center py-6">
+            <TableCell colSpan={5} className="text-center py-6">
               Nenhum setor encontrado.
             </TableCell>
           </TableRow> : departments.map(department => <TableRow key={department.id} className="h-8 py-1">
               <TableCell className="py-1">{department.id}</TableCell>
               <TableCell className="font-medium py-1">{department.name}</TableCell>
+              <TableCell className="py-1">{department.order}</TableCell>
               <TableCell className="py-1">{department.timeLimit}</TableCell>
               <TableCell className="text-right py-1">
                 <div className="flex justify-end space-x-2">
@@ -61,7 +73,7 @@ const DepartmentsList = ({
                     variant="outline" 
                     size="icon" 
                     onClick={() => handleMoveUp(department)} 
-                    disabled={departments[0].id === department.id} 
+                    disabled={isFirstDepartment(department)} 
                     title="Mover para cima" 
                     className="hover:border-blue-200 text-white bg-green-600 hover:bg-green-500"
                   >
@@ -71,7 +83,7 @@ const DepartmentsList = ({
                     variant="outline" 
                     size="icon" 
                     onClick={() => handleMoveDown(department)} 
-                    disabled={departments[departments.length - 1].id === department.id} 
+                    disabled={isLastDepartment(department)} 
                     title="Mover para baixo" 
                     className="hover:border-blue-200 text-white bg-green-600 hover:bg-green-500"
                   >

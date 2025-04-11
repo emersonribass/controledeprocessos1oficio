@@ -12,13 +12,21 @@ export const useDepartmentsFetch = () => {
   const fetchDepartments = async () => {
     setIsLoading(true);
     try {
+      console.log("Buscando setores do banco de dados...");
       const { data, error } = await supabase
         .from('setores')
         .select('*')
         .order('order_num', { ascending: true });
 
       if (error) {
+        console.error("Erro na consulta do Supabase:", error);
         throw error;
+      }
+
+      if (!data) {
+        console.log("Nenhum dado retornado");
+        setDepartments([]);
+        return;
       }
 
       // Converter os dados do Supabase para o formato do nosso tipo Department

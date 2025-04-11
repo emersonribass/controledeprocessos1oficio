@@ -11,10 +11,16 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
     try {
       console.log(`Iniciando movimento para cima do setor: ${department.name} (${department.id})`);
       
-      const { data: departmentsData } = await supabase
+      // Buscar lista completa e ordenada de departamentos
+      const { data: departmentsData, error: fetchError } = await supabase
         .from('setores')
         .select('*')
         .order('order_num', { ascending: true });
+      
+      if (fetchError) {
+        console.error('Erro ao buscar setores:', fetchError);
+        throw fetchError;
+      }
       
       if (!departmentsData || departmentsData.length === 0) {
         console.error('Não foi possível recuperar os setores');
@@ -42,26 +48,27 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
       
       console.log(`Movendo setor para cima: ${department.name} (${department.id}) da posição ${currentOrderValue} para ${prevOrderValue}`);
       
-      // Atualizar a ordem no banco de dados
-      const updates = [];
+      // Primeiro, atualize o departamento anterior para a ordem atual
+      const { error: updatePrevError } = await supabase
+        .from('setores')
+        .update({ order_num: currentOrderValue })
+        .eq('id', Number(prevDepartment.id));
       
-      // Atualizar o departamento atual para a ordem anterior
-      updates.push(
-        supabase
-          .from('setores')
-          .update({ order_num: prevOrderValue })
-          .eq('id', Number(department.id))
-      );
+      if (updatePrevError) {
+        console.error('Erro ao atualizar setor anterior:', updatePrevError);
+        throw updatePrevError;
+      }
       
-      // Atualizar o departamento anterior para a ordem atual
-      updates.push(
-        supabase
-          .from('setores')
-          .update({ order_num: currentOrderValue })
-          .eq('id', Number(prevDepartment.id))
-      );
+      // Depois, atualize o departamento atual para a ordem anterior
+      const { error: updateCurrentError } = await supabase
+        .from('setores')
+        .update({ order_num: prevOrderValue })
+        .eq('id', Number(department.id));
       
-      await Promise.all(updates);
+      if (updateCurrentError) {
+        console.error('Erro ao atualizar setor atual:', updateCurrentError);
+        throw updateCurrentError;
+      }
       
       toast({
         title: "Sucesso",
@@ -85,6 +92,7 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
     try {
       console.log(`Iniciando movimento para baixo do setor: ${department.name} (${department.id})`);
       
+      // Buscar lista completa e ordenada de departamentos
       const { data: departmentsData, error: fetchError } = await supabase
         .from('setores')
         .select('*')
