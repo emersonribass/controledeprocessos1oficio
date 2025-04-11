@@ -35,23 +35,42 @@ export const useNotifications = () => {
   }, [user]);
 
   const handleMarkAsRead = async (id: string) => {
+    // Atualização otimista
+    setNotifications(prev => 
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    );
+    setUnreadCount(prev => Math.max(0, prev - 1));
+
     const success = await markAsRead(id);
-    if (success) {
+    if (!success) {
+      // Reverter se falhar
       setNotifications(prev => 
-        prev.map(n => n.id === id ? { ...n, read: true } : n)
+        prev.map(n => n.id === id ? { ...n, read: false } : n)
       );
-      setUnreadCount(prev => prev - 1);
+      setUnreadCount(prev => prev + 1);
     }
+    
+    return success;
   };
 
   const handleMarkAllAsRead = async () => {
+    // Atualização otimista
+    const unreadNotificationsCount = notifications.filter(n => !n.read).length;
+    setNotifications(prev => 
+      prev.map(n => ({ ...n, read: true }))
+    );
+    setUnreadCount(0);
+
     const success = await markAllAsRead();
-    if (success) {
+    if (!success) {
+      // Reverter se falhar
       setNotifications(prev => 
-        prev.map(n => ({ ...n, read: true }))
+        prev.map(n => n === n ? { ...n, read: false } : n)
       );
-      setUnreadCount(0);
+      setUnreadCount(unreadNotificationsCount);
     }
+    
+    return success;
   };
 
   return {

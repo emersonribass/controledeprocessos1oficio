@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface NotificationsPopoverProps {
   children: ReactNode;
@@ -19,6 +20,7 @@ interface NotificationsPopoverProps {
 const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPopoverProps) => {
   const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotifications();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleMarkAllAsRead = async () => {
     if (unreadCount === 0) {
@@ -31,6 +33,11 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
     }
     
     await markAllAsRead();
+  };
+
+  const handleNotificationClick = (notificationId: string, processId: string) => {
+    markAsRead(notificationId);
+    navigate(`/processes/${processId}`);
   };
 
   return (
@@ -67,7 +74,7 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
                 <div
                   key={notification.id}
                   className={`p-4 ${!notification.read ? "bg-primary/5" : ""} cursor-pointer`}
-                  onClick={() => markAsRead(notification.id)}
+                  onClick={() => handleNotificationClick(notification.id, notification.processId)}
                 >
                   <p className="text-sm">{notification.message}</p>
                   <p className="text-xs text-muted-foreground mt-1">
