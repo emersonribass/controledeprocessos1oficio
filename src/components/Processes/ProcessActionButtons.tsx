@@ -21,6 +21,7 @@ interface ProcessActionButtonsProps {
   currentDepartmentId?: string;
   isMainResponsible?: boolean;
   isSectorResponsible?: boolean;
+  showLabels?: boolean;
 }
 
 const ProcessActionButtons = ({
@@ -36,7 +37,8 @@ const ProcessActionButtons = ({
   onAccept,
   currentDepartmentId,
   isMainResponsible = false,
-  isSectorResponsible = false
+  isSectorResponsible = false,
+  showLabels = false
 }: ProcessActionButtonsProps) => {
   
   // Se o processo não foi iniciado, mostrar apenas botão de iniciar
@@ -62,6 +64,7 @@ const ProcessActionButtons = ({
           isLastDepartment={isLastDepartment}
           moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
           moveProcessToNextDepartment={moveProcessToNextDepartment}
+          showLabels={showLabels}
         />
       </div>
     );

@@ -48,6 +48,7 @@ const ProcessDetailsContent = ({
         sectorResponsibleUserName={sectorResponsibleUserName}
         isMainResponsible={isMainResponsible}
         isSectorResponsible={isSectorResponsible}
+        showLabels={true}
       />
 
       <ProcessHistory 

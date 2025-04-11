@@ -9,6 +9,7 @@ interface NavigationButtonsProps {
   isLastDepartment: boolean;
   moveProcessToPreviousDepartment: (processId: string) => void;
   moveProcessToNextDepartment: (processId: string) => void;
+  showLabels?: boolean;
 }
 
 const NavigationButtons = ({
@@ -16,8 +17,36 @@ const NavigationButtons = ({
   isFirstDepartment,
   isLastDepartment,
   moveProcessToPreviousDepartment,
-  moveProcessToNextDepartment
+  moveProcessToNextDepartment,
+  showLabels = false
 }: NavigationButtonsProps) => {
+  if (showLabels) {
+    return (
+      <>
+        <Button 
+          variant="outline" 
+          onClick={() => moveProcessToPreviousDepartment(processId)} 
+          disabled={isFirstDepartment} 
+          title="Mover para departamento anterior"
+          className={isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}
+        >
+          <MoveLeft className="h-4 w-4 mr-2" />
+          Departamento Anterior
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => moveProcessToNextDepartment(processId)} 
+          disabled={isLastDepartment} 
+          title="Mover para próximo departamento"
+          className={isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}
+        >
+          <MoveRight className="h-4 w-4 mr-2" />
+          Próximo Departamento
+        </Button>
+      </>
+    );
+  }
+
   return (
     <>
       <Button 
