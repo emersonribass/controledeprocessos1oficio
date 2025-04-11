@@ -2,73 +2,27 @@
 import { useParams } from "react-router-dom";
 import { useProcesses } from "@/hooks/useProcesses";
 import ProcessHeader from "./ProcessHeader";
-import ProcessCard from "./ProcessCard";
-import ProcessHistory from "./ProcessHistory";
 import ProcessNotFound from "./ProcessNotFound";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/auth";
+import { useProcessUserManager } from "./ProcessUserManager";
+import ProcessDetailsContent from "./ProcessDetailsContent";
+import { ProcessAutoRefresher } from "./ProcessAutoRefresher";
 
 const ProcessDetails = () => {
-  // Adicionando console log para debug
-  console.log("Renderizando ProcessDetails");
-  
   const { id } = useParams<{ id: string }>();
-  const [userNames, setUserNames] = useState<Record<string, string>>({});
-  const [responsibleUser, setResponsibleUser] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
-  // Função para buscar nomes de usuários
-  const fetchUserNames = async (userIds: string[]) => {
-    if (!userIds.length) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('id, nome')
-        .in('id', userIds);
-        
-      if (error) {
-        console.error('Erro ao buscar nomes de usuários:', error);
-        return;
-      }
-      
-      const namesMap: Record<string, string> = {};
-      data?.forEach(user => {
-        namesMap[user.id] = user.nome;
-      });
-      
-      setUserNames(namesMap);
-    } catch (error) {
-      console.error('Erro ao processar nomes de usuários:', error);
-    }
-  };
-  
-  // Função para obter nome do usuário por ID
-  const getUserName = (userId: string): string => {
-    return userNames[userId] || "Usuário não encontrado";
-  };
+  // Gerenciamento de usuários
+  const {
+    userNames,
+    responsibleUser,
+    fetchUserNames,
+    getUserName,
+    fetchResponsibleUser,
+    setResponsibleUser
+  } = useProcessUserManager();
 
-  // Função para buscar usuário responsável pelo processo
-  const fetchResponsibleUser = async (processId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('processos')
-        .select('*')
-        .eq('id', processId)
-        .single();
-
-      if (error) {
-        console.error('Erro ao buscar usuário responsável:', error);
-        return;
-      }
-
-      setResponsibleUser(data.usuario_responsavel);
-    } catch (error) {
-      console.error('Erro ao processar usuário responsável:', error);
-    }
-  };
-
+  // Função para lidar com a aceitação do processo
   const handleProcessAccepted = () => {
     if (id) {
       setIsRefreshing(true);
@@ -106,15 +60,6 @@ const ProcessDetails = () => {
       }
     }, [process?.id]);
 
-    // Efeito para atualizar a lista de processos periodicamente
-    useEffect(() => {
-      const intervalId = setInterval(() => {
-        refreshProcesses();
-      }, 30000); // Atualizar a cada 30 segundos
-      
-      return () => clearInterval(intervalId);
-    }, [refreshProcesses]);
-
     if (!process) {
       return <ProcessNotFound />;
     }
@@ -122,27 +67,22 @@ const ProcessDetails = () => {
     return (
       <div className="space-y-6">
         <ProcessHeader title="Detalhes do Processo" />
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <ProcessCard
-            process={process}
-            getDepartmentName={getDepartmentName}
-            getProcessTypeName={getProcessTypeName}
-            moveProcessToNextDepartment={moveProcessToNextDepartment}
-            moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-            responsibleUserName={responsibleUser ? userNames[responsibleUser] : undefined}
-          />
-
-          <ProcessHistory 
-            history={process.history} 
-            getDepartmentName={getDepartmentName} 
-            getUserName={getUserName}
-            processId={process.id}
-            protocolNumber={process.protocolNumber}
-            hasResponsibleUser={!!responsibleUser}
-            onProcessAccepted={handleProcessAccepted}
-          />
-        </div>
+        
+        {/* Componente de atualização automática */}
+        <ProcessAutoRefresher refreshFunction={refreshProcesses} />
+        
+        <ProcessDetailsContent 
+          process={process}
+          getDepartmentName={getDepartmentName}
+          getProcessTypeName={getProcessTypeName}
+          moveProcessToNextDepartment={moveProcessToNextDepartment}
+          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+          getUserName={getUserName}
+          responsibleUserName={responsibleUser ? userNames[responsibleUser] : undefined}
+          isRefreshing={isRefreshing}
+          onProcessAccepted={handleProcessAccepted}
+          hasResponsibleUser={!!responsibleUser}
+        />
       </div>
     );
   } catch (error) {
