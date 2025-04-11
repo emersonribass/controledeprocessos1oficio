@@ -176,20 +176,26 @@ const ProcessActionButtons = ({
     );
   }
   
-  // Se o processo ainda não tem responsável no setor atual, mostrar botão de aceitar
-  return (
-    <div className="flex justify-center gap-2">
-      <Button
-        onClick={handleAcceptProcess}
-        disabled={isLoading || !user}
-        className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
-        size="sm"
-      >
-        <CheckCircle className="h-4 w-4" />
-        {isLoading ? "Processando..." : "Aceitar Processo"}
-      </Button>
-    </div>
-  );
+  // Se o processo já foi iniciado, mas o usuário atual não é responsável,
+  // e o setor atual não tem um responsável, mostrar botão de aceitar
+  if (!hasResponsibleUser) {
+    return (
+      <div className="flex justify-center gap-2">
+        <Button
+          onClick={handleAcceptProcess}
+          disabled={isLoading || !user}
+          className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
+          size="sm"
+        >
+          <CheckCircle className="h-4 w-4" />
+          {isLoading ? "Processando..." : "Aceitar Processo"}
+        </Button>
+      </div>
+    );
+  }
+  
+  // Caso não caia em nenhum dos casos acima, não mostra nenhum botão
+  return null;
 };
 
 export default ProcessActionButtons;

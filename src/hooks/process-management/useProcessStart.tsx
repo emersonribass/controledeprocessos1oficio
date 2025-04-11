@@ -43,7 +43,7 @@ export const useProcessStart = () => {
         throw updateError;
       }
       
-      // Registrar na tabela de histórico
+      // Registrar na tabela de histórico, já definindo o usuário como responsável pelo setor também
       const { error: historyError } = await supabase
         .from('processos_historico')
         .insert({
@@ -51,7 +51,8 @@ export const useProcessStart = () => {
           setor_id: firstDept.id.toString(),
           data_entrada: now,
           data_saida: null,
-          usuario_id: user.id
+          usuario_id: user.id,
+          usuario_responsavel_setor: user.id // O iniciador já é automaticamente responsável pelo primeiro setor
         });
         
       if (historyError) {
