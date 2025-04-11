@@ -52,7 +52,7 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
       const { error: updatePrevError } = await supabase
         .from('setores')
         .update({ order_num: currentOrderValue })
-        .eq('id', Number(prevDepartment.id));
+        .eq('id', parseInt(prevDepartment.id));
       
       if (updatePrevError) {
         console.error('Erro ao atualizar setor anterior:', updatePrevError);
@@ -63,7 +63,7 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
       const { error: updateCurrentError } = await supabase
         .from('setores')
         .update({ order_num: prevOrderValue })
-        .eq('id', Number(department.id));
+        .eq('id', parseInt(department.id));
       
       if (updateCurrentError) {
         console.error('Erro ao atualizar setor atual:', updateCurrentError);
@@ -108,6 +108,8 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
         return;
       }
       
+      console.log('Departamentos recuperados:', departmentsData);
+      
       const departments = departmentsData.map(dept => ({
         id: dept.id.toString(),
         name: dept.name,
@@ -116,6 +118,8 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
       }));
       
       const currentIndex = departments.findIndex(d => d.id === department.id);
+      console.log(`Índice atual: ${currentIndex}, Total de departamentos: ${departments.length}`);
+      
       if (currentIndex === -1) {
         console.error(`Setor com ID ${department.id} não encontrado`);
         return;
@@ -133,12 +137,14 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
       const nextOrderValue = nextDepartment.order;
       
       console.log(`Movendo setor para baixo: ${department.name} (${department.id}) da posição ${currentOrderValue} para ${nextOrderValue}`);
+      console.log(`Próximo setor: ${nextDepartment.name} (${nextDepartment.id}) da posição ${nextOrderValue} para ${currentOrderValue}`);
       
       // Primeiro, atualize o departamento seguinte para a ordem atual
+      console.log(`Atualizando setor ${nextDepartment.id} para ordem ${currentOrderValue}`);
       const { error: updateNextError } = await supabase
         .from('setores')
         .update({ order_num: currentOrderValue })
-        .eq('id', Number(nextDepartment.id));
+        .eq('id', parseInt(nextDepartment.id));
       
       if (updateNextError) {
         console.error('Erro ao atualizar setor seguinte:', updateNextError);
@@ -146,10 +152,11 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
       }
       
       // Depois, atualize o departamento atual para a ordem seguinte
+      console.log(`Atualizando setor ${department.id} para ordem ${nextOrderValue}`);
       const { error: updateCurrentError } = await supabase
         .from('setores')
         .update({ order_num: nextOrderValue })
-        .eq('id', Number(department.id));
+        .eq('id', parseInt(department.id));
       
       if (updateCurrentError) {
         console.error('Erro ao atualizar setor atual:', updateCurrentError);
@@ -180,7 +187,7 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
       const { error } = await supabase
         .from('setores')
         .delete()
-        .eq('id', Number(selectedDepartment.id));
+        .eq('id', parseInt(selectedDepartment.id));
 
       if (error) {
         throw error;

@@ -3,6 +3,7 @@ import { Pencil, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Department } from "@/types";
+import { useState } from "react";
 
 interface DepartmentsListProps {
   departments: Department[];
@@ -21,30 +22,40 @@ const DepartmentsList = ({
   onMoveUp,
   onMoveDown
 }: DepartmentsListProps) => {
+  const [isMoving, setIsMoving] = useState(false);
+
   if (isLoading) {
     return <div className="flex justify-center p-4">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
       </div>;
   }
   
-  const handleMoveUp = (department: Department) => {
+  const handleMoveUp = async (department: Department) => {
+    if (isMoving) return;
+    setIsMoving(true);
     console.log(`Clicou em mover para cima: ${department.name} (${department.id})`);
-    onMoveUp(department);
+    await onMoveUp(department);
+    setTimeout(() => setIsMoving(false), 1000);
   };
   
-  const handleMoveDown = (department: Department) => {
+  const handleMoveDown = async (department: Department) => {
+    if (isMoving) return;
+    setIsMoving(true);
     console.log(`Clicou em mover para baixo: ${department.name} (${department.id})`);
-    onMoveDown(department);
+    await onMoveDown(department);
+    setTimeout(() => setIsMoving(false), 1000);
   };
 
   const isFirstDepartment = (dept: Department) => {
     if (!departments.length) return false;
-    return departments[0].id === dept.id;
+    const orderedDepts = [...departments].sort((a, b) => a.order - b.order);
+    return orderedDepts[0].id === dept.id;
   };
 
   const isLastDepartment = (dept: Department) => {
     if (!departments.length) return false;
-    return departments[departments.length - 1].id === dept.id;
+    const orderedDepts = [...departments].sort((a, b) => a.order - b.order);
+    return orderedDepts[orderedDepts.length - 1].id === dept.id;
   };
   
   return <Table className="w-full">
@@ -73,7 +84,7 @@ const DepartmentsList = ({
                     variant="outline" 
                     size="icon" 
                     onClick={() => handleMoveUp(department)} 
-                    disabled={isFirstDepartment(department)} 
+                    disabled={isFirstDepartment(department) || isMoving} 
                     title="Mover para cima" 
                     className="hover:border-blue-200 text-white bg-green-600 hover:bg-green-500"
                   >
@@ -83,7 +94,7 @@ const DepartmentsList = ({
                     variant="outline" 
                     size="icon" 
                     onClick={() => handleMoveDown(department)} 
-                    disabled={isLastDepartment(department)} 
+                    disabled={isLastDepartment(department) || isMoving} 
                     title="Mover para baixo" 
                     className="hover:border-blue-200 text-white bg-green-600 hover:bg-green-500"
                   >
