@@ -28,7 +28,8 @@ export const useDepartments = () => {
 
   // Função para quando um departamento é salvo
   const onDepartmentSaved = () => {
-    fetchDepartments();
+    // Não precisamos mais chamar fetchDepartments aqui
+    // pois o evento real-time cuidará disso
     setOpenDialog(false);
   };
 

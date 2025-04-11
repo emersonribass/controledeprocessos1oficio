@@ -3,11 +3,11 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Department } from "@/types";
+import { toast } from "sonner";
 
 export const useDepartmentsFetch = () => {
   const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
   const hasFetchedRef = useRef(false);
 
   const fetchDepartments = async (forceRefresh = false) => {
@@ -50,11 +50,7 @@ export const useDepartmentsFetch = () => {
       hasFetchedRef.current = true;
     } catch (error) {
       console.error('Erro ao buscar setores:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os setores.",
-        variant: "destructive"
-      });
+      toast.error("Não foi possível carregar os setores.");
     } finally {
       setIsLoading(false);
     }
@@ -62,6 +58,29 @@ export const useDepartmentsFetch = () => {
 
   useEffect(() => {
     fetchDepartments();
+    
+    // Inscrever-se para atualizações em tempo real da tabela setores
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Escutar todos os eventos (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'setores'
+        },
+        (payload) => {
+          console.log('Mudança detectada na tabela setores:', payload);
+          fetchDepartments(true); // Forçar atualização ao receber uma mudança
+        }
+      )
+      .subscribe();
+
+    // Cleanup da inscrição ao desmontar o componente
+    return () => {
+      console.log('Removendo canal de escuta para tabela setores');
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {
