@@ -23,6 +23,7 @@ export const isAdmin = async (email: string): Promise<boolean> => {
   
   // Se não estiver na lista fixa, verifica o perfil na tabela de usuários
   try {
+    console.log("Buscando permissões no banco de dados para:", email);
     const { data, error } = await supabase
       .from('usuarios')
       .select('perfil')

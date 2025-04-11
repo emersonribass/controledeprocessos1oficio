@@ -27,6 +27,8 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
         return;
       }
       
+      console.log('Departamentos recuperados:', departmentsData);
+      
       const departments = departmentsData.map(dept => ({
         id: dept.id.toString(),
         name: dept.name,
@@ -47,6 +49,7 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
       const prevOrderValue = prevDepartment.order;
       
       console.log(`Movendo setor para cima: ${department.name} (${department.id}) da posição ${currentOrderValue} para ${prevOrderValue}`);
+      console.log(`Setor anterior: ${prevDepartment.name} (${prevDepartment.id}) da posição ${prevOrderValue} para ${currentOrderValue}`);
       
       // Primeiro, atualize o departamento anterior para a ordem atual
       const { error: updatePrevError } = await supabase
@@ -59,6 +62,8 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
         throw updatePrevError;
       }
       
+      console.log(`Atualizado com sucesso o setor ${prevDepartment.name} para ordem ${currentOrderValue}`);
+      
       // Depois, atualize o departamento atual para a ordem anterior
       const { error: updateCurrentError } = await supabase
         .from('setores')
@@ -69,6 +74,8 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
         console.error('Erro ao atualizar setor atual:', updateCurrentError);
         throw updateCurrentError;
       }
+      
+      console.log(`Atualizado com sucesso o setor ${department.name} para ordem ${prevOrderValue}`);
       
       toast({
         title: "Sucesso",
@@ -151,6 +158,8 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
         throw updateNextError;
       }
       
+      console.log(`Atualizado com sucesso o setor ${nextDepartment.name} para ordem ${currentOrderValue}`);
+      
       // Depois, atualize o departamento atual para a ordem seguinte
       console.log(`Atualizando setor ${department.id} para ordem ${nextOrderValue}`);
       const { error: updateCurrentError } = await supabase
@@ -162,6 +171,8 @@ export const useDepartmentOperations = (fetchDepartments: () => Promise<void>) =
         console.error('Erro ao atualizar setor atual:', updateCurrentError);
         throw updateCurrentError;
       }
+      
+      console.log(`Atualizado com sucesso o setor ${department.name} para ordem ${nextOrderValue}`);
       
       toast({
         title: "Sucesso",

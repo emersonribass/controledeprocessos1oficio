@@ -46,16 +46,17 @@ const DepartmentsList = ({
     setTimeout(() => setIsMoving(false), 1000);
   };
 
+  // Reordenar os departamentos pelo campo order antes de verificar primeiro/último
+  const orderedDepartments = [...departments].sort((a, b) => a.order - b.order);
+
   const isFirstDepartment = (dept: Department) => {
-    if (!departments.length) return false;
-    const orderedDepts = [...departments].sort((a, b) => a.order - b.order);
-    return orderedDepts[0].id === dept.id;
+    if (!orderedDepartments.length) return false;
+    return orderedDepartments[0].id === dept.id;
   };
 
   const isLastDepartment = (dept: Department) => {
-    if (!departments.length) return false;
-    const orderedDepts = [...departments].sort((a, b) => a.order - b.order);
-    return orderedDepts[orderedDepts.length - 1].id === dept.id;
+    if (!orderedDepartments.length) return false;
+    return orderedDepartments[orderedDepartments.length - 1].id === dept.id;
   };
   
   return <Table className="w-full">
@@ -73,7 +74,7 @@ const DepartmentsList = ({
             <TableCell colSpan={5} className="text-center py-6">
               Nenhum setor encontrado.
             </TableCell>
-          </TableRow> : departments.map(department => <TableRow key={department.id} className="h-8 py-1">
+          </TableRow> : orderedDepartments.map(department => <TableRow key={department.id} className="h-8 py-1">
               <TableCell className="py-1">{department.id}</TableCell>
               <TableCell className="font-medium py-1">{department.name}</TableCell>
               <TableCell className="py-1">{department.order}</TableCell>
