@@ -15,6 +15,8 @@ export const usePreviousDepartment = () => {
         return false;
       }
 
+      console.log("Iniciando movimentação para departamento anterior:", processId);
+
       // 1. Obter informações do processo
       const { data: processo, error: processoError } = await supabase
         .from("processos")
@@ -56,6 +58,7 @@ export const usePreviousDepartment = () => {
       }
 
       const departamentoAnterior = anteriores[0];
+      console.log(`Movendo de ${departamentoAtual.name} para ${departamentoAnterior.name}`);
 
       // 4. Marcar data de saída no histórico atual
       const now = new Date().toISOString();
@@ -109,6 +112,7 @@ export const usePreviousDepartment = () => {
       );
 
       toast.success(`Processo retornado para ${departamentoAnterior.name}`);
+      console.log("Processo movido com sucesso para departamento anterior");
       return true;
     } catch (error) {
       console.error("Erro ao mover processo:", error);

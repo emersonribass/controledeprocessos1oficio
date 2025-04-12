@@ -24,12 +24,22 @@ const NavigationButtons = ({
 }: NavigationButtonsProps) => {
   const processoTexto = protocolNumber ? `processo ${protocolNumber}` : 'processo';
   
+  const handlePreviousDepartment = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    moveProcessToPreviousDepartment(processId);
+  };
+
+  const handleNextDepartment = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    moveProcessToNextDepartment(processId);
+  };
+  
   if (showLabels) {
     return (
       <>
         <Button 
           variant="outline" 
-          onClick={() => moveProcessToPreviousDepartment(processId)} 
+          onClick={handlePreviousDepartment} 
           disabled={isFirstDepartment} 
           title={`Mover ${processoTexto} para departamento anterior`}
           aria-label={`Mover ${processoTexto} para departamento anterior`}
@@ -41,7 +51,7 @@ const NavigationButtons = ({
         </Button>
         <Button 
           variant="outline" 
-          onClick={() => moveProcessToNextDepartment(processId)} 
+          onClick={handleNextDepartment} 
           disabled={isLastDepartment} 
           title={`Mover ${processoTexto} para próximo departamento`}
           aria-label={`Mover ${processoTexto} para próximo departamento`}
@@ -60,7 +70,7 @@ const NavigationButtons = ({
       <Button 
         variant="ghost" 
         size="icon" 
-        onClick={() => moveProcessToPreviousDepartment(processId)} 
+        onClick={handlePreviousDepartment} 
         disabled={isFirstDepartment} 
         title={`Mover ${processoTexto} para departamento anterior`}
         aria-label={`Mover ${processoTexto} para departamento anterior`}
@@ -73,7 +83,7 @@ const NavigationButtons = ({
       <Button 
         variant="ghost" 
         size="icon" 
-        onClick={() => moveProcessToNextDepartment(processId)} 
+        onClick={handleNextDepartment} 
         disabled={isLastDepartment}
         title={`Mover ${processoTexto} para próximo departamento`}
         aria-label={`Mover ${processoTexto} para próximo departamento`}
