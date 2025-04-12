@@ -2,9 +2,11 @@
 import { Process, PROCESS_STATUS } from "@/types";
 import { useAuth } from "@/features/auth";
 import { ProcessFilters } from "../types";
+import { useProcessFilterByStatus } from "./useProcessFilterByStatus";
 
 export const useProcessFilters = (processes: Process[]) => {
   const { user, isAdmin } = useAuth();
+  const { filterByStatus } = useProcessFilterByStatus();
   
   const filterProcesses = (
     filters: ProcessFilters,
@@ -17,53 +19,43 @@ export const useProcessFilters = (processes: Process[]) => {
     // para evitar verificações repetidas para cada processo
     const userIsAdmin = user && user.isAdmin;
     
-    return listToFilter.filter((process) => {
-      // Verificar permissões de usuário apenas se não for admin e tiver departamentos atribuídos
-      if (user && !userIsAdmin && user.departments?.length > 0) {
-        // Para processos não iniciados, verificar o primeiro setor da sequência
-        if (process.status === PROCESS_STATUS.NOT_STARTED) {
-          // Verificar se o usuário tem acesso ao primeiro setor (Atendimento)
-          const firstDepartmentId = "1"; // ID do primeiro setor (Atendimento)
-          if (!user.departments.includes(firstDepartmentId)) {
-            return false; // Não mostrar processos não iniciados se o usuário não tiver acesso ao primeiro setor
-          }
-        } 
-        // Para processos em andamento ou em outros estados, verificar o setor atual
-        else if (!user.departments.includes(process.currentDepartment)) {
-          return false; // Não mostrar se o usuário não tem acesso ao setor atual
-        }
-      }
-
-      // Ocultar processos concluídos se showCompleted for false
-      if (filters.showCompleted === false && process.status === PROCESS_STATUS.COMPLETED) {
-        return false;
-      }
-
+    // Primeiro, filtrar processos por permissões do usuário
+    const permissionFiltered = filterByUserPermissions(listToFilter, userIsAdmin);
+    
+    // Em seguida, filtrar por status
+    const statusFiltered = filterByStatus(permissionFiltered, {
+      status: filters.status,
+      showCompleted: filters.showCompleted
+    });
+    
+    // Por fim, aplicar filtros de departamento, tipo e busca
+    return applyRemainingFilters(statusFiltered, filters);
+  };
+  
+  // Função auxiliar para filtrar por permissões de usuário
+  const filterByUserPermissions = (processList: Process[], userIsAdmin?: boolean): Process[] => {
+    if (!user || userIsAdmin || !user.departments?.length) {
+      return processList;
+    }
+    
+    return processList.filter(process => {
+      // Para processos não iniciados, verificar o primeiro setor da sequência
+      if (process.status === PROCESS_STATUS.NOT_STARTED) {
+        // Verificar se o usuário tem acesso ao primeiro setor (Atendimento)
+        const firstDepartmentId = "1"; // ID do primeiro setor (Atendimento)
+        return user.departments.includes(firstDepartmentId);
+      } 
+      // Para processos em andamento ou em outros estados, verificar o setor atual
+      return user.departments.includes(process.currentDepartment);
+    });
+  };
+  
+  // Função auxiliar para aplicar filtros restantes
+  const applyRemainingFilters = (processList: Process[], filters: ProcessFilters): Process[] => {
+    return processList.filter(process => {
       // Verificar filtro de departamento
       if (filters.department && process.currentDepartment !== filters.department) {
         return false;
-      }
-
-      // Verificar filtro de status
-      if (filters.status) {
-        // Converter os valores da UI para o formato usado no tipo Process
-        let statusToMatch = filters.status;
-        
-        // Mapear os valores da UI para os valores internos do tipo Process
-        if (filters.status === "pending") {
-          statusToMatch = PROCESS_STATUS.PENDING;
-        } else if (filters.status === "completed") {
-          statusToMatch = PROCESS_STATUS.COMPLETED;
-        } else if (filters.status === "overdue") {
-          statusToMatch = PROCESS_STATUS.OVERDUE;
-        } else if (filters.status === "not_started") {
-          statusToMatch = PROCESS_STATUS.NOT_STARTED;
-        }
-        
-        // Garantir que o status corresponda exatamente ao solicitado
-        if (process.status !== statusToMatch) {
-          return false;
-        }
       }
 
       // Verificar filtro de tipo de processo

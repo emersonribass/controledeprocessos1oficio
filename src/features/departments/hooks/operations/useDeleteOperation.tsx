@@ -47,10 +47,13 @@ export const useDeleteOperation = () => {
       }
       
       // Se não houver vínculos, excluir o departamento
+      // Convertendo o id de string para número para resolver o erro TypeScript
+      const departmentId = parseInt(department.id, 10);
+      
       const { error: deleteError } = await supabase
         .from("setores")
         .delete()
-        .eq("id", parseInt(department.id));
+        .eq("id", departmentId);
       
       if (deleteError) {
         console.error("Erro ao excluir departamento:", deleteError);

@@ -18,8 +18,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { handleLogin } = useLogin();
   const { handleLogout } = useLogout();
 
-  // Função para verificar se um usuário é administrador
+  // Função para verificar se um usuário é administrador - evitando chamadas condicionais de hooks
   const checkAdminStatus = async (email: string): Promise<boolean> => {
+    // Chamando a função externa sem lógica condicional
     return await isAdminByEmail(email);
   };
 
@@ -41,22 +42,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Sincronizar o estado do usuário com a sessão do Supabase
   useEffect(() => {
+    let isMounted = true; // Variável para prevenir atualizações de estado após desmontagem
+    
     const initAuth = async () => {
       setIsLoading(true);
       try {
         const session = await getSession();
         
-        if (session?.user) {
+        if (session?.user && isMounted) {
           const userData = await convertSupabaseUser(session.user);
           setUser(userData);
-        } else {
+        } else if (isMounted) {
           setUser(null);
         }
       } catch (error) {
         console.error("Erro ao inicializar autenticação:", error);
-        setUser(null);
+        if (isMounted) {
+          setUser(null);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
@@ -66,18 +73,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Configurar listener para mudanças de sessão
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Evento de autenticação:", event);
-      await handleSessionChange(event, session);
       
-      if (session?.user) {
-        const userData = await convertSupabaseUser(session.user);
-        setUser(userData);
-      } else {
-        setUser(null);
+      if (isMounted) {
+        await handleSessionChange(event, session);
+        
+        if (session?.user) {
+          const userData = await convertSupabaseUser(session.user);
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
       }
     });
 
     // Limpar listener ao desmontar
     return () => {
+      isMounted = false;
       authListener?.subscription?.unsubscribe();
     };
   }, []);

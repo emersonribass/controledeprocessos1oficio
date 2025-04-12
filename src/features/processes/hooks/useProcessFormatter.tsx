@@ -1,5 +1,5 @@
 
-import { Process, PROCESS_STATUS, ProcessStatus } from "@/types";
+import { Process, PROCESS_STATUS, ProcessStatus, HistoryEntry } from "@/types";
 
 interface ProcessoRaw {
   id: string;
@@ -28,14 +28,15 @@ export const useProcessFormatter = () => {
   const formatProcesses = (processesData: ProcessoRaw[]): Process[] => {
     return processesData.map(processo => {
       // Converter formato de histórico
-      const history = processo.historico.map(historico => ({
+      const history: HistoryEntry[] = processo.historico.map(historico => ({
         id: historico.id,
         processId: historico.processo_id,
         departmentId: historico.setor_id,
         entryDate: historico.data_entrada,
         exitDate: historico.data_saida || null,
         userId: historico.usuario_id || "",
-        userName: historico.usuario_nome || "Usuário"
+        userName: historico.usuario_nome || "Usuário",
+        departmentResponsibleUserId: historico.usuario_responsavel_setor || ""
       }));
 
       // Mapeamento de status
