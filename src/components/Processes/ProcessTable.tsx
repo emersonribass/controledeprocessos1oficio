@@ -7,6 +7,10 @@ import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
+import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
+import { useAuth } from "@/hooks/auth";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProcessTableProps {
   processes: Process[];
@@ -40,8 +44,71 @@ const ProcessTable = ({
   startProcess
 }: ProcessTableProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  
+  // Estado para armazenar os responsáveis de cada processo
+  const [processesResponsibles, setProcessesResponsibles] = useState<Record<string, any>>({});
+  const [loadingResponsibles, setLoadingResponsibles] = useState<Record<string, boolean>>({});
+
   const handleRowClick = (processId: string) => {
     navigate(`/processes/${processId}`);
+  };
+
+  // Função para carregar os responsáveis de todos os processos
+  useEffect(() => {
+    const loadAllResponsibles = async () => {
+      const newLoadingState: Record<string, boolean> = {};
+      
+      for (const process of processes) {
+        if (process.currentDepartment) {
+          newLoadingState[process.id] = true;
+        }
+      }
+      
+      setLoadingResponsibles(newLoadingState);
+      
+      const newResponsibles: Record<string, any> = {};
+      
+      for (const process of processes) {
+        if (process.currentDepartment) {
+          try {
+            const responsible = await getSectorResponsible(process.id, process.currentDepartment);
+            newResponsibles[process.id] = responsible;
+          } catch (error) {
+            console.error(`Erro ao carregar responsável para processo ${process.id}:`, error);
+          } finally {
+            setLoadingResponsibles(prev => ({...prev, [process.id]: false}));
+          }
+        }
+      }
+      
+      setProcessesResponsibles(newResponsibles);
+    };
+    
+    loadAllResponsibles();
+  }, [processes]);
+
+  // Função para aceitar a responsabilidade pelo processo
+  const handleAcceptResponsibility = async (processId: string, protocolNumber?: string) => {
+    if (!user || !protocolNumber) return;
+    
+    try {
+      const success = await acceptProcessResponsibility(processId, protocolNumber);
+      if (success) {
+        // Atualiza o estado local após aceitar a responsabilidade
+        const responsible = await getSectorResponsible(processId, processes.find(p => p.id === processId)?.currentDepartment || '');
+        setProcessesResponsibles(prev => ({...prev, [processId]: responsible}));
+        
+        toast({
+          title: "Sucesso",
+          description: "Você aceitou a responsabilidade pelo processo."
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao aceitar responsabilidade:", error);
+    }
   };
 
   // Função para obter a data de entrada mais recente para um departamento
@@ -159,7 +226,8 @@ const ProcessTable = ({
                 
                 <TableCell onClick={e => e.stopPropagation()} className="text-center px-0">
                   <ProcessActionButtons 
-                    processId={process.id} 
+                    processId={process.id}
+                    protocolNumber={process.protocolNumber}
                     moveProcessToPreviousDepartment={handleMoveToPrevious} 
                     moveProcessToNextDepartment={handleMoveToNext} 
                     isFirstDepartment={process.currentDepartment === sortedDepartments[0]?.id}
@@ -168,6 +236,10 @@ const ProcessTable = ({
                     isEditing={false} 
                     status={process.status}
                     startProcess={handleStartProcess}
+                    hasSectorResponsible={!!processesResponsibles[process.id]}
+                    onAcceptResponsibility={() => handleAcceptResponsibility(process.id, process.protocolNumber)}
+                    isAccepting={isAccepting}
+                    sectorId={process.currentDepartment}
                   />
                 </TableCell>
               </TableRow>
