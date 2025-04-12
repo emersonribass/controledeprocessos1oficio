@@ -15,8 +15,8 @@ interface ProcessTableProps {
   toggleSort: (field: keyof Process) => void;
   getDepartmentName: (id: string) => string;
   getProcessTypeName: (id: string) => string;
-  moveProcessToNextDepartment: (processId: string) => void;
-  moveProcessToPreviousDepartment: (processId: string) => void;
+  moveProcessToNextDepartment: (processId: string) => Promise<void>;
+  moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   processTypes: ProcessType[];
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
@@ -66,6 +66,21 @@ const ProcessTable = ({
     if (status === "overdue") return "bg-red-200";
     if (status === "pending") return "bg-blue-200";
     return "";
+  };
+  
+  // Adaptadores para converter as funções para Promise<void>
+  const handleMoveToNext = async (processId: string): Promise<void> => {
+    await moveProcessToNextDepartment(processId);
+  };
+  
+  const handleMoveToPrevious = async (processId: string): Promise<void> => {
+    await moveProcessToPreviousDepartment(processId);
+  };
+  
+  const handleStartProcess = async (processId: string): Promise<void> => {
+    if (startProcess) {
+      await startProcess(processId);
+    }
   };
   
   return (
@@ -145,14 +160,14 @@ const ProcessTable = ({
                 <TableCell onClick={e => e.stopPropagation()} className="text-center px-0">
                   <ProcessActionButtons 
                     processId={process.id} 
-                    moveProcessToPreviousDepartment={moveProcessToPreviousDepartment} 
-                    moveProcessToNextDepartment={moveProcessToNextDepartment} 
+                    moveProcessToPreviousDepartment={handleMoveToPrevious} 
+                    moveProcessToNextDepartment={handleMoveToNext} 
                     isFirstDepartment={process.currentDepartment === sortedDepartments[0]?.id}
                     isLastDepartment={process.currentDepartment === concludedDept?.id}
                     setIsEditing={() => {}} 
                     isEditing={false} 
                     status={process.status}
-                    startProcess={startProcess}
+                    startProcess={handleStartProcess}
                   />
                 </TableCell>
               </TableRow>

@@ -15,8 +15,8 @@ interface ProcessTableRowProps {
   departments: Department[];
   getDepartmentName: (id: string) => string;
   getProcessTypeName: (id: string) => string;
-  moveProcessToNextDepartment: (processId: string) => void;
-  moveProcessToPreviousDepartment: (processId: string) => void;
+  moveProcessToNextDepartment: (processId: string) => Promise<void>;
+  moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   processTypes: ProcessType[];
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
@@ -103,6 +103,21 @@ const ProcessTableRow = ({
     return "";
   };
 
+  // Adaptadores para garantir que as funções retornem Promise<void>
+  const handleMoveToNext = async (processId: string): Promise<void> => {
+    await moveProcessToNextDepartment(processId);
+  };
+  
+  const handleMoveToPrevious = async (processId: string): Promise<void> => {
+    await moveProcessToPreviousDepartment(processId);
+  };
+  
+  const handleStartProcess = async (processId: string): Promise<void> => {
+    if (startProcess) {
+      await startProcess(processId);
+    }
+  };
+
   return (
     <TableRow
       key={process.id}
@@ -147,14 +162,14 @@ const ProcessTableRow = ({
       <TableCell className="text-right">
         <ProcessActionButtons
           processId={process.id}
-          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-          moveProcessToNextDepartment={moveProcessToNextDepartment}
+          moveProcessToPreviousDepartment={handleMoveToPrevious}
+          moveProcessToNextDepartment={handleMoveToNext}
           isFirstDepartment={isFirstDepartment}
           isLastDepartment={isLastDepartment}
           setIsEditing={() => {}}
           isEditing={false}
           status={process.status}
-          startProcess={startProcess}
+          startProcess={handleStartProcess}
         />
       </TableCell>
     </TableRow>
