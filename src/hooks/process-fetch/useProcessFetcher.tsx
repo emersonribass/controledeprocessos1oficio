@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/schema";
 
 export const useProcessFetcher = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -31,10 +32,10 @@ export const useProcessFetcher = () => {
       }
 
       // Combinar os dados dos processos com os setores correspondentes
-      const processesWithDepartments = processesData.map(process => {
+      const processesWithDepartments = processesData.map((process: any) => {
         // Encontrar o setor que corresponde ao setor_atual do processo
         const matchingDept = departmentsData.find(
-          dept => dept.id.toString() === process.setor_atual
+          (dept: any) => dept.id.toString() === process.setor_atual
         );
         
         // Retornar o processo com as informações do setor

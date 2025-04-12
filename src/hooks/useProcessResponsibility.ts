@@ -4,21 +4,13 @@ import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useProcessResponsibility = () => {
   const [isAssigning, setIsAssigning] = useState<boolean>(false);
   const [isAccepting, setIsAccepting] = useState<boolean>(false);
   const { toast: uiToast } = useToast();
   const { user } = useAuth();
-  const {
-    updateProcesso,
-    getProcessoById,
-    updateSetorResponsavel,
-    createSetorResponsavel,
-    getSetorResponsaveis,
-    updateNotificacao,
-    getUsuarioById
-  } = useSupabase();
 
   /**
    * Atribui um usuário como responsável por um processo
@@ -36,9 +28,10 @@ export const useProcessResponsibility = () => {
     setIsAssigning(true);
 
     try {
-      const { error } = await updateProcesso(processId, { 
-        usuario_responsavel: userId 
-      });
+      const { error } = await supabase
+        .from('processos')
+        .update({ usuario_responsavel: userId })
+        .eq('id', processId);
 
       if (error) {
         throw error;
@@ -76,7 +69,11 @@ export const useProcessResponsibility = () => {
 
     try {
       // Verificar se o processo já tem um responsável no setor atual
-      const { data: processData, error: processError } = await getProcessoById(processId);
+      const { data: processData, error: processError } = await supabase
+        .from('processos')
+        .select('*')
+        .eq('id', processId)
+        .single();
 
       if (processError) {
         throw processError;
@@ -90,7 +87,11 @@ export const useProcessResponsibility = () => {
       const currentDepartmentId = processData.setor_atual;
       
       // Verificar se já existe um responsável para este setor
-      const { data: existingResponsibles, error: responsibleError } = await getSetorResponsaveis(processId, currentDepartmentId);
+      const { data: existingResponsibles, error: responsibleError } = await supabase
+        .from('setor_responsaveis')
+        .select('*')
+        .eq('processo_id', processId)
+        .eq('setor_id', currentDepartmentId);
 
       if (responsibleError) {
         throw responsibleError;
@@ -109,22 +110,27 @@ export const useProcessResponsibility = () => {
         }
         
         // Se outro usuário é responsável, atualizar
-        const { error: updateError } = await updateSetorResponsavel(existingResponsible.id, { 
-          usuario_id: user.id,
-          data_atribuicao: new Date().toISOString()
-        });
+        const { error: updateError } = await supabase
+          .from('setor_responsaveis')
+          .update({ 
+            usuario_id: user.id,
+            data_atribuicao: new Date().toISOString()
+          })
+          .eq('id', existingResponsible.id);
 
         if (updateError) {
           throw updateError;
         }
       } else {
         // Se não existe responsável, criar novo
-        const { error: insertError } = await createSetorResponsavel({ 
-          processo_id: processId,
-          setor_id: currentDepartmentId,
-          usuario_id: user.id,
-          data_atribuicao: new Date().toISOString()
-        });
+        const { error: insertError } = await supabase
+          .from('setor_responsaveis')
+          .insert({ 
+            processo_id: processId,
+            setor_id: currentDepartmentId,
+            usuario_id: user.id,
+            data_atribuicao: new Date().toISOString()
+          });
 
         if (insertError) {
           throw insertError;
@@ -132,9 +138,12 @@ export const useProcessResponsibility = () => {
       }
 
       // Marcar notificações como respondidas
-      const { error: notificationError } = await updateNotificacao(processId, { 
-        respondida: true 
-      });
+      const { error: notificationError } = await supabase
+        .from('notificacoes')
+        .update({ respondida: true })
+        .eq('processo_id', processId)
+        .eq('usuario_id', user.id)
+        .eq('tipo', 'processo_movido');
 
       if (notificationError) {
         console.error("Erro ao atualizar notificações:", notificationError);
@@ -160,7 +169,11 @@ export const useProcessResponsibility = () => {
    */
   const isUserResponsibleForProcess = async (processId: string, userId: string) => {
     try {
-      const { data, error } = await getProcessoById(processId);
+      const { data, error } = await supabase
+        .from('processos')
+        .select('usuario_responsavel')
+        .eq('id', processId)
+        .single();
 
       if (error) {
         throw error;
@@ -178,13 +191,18 @@ export const useProcessResponsibility = () => {
    */
   const isUserResponsibleForSector = async (processId: string, sectorId: string, userId: string) => {
     try {
-      const { data, error } = await getSetorResponsaveis(processId, sectorId);
+      const { data, error } = await supabase
+        .from('setor_responsaveis')
+        .select('*')
+        .eq('processo_id', processId)
+        .eq('setor_id', sectorId)
+        .eq('usuario_id', userId);
 
       if (error) {
         throw error;
       }
 
-      return data && data.length > 0 && data[0].usuario_id === userId;
+      return data && data.length > 0;
     } catch (error) {
       console.error("Erro ao verificar responsabilidade pelo setor:", error);
       return false;
@@ -196,7 +214,11 @@ export const useProcessResponsibility = () => {
    */
   const getProcessResponsible = async (processId: string) => {
     try {
-      const { data: process, error: processError } = await getProcessoById(processId);
+      const { data: process, error: processError } = await supabase
+        .from('processos')
+        .select('usuario_responsavel')
+        .eq('id', processId)
+        .single();
 
       if (processError) {
         throw processError;
@@ -206,7 +228,11 @@ export const useProcessResponsibility = () => {
         return null;
       }
 
-      const { data: user, error: userError } = await getUsuarioById(process.usuario_responsavel);
+      const { data: user, error: userError } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', process.usuario_responsavel)
+        .single();
 
       if (userError) {
         throw userError;
@@ -224,17 +250,25 @@ export const useProcessResponsibility = () => {
    */
   const getSectorResponsible = async (processId: string, sectorId: string) => {
     try {
-      const { data, error } = await getSetorResponsaveis(processId, sectorId);
+      const { data, error } = await supabase
+        .from('setor_responsaveis')
+        .select('usuario_id')
+        .eq('processo_id', processId)
+        .eq('setor_id', sectorId);
 
       if (error) {
         throw error;
       }
 
-      if (!data || data.length === 0 || !data[0].usuario_id) {
+      if (!data || data.length === 0) {
         return null;
       }
 
-      const { data: user, error: userError } = await getUsuarioById(data[0].usuario_id);
+      const { data: user, error: userError } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', data[0].usuario_id)
+        .single();
 
       if (userError) {
         throw userError;

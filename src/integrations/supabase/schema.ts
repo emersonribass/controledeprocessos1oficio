@@ -21,11 +21,11 @@ export type Tables = {
   };
   processos: {
     id: string;
-    protocolo: string;
+    numero_protocolo: string;
     tipo_processo: string;
     setor_atual: string;
     data_inicio: string;
-    data_fim_prevista: string;
+    data_fim_esperada: string;
     status: 'Em andamento' | 'Concluído' | 'Não iniciado';
     usuario_responsavel: string | null;
     created_at?: string;

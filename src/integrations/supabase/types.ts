@@ -9,7 +9,263 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      notificacoes: {
+        Row: {
+          created_at: string | null
+          data_criacao: string
+          id: string
+          lida: boolean
+          mensagem: string
+          processo_id: string | null
+          respondida: boolean
+          tipo: string
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data_criacao?: string
+          id?: string
+          lida?: boolean
+          mensagem: string
+          processo_id?: string | null
+          respondida?: boolean
+          tipo: string
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data_criacao?: string
+          id?: string
+          lida?: boolean
+          mensagem?: string
+          processo_id?: string | null
+          respondida?: boolean
+          tipo?: string
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "processos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notificacoes_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      processos: {
+        Row: {
+          created_at: string | null
+          data_fim_esperada: string | null
+          data_inicio: string | null
+          id: string
+          numero_protocolo: string
+          setor_atual: string | null
+          status: string
+          tipo_processo: string
+          updated_at: string | null
+          usuario_responsavel: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_fim_esperada?: string | null
+          data_inicio?: string | null
+          id?: string
+          numero_protocolo: string
+          setor_atual?: string | null
+          status: string
+          tipo_processo: string
+          updated_at?: string | null
+          usuario_responsavel?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_fim_esperada?: string | null
+          data_inicio?: string | null
+          id?: string
+          numero_protocolo?: string
+          setor_atual?: string | null
+          status?: string
+          tipo_processo?: string
+          updated_at?: string | null
+          usuario_responsavel?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processos_usuario_responsavel_fkey"
+            columns: ["usuario_responsavel"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      processos_historico: {
+        Row: {
+          created_at: string | null
+          data_entrada: string
+          data_saida: string | null
+          id: number
+          processo_id: string
+          setor_id: string
+          updated_at: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_entrada?: string
+          data_saida?: string | null
+          id?: number
+          processo_id: string
+          setor_id: string
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_entrada?: string
+          data_saida?: string | null
+          id?: number
+          processo_id?: string
+          setor_id?: string
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processos_historico_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "processos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processos_historico_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setor_responsaveis: {
+        Row: {
+          created_at: string | null
+          data_atribuicao: string
+          id: string
+          processo_id: string
+          setor_id: string
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data_atribuicao?: string
+          id?: string
+          processo_id: string
+          setor_id: string
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data_atribuicao?: string
+          id?: string
+          processo_id?: string
+          setor_id?: string
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setor_responsaveis_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "processos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "setor_responsaveis_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setores: {
+        Row: {
+          created_at: string | null
+          id: number
+          name: string
+          order_num: number
+          time_limit: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          name: string
+          order_num: number
+          time_limit?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          name?: string
+          order_num?: number
+          time_limit?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      usuarios: {
+        Row: {
+          ativo: boolean
+          created_at: string | null
+          email: string
+          id: string
+          nome: string
+          perfil: string
+          senha: string
+          setores_atribuidos: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string | null
+          email: string
+          id?: string
+          nome: string
+          perfil: string
+          senha: string
+          setores_atribuidos?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string | null
+          email?: string
+          id?: string
+          nome?: string
+          perfil?: string
+          senha?: string
+          setores_atribuidos?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

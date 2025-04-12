@@ -43,7 +43,7 @@ export type ProcessHistory = {
   userId: string;
 };
 
-// Utiliza o tipo de notificação do Supabase com pequenas adaptações
+// Utiliza o tipo de notificação do Supabase com adaptações
 export type Notification = Omit<Tables["notificacoes"], "mensagem"> & {
   message: string;
 };

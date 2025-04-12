@@ -69,7 +69,7 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
                   className={`p-4 ${!notification.lida ? "bg-primary/5" : ""} cursor-pointer`}
                   onClick={() => markAsRead(notification.id)}
                 >
-                  <p className="text-sm">{notification.message}</p>
+                  <p className="text-sm">{notification.mensagem || notification.message}</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     {format(new Date(notification.data_criacao), "dd MMM, HH:mm", { locale: ptBR })}
                   </p>

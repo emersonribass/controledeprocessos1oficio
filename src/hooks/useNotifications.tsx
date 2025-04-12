@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { useSupabase } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/auth";
 import { Tables } from "@/integrations/supabase/schema";
+import { supabase } from "@/integrations/supabase/client";
 
 type Notification = Tables["notificacoes"];
 

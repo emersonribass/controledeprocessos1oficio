@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Notification } from "@/types";
+import { Tables } from "@/integrations/supabase/schema";
 
 export const useNotificationsService = () => {
   const { toast } = useToast();
@@ -12,7 +13,6 @@ export const useNotificationsService = () => {
   const fetchUserNotifications = async (userId: string): Promise<Notification[]> => {
     setIsLoading(true);
     try {
-      // Aqui usamos a notação de string para a tabela que não está no types.ts do Supabase
       const { data, error } = await supabase
         .from('notificacoes')
         .select('*')
@@ -25,14 +25,8 @@ export const useNotificationsService = () => {
 
       // Mapear os dados para o nosso tipo Notification
       const notifications: Notification[] = data.map(n => ({
-        id: n.id,
-        userId: n.usuario_id,
-        processId: n.processo_id,
-        message: n.mensagem,
-        read: n.lida,
-        createdAt: n.created_at,
-        type: n.tipo,
-        responded: n.respondida
+        ...n,
+        message: n.mensagem
       }));
 
       return notifications;
@@ -103,7 +97,6 @@ export const useNotificationsService = () => {
     type: string = 'movimento'
   ): Promise<boolean> => {
     try {
-      // Usando a notação de string para evitar problemas de tipo
       const { error } = await supabase
         .from('notificacoes')
         .insert({
@@ -112,7 +105,8 @@ export const useNotificationsService = () => {
           mensagem: message,
           tipo: type,
           lida: false,
-          respondida: false
+          respondida: false,
+          data_criacao: new Date().toISOString()
         });
 
       if (error) {
