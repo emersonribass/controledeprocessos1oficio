@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from "react";
 import { Process } from "@/types";
-import { useSupabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/features/auth";
 
 /**
@@ -9,7 +9,6 @@ import { useAuth } from "@/features/auth";
  */
 export const useSingleProcessResponsible = (processId?: string) => {
   const { user } = useAuth();
-  const { supabase } = useSupabase();
   
   const [singleProcess, setSingleProcess] = useState<Process | null>(null);
   const [isMainResponsible, setIsMainResponsible] = useState(false);
@@ -82,7 +81,7 @@ export const useSingleProcessResponsible = (processId?: string) => {
     } catch (error) {
       console.error("Erro ao buscar responsabilidade do processo:", error);
     }
-  }, [processId, user, supabase]);
+  }, [processId, user]);
 
   return {
     singleProcess,

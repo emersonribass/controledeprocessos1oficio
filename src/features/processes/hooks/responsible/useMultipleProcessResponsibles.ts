@@ -1,13 +1,12 @@
 
 import { useState, useCallback } from "react";
 import { Process } from "@/types";
-import { useSupabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Hook para gerenciar responsáveis de múltiplos processos
  */
 export const useMultipleProcessResponsibles = (processes: Process[] = []) => {
-  const { supabase } = useSupabase();
   const [processResponsibles, setProcessResponsibles] = useState<Record<string, string | null>>({});
   
   const fetchMultipleProcessResponsibles = useCallback(async () => {
@@ -33,7 +32,7 @@ export const useMultipleProcessResponsibles = (processes: Process[] = []) => {
     } catch (error) {
       console.error("Erro ao buscar responsáveis dos processos:", error);
     }
-  }, [processes, supabase]);
+  }, [processes]);
   
   return {
     processResponsibles,

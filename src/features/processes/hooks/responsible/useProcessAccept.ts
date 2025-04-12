@@ -1,6 +1,6 @@
 
 import { useCallback } from "react";
-import { useSupabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/features/auth";
 import { toast } from "sonner";
 import { Process } from "@/types";
@@ -10,7 +10,6 @@ import { Process } from "@/types";
  */
 export const useProcessAccept = (processId?: string, singleProcess: Process | null = null) => {
   const { user } = useAuth();
-  const { supabase } = useSupabase();
   
   const acceptProcess = useCallback(async (): Promise<boolean> => {
     if (!user || !processId || !singleProcess) return false;
@@ -59,7 +58,7 @@ export const useProcessAccept = (processId?: string, singleProcess: Process | nu
       });
       return false;
     }
-  }, [user, processId, singleProcess, supabase]);
+  }, [user, processId, singleProcess]);
   
   return { acceptProcess };
 };
