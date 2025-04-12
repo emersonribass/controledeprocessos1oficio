@@ -4,6 +4,7 @@ import { Process, ProcessType, Department } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
 import ProcessTableBody from "./ProcessTableBody";
 import { useProcessTableState } from "@/hooks/useProcessTableState";
+import { useEffect } from "react";
 
 interface ProcessTableProps {
   processes: Process[];
@@ -19,6 +20,12 @@ interface ProcessTableProps {
   updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
   departments: Department[];
   startProcess?: (processId: string) => Promise<void>;
+  filterProcesses: (
+    filters: any, 
+    processes: Process[], 
+    processesResponsibles?: Record<string, any>
+  ) => Process[];
+  filters: any;
 }
 
 const ProcessTable = ({
@@ -33,9 +40,21 @@ const ProcessTable = ({
   processTypes,
   updateProcessType,
   departments,
-  startProcess
+  startProcess,
+  filterProcesses,
+  filters
 }: ProcessTableProps) => {
-  const { processesResponsibles } = useProcessTableState(processes);
+  const { processesResponsibles, fetchResponsibles } = useProcessTableState(processes);
+  
+  // Buscar responsáveis quando os processos mudarem
+  useEffect(() => {
+    if (processes.length > 0) {
+      fetchResponsibles();
+    }
+  }, [processes, fetchResponsibles]);
+  
+  // Aplicar filtros considerando as responsabilidades
+  const filteredProcesses = filterProcesses(filters, processes, processesResponsibles);
   
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -47,7 +66,7 @@ const ProcessTable = ({
           departments={departments} 
         />
         <ProcessTableBody
-          processes={processes}
+          processes={filteredProcesses}
           departments={departments}
           processTypes={processTypes}
           moveProcessToNextDepartment={moveProcessToNextDepartment}

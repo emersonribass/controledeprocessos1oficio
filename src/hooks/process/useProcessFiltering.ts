@@ -1,6 +1,8 @@
 
 import { Process } from "@/types";
 import { useAuth } from "@/hooks/auth";
+import { useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Hook para filtrar processos com base em critérios específicos
@@ -8,10 +10,8 @@ import { useAuth } from "@/hooks/auth";
 export const useProcessFiltering = (processes: Process[]) => {
   const { user, isAdmin } = useAuth();
   
-  /**
-   * Filtra processos com base nos critérios fornecidos
-   */
-  const filterProcesses = (
+  // Memoizando a função para não recriar a cada renderização
+  const filterProcesses = useMemo(() => (
     filters: {
       department?: string;
       status?: string;
@@ -19,7 +19,8 @@ export const useProcessFiltering = (processes: Process[]) => {
       search?: string;
       excludeCompleted?: boolean;
     },
-    processesToFilter?: Process[]
+    processesToFilter?: Process[],
+    processesResponsibles?: Record<string, any>
   ) => {
     // Se for fornecida uma lista personalizada, use-a, caso contrário use a lista padrão
     const listToFilter = processesToFilter || processes;
@@ -32,14 +33,36 @@ export const useProcessFiltering = (processes: Process[]) => {
 
       // Verificar se o usuário tem permissão para ver este processo
       if (user && !isAdmin(user.email) && user.departments?.length > 0) {
+        const isUserProfileRegular = user.profile === 'usuario';
+        const userHasAttendanceSector = user.departments.includes('1');
+        
         // Para processos não iniciados, apenas usuários do setor 1 (Atendimento) podem ver
         if (process.status === 'not_started') {
           // Se o usuário não tem o setor 1 em seus setores atribuídos, não mostrar
-          if (!user.departments.includes('1')) {
+          if (!userHasAttendanceSector) {
             return false;
           }
         } 
-        // Para processos em andamento, só mostrar se o usuário pertence ao departamento atual
+        // Para processos em andamento, regras mais específicas para usuários comuns
+        else if (isUserProfileRegular && !userHasAttendanceSector) {
+          // Verificar se o usuário pertence ao departamento atual
+          const userBelongsToDepartment = user.departments.includes(process.currentDepartment);
+          
+          // Verificar se o usuário é o responsável pelo processo
+          const isUserResponsible = process.responsibleUserId === user.id;
+          
+          // Verificar se o processo já tem responsável no setor atual
+          const hasResponsibleInCurrentSector = 
+            processesResponsibles && 
+            processesResponsibles[process.id] && 
+            processesResponsibles[process.id][process.currentDepartment];
+          
+          // Mostrar apenas se: o usuário é do setor E (é responsável OU não há responsável)
+          if (!userBelongsToDepartment || (!isUserResponsible && hasResponsibleInCurrentSector)) {
+            return false;
+          }
+        }
+        // Para outros tipos de usuário, só mostrar se pertence ao departamento atual
         else if (!user.departments.includes(process.currentDepartment)) {
           return false;
         }
@@ -87,7 +110,7 @@ export const useProcessFiltering = (processes: Process[]) => {
 
       return true;
     });
-  };
+  }, [processes, user, isAdmin]);
 
   /**
    * Verifica se um processo está com prazo vencido

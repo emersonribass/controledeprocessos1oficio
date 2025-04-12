@@ -38,6 +38,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const { sortField, sortDirection, toggleSort, sortProcesses } = useProcessListSorting();
 
   // Aplicar os filtros e ordenação
+  // Vamos ajustar para passar apenas processes e ordenar o resultado após a filtragem com responsabilidades
   const filteredProcesses = sortProcesses(filterProcesses(filters, processes));
 
   // Determinar os departamentos disponíveis para o usuário atual
@@ -71,6 +72,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
         departments={departments}
         startProcess={startProcess}
         availableDepartments={availableDepartments}
+        filterProcesses={filterProcesses}
       />
     </div>
   );

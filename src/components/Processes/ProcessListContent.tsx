@@ -1,4 +1,3 @@
-
 import { Loader2 } from "lucide-react";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
@@ -35,6 +34,11 @@ interface ProcessListContentProps {
   departments: Department[];
   startProcess?: (processId: string) => Promise<void>;
   availableDepartments: Department[];
+  filterProcesses: (
+    filters: any, 
+    processes: Process[], 
+    processesResponsibles?: Record<string, any>
+  ) => Process[];
 }
 
 const ProcessListContent = ({
@@ -55,7 +59,8 @@ const ProcessListContent = ({
   updateProcessStatus,
   departments,
   startProcess,
-  availableDepartments
+  availableDepartments,
+  filterProcesses
 }: ProcessListContentProps) => {
   if (isLoading) {
     return (
@@ -104,7 +109,7 @@ const ProcessListContent = ({
       />
 
       <ProcessTable
-        processes={filteredProcesses}
+        processes={processes}
         sortField={sortField}
         sortDirection={sortDirection}
         toggleSort={toggleSort}
@@ -117,6 +122,8 @@ const ProcessListContent = ({
         updateProcessStatus={updateProcessStatus}
         departments={departments}
         startProcess={startProcess}
+        filterProcesses={filterProcesses}
+        filters={filters}
       />
     </div>
   );
