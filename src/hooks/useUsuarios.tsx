@@ -13,16 +13,43 @@ export function useUsuarios() {
   const fetchUsuarios = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      console.log("Iniciando busca de usuários na tabela 'usuarios'");
+      
+      const { data, error, count } = await supabase
         .from("usuarios")
-        .select("*")
+        .select("*", { count: 'exact' })
         .order("nome");
 
       if (error) {
         throw error;
       }
 
-      setUsuarios(data as UsuarioSupabase[]);
+      console.log(`Encontrados ${count} usuários na tabela 'usuarios':`, data);
+      
+      // Se não houver usuários na tabela 'usuarios', vamos verificar 
+      // se existem usuários no sistema de autenticação
+      if (!data || data.length === 0) {
+        console.log("Nenhum usuário encontrado na tabela 'usuarios'. Verificando auth.users...");
+        
+        try {
+          // Verificar se há usuários autenticados que não estão na tabela 'usuarios'
+          const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+          
+          if (authError) {
+            console.error("Erro ao buscar usuários autenticados:", authError);
+          } else if (authUsers && authUsers.users && authUsers.users.length > 0) {
+            console.log(`Encontrados ${authUsers.users.length} usuários no sistema de autenticação.`);
+            console.log("É necessário sincronizar usuários do auth.users para a tabela 'usuarios'");
+          } else {
+            console.log("Nenhum usuário encontrado no sistema de autenticação.");
+          }
+        } catch (authError) {
+          // Pode não ter permissão para acessar a listagem de usuários autenticados
+          console.log("Não foi possível verificar usuários no sistema de autenticação:", authError);
+        }
+      }
+
+      setUsuarios(data as UsuarioSupabase[] || []);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
       toast({

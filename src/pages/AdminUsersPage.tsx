@@ -28,8 +28,13 @@ const AdminUsersPage = () => {
   } = useUsuarios();
 
   useEffect(() => {
+    console.log("AdminUsersPage: Carregando lista de usuários");
     fetchUsuarios();
   }, []);
+
+  useEffect(() => {
+    console.log("AdminUsersPage: Lista de usuários atualizada:", usuarios);
+  }, [usuarios]);
 
   const handleAddUsuario = () => {
     setUsuarioAtual(null);
