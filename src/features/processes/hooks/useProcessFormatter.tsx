@@ -1,28 +1,18 @@
 
 import { Process, PROCESS_STATUS, ProcessStatus, HistoryEntry } from "@/types";
+import { Tables } from "@/integrations/supabase/types";
 
-interface ProcessoRaw {
-  id: string;
-  numero_protocolo: string;
-  tipo_processo: string;
-  setor_atual: string | null;
-  status: string;
-  data_inicio: string | null;
-  data_fim_esperada: string;
-  usuario_responsavel: string | null;
+// Definir tipos específicos para dados brutos do Supabase
+type ProcessoRaw = Tables<"processos"> & {
   historico: HistoricoRaw[];
-}
+  setor_info?: {
+    time_limit: number;
+  };
+};
 
-interface HistoricoRaw {
-  id: string;
-  processo_id: string;
-  setor_id: string;
-  data_entrada: string;
-  data_saida: string | null;
-  usuario_id: string | null;
-  usuario_responsavel_setor: string | null;
+type HistoricoRaw = Tables<"processos_historico"> & {
   usuario_nome?: string;
-}
+};
 
 export const useProcessFormatter = () => {
   const formatProcesses = (processesData: ProcessoRaw[]): Process[] => {
@@ -33,24 +23,19 @@ export const useProcessFormatter = () => {
         processId: historico.processo_id,
         departmentId: historico.setor_id,
         entryDate: historico.data_entrada,
-        exitDate: historico.data_saida || null,
+        exitDate: historico.data_saida || undefined,
         userId: historico.usuario_id || "",
         userName: historico.usuario_nome || "Usuário",
-        departmentResponsibleUserId: historico.usuario_responsavel_setor || ""
+        usuario_responsavel_setor: historico.usuario_responsavel_setor || undefined
       }));
 
       // Mapeamento de status
-      const statusMap: { [key: string]: ProcessStatus } = {
+      const statusMap: Record<string, ProcessStatus> = {
         "Não iniciado": PROCESS_STATUS.NOT_STARTED,
         "Em andamento": PROCESS_STATUS.PENDING,
         "Concluído": PROCESS_STATUS.COMPLETED,
         "Atrasado": PROCESS_STATUS.OVERDUE
       };
-
-      // Formatar data de início (se existir)
-      const formattedStartDate = processo.data_inicio 
-        ? processo.data_inicio 
-        : null;
 
       // Formatar para nosso tipo Process
       const formattedProcess: Process = {
@@ -59,8 +44,8 @@ export const useProcessFormatter = () => {
         processType: processo.tipo_processo,
         currentDepartment: processo.setor_atual || "",
         status: statusMap[processo.status] || PROCESS_STATUS.NOT_STARTED,
-        startDate: formattedStartDate,
-        expectedEndDate: processo.data_fim_esperada,
+        startDate: processo.data_inicio || new Date().toISOString(),
+        expectedEndDate: processo.data_fim_esperada || new Date().toISOString(),
         responsibleUser: processo.usuario_responsavel,
         history: history
       };

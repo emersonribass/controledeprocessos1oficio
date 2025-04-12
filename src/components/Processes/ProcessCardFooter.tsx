@@ -2,8 +2,9 @@
 import { CardFooter } from "@/components/ui/card";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useProcesses } from "@/hooks/useProcesses";
+import { ProcessStatus } from "@/types";
 
-type ProcessCardFooterProps = {
+interface ProcessCardFooterProps {
   processId: string;
   protocolNumber: string;
   hasResponsibleUser: boolean;
@@ -15,9 +16,9 @@ type ProcessCardFooterProps = {
   isMainResponsible?: boolean;
   isSectorResponsible?: boolean;
   currentDepartmentId?: string;
-  status: string;
+  status: ProcessStatus;
   showLabels?: boolean;
-};
+}
 
 const ProcessCardFooter = ({
   processId,

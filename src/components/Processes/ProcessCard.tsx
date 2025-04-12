@@ -1,12 +1,12 @@
 
-import { Process } from "@/types";
+import { Process, ProcessStatus } from "@/types";
 import { Card } from "@/components/ui/card";
 import { useState, useEffect } from "react";
 import ProcessCardHeader from "./ProcessCardHeader";
 import ProcessCardContent from "./ProcessCardContent";
 import ProcessCardFooter from "./ProcessCardFooter";
 
-type ProcessCardProps = {
+interface ProcessCardProps {
   process: Process;
   getProcessTypeName: (id: string) => string;
   getDepartmentName: (id: string) => string;
@@ -17,7 +17,7 @@ type ProcessCardProps = {
   isMainResponsible?: boolean;
   isSectorResponsible?: boolean;
   showLabels?: boolean;
-};
+}
 
 const ProcessCard = ({
   process,

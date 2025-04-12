@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-type ProcessHistoryProps = {
+interface ProcessHistoryProps {
   history: HistoryEntry[];
   getDepartmentName: (id: string) => string;
   getUserName?: (id: string) => string;
@@ -23,7 +23,7 @@ type ProcessHistoryProps = {
   hasResponsibleUser: boolean;
   onProcessAccepted: () => void;
   currentDepartmentId?: string;
-};
+}
 
 interface HistoryEntryWithSectorResponsible extends HistoryEntry {
   usuario_responsavel_setor?: string | null;
@@ -59,8 +59,8 @@ const ProcessHistory = ({
           id: item.id,
           processId: item.processo_id,
           departmentId: item.setor_id,
-          userId: item.usuario_id,
-          userName: getUserName ? getUserName(item.usuario_id) : "Usuário",
+          userId: item.usuario_id || "",
+          userName: getUserName ? getUserName(item.usuario_id || "") : "Usuário",
           entryDate: item.data_entrada,
           exitDate: item.data_saida,
           usuario_responsavel_setor: item.usuario_responsavel_setor

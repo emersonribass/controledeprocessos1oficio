@@ -4,7 +4,14 @@ import { Process } from "@/types";
 import { useProcessFetcher } from "./useProcessFetcher";
 import { useProcessFormatter } from "./useProcessFormatter";
 
-export const useProcessesFetch = () => {
+interface ProcessesFetchResult {
+  processes: Process[];
+  isLoading: boolean;
+  fetchProcesses: () => Promise<void>;
+  setProcesses: React.Dispatch<React.SetStateAction<Process[]>>;
+}
+
+export const useProcessesFetch = (): ProcessesFetchResult => {
   const [processes, setProcesses] = useState<Process[]>([]);
   const { fetchProcessesData, isLoading, setIsLoading } = useProcessFetcher();
   const { formatProcesses } = useProcessFormatter();
@@ -31,7 +38,7 @@ export const useProcessesFetch = () => {
       console.error("Erro ao buscar processos:", error);
       setIsLoading(false); // Garantir que o loading termina mesmo com erro
     });
-  }, [fetchProcesses, setIsLoading]); // Adicionei as dependências corretas
+  }, [fetchProcesses, setIsLoading]);
 
   return {
     processes,

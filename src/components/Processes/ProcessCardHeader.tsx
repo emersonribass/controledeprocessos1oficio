@@ -1,12 +1,13 @@
 
 import ProcessStatusBadge from "./ProcessStatusBadge";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProcessStatus } from "@/types";
 
-type ProcessCardHeaderProps = {
+interface ProcessCardHeaderProps {
   protocolNumber: string;
-  status: string;
+  status: ProcessStatus;
   processTypeName: string;
-};
+}
 
 const ProcessCardHeader = ({
   protocolNumber,

@@ -15,6 +15,11 @@ interface ProcessResponsiblesHookProps {
   processes: Process[];
 }
 
+type ProcessResponsible = {
+  id: string;
+  usuario_responsavel: string | null;
+};
+
 const ProcessTableResponsibles = ({ processes }: ProcessResponsiblesHookProps): ProcessResponsiblesHookResult => {
   const [processResponsibles, setProcessResponsibles] = useState<Record<string, string | null>>({});
   const { user } = useAuth();
@@ -41,9 +46,9 @@ const ProcessTableResponsibles = ({ processes }: ProcessResponsiblesHookProps): 
         
         // Mapear os resultados para o estado
         const newResponsibles: Record<string, string | null> = {};
-        data.forEach(item => {
+        (data as ProcessResponsible[]).forEach(item => {
           // Marcar como tendo responsável se tiver usuário_responsavel
-          newResponsibles[item.id] = item.usuario_responsavel || null;
+          newResponsibles[item.id] = item.usuario_responsavel;
         });
         
         setProcessResponsibles(newResponsibles);
