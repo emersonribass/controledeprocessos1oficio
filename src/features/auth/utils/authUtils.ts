@@ -1,29 +1,32 @@
 
+// Tipos de responsáveis por processo
 export enum ProcessResponsibleType {
-  NOT_RESPONSIBLE = "not_responsible",
-  DEPARTMENT_MEMBER = "department_member",
-  PROCESS_RESPONSIBLE = "process_responsible"
+  MAIN = 'main',
+  SECTOR = 'sector',
+  NONE = 'none'
 }
 
+/**
+ * Utilitário para determinar o tipo de responsabilidade de um usuário em um processo
+ * @param userId ID do usuário atual
+ * @param processResponsibleId ID do responsável principal do processo
+ * @param hasUserInSector Indica se existe um responsável no setor
+ * @returns ProcessResponsibleType indicando o tipo de responsabilidade
+ */
 export const getProcessResponsibilityType = (
-  userDepartments: string[] | undefined,
-  currentDepartmentId: string | null | undefined,
-  isProcessResponsible: boolean
+  userId: string | null | undefined,
+  processResponsibleId: string | null | undefined,
+  hasUserInSector: boolean
 ): ProcessResponsibleType => {
-  // Se o usuário é responsável direto pelo processo
-  if (isProcessResponsible) {
-    return ProcessResponsibleType.PROCESS_RESPONSIBLE;
+  if (!userId) return ProcessResponsibleType.NONE;
+  
+  if (processResponsibleId && userId === processResponsibleId) {
+    return ProcessResponsibleType.MAIN;
   }
   
-  // Se o usuário pertence ao departamento atual do processo
-  if (
-    userDepartments &&
-    currentDepartmentId &&
-    userDepartments.includes(currentDepartmentId)
-  ) {
-    return ProcessResponsibleType.DEPARTMENT_MEMBER;
+  if (hasUserInSector) {
+    return ProcessResponsibleType.SECTOR;
   }
   
-  // Usuário não tem relação com o processo
-  return ProcessResponsibleType.NOT_RESPONSIBLE;
+  return ProcessResponsibleType.NONE;
 };

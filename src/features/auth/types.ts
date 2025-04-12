@@ -7,9 +7,13 @@ export interface UserData {
   id: string;
   email: string;
   nome: string | null;
+  name: string | null;  // Adicionado para compatibilidade
   perfil: string | null;
+  profile: string | null;  // Adicionado para compatibilidade
   ativo: boolean;
   setores_atribuidos: string[];
+  departments: string[];  // Adicionado para compatibilidade
+  isAdmin: boolean;  // Adicionado para compatibilidade
 }
 
 // Tipo de retorno para a operação de login

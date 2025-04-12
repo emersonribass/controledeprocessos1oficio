@@ -17,14 +17,21 @@ export const convertSupabaseUser = async (user: User): Promise<UserData> => {
       throw error;
     }
 
+    // Verificar se o perfil é de administrador
+    const isAdmin = data.perfil === "admin";
+
     // Construir o objeto UserData com os dados do Supabase
     const userData: UserData = {
       id: user.id,
       email: user.email || "",
-      name: data.nome || "",
-      profile: data.perfil || "usuario",
-      isAdmin: data.perfil === "admin",
-      departments: data.setores_atribuidos || [],
+      nome: data.nome || "",
+      name: data.nome || "", // Para compatibilidade
+      perfil: data.perfil || "usuario",
+      profile: data.perfil || "usuario", // Para compatibilidade
+      ativo: data.ativo,
+      setores_atribuidos: data.setores_atribuidos || [],
+      departments: data.setores_atribuidos || [], // Para compatibilidade
+      isAdmin: isAdmin
     };
 
     return userData;
@@ -35,10 +42,14 @@ export const convertSupabaseUser = async (user: User): Promise<UserData> => {
     return {
       id: user.id,
       email: user.email || "",
+      nome: "",
       name: "",
+      perfil: "usuario",
       profile: "usuario",
-      isAdmin: false,
+      ativo: true,
+      setores_atribuidos: [],
       departments: [],
+      isAdmin: false
     };
   }
 };
