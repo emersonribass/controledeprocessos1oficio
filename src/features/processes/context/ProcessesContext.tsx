@@ -7,6 +7,7 @@ import { useProcessTypes } from "../hooks/useProcessTypes";
 import { useSupabaseProcesses } from "../hooks/useSupabaseProcesses";
 import { ProcessesContextType } from "../types";
 
+// Criando o contexto
 const ProcessesContext = createContext<ProcessesContextType | undefined>(undefined);
 
 export const ProcessesProvider = ({ children }: { children: ReactNode }) => {

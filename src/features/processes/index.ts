@@ -6,6 +6,9 @@ export * from './components/ProcessTableHeader';
 export * from './components/ProcessTypePicker';
 export * from './components/ProcessDepartmentCell';
 
+// Exportar provider e contexto
+export * from './context/ProcessesContext';
+
 // Exportar hooks
 export * from './hooks/useProcesses';
 export * from './hooks/useProcessesFetch';
