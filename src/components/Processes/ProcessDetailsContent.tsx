@@ -1,10 +1,10 @@
 
+import React, { useState, useCallback } from "react";
 import { Process } from "@/types";
 import ProcessCard from "./ProcessCard";
 import ProcessHistory from "./ProcessHistory";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useProcesses } from "@/features/processes";
-import { useState } from "react";
 
 // Interface de apresentação pura, sem lógica de negócio
 export interface ProcessDetailsContentPresentationProps {
@@ -23,8 +23,8 @@ export interface ProcessDetailsContentPresentationProps {
   onProcessAccepted: () => Promise<void>;
 }
 
-// Componente de apresentação pura
-export const ProcessDetailsContentPresentation = ({
+// Componente de apresentação pura memoizado para evitar re-renderizações desnecessárias
+export const ProcessDetailsContentPresentation = React.memo(({
   process,
   getUserName,
   isRefreshing,
@@ -66,7 +66,9 @@ export const ProcessDetailsContentPresentation = ({
       />
     </div>
   );
-};
+});
+
+ProcessDetailsContentPresentation.displayName = 'ProcessDetailsContentPresentation';
 
 // Componente container que gerencia a lógica
 const ProcessDetailsContent = ({
@@ -99,13 +101,13 @@ const ProcessDetailsContent = ({
     acceptProcess
   } = useProcessResponsibility({ processId: process.id });
 
-  const handleProcessAccepted = async () => {
+  const handleProcessAccepted = useCallback(async () => {
     const success = await acceptProcess();
     if (success) {
       await refreshResponsibility();
       setRefreshKey(prev => prev + 1);
     }
-  };
+  }, [acceptProcess, refreshResponsibility]);
 
   return (
     <ProcessDetailsContentPresentation

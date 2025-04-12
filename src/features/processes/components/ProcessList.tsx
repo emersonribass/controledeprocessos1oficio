@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useProcesses } from "../hooks/useProcesses";
 import { Process, PROCESS_STATUS } from "@/types";
 import { Loader2 } from "lucide-react";
@@ -55,50 +55,63 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   }, [user]);
 
   // Filtragem rigorosa aplicando as regras de permissão de usuário
-  const filteredProcesses = filterProcesses(filters, processes);
+  const filteredProcesses = useMemo(() => {
+    return filterProcesses(filters, processes);
+  }, [filterProcesses, filters, processes]);
 
-  const sortedProcesses = [...filteredProcesses].sort((a, b) => {
-    // Primeiro, ordenar por status: processos iniciados (não 'Não iniciado') vêm primeiro
-    if (a.status === PROCESS_STATUS.NOT_STARTED && b.status !== PROCESS_STATUS.NOT_STARTED) {
-      return 1; // a (não iniciado) vem depois
-    }
-    if (a.status !== PROCESS_STATUS.NOT_STARTED && b.status === PROCESS_STATUS.NOT_STARTED) {
-      return -1; // a (iniciado) vem antes
-    }
-    
-    // Se ambos têm o mesmo status de iniciação, usar a ordenação por campo selecionado
-    if (sortField === "startDate" || sortField === "expectedEndDate") {
-      const dateA = new Date(a[sortField]).getTime();
-      const dateB = new Date(b[sortField]).getTime();
-      return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
-    }
+  // Memoizar a ordenação dos processos para evitar recálculos desnecessários
+  const sortedProcesses = useMemo(() => {
+    return [...filteredProcesses].sort((a, b) => {
+      // Primeiro, ordenar por status: processos iniciados (não 'Não iniciado') vêm primeiro
+      if (a.status === PROCESS_STATUS.NOT_STARTED && b.status !== PROCESS_STATUS.NOT_STARTED) {
+        return 1; // a (não iniciado) vem depois
+      }
+      if (a.status !== PROCESS_STATUS.NOT_STARTED && b.status === PROCESS_STATUS.NOT_STARTED) {
+        return -1; // a (iniciado) vem antes
+      }
+      
+      // Se ambos têm o mesmo status de iniciação, usar a ordenação por campo selecionado
+      if (sortField === "startDate" || sortField === "expectedEndDate") {
+        const dateA = new Date(a[sortField]).getTime();
+        const dateB = new Date(b[sortField]).getTime();
+        return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
+      }
 
-    if (sortField === "protocolNumber") {
-      const numA = parseInt(a.protocolNumber.replace(/\D/g, ""));
-      const numB = parseInt(b.protocolNumber.replace(/\D/g, ""));
-      return sortDirection === "asc" ? numA - numB : numB - numA;
-    }
+      if (sortField === "protocolNumber") {
+        const numA = parseInt(a.protocolNumber.replace(/\D/g, ""));
+        const numB = parseInt(b.protocolNumber.replace(/\D/g, ""));
+        return sortDirection === "asc" ? numA - numB : numB - numA;
+      }
 
-    if (a[sortField] < b[sortField]) {
-      return sortDirection === "asc" ? -1 : 1;
-    }
-    if (a[sortField] > b[sortField]) {
-      return sortDirection === "asc" ? 1 : -1;
-    }
-    return 0;
-  });
+      if (a[sortField] < b[sortField]) {
+        return sortDirection === "asc" ? -1 : 1;
+      }
+      if (a[sortField] > b[sortField]) {
+        return sortDirection === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [filteredProcesses, sortField, sortDirection]);
 
-  const toggleSort = (field: keyof Process) => {
+  // Usar useCallback para evitar recriação desnecessária da função
+  const toggleSort = useCallback((field: keyof Process) => {
     if (field === sortField) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      setSortDirection(prevDirection => prevDirection === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
       setSortDirection("asc");
     }
-  };
+  }, [sortField]);
 
-  // Usando o hook de responsáveis
+  // Usando o hook de responsáveis com os processos ordenados
   const responsiblesManager = useProcessResponsibles({ processes: sortedProcesses });
+
+  // Filtrar os departamentos baseado nos departamentos do usuário - memoizado
+  const availableDepartments = useMemo(() => {
+    return userIsAdmin || !user?.departments?.length 
+      ? departments 
+      : departments.filter(dept => user?.departments.includes(dept.id));
+  }, [userIsAdmin, user?.departments, departments]);
 
   if (isLoading) {
     return (
@@ -107,11 +120,6 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
       </div>
     );
   }
-
-  // Filtrar os departamentos baseado nos departamentos do usuário
-  const availableDepartments = userIsAdmin || !user?.departments?.length 
-    ? departments 
-    : departments.filter(dept => user?.departments.includes(dept.id));
 
   return (
     <div>
