@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { toast } from "sonner";
 import { useAuth } from "@/hooks/auth";
 import { useNotificationService } from "./useNotificationService";
 
@@ -99,7 +98,7 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
         process.numero_protocolo
       );
 
-      toast.success(`Processo movido para ${nextDepartment.name}`);
+      // Removido toast de confirmação
       onProcessUpdated();
       return true;
     } catch (error) {

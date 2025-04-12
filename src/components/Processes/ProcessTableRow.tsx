@@ -57,7 +57,13 @@ const ProcessTableRow = ({
     return "";
   };
 
-  const handleRowClick = () => {
+  const handleRowClick = (e: React.MouseEvent) => {
+    // Não navegar se o clique foi em um elemento de ação (botões, selects, etc)
+    if ((e.target as HTMLElement).closest('.process-action')) {
+      e.stopPropagation();
+      return;
+    }
+    
     navigate(`/processes/${process.id}`);
   };
 
@@ -72,7 +78,7 @@ const ProcessTableRow = ({
       <TableCell className="font-medium">
         {process.protocolNumber}
       </TableCell>
-      <TableCell onClick={e => e.stopPropagation()}>
+      <TableCell className="process-action" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
           currentTypeId={process.processType} 
@@ -82,7 +88,6 @@ const ProcessTableRow = ({
         />
       </TableCell>
       
-      {/* Células para cada departamento */}
       <ProcessDepartmentsSection 
         sortedDepartments={sortedDepartments}
         isProcessStarted={process.status !== "not_started"}
@@ -93,7 +98,6 @@ const ProcessTableRow = ({
         isDepartmentOverdue={(departmentId, isProcessStarted) => isDepartmentOverdue(departmentId, isProcessStarted)}
       />
       
-      {/* Ações do processo */}
       <ProcessRowActions 
         processId={process.id}
         protocolNumber={process.protocolNumber}

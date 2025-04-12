@@ -37,21 +37,25 @@ const ProcessActionButtons = ({
 }: ProcessActionButtonsProps) => {
   const isNotStarted = status === "not_started";
   
-  const handleMoveToNext = async () => {
+  const handleMoveToNext = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     await moveProcessToNextDepartment(processId);
   };
   
-  const handleMoveToPrevious = async () => {
+  const handleMoveToPrevious = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     await moveProcessToPreviousDepartment(processId);
   };
   
-  const handleStartProcess = async () => {
+  const handleStartProcess = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (startProcess) {
       await startProcess(processId);
     }
   };
   
-  const handleAcceptResponsibility = async () => {
+  const handleAcceptResponsibility = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (onAcceptResponsibility) {
       await onAcceptResponsibility();
     }
@@ -60,13 +64,13 @@ const ProcessActionButtons = ({
   // Se o processo não está iniciado, mostra apenas o botão de iniciar
   if (isNotStarted) {
     return (
-      <div className="flex justify-center gap-2">
+      <div className="flex justify-center gap-2 process-action">
         <Button 
           variant="outline" 
           size="sm" 
           onClick={handleStartProcess} 
           title="Iniciar processo" 
-          className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1"
+          className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action"
         >
           <Play className="h-3 w-3" />
           Iniciar
@@ -78,14 +82,14 @@ const ProcessActionButtons = ({
   // Se não há responsável no setor, mostra apenas o botão de aceitar processo
   if (!hasSectorResponsible && onAcceptResponsibility) {
     return (
-      <div className="flex justify-center gap-2">
+      <div className="flex justify-center gap-2 process-action">
         <Button 
           variant="outline" 
           size="sm" 
           onClick={handleAcceptResponsibility} 
           disabled={isAccepting}
           title="Aceitar processo" 
-          className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1"
+          className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action"
         >
           <CheckCircle className="h-3 w-3" />
           {isAccepting ? "Processando..." : "Aceitar Processo"}
@@ -96,14 +100,14 @@ const ProcessActionButtons = ({
   
   // Caso contrário, mostra os botões de navegação entre departamentos
   return (
-    <div className="flex justify-center gap-2">
+    <div className="flex justify-center gap-2 process-action">
       <Button 
         variant="ghost" 
         size="icon" 
         onClick={handleMoveToPrevious} 
         disabled={isFirstDepartment} 
         title="Mover para departamento anterior"
-        className={isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}
+        className={`process-action ${isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <MoveLeft className="h-4 w-4" />
       </Button>
@@ -113,7 +117,7 @@ const ProcessActionButtons = ({
         onClick={handleMoveToNext} 
         disabled={isLastDepartment} 
         title="Mover para próximo departamento"
-        className={isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}
+        className={`process-action ${isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <MoveRight className="h-4 w-4" />
       </Button>

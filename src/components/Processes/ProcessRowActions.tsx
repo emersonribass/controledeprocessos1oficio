@@ -33,7 +33,7 @@ const ProcessRowActions = ({
   sectorId
 }: ProcessRowActionsProps) => {
   return (
-    <TableCell className="text-right">
+    <TableCell className="text-right process-action">
       <ProcessActionButtons 
         processId={processId} 
         protocolNumber={protocolNumber} 
