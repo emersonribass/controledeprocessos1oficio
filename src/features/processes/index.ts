@@ -11,18 +11,7 @@ export * from './components/ProcessDetails';
 export * from './context/ProcessesContext';
 
 // Exportar hooks
-export * from './hooks/useProcesses';
-export * from './hooks/useProcessesFetch';
-export * from './hooks/useProcessFilters';
-export * from './hooks/useProcessFormatter';
-export * from './hooks/useProcessMovement';
-export * from './hooks/useProcessTypes';
-export * from './hooks/useProcessUpdate';
-export * from './hooks/useSupabaseProcesses';
-export * from './hooks/useProcessDelete';
-export * from './hooks/useProcessStart';
-export { useProcessResponsibles } from './hooks/useProcessResponsibles';
-export type { ProcessResponsiblesHookResult } from './hooks/useProcessResponsibles';
+export * from './hooks';
 
 // Exportar tipos
 export * from './types';
