@@ -4,26 +4,38 @@ import { useProcessResponsibilityAcceptance } from "./process-responsibility/use
 import { useProcessResponsibilityVerification } from "./process-responsibility/useProcessResponsibilityVerification";
 import { useProcessResponsibleFetching } from "./process-responsibility/useProcessResponsibleFetching";
 
+/**
+ * Hook unificado para gerenciar responsabilidade em processos
+ */
 export const useProcessResponsibility = () => {
+  // Hook para atribuir responsáveis
   const { isAssigning, assignResponsible } = useProcessResponsibleAssignment();
+  
+  // Hook para aceitar responsabilidade
   const { isAccepting, acceptProcessResponsibility } = useProcessResponsibilityAcceptance();
+  
+  // Hook para verificar responsabilidade
   const { isUserResponsibleForProcess, isUserResponsibleForSector } = useProcessResponsibilityVerification();
+  
+  // Hook para buscar responsáveis
   const { getProcessResponsible, getSectorResponsible } = useProcessResponsibleFetching();
 
   return {
-    // Estado
+    // Estados
     isAssigning,
     isAccepting,
     
-    // Funções de atribuição
+    // Atribuição
     assignResponsible,
+    
+    // Aceitação
     acceptProcessResponsibility,
     
-    // Funções de verificação
+    // Verificação
     isUserResponsibleForProcess,
     isUserResponsibleForSector,
     
-    // Funções de busca
+    // Busca
     getProcessResponsible,
     getSectorResponsible
   };

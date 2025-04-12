@@ -4,6 +4,9 @@ import { Process } from "@/types";
 import { useProcessFetcher } from "./process-fetch/useProcessFetcher";
 import { useProcessFormatter } from "./process-fetch/useProcessFormatter";
 
+/**
+ * Hook para buscar e formatar processos
+ */
 export const useProcessesFetch = () => {
   const [processes, setProcesses] = useState<Process[]>([]);
   const { fetchProcessesData, isLoading, setIsLoading } = useProcessFetcher();
