@@ -17,6 +17,7 @@ export const LayoutPresentation = ({
   hasUser: boolean;
   children: React.ReactNode;
 }) => {
+  // Limitar o tempo de exibição do spinner para evitar bloqueios infinitos
   if (isLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">

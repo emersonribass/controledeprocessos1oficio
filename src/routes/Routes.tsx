@@ -60,6 +60,25 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }, [user, checkAdminStatus]);
   
+  // Adicionando timeout para evitar tela de carregamento infinita
+  useEffect(() => {
+    let timeoutId: number;
+    
+    if (isLoading || (adminOnly && isCheckingAdmin)) {
+      timeoutId = window.setTimeout(() => {
+        console.log("Timeout de proteção ativado para rota protegida");
+        if (isLoading) {
+          // Se ainda estiver carregando após o timeout, redirecionar para login
+          window.location.href = "/login";
+        }
+      }, 5000); // 5 segundos de timeout
+    }
+    
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [isLoading, adminOnly, isCheckingAdmin]);
+  
   if (isLoading || (adminOnly && isCheckingAdmin)) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">

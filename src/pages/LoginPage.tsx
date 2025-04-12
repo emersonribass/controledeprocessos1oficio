@@ -36,13 +36,14 @@ const LoginPage = () => {
     // Evitar redirecionamentos múltiplos
     if (hasRedirected) return;
     
+    // Se ainda estiver carregando, aguarde
+    if (isLoading) return;
+    
     try {
-      if (!isLoading && user) {
+      if (user) {
         console.log("LoginPage: Usuário já autenticado, redirecionando para /dashboard");
         setHasRedirected(true);
-        navigate("/dashboard", {
-          replace: true
-        });
+        navigate("/dashboard", { replace: true });
       }
     } catch (error) {
       console.error("Erro ao tentar redirecionar:", error);
