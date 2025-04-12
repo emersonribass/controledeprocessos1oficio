@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import AcceptProcessButton from "./ProcessButtons/AcceptProcessButton";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 

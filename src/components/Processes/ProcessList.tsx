@@ -5,7 +5,7 @@ import { Process, PROCESS_STATUS } from "@/types";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth";
 import ProcessTableResponsibles from "./ProcessTableResponsibles";
 
 interface ProcessListProps {

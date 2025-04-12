@@ -1,15 +1,14 @@
-
 import React, { useMemo } from "react";
 import { TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { Department, Process, ProcessType, PROCESS_STATUS } from "@/types";
 import ProcessTypePicker from "./ProcessTypePicker";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
-import ProcessActionButtons from "./ProcessActionButtons";
-import ProcessTableEmpty from "./ProcessTableEmpty";
+import ProcessActionButtons from "@/components/Processes/ProcessActionButtons";
+import ProcessTableEmpty from "@/components/Processes/ProcessTableEmpty";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/auth";
-import { ProcessResponsiblesHookResult } from "@/features/processes/hooks/useProcessResponsibles";
+import { useAuth } from "@/features/auth";
+import { ProcessResponsiblesHookResult } from "../hooks/useProcessResponsibles";
 
 interface ProcessTableBodyProps {
   processes: Process[];
@@ -26,7 +25,6 @@ interface ProcessTableBodyProps {
   responsiblesManager: ProcessResponsiblesHookResult;
 }
 
-// Componente de linha de processo memoizado para evitar re-renderizações desnecessárias
 const MemoizedProcessRow = React.memo(({
   process,
   sortedDepartments,

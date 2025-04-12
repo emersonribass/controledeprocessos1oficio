@@ -1,10 +1,9 @@
-
 import { useEffect, useState } from "react";
 import ProcessList from "@/components/Processes/ProcessList";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, ArrowUpRight } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth";
 
 const ProcessesPage = () => {
   const navigate = useNavigate();

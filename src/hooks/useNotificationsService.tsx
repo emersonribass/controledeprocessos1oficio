@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth";
 import { Notification } from "@/types";
 
 export const useNotificationsService = () => {

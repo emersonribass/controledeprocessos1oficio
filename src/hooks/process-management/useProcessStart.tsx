@@ -1,7 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth";
 
 export const useProcessStart = () => {
   const { toast } = useToast();

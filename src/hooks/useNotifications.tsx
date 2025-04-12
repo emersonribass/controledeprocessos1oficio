@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { useNotificationsService } from "@/hooks/useNotificationsService";
 import { Notification } from "@/types";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth";
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);

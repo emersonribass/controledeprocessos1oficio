@@ -7,7 +7,7 @@ import { UserFormDialog } from "@/components/Admin/UserFormDialog";
 import { UsersPageHeader } from "@/components/Admin/UsersPageHeader";
 import { useUsuarios } from "@/hooks/useUsuarios";
 import { UsuarioSupabase } from "@/types/usuario";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth";
 
 const AdminUsersPage = () => {
   const [openDialog, setOpenDialog] = useState(false);

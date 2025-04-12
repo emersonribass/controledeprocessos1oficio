@@ -4,7 +4,7 @@ import { Home, ClipboardList, Users, Settings, ChevronDown, ChevronUp } from "lu
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth";
 
 type SidebarLink = {
   title: string;

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Process } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth";
 import { ProcessResponsiblesHookResult } from "@/features/processes";
 
 interface ProcessResponsiblesHookProps {
