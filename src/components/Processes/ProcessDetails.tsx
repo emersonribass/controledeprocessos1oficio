@@ -16,7 +16,16 @@ const ProcessDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { processes, getDepartmentName, getProcessTypeName, moveProcessToNextDepartment, moveProcessToPreviousDepartment, isLoading, refreshProcesses } = useProcesses();
+  const { 
+    processes, 
+    getDepartmentName, 
+    getProcessTypeName, 
+    moveProcessToNextDepartment, 
+    moveProcessToPreviousDepartment, 
+    isLoading, 
+    refreshProcesses,
+    filterProcesses 
+  } = useProcesses();
   
   const {
     userNames,
@@ -48,8 +57,18 @@ const ProcessDetails = () => {
   useEffect(() => {
     if (!processes.length || !id || !user) return;
     
-    const foundProcess = processes.find(p => p.id === id);
-    setProcess(foundProcess || null);
+    // Aplicar as regras de permissão ao buscar um processo específico
+    const filteredProcesses = filterProcesses({});
+    const foundProcess = filteredProcesses.find(p => p.id === id);
+    
+    // Se o processo não foi encontrado na lista filtrada (que já aplicou as permissões),
+    // significa que o usuário não tem permissão para vê-lo
+    if (!foundProcess) {
+      setProcess(null);
+      return;
+    }
+    
+    setProcess(foundProcess);
     
     // Verificar se o usuário atual é o responsável principal
     if (foundProcess && responsibleUser) {
@@ -108,7 +127,7 @@ const ProcessDetails = () => {
         fetchUserNames(uniqueUserIds);
       }
     }
-  }, [processes, id, responsibleUser, user, currentSectorResponsible]);
+  }, [processes, id, responsibleUser, user, currentSectorResponsible, filterProcesses]);
 
   const handleRefresh = async () => {
     if (isRefreshing) return;

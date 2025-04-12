@@ -63,6 +63,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     }
   }, [user]);
 
+  // Filtragem rigorosa aplicando as regras de permissão de usuário
   const filteredProcesses = filterProcesses(filters, processes);
 
   const sortedProcesses = [...filteredProcesses].sort((a, b) => {
@@ -113,6 +114,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     );
   }
 
+  // Filtrar os departamentos baseado nos departamentos do usuário
   const availableDepartments = userIsAdmin || !user?.departments?.length 
     ? departments 
     : departments.filter(dept => user?.departments.includes(dept.id));

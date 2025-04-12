@@ -22,12 +22,11 @@ export const useProcessFilters = (processes: Process[]) => {
       // Verificar se o usuário tem permissão para ver este processo
       if (user && !isAdmin(user.email) && user.departments?.length > 0) {
         // Para processos não iniciados, verificar o primeiro setor da sequência
-        // Assumindo que processos não iniciados estariam no primeiro setor (normalmente id 1)
         if (process.status === PROCESS_STATUS.NOT_STARTED) {
           // Verificar se o usuário tem acesso ao primeiro setor (Atendimento)
           const firstDepartmentId = "1"; // ID do primeiro setor (Atendimento)
           if (!user.departments.includes(firstDepartmentId)) {
-            return false;
+            return false; // Não mostrar processos não iniciados se o usuário não tiver acesso ao primeiro setor
           }
         } 
         // Para processos em andamento ou em outros estados, verificar o setor atual
