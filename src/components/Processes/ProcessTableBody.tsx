@@ -8,7 +8,7 @@ import ProcessActionButtons from "@/components/Processes/ProcessActionButtons";
 import ProcessTableEmpty from "@/components/Processes/ProcessTableEmpty";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth";
-import { ProcessResponsiblesHookResult } from "../hooks/useProcessResponsibles";
+import { ProcessResponsiblesHookResult } from "@/features/processes";
 
 interface ProcessTableBodyProps {
   processes: Process[];
