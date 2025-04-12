@@ -1,11 +1,10 @@
-
 import { Table } from "@/components/ui/table";
 import { Department, Process, ProcessType } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
 import { useNavigate } from "react-router-dom";
 import { useProcessTableUtilities } from "./ProcessTableUtilities";
 import ProcessTableBody from "./ProcessTableBody";
-import { ProcessResponsiblesHookResult } from "./ProcessTableResponsibles";
+import { ProcessResponsiblesHookResult } from "@/features/processes";
 
 interface ProcessTableProps {
   processes: Process[];

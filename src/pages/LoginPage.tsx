@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth";
-import AuthLoginForm from "@/features/auth/components/AuthLoginForm";
+import { AuthLoginForm } from "@/features/auth/components"; // Corrigido para importar do novo local
 import { ErrorBoundary } from "@/components/ErrorBoundary/ErrorBoundary";
 import { toast } from "sonner";
 

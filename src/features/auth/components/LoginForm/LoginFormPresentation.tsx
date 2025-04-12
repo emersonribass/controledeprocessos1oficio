@@ -7,8 +7,7 @@ import { Card, CardContent, CardDescription } from "@/components/ui/card";
 import { AlertCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-// Interface para os props do componente de apresentação
-export interface LoginFormPresentationProps {
+interface LoginFormPresentationProps {
   email: string;
   password: string;
   isSubmitting: boolean;
@@ -21,8 +20,7 @@ export interface LoginFormPresentationProps {
   onTogglePasswordVisibility: () => void;
 }
 
-// Componente de apresentação pura
-export const LoginFormPresentation = ({
+export const LoginFormPresentation: React.FC<LoginFormPresentationProps> = ({
   email,
   password,
   isSubmitting,
@@ -33,7 +31,7 @@ export const LoginFormPresentation = ({
   onPasswordChange,
   onSubmit,
   onTogglePasswordVisibility
-}: LoginFormPresentationProps) => {
+}) => {
   return (
     <Card className="w-[380px] shadow-lg">
       <CardContent className="pt-6 px-6 py-[14px]">
@@ -45,15 +43,12 @@ export const LoginFormPresentation = ({
           </CardDescription>
         </div>
 
-        {error && (
-          <Alert variant="destructive" className="mb-4">
+        {error && <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+          </Alert>}
         
-        {connectionError && (
-          <Alert variant="destructive" className="mb-4">
+        {connectionError && <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               {connectionError}
@@ -62,25 +57,14 @@ export const LoginFormPresentation = ({
                 alguma alteração nas credenciais de acesso.
               </p>
             </AlertDescription>
-          </Alert>
-        )}
+          </Alert>}
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">E-mail</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="seu@email.com" 
-                value={email} 
-                onChange={onEmailChange} 
-                className="pl-10" 
-                required 
-                disabled={isSubmitting} 
-                aria-label="Email para login"
-              />
+              <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={onEmailChange} className="pl-10" required disabled={isSubmitting} />
             </div>
           </div>
           
@@ -88,41 +72,18 @@ export const LoginFormPresentation = ({
             <Label htmlFor="password">Senha</Label>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input 
-                id="password" 
-                type={showPassword ? "text" : "password"} 
-                value={password} 
-                onChange={onPasswordChange} 
-                className="pl-10" 
-                required 
-                disabled={isSubmitting} 
-                aria-label="Senha para login"
-              />
-              <button 
-                type="button" 
-                onClick={onTogglePasswordVisibility} 
-                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
-                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-              >
+              <Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={onPasswordChange} className="pl-10" required disabled={isSubmitting} />
+              <button type="button" onClick={onTogglePasswordVisibility} className="absolute right-3 top-3 text-muted-foreground hover:text-foreground">
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </div>
           
-          <Button 
-            className="w-full bg-blue-500 hover:bg-blue-600" 
-            type="submit" 
-            disabled={isSubmitting}
-            aria-label="Botão para entrar no sistema"
-          >
-            {isSubmitting ? (
-              <span className="flex items-center gap-2">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          <Button className="w-full bg-blue-500 hover:bg-blue-600" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? <span className="flex items-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
                 Entrando...
-              </span>
-            ) : (
-              "Entrar"
-            )}
+              </span> : "Entrar"}
           </Button>
         </form>
       </CardContent>
