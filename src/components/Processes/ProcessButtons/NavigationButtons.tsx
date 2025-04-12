@@ -26,12 +26,32 @@ const NavigationButtons = ({
   
   const handlePreviousDepartment = (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Desabilitar o botão após o clique para evitar cliques múltiplos
+    const button = e.currentTarget as HTMLButtonElement;
+    button.disabled = true;
+    
     moveProcessToPreviousDepartment(processId);
+    
+    // Reabilitar o botão após um período de tempo
+    setTimeout(() => {
+      if (button) button.disabled = false;
+    }, 2000);
   };
 
   const handleNextDepartment = (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Desabilitar o botão após o clique para evitar cliques múltiplos
+    const button = e.currentTarget as HTMLButtonElement;
+    button.disabled = true;
+    
     moveProcessToNextDepartment(processId);
+    
+    // Reabilitar o botão após um período de tempo
+    setTimeout(() => {
+      if (button) button.disabled = false;
+    }, 2000);
   };
   
   if (showLabels) {
