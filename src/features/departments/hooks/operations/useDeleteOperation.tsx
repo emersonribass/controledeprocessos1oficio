@@ -50,7 +50,7 @@ export const useDeleteOperation = () => {
       const { error: deleteError } = await supabase
         .from("setores")
         .delete()
-        .eq("id", department.id);
+        .eq("id", parseInt(department.id));
       
       if (deleteError) {
         console.error("Erro ao excluir departamento:", deleteError);

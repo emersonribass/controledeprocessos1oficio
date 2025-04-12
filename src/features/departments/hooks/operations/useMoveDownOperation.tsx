@@ -81,7 +81,7 @@ export const useMoveDownOperation = () => {
       const { error: updateError1 } = await supabase
         .from("setores")
         .update({ order_num: 0 }) // Valor temporário para evitar violação de restrição de unicidade
-        .eq("id", currentDept.id);
+        .eq("id", parseInt(currentDept.id));
 
       if (updateError1) {
         console.error("Erro na primeira atualização:", updateError1);
@@ -92,7 +92,7 @@ export const useMoveDownOperation = () => {
       const { error: updateError2 } = await supabase
         .from("setores")
         .update({ order_num: currentDept.order })
-        .eq("id", nextDept.id);
+        .eq("id", parseInt(nextDept.id));
 
       if (updateError2) {
         console.error("Erro na segunda atualização:", updateError2);
@@ -103,7 +103,7 @@ export const useMoveDownOperation = () => {
       const { error: updateError3 } = await supabase
         .from("setores")
         .update({ order_num: nextDept.order })
-        .eq("id", currentDept.id);
+        .eq("id", parseInt(currentDept.id));
 
       if (updateError3) {
         console.error("Erro na terceira atualização:", updateError3);

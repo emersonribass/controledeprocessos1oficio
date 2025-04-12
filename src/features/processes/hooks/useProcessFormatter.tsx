@@ -1,5 +1,5 @@
 
-import { Process, PROCESS_STATUS } from "@/types";
+import { Process, PROCESS_STATUS, ProcessStatus } from "@/types";
 
 interface ProcessoRaw {
   id: string;
@@ -21,6 +21,7 @@ interface HistoricoRaw {
   data_saida: string | null;
   usuario_id: string | null;
   usuario_responsavel_setor: string | null;
+  usuario_nome?: string;
 }
 
 export const useProcessFormatter = () => {
@@ -33,12 +34,12 @@ export const useProcessFormatter = () => {
         departmentId: historico.setor_id,
         entryDate: historico.data_entrada,
         exitDate: historico.data_saida || null,
-        userId: historico.usuario_id || null,
-        departmentResponsibleUserId: historico.usuario_responsavel_setor || null
+        userId: historico.usuario_id || "",
+        userName: historico.usuario_nome || "Usuário"
       }));
 
       // Mapeamento de status
-      const statusMap: { [key: string]: string } = {
+      const statusMap: { [key: string]: ProcessStatus } = {
         "Não iniciado": PROCESS_STATUS.NOT_STARTED,
         "Em andamento": PROCESS_STATUS.PENDING,
         "Concluído": PROCESS_STATUS.COMPLETED,

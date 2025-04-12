@@ -4,108 +4,105 @@ import { toast } from "sonner";
 import { Department } from "@/types";
 
 export const useMoveUpOperation = () => {
-  const handleMoveUp = async (
-    department: Department,
-    onOptimisticUpdate?: (departments: Department[]) => void
-  ) => {
+  // Função para mover um departamento para cima na ordem
+  const handleMoveUp = async (department: Department, onOptimisticUpdate?: (departments: Department[]) => void) => {
     try {
-      // 1. Buscar todos os departamentos para encontrar o anterior
-      const { data: departments, error } = await supabase
-        .from("setores")
-        .select("*")
-        .order("order_num", { ascending: true });
-
-      if (error) {
-        console.error("Erro ao buscar departamentos:", error);
-        toast.error("Erro ao mover departamento para cima");
+      console.log(`Iniciando movimento para cima do setor: ${department.name} (${department.id})`);
+      
+      // Buscar lista completa e ordenada de departamentos
+      const { data: departmentsData, error: fetchError } = await supabase
+        .from('setores')
+        .select('*')
+        .order('order_num', { ascending: true });
+      
+      if (fetchError) {
+        console.error('Erro ao buscar setores:', fetchError);
+        throw fetchError;
+      }
+      
+      if (!departmentsData || departmentsData.length === 0) {
+        console.error('Não foi possível recuperar os setores');
         return;
       }
-
-      // Converter para nosso formato de Department
-      const formattedDepartments = departments.map(d => ({
-        id: d.id.toString(),
-        name: d.name,
-        order: d.order_num,
-        timeLimit: d.time_limit
+      
+      console.log('Departamentos recuperados:', departmentsData);
+      
+      const departments = departmentsData.map(dept => ({
+        id: dept.id.toString(),
+        name: dept.name,
+        order: dept.order_num,
+        timeLimit: dept.time_limit
       }));
-
-      // 2. Encontrar o departamento atual e o anterior
-      const currentDept = formattedDepartments.find(d => d.id === department.id);
-      if (!currentDept) {
-        toast.error("Departamento não encontrado");
-        return;
+      
+      const currentIndex = departments.findIndex(d => d.id === department.id);
+      if (currentIndex <= 0) {
+        console.log('Este setor já está no topo');
+        return; // Já está no topo
       }
 
-      // Se já estiver no topo, não fazer nada
-      if (currentDept.order <= 1) {
-        toast.info("Já está no topo");
-        return;
-      }
-
-      const previousDept = formattedDepartments
-        .filter(d => d.order < currentDept.order)
-        .sort((a, b) => b.order - a.order)[0];
-
-      if (!previousDept) {
-        toast.error("Não foi possível identificar o departamento anterior");
-        return;
-      }
-
-      // 3. Atualização otimista (se fornecida uma função de callback)
+      const prevDepartment = departments[currentIndex - 1];
+      
+      // Armazenar os valores originais para troca
+      const currentOrderValue = department.order;
+      const prevOrderValue = prevDepartment.order;
+      
+      console.log(`Movendo setor para cima: ${department.name} (${department.id}) da posição ${currentOrderValue} para ${prevOrderValue}`);
+      console.log(`Setor anterior: ${prevDepartment.name} (${prevDepartment.id}) da posição ${prevOrderValue} para ${currentOrderValue}`);
+      
+      // Criar uma cópia otimista dos departamentos para atualização da UI
       if (onOptimisticUpdate) {
-        const updatedDepartments = formattedDepartments.map(d => {
-          if (d.id === currentDept.id) {
-            return { ...d, order: previousDept.order };
-          }
-          if (d.id === previousDept.id) {
-            return { ...d, order: currentDept.order };
-          }
-          return d;
-        });
+        const optimisticDepartments = [...departments];
         
-        onOptimisticUpdate(updatedDepartments);
+        // Trocar as posições dos departamentos para atualização otimista
+        const currentDept = {...optimisticDepartments[currentIndex]};
+        const prevDept = {...optimisticDepartments[currentIndex - 1]};
+        
+        // Trocar as ordens
+        currentDept.order = prevOrderValue;
+        prevDept.order = currentOrderValue;
+        
+        // Atualizar a lista
+        optimisticDepartments[currentIndex] = currentDept;
+        optimisticDepartments[currentIndex - 1] = prevDept;
+        
+        // Ordenar a lista atualizada
+        optimisticDepartments.sort((a, b) => a.order - b.order);
+        
+        // Atualizar a UI imediatamente
+        onOptimisticUpdate(optimisticDepartments);
       }
-
-      // 4. Trocar as ordens no banco de dados
-      const { error: updateError1 } = await supabase
-        .from("setores")
-        .update({ order_num: 0 }) // Valor temporário para evitar violação de restrição de unicidade
-        .eq("id", currentDept.id);
-
-      if (updateError1) {
-        console.error("Erro na primeira atualização:", updateError1);
-        toast.error("Erro ao mover departamento");
-        return;
+      
+      // Primeiro, atualize o departamento anterior para a ordem atual
+      const { error: updatePrevError } = await supabase
+        .from('setores')
+        .update({ order_num: currentOrderValue, updated_at: new Date().toISOString() })
+        .eq('id', parseInt(prevDepartment.id));
+      
+      if (updatePrevError) {
+        console.error('Erro ao atualizar setor anterior:', updatePrevError);
+        throw updatePrevError;
       }
-
-      const { error: updateError2 } = await supabase
-        .from("setores")
-        .update({ order_num: currentDept.order })
-        .eq("id", previousDept.id);
-
-      if (updateError2) {
-        console.error("Erro na segunda atualização:", updateError2);
-        toast.error("Erro ao mover departamento");
-        return;
+      
+      console.log(`Atualizado com sucesso o setor ${prevDepartment.name} para ordem ${currentOrderValue}`);
+      
+      // Depois, atualize o departamento atual para a ordem anterior
+      const { error: updateCurrentError } = await supabase
+        .from('setores')
+        .update({ order_num: prevOrderValue, updated_at: new Date().toISOString() })
+        .eq('id', parseInt(department.id));
+      
+      if (updateCurrentError) {
+        console.error('Erro ao atualizar setor atual:', updateCurrentError);
+        throw updateCurrentError;
       }
-
-      const { error: updateError3 } = await supabase
-        .from("setores")
-        .update({ order_num: previousDept.order })
-        .eq("id", currentDept.id);
-
-      if (updateError3) {
-        console.error("Erro na terceira atualização:", updateError3);
-        toast.error("Erro ao mover departamento");
-        return;
-      }
-
-      // Não precisamos fazer fetch novamente, pois o listener real-time cuidará disso
-      toast.success("Departamento movido com sucesso");
-
+      
+      console.log(`Atualizado com sucesso o setor ${department.name} para ordem ${prevOrderValue}`);
+      
+      toast.success(`${department.name} movido para cima`);
+      
     } catch (error) {
-      console.error("Erro ao mover departamento:", error);
-      toast.error("Erro ao mover departamento");
+      console.error('Erro ao reordenar setores:', error);
+      toast.error("Não foi possível reordenar os setores.");
     }
   };
 
