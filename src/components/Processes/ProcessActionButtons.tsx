@@ -36,6 +36,7 @@ const ProcessActionButtons = ({
   sectorId
 }: ProcessActionButtonsProps) => {
   const isNotStarted = status === "not_started";
+  const isCompleted = status === "completed";
   
   const handleMoveToNext = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -132,9 +133,9 @@ const ProcessActionButtons = ({
         variant="ghost" 
         size="icon" 
         onClick={handleMoveToNext} 
-        disabled={true} // Sempre desabilitado para próximo setor
+        disabled={isFirstDepartment || isCompleted} // Desabilitado se for primeiro departamento ou status concluído
         title="Mover para próximo departamento"
-        className="opacity-50 cursor-not-allowed process-action"
+        className={`process-action ${(isFirstDepartment || isCompleted) ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <MoveRight className="h-4 w-4" />
       </Button>
