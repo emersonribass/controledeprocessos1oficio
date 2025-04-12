@@ -80,13 +80,28 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
 
       if (newHistoryError) throw newHistoryError;
 
-      // Atualizar o departamento atual do processo
+      // Verificar se o próximo departamento é o "Concluído(a)"
+      // Obter o nome do departamento para verificar se é "Concluído(a)"
+      const isConcludedDept = nextDepartment.name === "Concluído(a)";
+      
+      // Atualizar o departamento atual do processo e o status se for o departamento "Concluído(a)"
+      const updateData: {
+        setor_atual: string;
+        updated_at: string;
+        status?: string;
+      } = {
+        setor_atual: nextDepartment.id.toString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      // Se for o departamento "Concluído(a)", atualiza o status
+      if (isConcludedDept) {
+        updateData.status = "Concluído";
+      }
+
       const { error: updateError } = await supabase
         .from('processos')
-        .update({
-          setor_atual: nextDepartment.id.toString(),
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', processId);
 
       if (updateError) throw updateError;
@@ -98,7 +113,6 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
         process.numero_protocolo
       );
 
-      // Removido toast de confirmação
       onProcessUpdated();
       return true;
     } catch (error) {
