@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 export const useProcessDelete = (onProcessUpdated: () => void) => {
   const { toast } = useToast();
 
-  // Função para excluir um processo
   const deleteProcess = async (processId: string) => {
     try {
       // Primeiro, excluímos o histórico do processo
@@ -56,7 +55,6 @@ export const useProcessDelete = (onProcessUpdated: () => void) => {
     }
   };
 
-  // Função para excluir múltiplos processos de uma vez
   const deleteManyProcesses = async (processIds: string[]) => {
     try {
       // Primeiro, excluímos o histórico dos processos

@@ -17,8 +17,8 @@ type ProcessesContextType = {
   }, processesToFilter?: Process[]) => Process[];
   getDepartmentName: (id: string) => string;
   getProcessTypeName: (id: string) => string;
-  moveProcessToNextDepartment: (processId: string) => void;
-  moveProcessToPreviousDepartment: (processId: string) => void;
+  moveProcessToNextDepartment: (processId: string) => Promise<void>;
+  moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   isProcessOverdue: (process: Process) => boolean;
   departments: ReturnType<typeof useDepartmentsData>["departments"];
   processTypes: ReturnType<typeof useProcessTypes>["processTypes"];
@@ -42,15 +42,28 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
     processes, 
     isLoading, 
     fetchProcesses, 
-    moveProcessToNextDepartment, 
-    moveProcessToPreviousDepartment,
+    moveProcessToNextDepartment: moveNext, 
+    moveProcessToPreviousDepartment: movePrev,
     updateProcessType,
     updateProcessStatus,
-    startProcess,
+    startProcess: startP,
     deleteProcess,
     deleteManyProcesses
   } = useSupabaseProcesses();
   const { filterProcesses, isProcessOverdue } = useProcessFilters(processes);
+  
+  // Adaptadores para transformar os retornos boolean em void para a interface do contexto
+  const moveProcessToNextDepartment = async (processId: string): Promise<void> => {
+    await moveNext(processId);
+  };
+
+  const moveProcessToPreviousDepartment = async (processId: string): Promise<void> => {
+    await movePrev(processId);
+  };
+
+  const startProcess = async (processId: string): Promise<void> => {
+    await startP(processId);
+  };
   
   // Adicionar a função getProcess
   const getProcess = async (processId: string): Promise<Process | null> => {

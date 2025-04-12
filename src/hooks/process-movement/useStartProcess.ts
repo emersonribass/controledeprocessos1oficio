@@ -16,7 +16,7 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
    * Inicia um processo que está com status não iniciado
    */
   const startProcess = async (processId: string) => {
-    if (!user) return;
+    if (!user) return false;
     
     setIsStarting(true);
     try {
@@ -74,6 +74,7 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
 
       toast.success(`Processo iniciado em ${firstDepartment.name}`);
       onProcessUpdated();
+      return true;
     } catch (error) {
       console.error("Erro ao iniciar processo:", error);
       uiToast({
@@ -81,6 +82,7 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
         description: "Não foi possível iniciar o processo.",
         variant: "destructive"
       });
+      return false;
     } finally {
       setIsStarting(false);
     }

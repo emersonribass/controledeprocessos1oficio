@@ -1,21 +1,26 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/schema";
-
-import { moveProcessToNextDepartment as moveNext } from "./process-movement/useProcessMoveNext";
-import { moveProcessToPreviousDepartment as movePrevious } from "./process-movement/useProcessMovePrevious";
-import { deleteProcess as deleteP, deleteManyProcesses as deleteMany } from "./process-movement/useProcessDelete";
-import { startProcess as start } from "./process-movement/useStartProcess";
+import { useProcessMoveNext } from "./process-movement/useProcessMoveNext";
+import { useProcessMovePrevious } from "./process-movement/useProcessMovePrevious";
+import { useProcessDelete } from "./process-movement/useProcessDelete";
+import { useStartProcess } from "./process-movement/useStartProcess";
 import { useProcessesFetch } from "./useProcessesFetch";
 
 export const useSupabaseProcesses = () => {
   const { processes, isLoading, fetchProcesses, setProcesses } = useProcessesFetch();
+  
+  // Instanciar os hooks de movimento
+  const { moveProcessToNextDepartment: moveNext } = useProcessMoveNext(fetchProcesses);
+  const { moveProcessToPreviousDepartment: movePrevious } = useProcessMovePrevious(fetchProcesses);
+  const { startProcess: start } = useStartProcess(fetchProcesses);
+  const { deleteProcess: deleteP, deleteManyProcesses: deleteMany } = useProcessDelete(fetchProcesses);
 
   // Adaptador para garantir que a função retorne um boolean como esperado
   const moveProcessToNextDepartment = async (processId: string): Promise<boolean> => {
     try {
-      await moveNext(processId);
-      return true;
+      return await moveNext(processId);
     } catch (error) {
       console.error("Erro ao mover processo para o próximo departamento:", error);
       return false;
@@ -24,8 +29,7 @@ export const useSupabaseProcesses = () => {
 
   const moveProcessToPreviousDepartment = async (processId: string): Promise<boolean> => {
     try {
-      await movePrevious(processId);
-      return true;
+      return await movePrevious(processId);
     } catch (error) {
       console.error("Erro ao mover processo para o departamento anterior:", error);
       return false;
@@ -34,8 +38,7 @@ export const useSupabaseProcesses = () => {
 
   const startProcess = async (processId: string): Promise<boolean> => {
     try {
-      await start(processId);
-      return true;
+      return await start(processId);
     } catch (error) {
       console.error("Erro ao iniciar processo:", error);
       return false;
@@ -114,34 +117,14 @@ export const useSupabaseProcesses = () => {
     }
   };
 
-  const deleteProcess = async (processId: string): Promise<boolean> => {
-    try {
-      await deleteP(processId);
-      return true;
-    } catch (error) {
-      console.error("Erro ao excluir o processo:", error);
-      return false;
-    }
-  };
-
-  const deleteManyProcesses = async (processIds: string[]): Promise<boolean> => {
-    try {
-      await deleteMany(processIds);
-      return true;
-    } catch (error) {
-      console.error("Erro ao excluir os processos:", error);
-      return false;
-    }
-  };
-
   return {
     processes,
     isLoading,
     fetchProcesses,
     moveProcessToNextDepartment,
     moveProcessToPreviousDepartment,
-    updateProcessType: updateProcessType,
-    updateProcessStatus: updateProcessStatus,
+    updateProcessType,
+    updateProcessStatus,
     startProcess,
     deleteProcess: deleteP,
     deleteManyProcesses: deleteMany,

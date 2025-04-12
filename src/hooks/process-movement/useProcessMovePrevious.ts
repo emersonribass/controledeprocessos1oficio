@@ -101,6 +101,7 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
 
       toast.success(`Processo movido para ${prevDepartment.name}`);
       onProcessUpdated();
+      return true;
     } catch (error) {
       console.error("Erro ao mover processo:", error);
       uiToast({
@@ -108,6 +109,7 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
         description: "Não foi possível mover o processo para o departamento anterior.",
         variant: "destructive"
       });
+      return false;
     } finally {
       setIsMoving(false);
     }
