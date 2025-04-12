@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useProcesses } from "@/hooks/useProcesses";
 import { Process, PROCESS_STATUS } from "@/types";
 import ProcessFilters from "./ProcessFilters";
@@ -35,8 +35,8 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
 
   const { user } = useAuth();
   
-  // Estado para armazenar o status admin do usuário atual
   const [userIsAdmin, setUserIsAdmin] = useState(false);
+  const [processResponsibles, setProcessResponsibles] = useState<Record<string, string | null>>({});
   
   const [filters, setFilters] = useState<{
     department?: string;
@@ -55,11 +55,10 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     }
   }, [initialFilters]);
   
-  // Verificar os departamentos do usuário no carregamento do componente
+  // Usar o status admin já armazenado no objeto user
   useEffect(() => {
-    // Aqui utilizamos o status admin já cacheado
-    if (user && user.isAdmin !== undefined) {
-      setUserIsAdmin(user.isAdmin);
+    if (user) {
+      setUserIsAdmin(user.isAdmin || false);
     }
   }, [user]);
 
@@ -106,6 +105,11 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     }
   };
 
+  // Verificar se um processo tem responsável por setor
+  const hasProcessResponsible = useCallback((processId: string) => {
+    return !!processResponsibles[processId];
+  }, [processResponsibles]);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -150,6 +154,9 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
           updateProcessStatus={updateProcessStatus}
           departments={departments}
           startProcess={startProcess}
+          hasProcessResponsible={hasProcessResponsible}
+          processResponsibles={processResponsibles}
+          setProcessResponsibles={setProcessResponsibles}
         />
       )}
     </div>

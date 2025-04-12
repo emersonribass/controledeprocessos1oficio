@@ -2,7 +2,7 @@
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
-import { isAdmin } from "./permissions";
+import { isAdmin, isAdminSync } from "./permissions";
 
 export const convertSupabaseUser = async (supabaseUser: SupabaseUser): Promise<User> => {
   try {
@@ -25,8 +25,14 @@ export const convertSupabaseUser = async (supabaseUser: SupabaseUser): Promise<U
       };
     }
 
-    // Verificar o status de administrador do usuário
-    const adminStatus = await isAdmin(supabaseUser.email || '');
+    // Verificar status admin - primeiro tenta o cache sincronizado
+    const email = supabaseUser.email || '';
+    let adminStatus = isAdminSync(email);
+    
+    // Se não estiver no cache, faz a verificação completa
+    if (adminStatus === null) {
+      adminStatus = await isAdmin(email);
+    }
 
     // Retornar o usuário com informações de ambas as fontes
     return {

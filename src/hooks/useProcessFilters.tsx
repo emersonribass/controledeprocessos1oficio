@@ -18,9 +18,13 @@ export const useProcessFilters = (processes: Process[]) => {
     // Se for fornecida uma lista personalizada, use-a, caso contrário use a lista padrão
     const listToFilter = processesToFilter || processes;
     
+    // Verificar antecipadamente se o usuário tem acesso administrativo
+    // para evitar verificações repetidas para cada processo
+    const userIsAdmin = user && user.isAdmin;
+    
     return listToFilter.filter((process) => {
-      // Verificar se o usuário tem permissão para ver este processo
-      if (user && !isAdmin(user.email) && user.departments?.length > 0) {
+      // Verificar permissões de usuário apenas se não for admin e tiver departamentos atribuídos
+      if (user && !userIsAdmin && user.departments?.length > 0) {
         // Para processos não iniciados, verificar o primeiro setor da sequência
         if (process.status === PROCESS_STATUS.NOT_STARTED) {
           // Verificar se o usuário tem acesso ao primeiro setor (Atendimento)

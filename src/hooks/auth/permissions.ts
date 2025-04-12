@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 // Lista expandida de emails administrativos para garantir acesso
 export const adminEmails = ["emerson.ribas@live.com", "emerson@nottar.com.br"];
 
-// Cache para armazenar resultados de verificações administrativas
+// Cache aprimorado para armazenar resultados de verificações administrativas
 const adminStatusCache: Record<string, {
   status: boolean;
   timestamp: number;
@@ -29,31 +29,43 @@ const cleanExpiredCache = () => {
   });
 };
 
-// Função para verificar se um usuário é administrador
-// Verifica tanto a lista fixa quanto o perfil do usuário na tabela
-export const isAdmin = async (email: string): Promise<boolean> => {
+// Versão sincronizada que não faz chamadas ao banco se já tivermos a resposta no cache
+export const isAdminSync = (email: string): boolean | null => {
   if (!email) return false;
   
-  // Primeiro, verificar se existe no cache e se não está expirado
+  // Verificar se existe no cache e se não está expirado
   const now = Date.now();
   if (adminStatusCache[email] && (now - adminStatusCache[email].timestamp < CACHE_EXPIRATION)) {
-    console.log("Usando resultado em cache para:", email);
     return adminStatusCache[email].status;
   }
   
-  console.log("Verificando permissões administrativas para:", email);
-  
-  // Primeiro, verifica se o email está na lista fixa
+  // Verificar lista fixa de administradores sem consulta ao banco
   if (isAdminByEmail(email)) {
-    console.log("Usuário é administrador pela lista fixa");
     // Armazenar no cache
     adminStatusCache[email] = { status: true, timestamp: now };
     return true;
   }
   
-  // Se não estiver na lista fixa, verifica o perfil na tabela de usuários
+  // Se não está no cache e não é admin pela lista fixa, retorna null para indicar
+  // que precisamos de verificação no banco de dados
+  return null;
+};
+
+// Função para verificar se um usuário é administrador
+// Verifica tanto a lista fixa quanto o perfil do usuário na tabela
+export const isAdmin = async (email: string): Promise<boolean> => {
+  if (!email) return false;
+  
+  // Primeiro, tentar obter do cache ou verificações sincronizadas
+  const cachedResult = isAdminSync(email);
+  if (cachedResult !== null) {
+    return cachedResult;
+  }
+  
+  const now = Date.now();
+  
+  // Se chegou aqui, precisamos verificar no banco de dados
   try {
-    console.log("Buscando permissões no banco de dados para:", email);
     const { data, error } = await supabase
       .from('usuarios')
       .select('perfil')
@@ -61,13 +73,11 @@ export const isAdmin = async (email: string): Promise<boolean> => {
       .single();
 
     if (error) {
-      console.error('Erro ao verificar perfil do usuário:', error);
       adminStatusCache[email] = { status: false, timestamp: now };
       return false;
     }
 
     const isAdminUser = data?.perfil === 'administrador';
-    console.log("Usuário é administrador pelo perfil na tabela:", isAdminUser);
     
     // Armazenar no cache
     adminStatusCache[email] = { status: isAdminUser, timestamp: now };
@@ -77,7 +87,6 @@ export const isAdmin = async (email: string): Promise<boolean> => {
     
     return isAdminUser;
   } catch (error) {
-    console.error('Erro ao verificar se usuário é administrador:', error);
     // Em caso de erro, cachear como não administrador para evitar consultas repetidas
     adminStatusCache[email] = { status: false, timestamp: now };
     return false;
