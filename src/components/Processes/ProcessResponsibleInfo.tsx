@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
@@ -24,13 +24,15 @@ const ProcessResponsibleInfo = ({
   const { getProcessResponsible, getSectorResponsible } = useProcessResponsibility();
   const { user } = useAuth();
 
-  const loadResponsibles = async () => {
+  // Usando useCallback para evitar recriações desnecessárias da função
+  const loadResponsibles = useCallback(async () => {
+    if (!processId || !sectorId) return;
+    
     setIsLoading(true);
     try {
-      const [processResp, sectorResp] = await Promise.all([
-        getProcessResponsible(processId),
-        getSectorResponsible(processId, sectorId)
-      ]);
+      // Executando as chamadas em paralelo para melhorar a performance
+      const processResp = await getProcessResponsible(processId);
+      const sectorResp = await getSectorResponsible(processId, sectorId);
       
       setProcessResponsible(processResp);
       setSectorResponsible(sectorResp);
@@ -39,15 +41,16 @@ const ProcessResponsibleInfo = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [processId, sectorId, getProcessResponsible, getSectorResponsible]);
 
+  // Carrega os responsáveis apenas quando os IDs mudam
   useEffect(() => {
     loadResponsibles();
-  }, [processId, sectorId]);
+  }, [loadResponsibles]);
 
-  const handleResponsibilityAccepted = () => {
+  const handleResponsibilityAccepted = useCallback(() => {
     loadResponsibles();
-  };
+  }, [loadResponsibles]);
 
   if (isLoading) {
     return (

@@ -1,14 +1,11 @@
 
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, Clock, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ProcessActionButtons from "./ProcessActionButtons";
-import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/auth";
+import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
 
 interface ProcessMainDetailsProps {
   process: any;
@@ -33,45 +30,12 @@ const ProcessMainDetails = ({
   isNotStarted,
   startProcess
 }: ProcessMainDetailsProps) => {
-  const { getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
-  const [sectorResponsible, setSectorResponsible] = useState<any>(null);
-  const [isLoadingResponsible, setIsLoadingResponsible] = useState(false);
-  const { toast } = useToast();
-  const { user } = useAuth();
-
-  // Carrega o responsável pelo processo no setor atual
-  const loadSectorResponsible = async () => {
-    if (!process.currentDepartment) return;
-    
-    setIsLoadingResponsible(true);
-    try {
-      const responsible = await getSectorResponsible(process.id, process.currentDepartment);
-      setSectorResponsible(responsible);
-    } catch (error) {
-      console.error("Erro ao carregar responsável:", error);
-    } finally {
-      setIsLoadingResponsible(false);
-    }
-  };
-
-  // Carrega o responsável quando o componente é montado ou quando o departamento atual muda
-  useEffect(() => {
-    loadSectorResponsible();
-  }, [process.id, process.currentDepartment]);
-
-  // Função para aceitar a responsabilidade pelo processo
-  const handleAcceptResponsibility = async () => {
-    if (!user || !process.protocolNumber) return;
-    
-    const success = await acceptProcessResponsibility(process.id, process.protocolNumber);
-    if (success) {
-      await loadSectorResponsible();
-      toast({
-        title: "Sucesso",
-        description: "Você aceitou a responsabilidade pelo processo."
-      });
-    }
-  };
+  // Usando o hook otimizado para evitar chamadas duplicadas
+  const { 
+    sectorResponsible, 
+    handleAcceptResponsibility, 
+    isAccepting 
+  } = useProcessRowResponsibility(process.id, process.currentDepartment);
 
   return (
     <Card>
@@ -148,7 +112,7 @@ const ProcessMainDetails = ({
             status={process.status}
             startProcess={startProcess}
             hasSectorResponsible={!!sectorResponsible}
-            onAcceptResponsibility={handleAcceptResponsibility}
+            onAcceptResponsibility={() => handleAcceptResponsibility(process.protocolNumber)}
             isAccepting={isAccepting}
             sectorId={process.currentDepartment}
           />

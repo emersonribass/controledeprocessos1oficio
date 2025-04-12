@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
+import { memo } from "react";
 
 interface AcceptProcessResponsibilityButtonProps {
   processId: string;
@@ -12,7 +13,7 @@ interface AcceptProcessResponsibilityButtonProps {
   onAccept: () => void;
 }
 
-const AcceptProcessResponsibilityButton = ({
+const AcceptProcessResponsibilityButton = memo(({
   processId,
   protocolNumber,
   sectorId,
@@ -44,6 +45,9 @@ const AcceptProcessResponsibilityButton = ({
       {isAccepting ? "Processando..." : "Aceitar Processo"}
     </Button>
   );
-};
+});
+
+// Adicionando displayName para facilitar debugging
+AcceptProcessResponsibilityButton.displayName = 'AcceptProcessResponsibilityButton';
 
 export default AcceptProcessResponsibilityButton;

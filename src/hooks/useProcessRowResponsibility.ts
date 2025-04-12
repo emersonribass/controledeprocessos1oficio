@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useProcessResponsibility } from "./useProcessResponsibility";
 import { useToast } from "./use-toast";
 import { useAuth } from "./auth";
@@ -12,8 +12,8 @@ export const useProcessRowResponsibility = (processId: string, currentDepartment
   const { user } = useAuth();
 
   // Carrega o responsável pelo processo no setor atual
-  const loadSectorResponsible = async () => {
-    if (!currentDepartment) return;
+  const loadSectorResponsible = useCallback(async () => {
+    if (!currentDepartment || !processId) return;
     
     setIsLoadingResponsible(true);
     try {
@@ -24,12 +24,14 @@ export const useProcessRowResponsibility = (processId: string, currentDepartment
     } finally {
       setIsLoadingResponsible(false);
     }
-  };
+  }, [processId, currentDepartment, getSectorResponsible]);
 
   // Carrega o responsável quando o componente é montado ou quando o departamento atual muda
   useEffect(() => {
-    loadSectorResponsible();
-  }, [processId, currentDepartment]);
+    if (processId && currentDepartment) {
+      loadSectorResponsible();
+    }
+  }, [loadSectorResponsible]);
 
   // Função para aceitar a responsabilidade pelo processo
   const handleAcceptResponsibility = async (protocolNumber?: string) => {
