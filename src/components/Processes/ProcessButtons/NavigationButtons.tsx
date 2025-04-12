@@ -10,6 +10,7 @@ interface NavigationButtonsProps {
   moveProcessToPreviousDepartment: (processId: string) => void;
   moveProcessToNextDepartment: (processId: string) => void;
   showLabels?: boolean;
+  protocolNumber?: string; // Adicionado para melhorar as descrições de acessibilidade
 }
 
 const NavigationButtons = ({
@@ -18,8 +19,11 @@ const NavigationButtons = ({
   isLastDepartment,
   moveProcessToPreviousDepartment,
   moveProcessToNextDepartment,
-  showLabels = false
+  showLabels = false,
+  protocolNumber = ''
 }: NavigationButtonsProps) => {
+  const processoTexto = protocolNumber ? `processo ${protocolNumber}` : 'processo';
+  
   if (showLabels) {
     return (
       <>
@@ -27,21 +31,25 @@ const NavigationButtons = ({
           variant="outline" 
           onClick={() => moveProcessToPreviousDepartment(processId)} 
           disabled={isFirstDepartment} 
-          title="Mover para departamento anterior"
+          title={`Mover ${processoTexto} para departamento anterior`}
+          aria-label={`Mover ${processoTexto} para departamento anterior`}
+          aria-disabled={isFirstDepartment}
           className={isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}
         >
-          <MoveLeft className="h-4 w-4 mr-2" />
-          Departamento Anterior
+          <MoveLeft className="h-4 w-4 mr-2" aria-hidden="true" />
+          <span>Departamento Anterior</span>
         </Button>
         <Button 
           variant="outline" 
           onClick={() => moveProcessToNextDepartment(processId)} 
           disabled={isLastDepartment} 
-          title="Mover para próximo departamento"
+          title={`Mover ${processoTexto} para próximo departamento`}
+          aria-label={`Mover ${processoTexto} para próximo departamento`}
+          aria-disabled={isLastDepartment}
           className={isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}
         >
-          <MoveRight className="h-4 w-4 mr-2" />
-          Próximo Departamento
+          <MoveRight className="h-4 w-4 mr-2" aria-hidden="true" />
+          <span>Próximo Departamento</span>
         </Button>
       </>
     );
@@ -54,20 +62,26 @@ const NavigationButtons = ({
         size="icon" 
         onClick={() => moveProcessToPreviousDepartment(processId)} 
         disabled={isFirstDepartment} 
-        title="Mover para departamento anterior"
+        title={`Mover ${processoTexto} para departamento anterior`}
+        aria-label={`Mover ${processoTexto} para departamento anterior`}
+        aria-disabled={isFirstDepartment}
         className={isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}
       >
-        <MoveLeft className="h-4 w-4" />
+        <MoveLeft className="h-4 w-4" aria-hidden="true" />
+        <span className="sr-only">Departamento Anterior</span>
       </Button>
       <Button 
         variant="ghost" 
         size="icon" 
         onClick={() => moveProcessToNextDepartment(processId)} 
-        disabled={isLastDepartment} 
-        title="Mover para próximo departamento"
+        disabled={isLastDepartment}
+        title={`Mover ${processoTexto} para próximo departamento`}
+        aria-label={`Mover ${processoTexto} para próximo departamento`}
+        aria-disabled={isLastDepartment}
         className={isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}
       >
-        <MoveRight className="h-4 w-4" />
+        <MoveRight className="h-4 w-4" aria-hidden="true" />
+        <span className="sr-only">Próximo Departamento</span>
       </Button>
     </>
   );

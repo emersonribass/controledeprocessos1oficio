@@ -40,7 +40,7 @@ export const ProcessDetailsContentPresentation = React.memo(({
   onProcessAccepted
 }: ProcessDetailsContentPresentationProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6" role="region" aria-label="Detalhes do processo">
       <ProcessCard
         process={process}
         getDepartmentName={getDepartmentName}

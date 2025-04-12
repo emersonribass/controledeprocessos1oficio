@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useProcesses } from "../hooks/useProcesses";
 import { Process, PROCESS_STATUS } from "@/types";
 import { Loader2 } from "lucide-react";
@@ -47,30 +46,25 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     }
   }, [initialFilters]);
   
-  // Usar o status admin já armazenado no objeto user
   useEffect(() => {
     if (user) {
       setUserIsAdmin(user.isAdmin || false);
     }
   }, [user]);
 
-  // Filtragem rigorosa aplicando as regras de permissão de usuário
   const filteredProcesses = useMemo(() => {
     return filterProcesses(filters, processes);
   }, [filterProcesses, filters, processes]);
 
-  // Memoizar a ordenação dos processos para evitar recálculos desnecessários
   const sortedProcesses = useMemo(() => {
     return [...filteredProcesses].sort((a, b) => {
-      // Primeiro, ordenar por status: processos iniciados (não 'Não iniciado') vêm primeiro
       if (a.status === PROCESS_STATUS.NOT_STARTED && b.status !== PROCESS_STATUS.NOT_STARTED) {
-        return 1; // a (não iniciado) vem depois
+        return 1;
       }
       if (a.status !== PROCESS_STATUS.NOT_STARTED && b.status === PROCESS_STATUS.NOT_STARTED) {
-        return -1; // a (iniciado) vem antes
+        return -1;
       }
       
-      // Se ambos têm o mesmo status de iniciação, usar a ordenação por campo selecionado
       if (sortField === "startDate" || sortField === "expectedEndDate") {
         const dateA = new Date(a[sortField]).getTime();
         const dateB = new Date(b[sortField]).getTime();
@@ -93,7 +87,6 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     });
   }, [filteredProcesses, sortField, sortDirection]);
 
-  // Usar useCallback para evitar recriação desnecessária da função
   const toggleSort = useCallback((field: keyof Process) => {
     if (field === sortField) {
       setSortDirection(prevDirection => prevDirection === "asc" ? "desc" : "asc");
@@ -103,10 +96,8 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     }
   }, [sortField]);
 
-  // Usando o hook de responsáveis com os processos ordenados
   const responsiblesManager = useProcessResponsibles({ processes: sortedProcesses });
 
-  // Filtrar os departamentos baseado nos departamentos do usuário - memoizado
   const availableDepartments = useMemo(() => {
     return userIsAdmin || !user?.departments?.length 
       ? departments 
@@ -115,8 +106,9 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-64" aria-live="polite" role="status">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="sr-only">Carregando processos...</span>
       </div>
     );
   }
@@ -130,11 +122,11 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
       />
 
       {processes.length === 0 ? (
-        <div className="flex justify-center items-center h-64 border rounded-md p-6 mt-4 bg-gray-50">
+        <div className="flex justify-center items-center h-64 border rounded-md p-6 mt-4 bg-gray-50" role="alert" aria-live="polite">
           <p className="text-muted-foreground text-lg">Nenhum processo encontrado</p>
         </div>
       ) : filteredProcesses.length === 0 ? (
-        <div className="flex justify-center items-center h-64 border rounded-md p-6 mt-4 bg-gray-50">
+        <div className="flex justify-center items-center h-64 border rounded-md p-6 mt-4 bg-gray-50" role="alert" aria-live="polite">
           <p className="text-muted-foreground text-lg">Nenhum processo corresponde aos filtros selecionados</p>
         </div>
       ) : (

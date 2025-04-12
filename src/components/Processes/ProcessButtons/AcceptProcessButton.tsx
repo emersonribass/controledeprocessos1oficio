@@ -112,9 +112,11 @@ const AcceptProcessButton = ({
       disabled={isLoading || !user}
       className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
       size="sm"
+      aria-label={`Aceitar responsabilidade pelo processo ${protocolNumber}`}
+      aria-busy={isLoading}
     >
-      <CheckCircle className="h-4 w-4" />
-      {isLoading ? "Processando..." : "Aceitar Processo"}
+      <CheckCircle className="h-4 w-4" aria-hidden="true" />
+      <span>{isLoading ? "Processando..." : "Aceitar Processo"}</span>
     </Button>
   );
 };
