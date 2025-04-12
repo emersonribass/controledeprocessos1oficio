@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -14,8 +13,7 @@ export function useUsuarios() {
     setIsLoading(true);
     try {
       console.log("Iniciando busca de usuários na tabela 'usuarios' do projeto controledeprocessos1oficio");
-      // Corrigindo o acesso à URL do Supabase
-      const supabaseUrl = supabase.getUrl(); // Usar método getUrl() em vez de .url
+      const supabaseUrl = supabase.getUrl();
       console.log("URL do Supabase:", supabaseUrl);
       
       const { data, error, count } = await supabase
@@ -29,13 +27,10 @@ export function useUsuarios() {
 
       console.log(`Encontrados ${count} usuários na tabela 'usuarios':`, data);
       
-      // Se não houver usuários na tabela 'usuarios', vamos verificar 
-      // se existem usuários no sistema de autenticação
       if (!data || data.length === 0) {
         console.log("Nenhum usuário encontrado na tabela 'usuarios'. Verificando auth.users...");
         
         try {
-          // Verificar se há usuários autenticados que não estão na tabela 'usuarios'
           const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
           
           if (authError) {
@@ -47,7 +42,6 @@ export function useUsuarios() {
             console.log("Nenhum usuário encontrado no sistema de autenticação.");
           }
         } catch (authError) {
-          // Pode não ter permissão para acessar a listagem de usuários autenticados
           console.log("Não foi possível verificar usuários no sistema de autenticação:", authError);
         }
       }
@@ -124,7 +118,6 @@ export function useUsuarios() {
   const saveUsuario = async (data: FormUsuario, usuarioId?: string) => {
     try {
       if (usuarioId) {
-        // Atualizar usuário existente
         const updateData: Partial<UsuarioSupabase> = {
           nome: data.nome,
           email: data.email,
@@ -149,7 +142,6 @@ export function useUsuarios() {
           description: "Usuário atualizado com sucesso!",
         });
       } else {
-        // Criar novo usuário
         const { error } = await supabase.from("usuarios").insert({
           nome: data.nome,
           email: data.email,

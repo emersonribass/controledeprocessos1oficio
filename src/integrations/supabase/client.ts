@@ -10,7 +10,7 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Estendendo o cliente Supabase com métodos personalizados
+// Criando o cliente Supabase com as configurações adequadas
 const supabaseClient = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: typeof window !== 'undefined' ? localStorage : undefined,
@@ -20,8 +20,8 @@ const supabaseClient = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE
   }
 });
 
-// Adicionando método getUrl para acessar a URL do Supabase
-export const supabase = {
-  ...supabaseClient,
+// Exportando o cliente Supabase com método adicional para acessar a URL
+// Usando type assertion para evitar problemas de tipagem
+export const supabase = Object.assign(supabaseClient, {
   getUrl: () => SUPABASE_URL
-};
+});
