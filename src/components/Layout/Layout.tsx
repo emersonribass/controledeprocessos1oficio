@@ -4,9 +4,16 @@ import Navbar from "./Navbar";
 import { useAuth } from "@/features/auth";
 import { NotificationsProvider } from "@/hooks/NotificationsProvider";
 
-const Layout = () => {
-  const { user, isLoading } = useAuth();
-
+// Componente de apresentação pura
+export const LayoutPresentation = ({
+  isLoading,
+  hasUser,
+  children
+}: {
+  isLoading: boolean;
+  hasUser: boolean;
+  children: React.ReactNode;
+}) => {
   if (isLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
@@ -15,8 +22,8 @@ const Layout = () => {
     );
   }
 
-  if (!user) {
-    return <Outlet />;
+  if (!hasUser) {
+    return <>{children}</>;
   }
 
   return (
@@ -24,10 +31,24 @@ const Layout = () => {
       <div className="h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 overflow-y-auto bg-background p-6">
-          <Outlet />
+          {children}
         </main>
       </div>
     </NotificationsProvider>
+  );
+};
+
+// Componente container que gerencia a lógica
+const Layout = () => {
+  const { user, isLoading } = useAuth();
+
+  return (
+    <LayoutPresentation 
+      isLoading={isLoading} 
+      hasUser={!!user}
+    >
+      <Outlet />
+    </LayoutPresentation>
   );
 };
 

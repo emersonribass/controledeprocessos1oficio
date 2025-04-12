@@ -6,17 +6,78 @@ import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useProcesses } from "@/features/processes";
 import { useState } from "react";
 
-interface ProcessDetailsContentProps {
+// Interface de apresentação pura, sem lógica de negócio
+export interface ProcessDetailsContentPresentationProps {
   process: Process;
   getUserName: (userId: string) => string;
   isRefreshing: boolean;
+  getDepartmentName: (id: string) => string; 
+  getProcessTypeName: (id: string) => string;
+  moveProcessToNextDepartment: (processId: string) => void;
+  moveProcessToPreviousDepartment: (processId: string) => void;
+  mainResponsibleUserName: string | null;
+  sectorResponsibleUserName: string | null;
+  isMainResponsible: boolean;
+  isSectorResponsible: boolean;
+  hasResponsibleUser: boolean;
+  onProcessAccepted: () => Promise<void>;
 }
 
+// Componente de apresentação pura
+export const ProcessDetailsContentPresentation = ({
+  process,
+  getUserName,
+  isRefreshing,
+  getDepartmentName,
+  getProcessTypeName,
+  moveProcessToNextDepartment,
+  moveProcessToPreviousDepartment,
+  mainResponsibleUserName,
+  sectorResponsibleUserName,
+  isMainResponsible,
+  isSectorResponsible,
+  hasResponsibleUser,
+  onProcessAccepted
+}: ProcessDetailsContentPresentationProps) => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <ProcessCard
+        process={process}
+        getDepartmentName={getDepartmentName}
+        getProcessTypeName={getProcessTypeName}
+        moveProcessToNextDepartment={moveProcessToNextDepartment}
+        moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+        mainResponsibleUserName={mainResponsibleUserName}
+        sectorResponsibleUserName={sectorResponsibleUserName}
+        isMainResponsible={isMainResponsible}
+        isSectorResponsible={isSectorResponsible}
+        showLabels={true}
+      />
+
+      <ProcessHistory 
+        history={process.history} 
+        getDepartmentName={getDepartmentName} 
+        getUserName={getUserName}
+        processId={process.id}
+        protocolNumber={process.protocolNumber}
+        hasResponsibleUser={hasResponsibleUser}
+        onProcessAccepted={onProcessAccepted}
+        currentDepartmentId={process.currentDepartment}
+      />
+    </div>
+  );
+};
+
+// Componente container que gerencia a lógica
 const ProcessDetailsContent = ({
   process,
   getUserName,
   isRefreshing,
-}: ProcessDetailsContentProps) => {
+}: {
+  process: Process;
+  getUserName: (userId: string) => string;
+  isRefreshing: boolean;
+}) => {
   const [refreshKey, setRefreshKey] = useState(0);
   
   // Usar o contexto de processos para acessar funções e dados
@@ -47,32 +108,22 @@ const ProcessDetailsContent = ({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <ProcessCard
-        process={process}
-        getDepartmentName={getDepartmentName}
-        getProcessTypeName={getProcessTypeName}
-        moveProcessToNextDepartment={moveProcessToNextDepartment}
-        moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-        mainResponsibleUserName={mainResponsibleUserName}
-        sectorResponsibleUserName={sectorResponsibleUserName}
-        isMainResponsible={isMainResponsible}
-        isSectorResponsible={isSectorResponsible}
-        showLabels={true}
-      />
-
-      <ProcessHistory 
-        key={refreshKey}
-        history={process.history} 
-        getDepartmentName={getDepartmentName} 
-        getUserName={getUserName}
-        processId={process.id}
-        protocolNumber={process.protocolNumber}
-        hasResponsibleUser={hasResponsibleUser}
-        onProcessAccepted={handleProcessAccepted}
-        currentDepartmentId={process.currentDepartment}
-      />
-    </div>
+    <ProcessDetailsContentPresentation
+      key={refreshKey}
+      process={process}
+      getUserName={getUserName}
+      isRefreshing={isRefreshing}
+      getDepartmentName={getDepartmentName}
+      getProcessTypeName={getProcessTypeName}
+      moveProcessToNextDepartment={moveProcessToNextDepartment}
+      moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+      mainResponsibleUserName={mainResponsibleUserName}
+      sectorResponsibleUserName={sectorResponsibleUserName}
+      isMainResponsible={isMainResponsible}
+      isSectorResponsible={isSectorResponsible}
+      hasResponsibleUser={hasResponsibleUser}
+      onProcessAccepted={handleProcessAccepted}
+    />
   );
 };
 
