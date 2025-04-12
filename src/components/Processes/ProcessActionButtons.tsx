@@ -124,7 +124,7 @@ const ProcessActionButtons = ({
         size="icon" 
         onClick={handleMoveToPrevious} 
         disabled={isFirstDepartment} 
-        title="Mover para departamento anterior"
+        title="Mover para setor anterior"
         className={`process-action ${isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <MoveLeft className="h-4 w-4" />
@@ -134,7 +134,7 @@ const ProcessActionButtons = ({
         size="icon" 
         onClick={handleMoveToNext} 
         disabled={isCompleted} 
-        title="Mover para próximo departamento"
+        title="Mover para próximo setor"
         className={`process-action ${isCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <MoveRight className="h-4 w-4" />
