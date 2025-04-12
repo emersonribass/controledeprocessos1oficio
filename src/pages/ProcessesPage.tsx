@@ -1,18 +1,10 @@
 
 import { useEffect, useState } from "react";
 import ProcessList from "@/components/Processes/ProcessList";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, ArrowUpRight, Clock } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/auth";
+import { useLocation } from "react-router-dom";
 
 const ProcessesPage = () => {
-  const navigate = useNavigate();
   const location = useLocation();
-  const {
-    user,
-    isAdmin
-  } = useAuth();
   const [initialFilters, setInitialFilters] = useState({});
 
   useEffect(() => {
@@ -30,46 +22,9 @@ const ProcessesPage = () => {
     }
   }, [location.search]);
 
-  const handleViewNonStarted = () => {
-    navigate("/processes?status=not_started");
-  };
-
-  const handleViewInProgress = () => {
-    // Limpa filtros específicos e mantém apenas excludeCompleted
-    navigate("/processes");
-  };
-
-  return <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Processos</h2>
-          <p className="text-muted-foreground">
-            Gerencie e acompanhe o andamento de todos os processos.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          {/* Botão para visualizar processos em andamento */}
-          <Button onClick={handleViewInProgress} variant="outline" className="flex items-center gap-1 px-[10px] text-sm text-center bg-blue-600 hover:bg-blue-500 text-white">
-            <Clock className="h-5 w-5" />
-            Processos em andamento
-          </Button>
-          
-          {/* Botão para visualizar processos não iniciados */}
-          <Button onClick={handleViewNonStarted} variant="outline" className="flex items-center gap-1 px-[10px] text-sm text-center bg-green-600 hover:bg-green-500 text-white">
-            <ArrowUpRight className="h-5 w-5" />
-            Processos não iniciados
-          </Button>
-          
-          {/* Botão para criar novo processo - apenas para admin ou usuários sem departamento atribuído */}
-          {(isAdmin(user?.email || "") || user?.departments?.length === 0) && <Button onClick={() => navigate("/admin/process-settings")} className="flex items-center gap-1 px-[10px] text-sm text-center bg-blue-600 hover:bg-blue-500 rounded text-white font-medium">
-              <PlusCircle className="h-5 w-5" />
-              Novo Processo
-            </Button>}
-        </div>
-      </div>
-
-      <ProcessList initialFilters={initialFilters} />
-    </div>;
+  return (
+    <ProcessList initialFilters={initialFilters} />
+  );
 };
 
 export default ProcessesPage;
