@@ -43,9 +43,21 @@ export const useLogin = () => {
         throw new Error("Não foi possível obter uma sessão válida");
       }
       
+      toast.success("Login efetuado com sucesso!", {
+        description: "Bem-vindo de volta!",
+        duration: 1500 // Set duration to 1.5 seconds
+      });
+      
       return { session: data.session, error: null };
     } catch (error) {
       console.error("Erro durante o processo de login:", error);
+      
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          duration: 1500 // Set duration to 1.5 seconds
+        });
+      }
+      
       return { session: null, error };
     }
   };

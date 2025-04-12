@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/features/auth";
 import { toast } from "sonner";
@@ -111,12 +110,16 @@ export const usePreviousDepartment = () => {
         `O processo ${processo.numero_protocolo} foi retornado para o setor ${departamentoAnterior.name}`
       );
 
-      toast.success(`Processo retornado para ${departamentoAnterior.name}`);
+      toast.success(`Processo retornado para ${departamentoAnterior.name}`, {
+        duration: 1500 // Set duration to 1.5 seconds
+      });
       console.log("Processo movido com sucesso para departamento anterior");
       return true;
     } catch (error) {
       console.error("Erro ao mover processo:", error);
-      toast.error("Erro ao mover processo");
+      toast.error("Erro ao mover processo", {
+        duration: 1500 // Set duration to 1.5 seconds
+      });
       return false;
     }
   };
