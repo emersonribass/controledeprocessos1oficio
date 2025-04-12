@@ -5,7 +5,7 @@ import ProcessTableHeader from "./ProcessTableHeader";
 import { useNavigate } from "react-router-dom";
 import ProcessTableBody from "./ProcessTableBody";
 import { useProcessTableUtilities } from "./utils/ProcessTableUtilities";
-import { ProcessResponsiblesHookResult } from "../hooks/useProcessResponsibles";
+import { ProcessResponsiblesHookResult } from "../hooks/responsible/types";
 
 interface ProcessTableProps {
   processes: Process[];

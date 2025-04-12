@@ -1,9 +1,10 @@
+
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useProcesses } from "../hooks/useProcesses";
 import { Process, PROCESS_STATUS } from "@/types";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth";
-import { useProcessResponsibles } from "../hooks/useProcessResponsibles";
+import { useProcessResponsibles } from "../hooks/responsible";
 import ProcessFilters from "@/components/Processes/ProcessFilters";
 import ProcessTable from "./ProcessTable";
 import { ProcessFilters as ProcessFiltersType } from "../types";
