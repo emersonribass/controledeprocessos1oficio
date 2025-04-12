@@ -46,8 +46,7 @@ export const useProcessOperations = (
             userId: "1",
           });
           
-          toast.success(`Processo movido para ${nextDept.name}`);
-          
+          // Se o próximo departamento é "Concluído(a)", marcar o processo como concluído
           const isCompleted = nextDept.name === "Concluído(a)";
           
           return {
@@ -100,12 +99,15 @@ export const useProcessOperations = (
             userId: "1",
           });
           
-          toast.success(`Processo devolvido para ${prevDept.name}`);
+          // Se o processo estiver concluído ou vier do departamento "Concluído(a)", 
+          // alterar seu status para "pending" (Em andamento)
+          const isFromConcluded = currentDept.name === "Concluído(a)";
+          const newStatus = (process.status === "completed" || isFromConcluded) ? "pending" : process.status;
           
           return {
             ...process,
             currentDepartment: prevDept.id,
-            status: process.status === "completed" ? "pending" : process.status,
+            status: newStatus,
             history,
           };
         }

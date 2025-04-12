@@ -73,15 +73,30 @@ export const usePreviousDepartment = (departments: Department[]) => {
         throw newHistoryError;
       }
 
+      // Verificar se o processo está vindo do departamento "Concluído(a)"
+      const isFromConcludedDept = currentDept.name === "Concluído(a)";
+      const isProcessCompleted = process.status === "completed";
+
       // Atualizar o processo, resetando o usuário responsável
+      const updateData: {
+        setor_atual: string;
+        status?: string;
+        updated_at: string;
+        usuario_responsavel: null;
+      } = { 
+        setor_atual: prevDept.id,
+        updated_at: now,
+        usuario_responsavel: null // Resetar o usuário responsável ao mudar de departamento
+      };
+
+      // Se o processo vier do departamento "Concluído(a)" ou se seu status for "completed", alterar para "Em andamento"
+      if (isFromConcludedDept || isProcessCompleted) {
+        updateData.status = "Em andamento";
+      }
+
       const { error: updateProcessError } = await supabase
         .from('processos')
-        .update({ 
-          setor_atual: prevDept.id,
-          status: "Em andamento", // Sempre será "Em andamento" ao voltar
-          updated_at: now,
-          usuario_responsavel: null // Resetar o usuário responsável ao mudar de departamento
-        })
+        .update(updateData)
         .eq('id', process.id);
 
       if (updateProcessError) {

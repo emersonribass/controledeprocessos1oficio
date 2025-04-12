@@ -42,6 +42,7 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
       if (!currentDepartment) throw new Error("Departamento atual não encontrado");
 
       const currentOrder = currentDepartment.order_num;
+      const isFromConcludedDept = currentDepartment.name === "Concluído(a)";
 
       // Buscar o departamento anterior
       const { data: prevDepartment, error: prevDeptError } = await supabase
@@ -80,13 +81,24 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
 
       if (newHistoryError) throw newHistoryError;
 
-      // Atualizar o departamento atual do processo
+      // Atualizar o departamento atual do processo e o status se vier do departamento "Concluído(a)"
+      const updateData: {
+        setor_atual: string;
+        updated_at: string;
+        status?: string;
+      } = {
+        setor_atual: prevDepartment.id.toString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Se o processo veio do departamento "Concluído(a)", altera o status para "Em andamento"
+      if (isFromConcludedDept || process.status === "Concluído") {
+        updateData.status = "Em andamento";
+      }
+
       const { error: updateError } = await supabase
         .from('processos')
-        .update({
-          setor_atual: prevDepartment.id.toString(),
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', processId);
 
       if (updateError) throw updateError;
