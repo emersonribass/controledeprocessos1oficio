@@ -4,9 +4,10 @@ import { AuthContextType, UserData } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { useLogin } from "./useLogin";
 import { useLogout } from "./useLogout";
-import { useSession } from "./useSession";
 import { isAdminByEmail } from "../utils/isAdminByEmail";
 import { convertSupabaseUser } from "../utils/userConverter";
+import { Session } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -14,14 +15,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const authInitialized = useRef(false);
+  const [session, setSession] = useState<Session | null>(null);
 
-  const { getSession, handleSessionChange } = useSession();
+  // Hooks para login e logout
   const { handleLogin } = useLogin();
   const { handleLogout } = useLogout();
 
-  // Função para verificar se um usuário é administrador - evitando chamadas condicionais de hooks
+  // Verificar se um usuário é administrador
   const checkAdminStatus = async (email: string): Promise<boolean> => {
-    // Chamando a função externa sem lógica condicional
     return await isAdminByEmail(email);
   };
 
@@ -45,68 +46,143 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (authInitialized.current) return;
     
-    let isMounted = true; // Variável para prevenir atualizações de estado após desmontagem
+    let isMounted = true;
     authInitialized.current = true;
     
     const initAuth = async () => {
-      setIsLoading(true);
       try {
-        const session = await getSession();
+        setIsLoading(true);
         
-        if (session?.user && isMounted) {
-          const userData = await convertSupabaseUser(session.user);
-          setUser(userData);
-        } else if (isMounted) {
-          setUser(null);
+        // Configurar listener para mudanças de sessão
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+          console.log("Evento de autenticação:", event);
+          
+          if (!isMounted) return;
+          
+          setSession(currentSession);
+          
+          // Processar dados do usuário de forma assíncrona
+          if (currentSession?.user) {
+            try {
+              const userData = await convertSupabaseUser(currentSession.user);
+              if (isMounted) setUser(userData);
+            } catch (error) {
+              console.error("Erro ao converter dados do usuário:", error);
+              if (isMounted) setUser(null);
+            }
+          } else {
+            if (isMounted) setUser(null);
+          }
+          
+          if (isMounted) setIsLoading(false);
+        });
+        
+        // Verificar sessão atual
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Erro ao obter sessão:", sessionError);
+          if (isMounted) {
+            setUser(null);
+            setSession(null);
+            setIsLoading(false);
+          }
+          return () => subscription.unsubscribe();
         }
+        
+        // Atualizar estado com a sessão atual
+        if (sessionData.session && isMounted) {
+          setSession(sessionData.session);
+          const userData = await convertSupabaseUser(sessionData.session.user);
+          setUser(userData);
+        }
+        
+        // Garantir que isLoading seja definido como false
+        if (isMounted) {
+          setIsLoading(false);
+        }
+        
+        return () => subscription.unsubscribe();
       } catch (error) {
         console.error("Erro ao inicializar autenticação:", error);
         if (isMounted) {
           setUser(null);
-        }
-      } finally {
-        if (isMounted) {
+          setSession(null);
           setIsLoading(false);
         }
+        return () => {};
       }
     };
-
-    // Inicializar autenticação
-    initAuth();
-
-    // Configurar listener para mudanças de sessão
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Evento de autenticação:", event);
-      
-      if (isMounted) {
-        await handleSessionChange(event, session);
-        
-        if (session?.user) {
-          const userData = await convertSupabaseUser(session.user);
-          setUser(userData);
-        } else {
-          setUser(null);
-        }
-        setIsLoading(false);
-      }
-    });
-
-    // Limpar listener ao desmontar
+    
+    // Executar inicialização
+    const cleanupPromise = initAuth();
+    
+    // Função de limpeza
     return () => {
       isMounted = false;
-      authListener?.subscription?.unsubscribe();
+      cleanupPromise.then(cleanup => {
+        if (cleanup && typeof cleanup === 'function') {
+          cleanup();
+        }
+      });
     };
   }, []);
+
+  // Função login
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const result = await handleLogin(email, password);
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      if (!result.session) {
+        throw new Error("Não foi possível obter uma sessão válida");
+      }
+      
+      // O estado será atualizado pelo onAuthStateChange
+      toast.success("Login efetuado com sucesso!", {
+        description: "Bem-vindo de volta!",
+        duration: 3000
+      });
+      
+      return { 
+        user: user, 
+        session: result.session, 
+        weakPassword: false 
+      };
+    } catch (error) {
+      console.error("Erro ao fazer login:", error);
+      setIsLoading(false);
+      throw error;
+    }
+  };
+
+  // Função logout
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      await handleLogout();
+      // O estado será atualizado pelo onAuthStateChange
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      setIsLoading(false);
+      throw error;
+    }
+  };
 
   // Construir o objeto de contexto
   const authContext: AuthContextType = {
     user,
     isLoading,
-    login: (email: string, password: string) => handleLogin(email, password),
-    logout: () => handleLogout(),
+    login,
+    logout,
     isAdmin: checkAdminStatus,
     checkAdminStatus,
-    updateUserPassword
+    updateUserPassword,
+    session
   };
 
   return (

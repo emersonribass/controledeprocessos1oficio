@@ -18,28 +18,30 @@ const LoginPage = () => {
   useEffect(() => {
     const clearLocalStorageAuth = () => {
       try {
-        localStorage.removeItem('supabase.auth.token');
-        localStorage.removeItem('supabase.auth.refreshToken');
-        localStorage.removeItem('sb-drkhksdohtndsbbnxbfv-auth-token');
-        localStorage.removeItem('sb-refresh-token');
-        localStorage.removeItem('supabase.auth.expires_at');
-        console.log("Login: Tokens de autenticação limpos ao montar componente");
+        // Não apagamos os tokens aqui, deixamos o gerenciamento para o Supabase Auth
+        console.log("Login: Componente montado");
       } catch (error) {
-        console.error("Erro ao limpar tokens de autenticação:", error);
+        console.error("Erro ao acessar localStorage:", error);
       }
     };
     
     clearLocalStorageAuth();
   }, []);
 
+  // Redirecionar se o usuário já estiver autenticado
   useEffect(() => {
     // Evitar redirecionamentos múltiplos
     if (hasRedirected) return;
     
     // Se ainda estiver carregando, aguarde
-    if (isLoading) return;
+    if (isLoading) {
+      console.log("LoginPage: Ainda carregando autenticação...");
+      return;
+    }
     
     try {
+      console.log("LoginPage: Verificando autenticação, usuário:", !!user);
+      
       if (user) {
         console.log("LoginPage: Usuário já autenticado, redirecionando para /dashboard");
         setHasRedirected(true);
@@ -53,11 +55,12 @@ const LoginPage = () => {
     }
   }, [user, isLoading, navigate, hasRedirected]);
 
+  // Mostrar indicador de carregamento enquanto verifica autenticação
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30" role="status" aria-live="polite">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" aria-hidden="true"></div>
-        <span className="sr-only">Carregando...</span>
+        <span className="mt-2">Carregando...</span>
       </div>
     );
   }

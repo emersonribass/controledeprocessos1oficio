@@ -29,12 +29,6 @@ export const useLoginForm = () => {
 
       // Verificar se o login foi bem-sucedido antes de redirecionar
       if (result.session) {
-        toast.success("Login efetuado com sucesso", {
-          description: "Bem-vindo de volta!",
-          duration: 3000,
-          important: true
-        });
-
         // Adicionar um pequeno atraso para garantir que a sessão seja processada corretamente
         // antes de redirecionar
         setTimeout(() => {
@@ -42,23 +36,22 @@ export const useLoginForm = () => {
             replace: true
           });
           setIsSubmitting(false);
-        }, 100);
+        }, 500); // Aumentar para 500ms para dar mais tempo de processamento
       } else {
         setError("Não foi possível obter uma sessão válida");
         setIsSubmitting(false);
       }
     } catch (err: any) {
       console.error("Erro ao fazer login:", err);
+      
       if (err.message?.includes('Failed to fetch') || err.code === 'NETWORK_ERROR') {
         setConnectionError("Não foi possível conectar ao servidor Supabase. Verifique se o projeto Supabase está ativo e se a conexão com a internet está funcionando.");
-      }
-
-      // Erro já é tratado pelo hook useAuth, mas podemos exibir mensagem específica aqui
-      if (err instanceof Error) {
+      } else if (err instanceof Error) {
         setError(err.message);
       } else {
         setError("Ocorreu um erro ao tentar fazer login. Tente novamente.");
       }
+      
       setIsSubmitting(false);
     }
   };
