@@ -1,7 +1,7 @@
 
 import { Routes as RouterRoutes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "@/features/auth";
-import { ProcessesProvider } from "@/features/processes";
+import { ProcessesProvider } from "@/features/processes/context/ProcessesContext";
 import React, { useEffect, useState } from "react";
 
 // Importações necessárias para resolver os erros
@@ -31,15 +31,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   adminOnly = false, 
   needsProcesses = true 
 }) => {
-  const { user, isLoading, isAdmin } = useAuth();
+  const { user, isLoading, checkAdminStatus } = useAuth();
   const [isUserAdmin, setIsUserAdmin] = useState<boolean>(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState<boolean>(true);
   
   useEffect(() => {
-    const checkAdminStatus = async () => {
+    const verifyAdminStatus = async () => {
       if (user && user.email) {
         try {
-          const adminStatus = await isAdmin(user.email);
+          const adminStatus = await checkAdminStatus(user.email);
           setIsUserAdmin(adminStatus);
         } catch (error) {
           console.error("Erro ao verificar status de administrador:", error);
@@ -54,11 +54,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     };
     
     if (user) {
-      checkAdminStatus();
+      verifyAdminStatus();
     } else {
       setIsCheckingAdmin(false);
     }
-  }, [user, isAdmin]);
+  }, [user, checkAdminStatus]);
   
   if (isLoading || (adminOnly && isCheckingAdmin)) {
     return (

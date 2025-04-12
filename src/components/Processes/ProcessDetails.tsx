@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useProcesses } from "@/hooks/useProcesses";
+import { useParams } from "react-router-dom";
+import { useProcesses } from "@/features/processes";
 import { useProcessUserManager } from "@/components/Processes/ProcessUserManager";
 import { ProcessAutoRefresher } from "@/components/Processes/ProcessAutoRefresher";
 import ProcessDetailsContent from "@/components/Processes/ProcessDetailsContent";
@@ -9,17 +9,13 @@ import { Loader2 } from "lucide-react";
 import { Process } from "@/types";
 import ProcessHeader from "./ProcessHeader";
 import ProcessNotFound from "./ProcessNotFound";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth";
 
 const ProcessDetails = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const { 
     processes, 
-    getDepartmentName, 
-    getProcessTypeName, 
-    moveProcessToNextDepartment, 
-    moveProcessToPreviousDepartment, 
     isLoading, 
     refreshProcesses,
     filterProcesses 
@@ -106,10 +102,6 @@ const ProcessDetails = () => {
 
       <ProcessDetailsContent 
         process={process}
-        getDepartmentName={getDepartmentName}
-        getProcessTypeName={getProcessTypeName}
-        moveProcessToNextDepartment={moveProcessToNextDepartment}
-        moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
         getUserName={getUserName}
         isRefreshing={isRefreshing}
       />

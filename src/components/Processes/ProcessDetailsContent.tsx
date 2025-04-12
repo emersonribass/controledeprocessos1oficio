@@ -3,28 +3,29 @@ import { Process } from "@/types";
 import ProcessCard from "./ProcessCard";
 import ProcessHistory from "./ProcessHistory";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
+import { useProcesses } from "@/features/processes";
 import { useState } from "react";
 
 interface ProcessDetailsContentProps {
   process: Process;
-  getDepartmentName: (id: string) => string;
-  getProcessTypeName: (id: string) => string;
-  moveProcessToNextDepartment: (processId: string) => void;
-  moveProcessToPreviousDepartment: (processId: string) => void;
   getUserName: (userId: string) => string;
   isRefreshing: boolean;
 }
 
 const ProcessDetailsContent = ({
   process,
-  getDepartmentName,
-  getProcessTypeName,
-  moveProcessToNextDepartment,
-  moveProcessToPreviousDepartment,
   getUserName,
   isRefreshing,
 }: ProcessDetailsContentProps) => {
   const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Usar o contexto de processos para acessar funções e dados
+  const { 
+    getDepartmentName, 
+    getProcessTypeName,
+    moveProcessToNextDepartment,
+    moveProcessToPreviousDepartment
+  } = useProcesses();
   
   // Usar o hook de responsabilidade
   const {

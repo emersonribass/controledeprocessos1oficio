@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth";
 import { NavbarBrand } from "./NavbarBrand";
 import { NavLinks } from "./NavLinks";
 import { AdminMenu } from "./AdminMenu";
@@ -8,14 +8,14 @@ import { NotificationsButton } from "./NotificationsButton";
 import { UserMenu } from "./UserMenu";
 
 const Navbar = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, checkAdminStatus } = useAuth();
   const [userIsAdmin, setUserIsAdmin] = useState(false);
   
   useEffect(() => {
-    const checkAdminStatus = async () => {
+    const verifyAdminStatus = async () => {
       if (user && user.email) {
         try {
-          const adminStatus = await isAdmin(user.email);
+          const adminStatus = await checkAdminStatus(user.email);
           setUserIsAdmin(adminStatus);
         } catch (error) {
           console.error("Erro ao verificar status de administrador:", error);
@@ -26,8 +26,8 @@ const Navbar = () => {
       }
     };
     
-    checkAdminStatus();
-  }, [user, isAdmin]);
+    verifyAdminStatus();
+  }, [user, checkAdminStatus]);
 
   return (
     <nav className="bg-white border-b border-border h-14 px-4 sm:px-6 flex items-center justify-between">
