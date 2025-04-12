@@ -21,16 +21,10 @@ export const useProcessFilters = (processes: Process[]) => {
     return listToFilter.filter((process) => {
       // Verificar se o usuário tem permissão para ver este processo
       if (user && !isAdmin(user.email) && user.departments?.length > 0) {
-        // Para processos não iniciados, apenas usuários do setor 1 (Atendimento) podem ver
-        if (process.status === PROCESS_STATUS.NOT_STARTED) {
-          // Se o usuário não tem o setor 1 em seus setores atribuídos, não mostrar
-          if (!user.departments.includes('1')) {
-            return false;
-          }
-        } 
-        // Para processos em andamento, só mostrar se o usuário pertence ao departamento atual
-        else if (!user.departments.includes(process.currentDepartment)) {
-          return false;
+        // Para todos os tipos de processos (incluindo não iniciados), 
+        // verificar se o usuário tem o setor atual do processo em seus setores atribuídos
+        if (!user.departments.includes(process.currentDepartment)) {
+          return false; // Não mostrar se o usuário não tem acesso ao setor atual
         }
       }
 
