@@ -1,8 +1,6 @@
-
 import { TableCell } from "@/components/ui/table";
 import ProcessActionButtons from "./ProcessActionButtons";
 import ProcessStatusBadge from "./ProcessStatusBadge";
-
 interface ProcessRowActionsProps {
   processId: string;
   protocolNumber?: string;
@@ -17,7 +15,6 @@ interface ProcessRowActionsProps {
   isAccepting: boolean;
   sectorId?: string;
 }
-
 const ProcessRowActions = ({
   processId,
   protocolNumber,
@@ -32,29 +29,11 @@ const ProcessRowActions = ({
   isAccepting,
   sectorId
 }: ProcessRowActionsProps) => {
-  return (
-    <>
-      <TableCell><ProcessStatusBadge status={status} /></TableCell>
+  return <>
+      
       <TableCell className="text-right">
-        <ProcessActionButtons
-          processId={processId}
-          protocolNumber={protocolNumber}
-          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-          moveProcessToNextDepartment={moveProcessToNextDepartment}
-          isFirstDepartment={isFirstDepartment}
-          isLastDepartment={isLastDepartment}
-          setIsEditing={() => {}}
-          isEditing={false}
-          status={status}
-          startProcess={startProcess}
-          hasSectorResponsible={hasSectorResponsible}
-          onAcceptResponsibility={onAcceptResponsibility}
-          isAccepting={isAccepting}
-          sectorId={sectorId}
-        />
+        <ProcessActionButtons processId={processId} protocolNumber={protocolNumber} moveProcessToPreviousDepartment={moveProcessToPreviousDepartment} moveProcessToNextDepartment={moveProcessToNextDepartment} isFirstDepartment={isFirstDepartment} isLastDepartment={isLastDepartment} setIsEditing={() => {}} isEditing={false} status={status} startProcess={startProcess} hasSectorResponsible={hasSectorResponsible} onAcceptResponsibility={onAcceptResponsibility} isAccepting={isAccepting} sectorId={sectorId} />
       </TableCell>
-    </>
-  );
+    </>;
 };
-
 export default ProcessRowActions;
