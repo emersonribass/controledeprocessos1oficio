@@ -7,7 +7,7 @@ interface MigrateUsuarioParams {
   usuario_senha: string;
 }
 
-// Interface para a resposta esperada da função RPC (ou use any se a resposta for desconhecida)
+// Interface para a resposta esperada da função RPC
 interface MigrateUsuarioResponse {
   success: boolean;
   // Adicione outras propriedades que a resposta possa ter
@@ -15,8 +15,8 @@ interface MigrateUsuarioResponse {
 
 export const syncAuthWithUsuarios = async (email: string, password: string): Promise<boolean> => {
   try {
-    // Chama a função de migração no Supabase com as tipagens corretas para os parâmetros e resposta
-    const { data, error } = await supabase.rpc<MigrateUsuarioResponse, MigrateUsuarioParams>(
+    // Usamos uma abordagem mais simplificada com tipagem segura
+    const { data, error } = await supabase.rpc(
       'migrate_usuario_to_auth',
       {
         usuario_email: email, 
