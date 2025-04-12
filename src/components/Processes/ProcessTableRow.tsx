@@ -1,52 +1,45 @@
 
-import { useState } from "react";
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Department, Process, ProcessType } from "@/types";
+import { TableRow, TableCell } from "@/components/ui/table";
+import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 import ProcessTypePicker from "./ProcessTypePicker";
-import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
-import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
 import ProcessDepartmentsSection from "./ProcessDepartmentsSection";
 import ProcessRowActions from "./ProcessRowActions";
+import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
 
 interface ProcessTableRowProps {
   process: Process;
   departments: Department[];
-  getDepartmentName: (id: string) => string;
-  getProcessTypeName: (id: string) => string;
+  processTypes: ProcessType[];
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
   moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
-  processTypes: ProcessType[];
+  getProcessTypeName: (id: string) => string;
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
-  updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
   startProcess?: (processId: string) => Promise<void>;
+  hasSectorResponsible: boolean;
+  onAcceptResponsibility: () => Promise<void>;
+  isAccepting: boolean;
 }
 
 const ProcessTableRow = ({
   process,
   departments,
-  getDepartmentName,
-  getProcessTypeName,
+  processTypes,
   moveProcessToNextDepartment,
   moveProcessToPreviousDepartment,
-  processTypes,
+  getProcessTypeName,
   updateProcessType,
-  updateProcessStatus,
   startProcess,
+  hasSectorResponsible,
+  onAcceptResponsibility,
+  isAccepting
 }: ProcessTableRowProps) => {
-  const isNotStarted = process.status === "not_started";
-  const isProcessStarted = !isNotStarted;
-
-  // Hook para lidar com responsáveis do processo
-  const {
-    sectorResponsible,
-    handleAcceptResponsibility,
-    isAccepting
-  } = useProcessRowResponsibility(process.id, process.currentDepartment);
-
-  // Hook para lidar com informações de departamento
+  const navigate = useNavigate();
+  
   const {
     sortedDepartments,
+    concludedDept,
     isFirstDepartment,
     isLastDepartment,
     getMostRecentEntryDate,
@@ -56,74 +49,62 @@ const ProcessTableRow = ({
     isDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
-  // Define a cor de fundo com base no status do processo
-  const getRowBackgroundColor = () => {
-    if (process.status === "completed") return "bg-green-300";
-    if (process.status === "overdue") return "bg-red-300";
-    if (process.status === "pending") return "bg-blue-300";
+  // Função para definir a cor de fundo com base no status
+  const getRowBackgroundColor = (status: string) => {
+    if (status === "completed") return "bg-green-200";
+    if (status === "overdue") return "bg-red-200";
+    if (status === "pending") return "bg-blue-200";
     return "";
   };
 
-  // Adaptadores para garantir que as funções retornem Promise<void>
-  const handleMoveToNext = async (processId: string): Promise<void> => {
-    await moveProcessToNextDepartment(processId);
-  };
-  
-  const handleMoveToPrevious = async (processId: string): Promise<void> => {
-    await moveProcessToPreviousDepartment(processId);
-  };
-  
-  const handleStartProcess = async (processId: string): Promise<void> => {
-    if (startProcess) {
-      await startProcess(processId);
-    }
-  };
-
-  const handleAcceptProcessResponsibility = async (): Promise<void> => {
-    await handleAcceptResponsibility(process.protocolNumber);
+  const handleRowClick = () => {
+    navigate(`/processes/${process.id}`);
   };
 
   return (
-    <TableRow
-      key={process.id}
-      className={cn(getRowBackgroundColor())}
+    <TableRow 
+      className={cn(
+        "cursor-pointer hover:bg-gray-100",
+        getRowBackgroundColor(process.status)
+      )}
+      onClick={handleRowClick}
     >
       <TableCell className="font-medium">
         {process.protocolNumber}
       </TableCell>
-      <TableCell>
-        <ProcessTypePicker
-          processId={process.id}
-          currentTypeId={process.processType}
-          processTypes={processTypes}
-          getProcessTypeName={getProcessTypeName}
-          updateProcessType={updateProcessType}
+      <TableCell onClick={e => e.stopPropagation()}>
+        <ProcessTypePicker 
+          processId={process.id} 
+          currentTypeId={process.processType} 
+          processTypes={processTypes} 
+          getProcessTypeName={getProcessTypeName} 
+          updateProcessType={updateProcessType} 
         />
       </TableCell>
       
-      {/* Seção de departamentos */}
+      {/* Células para cada departamento */}
       <ProcessDepartmentsSection 
         sortedDepartments={sortedDepartments}
-        isProcessStarted={isProcessStarted}
-        getMostRecentEntryDate={getMostRecentEntryDate}
-        hasPassedDepartment={hasPassedDepartment}
-        isCurrentDepartment={isCurrentDepartment}
-        isPreviousDepartment={isPreviousDepartment}
-        isDepartmentOverdue={isDepartmentOverdue}
+        isProcessStarted={process.status !== "not_started"}
+        getMostRecentEntryDate={(departmentId) => getMostRecentEntryDate(departmentId)}
+        hasPassedDepartment={(departmentId) => hasPassedDepartment(departmentId)}
+        isCurrentDepartment={(departmentId) => isCurrentDepartment(departmentId)}
+        isPreviousDepartment={(departmentId) => isPreviousDepartment(departmentId)}
+        isDepartmentOverdue={(departmentId, isProcessStarted) => isDepartmentOverdue(departmentId, isProcessStarted)}
       />
       
       {/* Ações do processo */}
       <ProcessRowActions 
         processId={process.id}
         protocolNumber={process.protocolNumber}
-        moveProcessToPreviousDepartment={handleMoveToPrevious}
-        moveProcessToNextDepartment={handleMoveToNext}
+        moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+        moveProcessToNextDepartment={moveProcessToNextDepartment}
         isFirstDepartment={isFirstDepartment}
         isLastDepartment={isLastDepartment}
         status={process.status}
-        startProcess={handleStartProcess}
-        hasSectorResponsible={!!sectorResponsible}
-        onAcceptResponsibility={handleAcceptProcessResponsibility}
+        startProcess={startProcess}
+        hasSectorResponsible={hasSectorResponsible}
+        onAcceptResponsibility={onAcceptResponsibility}
         isAccepting={isAccepting}
         sectorId={process.currentDepartment}
       />
