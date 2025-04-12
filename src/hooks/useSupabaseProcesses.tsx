@@ -15,9 +15,11 @@ export const useSupabaseProcesses = () => {
   } = useProcessesFetch();
   
   const { 
-    moveProcessToNextDepartment, 
-    moveProcessToPreviousDepartment 
-  } = useProcessMovement(processes);
+    moveProcessToNextDepartment: moveToNext, 
+    moveProcessToPreviousDepartment: moveToPrevious 
+  } = useProcessMovement(() => {
+    fetchProcesses();
+  });
   
   const { 
     updateProcessType,
@@ -29,17 +31,13 @@ export const useSupabaseProcesses = () => {
   const { user } = useAuth();
 
   const handleMoveProcessToNextDepartment = async (processId: string) => {
-    const success = await moveProcessToNextDepartment(processId);
-    if (success) {
-      await fetchProcesses();
-    }
+    await moveToNext(processId);
+    await fetchProcesses();
   };
 
   const handleMoveProcessToPreviousDepartment = async (processId: string) => {
-    const success = await moveProcessToPreviousDepartment(processId);
-    if (success) {
-      await fetchProcesses();
-    }
+    await moveToPrevious(processId);
+    await fetchProcesses();
   };
 
   const handleUpdateProcessType = async (processId: string, newTypeId: string) => {

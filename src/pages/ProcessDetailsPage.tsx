@@ -16,6 +16,9 @@ import ProcessResponsibleInfo from "@/components/Processes/ProcessResponsibleInf
 import { useAuth } from "@/hooks/auth";
 
 const ProcessDetailsPage = () => {
+  // Adicionando console log para debug
+  console.log("Renderizando ProcessDetails");
+  
   const { id } = useParams<{ id: string }>();
   const { processes, isLoading: isLoadingProcesses, getProcess, getDepartmentName, getProcessTypeName, refreshProcesses } = useProcesses();
   const { user } = useAuth();

@@ -5,6 +5,7 @@ import { useDepartmentsData } from "@/hooks/useDepartmentsData";
 import { useProcessFilters } from "@/hooks/useProcessFilters";
 import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { useSupabaseProcesses } from "@/hooks/useSupabaseProcesses";
+import { supabase } from "@/integrations/supabase/client";
 
 type ProcessesContextType = {
   processes: Process[];
@@ -29,6 +30,7 @@ type ProcessesContextType = {
   // Novas funções para excluir processos
   deleteProcess: (processId: string) => Promise<boolean>;
   deleteManyProcesses: (processIds: string[]) => Promise<boolean>;
+  getProcess: (processId: string) => Promise<Process | null>;
 };
 
 const ProcessesContext = createContext<ProcessesContextType | undefined>(undefined);
@@ -49,6 +51,51 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
     deleteManyProcesses
   } = useSupabaseProcesses();
   const { filterProcesses, isProcessOverdue } = useProcessFilters(processes);
+  
+  // Adicionar a função getProcess
+  const getProcess = async (processId: string): Promise<Process | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('processos')
+        .select(`
+          *,
+          processos_historico(*)
+        `)
+        .eq('id', processId)
+        .single();
+        
+      if (error) throw error;
+      if (!data) return null;
+      
+      // Converter para o formato Process
+      const formattedProcess: Process = {
+        id: data.id,
+        protocolNumber: data.numero_protocolo,
+        processType: data.tipo_processo,
+        currentDepartment: data.setor_atual,
+        startDate: data.data_inicio || new Date().toISOString(),
+        expectedEndDate: data.data_fim_esperada || new Date().toISOString(),
+        status: data.status === 'Em andamento' 
+          ? 'pending' 
+          : data.status === 'Concluído' 
+            ? 'completed' 
+            : 'not_started',
+        history: data.processos_historico.map((h: any) => ({
+          departmentId: h.setor_id,
+          entryDate: h.data_entrada,
+          exitDate: h.data_saida,
+          userId: h.usuario_id || '',
+        })),
+        userId: data.usuario_id,
+        responsibleUserId: data.usuario_responsavel,
+      };
+      
+      return formattedProcess;
+    } catch (error) {
+      console.error('Erro ao buscar processo:', error);
+      return null;
+    }
+  };
 
   return (
     <ProcessesContext.Provider
@@ -68,7 +115,8 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
         updateProcessStatus,
         startProcess,
         deleteProcess,
-        deleteManyProcesses
+        deleteManyProcesses,
+        getProcess
       }}
     >
       {children}

@@ -8,7 +8,7 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
     const { data, error } = await supabase.rpc('migrate_usuario_to_auth', {
       usuario_email: email, 
       usuario_senha: password
-    });
+    } as any);
     
     if (error) {
       console.error('Erro na sincronização com autenticação:', error);
@@ -21,4 +21,3 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
     return false;
   }
 };
-

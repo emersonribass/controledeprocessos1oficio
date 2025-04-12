@@ -43,10 +43,8 @@ export type ProcessHistory = {
   userId: string;
 };
 
-// Utiliza o tipo de notificação do Supabase com adaptações
-export type Notification = Omit<Tables["notificacoes"], "mensagem"> & {
-  message: string;
-};
+// Utiliza o tipo de notificação do Supabase
+export type Notification = Tables["notificacoes"];
 
 // Mapear os tipos do banco de dados para os tipos da aplicação
 export const mapSupabaseUserToUser = (dbUser: Tables["usuarios"]): User => {
@@ -65,12 +63,5 @@ export const mapSupabaseDepartmentToDepartment = (dbDepartment: Tables["setores"
     name: dbDepartment.name,
     order: dbDepartment.order_num,
     timeLimit: dbDepartment.time_limit
-  };
-};
-
-export const mapSupabaseNotificationToNotification = (dbNotification: Tables["notificacoes"]): Notification => {
-  return {
-    ...dbNotification,
-    message: dbNotification.mensagem
   };
 };

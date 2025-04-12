@@ -22,14 +22,23 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
       // Primeiro, obter os dados do processo
       const { data: process, error: processError } = await supabase
         .from('processos')
-        .select('*, setores(*)')
+        .select('*')
         .eq('id', processId)
         .single();
 
       if (processError) throw processError;
 
+      if (!process) throw new Error("Processo não encontrado");
+
       // Obter a ordem do departamento atual
-      const currentDepartment = process.setores;
+      const { data: currentDepartment, error: currentDeptError } = await supabase
+        .from('setores')
+        .select('*')
+        .eq('id', process.setor_atual)
+        .single();
+
+      if (currentDeptError) throw currentDeptError;
+
       if (!currentDepartment) throw new Error("Departamento atual não encontrado");
 
       const currentOrder = currentDepartment.order_num;
@@ -49,12 +58,12 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
       const { error: historyError } = await supabase
         .from('processos_historico')
         .update({
-          exit_date: new Date().toISOString(),
-          processed_by: user.id
-        } as any)
+          data_saida: new Date().toISOString(),
+          usuario_id: user.id
+        })
         .eq('processo_id', processId)
-        .eq('department_id', currentDepartment.id)
-        .is('exit_date', null);
+        .eq('setor_id', currentDepartment.id.toString())
+        .is('data_saida', null);
 
       if (historyError) throw historyError;
 
@@ -63,9 +72,10 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
         .from('processos_historico')
         .insert({
           processo_id: processId,
-          department_id: nextDepartment.id,
-          entry_date: new Date().toISOString(),
-          exit_date: null
+          setor_id: nextDepartment.id.toString(),
+          data_entrada: new Date().toISOString(),
+          data_saida: null,
+          usuario_id: user.id
         });
 
       if (newHistoryError) throw newHistoryError;
@@ -74,15 +84,19 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
       const { error: updateError } = await supabase
         .from('processos')
         .update({
-          current_department: nextDepartment.id,
+          setor_atual: nextDepartment.id.toString(),
           updated_at: new Date().toISOString()
-        } as any)
+        })
         .eq('id', processId);
 
       if (updateError) throw updateError;
 
       // Enviar notificações para usuários do setor
-      await sendNotificationsToSectorUsers(processId, nextDepartment.id, process.protocol_number);
+      await sendNotificationsToSectorUsers(
+        processId, 
+        nextDepartment.id.toString(), 
+        process.numero_protocolo
+      );
 
       toast.success(`Processo movido para ${nextDepartment.name}`);
       onProcessUpdated();
@@ -109,14 +123,23 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
       // Primeiro, obter os dados do processo
       const { data: process, error: processError } = await supabase
         .from('processos')
-        .select('*, setores(*)')
+        .select('*')
         .eq('id', processId)
         .single();
 
       if (processError) throw processError;
+      
+      if (!process) throw new Error("Processo não encontrado");
 
       // Obter a ordem do departamento atual
-      const currentDepartment = process.setores;
+      const { data: currentDepartment, error: currentDeptError } = await supabase
+        .from('setores')
+        .select('*')
+        .eq('id', process.setor_atual)
+        .single();
+
+      if (currentDeptError) throw currentDeptError;
+      
       if (!currentDepartment) throw new Error("Departamento atual não encontrado");
 
       const currentOrder = currentDepartment.order_num;
@@ -136,12 +159,12 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
       const { error: historyError } = await supabase
         .from('processos_historico')
         .update({
-          exit_date: new Date().toISOString(),
-          processed_by: user.id
-        } as any)
+          data_saida: new Date().toISOString(),
+          usuario_id: user.id
+        })
         .eq('processo_id', processId)
-        .eq('department_id', currentDepartment.id)
-        .is('exit_date', null);
+        .eq('setor_id', currentDepartment.id.toString())
+        .is('data_saida', null);
 
       if (historyError) throw historyError;
 
@@ -150,9 +173,10 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
         .from('processos_historico')
         .insert({
           processo_id: processId,
-          department_id: prevDepartment.id,
-          entry_date: new Date().toISOString(),
-          exit_date: null
+          setor_id: prevDepartment.id.toString(),
+          data_entrada: new Date().toISOString(),
+          data_saida: null,
+          usuario_id: user.id
         });
 
       if (newHistoryError) throw newHistoryError;
@@ -161,15 +185,19 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
       const { error: updateError } = await supabase
         .from('processos')
         .update({
-          current_department: prevDepartment.id,
+          setor_atual: prevDepartment.id.toString(),
           updated_at: new Date().toISOString()
-        } as any)
+        })
         .eq('id', processId);
 
       if (updateError) throw updateError;
 
       // Enviar notificações para usuários do setor
-      await sendNotificationsToSectorUsers(processId, prevDepartment.id, process.protocol_number);
+      await sendNotificationsToSectorUsers(
+        processId, 
+        prevDepartment.id.toString(), 
+        process.numero_protocolo
+      );
 
       toast.success(`Processo movido para ${prevDepartment.name}`);
       onProcessUpdated();
@@ -217,9 +245,10 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
         .from('processos_historico')
         .insert({
           processo_id: processId,
-          department_id: firstDepartment.id,
-          entry_date: new Date().toISOString(),
-          exit_date: null
+          setor_id: firstDepartment.id.toString(),
+          data_entrada: new Date().toISOString(),
+          data_saida: null,
+          usuario_id: user.id
         });
 
       if (historyError) throw historyError;
@@ -229,16 +258,20 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
         .from('processos')
         .update({
           status: 'Em andamento',
-          current_department: firstDepartment.id,
+          setor_atual: firstDepartment.id.toString(),
           usuario_responsavel: user.id,
           updated_at: new Date().toISOString()
-        } as any)
+        })
         .eq('id', processId);
 
       if (updateError) throw updateError;
 
       // Enviar notificações para usuários do setor
-      await sendNotificationsToSectorUsers(processId, firstDepartment.id, process.protocol_number);
+      await sendNotificationsToSectorUsers(
+        processId, 
+        firstDepartment.id.toString(), 
+        process.numero_protocolo
+      );
 
       toast.success(`Processo iniciado em ${firstDepartment.name}`);
       onProcessUpdated();
@@ -276,7 +309,7 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
       const notifications = users.map(user => ({
         usuario_id: user.id,
         processo_id: processId,
-        message: `O processo ${protocolNumber} foi movido para seu setor. Clique para aceitar a responsabilidade.`,
+        mensagem: `O processo ${protocolNumber} foi movido para seu setor. Clique para aceitar a responsabilidade.`,
         tipo: 'processo_movido',
         data_criacao: new Date().toISOString(),
         lida: false,
