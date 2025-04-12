@@ -48,6 +48,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     let isMounted = true;
     authInitialized.current = true;
+    console.log("Inicializando AuthProvider (useAuth.tsx)");
     
     const initAuth = async () => {
       try {
@@ -59,25 +60,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           
           if (!isMounted) return;
           
+          // Atualizar estado da sessão imediatamente
           setSession(currentSession);
           
-          // Processar dados do usuário de forma assíncrona
+          // Processar dados do usuário através de um setTimeout para evitar deadlocks
           if (currentSession?.user) {
-            try {
-              const userData = await convertSupabaseUser(currentSession.user);
-              if (isMounted) setUser(userData);
-            } catch (error) {
-              console.error("Erro ao converter dados do usuário:", error);
-              if (isMounted) setUser(null);
-            }
+            setTimeout(async () => {
+              try {
+                if (isMounted) {
+                  const userData = await convertSupabaseUser(currentSession.user);
+                  setUser(userData);
+                  setIsLoading(false);
+                }
+              } catch (error) {
+                console.error("Erro ao converter dados do usuário:", error);
+                if (isMounted) {
+                  setUser(null);
+                  setIsLoading(false);
+                }
+              }
+            }, 0);
           } else {
-            if (isMounted) setUser(null);
+            if (isMounted) {
+              setUser(null);
+              setIsLoading(false);
+            }
           }
-          
-          if (isMounted) setIsLoading(false);
         });
         
-        // Verificar sessão atual
+        // Verificar sessão atual - após configurar o listener
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -93,8 +104,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Atualizar estado com a sessão atual
         if (sessionData.session && isMounted) {
           setSession(sessionData.session);
-          const userData = await convertSupabaseUser(sessionData.session.user);
-          setUser(userData);
+          try {
+            const userData = await convertSupabaseUser(sessionData.session.user);
+            if (isMounted) setUser(userData);
+          } catch (error) {
+            console.error("Erro ao converter dados do usuário:", error);
+          }
         }
         
         // Garantir que isLoading seja definido como false
@@ -102,7 +117,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setIsLoading(false);
         }
         
-        return () => subscription.unsubscribe();
+        return () => {
+          if (subscription) {
+            subscription.unsubscribe();
+          }
+        };
       } catch (error) {
         console.error("Erro ao inicializar autenticação:", error);
         if (isMounted) {
@@ -135,10 +154,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const result = await handleLogin(email, password);
       
       if (result.error) {
+        setIsLoading(false);
         throw result.error;
       }
       
       if (!result.session) {
+        setIsLoading(false);
         throw new Error("Não foi possível obter uma sessão válida");
       }
       

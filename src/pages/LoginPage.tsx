@@ -12,51 +12,42 @@ const LoginPage = () => {
     isLoading
   } = useAuth();
   const navigate = useNavigate();
-  const [hasRedirected, setHasRedirected] = useState(false);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
-  // Limpar localStorage de autenticação ao montar o componente de login
+  // Verificar autenticação e redirecionar se necessário
   useEffect(() => {
-    const clearLocalStorageAuth = () => {
-      try {
-        // Não apagamos os tokens aqui, deixamos o gerenciamento para o Supabase Auth
-        console.log("Login: Componente montado");
-      } catch (error) {
-        console.error("Erro ao acessar localStorage:", error);
-      }
-    };
-    
-    clearLocalStorageAuth();
-  }, []);
-
-  // Redirecionar se o usuário já estiver autenticado
-  useEffect(() => {
-    // Evitar redirecionamentos múltiplos
-    if (hasRedirected) return;
-    
-    // Se ainda estiver carregando, aguarde
+    // Se ainda está carregando, não faz nada
     if (isLoading) {
       console.log("LoginPage: Ainda carregando autenticação...");
       return;
     }
     
-    try {
-      console.log("LoginPage: Verificando autenticação, usuário:", !!user);
-      
-      if (user) {
-        console.log("LoginPage: Usuário já autenticado, redirecionando para /dashboard");
-        setHasRedirected(true);
-        navigate("/dashboard", { replace: true });
-      }
-    } catch (error) {
-      console.error("Erro ao tentar redirecionar:", error);
-      toast.error("Erro ao navegar", {
-        description: "Não foi possível redirecionar para o dashboard.",
-      });
+    // Marca que já verificamos a autenticação
+    setHasCheckedAuth(true);
+    
+    // Se o usuário está autenticado, redireciona para o dashboard
+    if (user) {
+      console.log("LoginPage: Usuário já autenticado, redirecionando para /dashboard");
+      navigate("/dashboard", { replace: true });
     }
-  }, [user, isLoading, navigate, hasRedirected]);
+  }, [user, isLoading, navigate]);
 
-  // Mostrar indicador de carregamento enquanto verifica autenticação
-  if (isLoading) {
+  // Adicionando um timeout de segurança para evitar spinner infinito
+  useEffect(() => {
+    // Se não conseguimos carregar os dados de autenticação em 5 segundos, 
+    // assumimos que não há sessão ativa
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.log("LoginPage: Timeout de carregamento atingido, forçando estado de não-autenticado");
+        setHasCheckedAuth(true);
+      }
+    }, 5000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [isLoading]);
+
+  // Mostrar indicador de carregamento apenas por um período razoável
+  if (isLoading && !hasCheckedAuth) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30" role="status" aria-live="polite">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" aria-hidden="true"></div>

@@ -8,9 +8,8 @@ export const useLogin = () => {
       console.log(`Tentando fazer login para o usuário: ${email}`);
       
       // Limpar qualquer sessão anterior que possa estar causando problemas
-      // Isso ajuda a evitar estados inconsistentes
       try {
-        await supabase.auth.signOut();
+        await supabase.auth.signOut({ scope: 'local' });
       } catch (err) {
         // Ignorar erros ao tentar fazer signOut
         console.log("Erro ao limpar sessão anterior:", err);
