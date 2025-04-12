@@ -13,7 +13,8 @@ export function useUsuarios() {
   const fetchUsuarios = async () => {
     setIsLoading(true);
     try {
-      console.log("Iniciando busca de usuários na tabela 'usuarios'");
+      console.log("Iniciando busca de usuários na tabela 'usuarios' do projeto controledeprocessos1oficio");
+      console.log("URL do Supabase:", supabase.supabaseUrl);
       
       const { data, error, count } = await supabase
         .from("usuarios")
