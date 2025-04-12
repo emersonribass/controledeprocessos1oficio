@@ -1,11 +1,12 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useProcesses } from "@/hooks/useProcesses";
 import { Process, PROCESS_STATUS } from "@/types";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/auth";
+import ProcessTableResponsibles from "./ProcessTableResponsibles";
 
 interface ProcessListProps {
   initialFilters?: {
@@ -36,7 +37,6 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const { user } = useAuth();
   
   const [userIsAdmin, setUserIsAdmin] = useState(false);
-  const [processResponsibles, setProcessResponsibles] = useState<Record<string, string | null>>({});
   
   const [filters, setFilters] = useState<{
     department?: string;
@@ -105,10 +105,8 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     }
   };
 
-  // Verificar se um processo tem responsável por setor
-  const hasProcessResponsible = useCallback((processId: string) => {
-    return !!processResponsibles[processId];
-  }, [processResponsibles]);
+  // Usando o hook de responsáveis
+  const responsiblesManager = ProcessTableResponsibles({ processes: sortedProcesses });
 
   if (isLoading) {
     return (
@@ -154,9 +152,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
           updateProcessStatus={updateProcessStatus}
           departments={departments}
           startProcess={startProcess}
-          hasProcessResponsible={hasProcessResponsible}
-          processResponsibles={processResponsibles}
-          setProcessResponsibles={setProcessResponsibles}
+          responsiblesManager={responsiblesManager}
         />
       )}
     </div>

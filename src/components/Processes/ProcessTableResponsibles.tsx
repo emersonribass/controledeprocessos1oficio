@@ -31,7 +31,7 @@ const ProcessTableResponsibles = ({ processes }: ProcessResponsiblesHookProps): 
         // Buscar informações de responsáveis para todos os processos
         const { data, error } = await supabase
           .from('processos')
-          .select('id, usuario_responsavel, resp_departamento_atual')
+          .select('id, usuario_responsavel')
           .in('id', processIds);
         
         if (error) {
@@ -42,8 +42,8 @@ const ProcessTableResponsibles = ({ processes }: ProcessResponsiblesHookProps): 
         // Mapear os resultados para o estado
         const newResponsibles: Record<string, string | null> = {};
         data.forEach(item => {
-          // Marcar como tendo responsável se tiver usuário_responsavel OU resp_departamento_atual
-          newResponsibles[item.id] = item.usuario_responsavel || item.resp_departamento_atual || null;
+          // Marcar como tendo responsável se tiver usuário_responsavel
+          newResponsibles[item.id] = item.usuario_responsavel || null;
         });
         
         setProcessResponsibles(newResponsibles);

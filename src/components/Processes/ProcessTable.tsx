@@ -5,7 +5,7 @@ import ProcessTableHeader from "./ProcessTableHeader";
 import { useNavigate } from "react-router-dom";
 import { useProcessTableUtilities } from "./ProcessTableUtilities";
 import ProcessTableBody from "./ProcessTableBody";
-import ProcessTableResponsibles from "./ProcessTableResponsibles";
+import { ProcessResponsiblesHookResult } from "./ProcessTableResponsibles";
 
 interface ProcessTableProps {
   processes: Process[];
@@ -21,6 +21,7 @@ interface ProcessTableProps {
   updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
   departments: Department[];
   startProcess?: (processId: string) => Promise<void>;
+  responsiblesManager: ProcessResponsiblesHookResult;
 }
 
 const ProcessTable = ({
@@ -35,13 +36,11 @@ const ProcessTable = ({
   processTypes,
   updateProcessType,
   departments,
-  startProcess
+  startProcess,
+  responsiblesManager
 }: ProcessTableProps) => {
   const navigate = useNavigate();
   const { sortedDepartments, concludedDept } = useProcessTableUtilities(departments);
-  
-  // Use o hook que gerencia os responsáveis dos processos
-  const responsiblesManager = ProcessTableResponsibles({ processes });
 
   return (
     <div className="rounded-md border overflow-x-auto">

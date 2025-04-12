@@ -9,12 +9,10 @@ import { Loader2 } from "lucide-react";
 import { Process } from "@/types";
 import ProcessHeader from "./ProcessHeader";
 import ProcessNotFound from "./ProcessNotFound";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
 
 const ProcessDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { 
     processes, 
@@ -29,26 +27,18 @@ const ProcessDetails = () => {
   
   const {
     userNames,
-    responsibleUser,
     fetchUserNames,
     getUserName,
-    fetchResponsibleUser,
-    setResponsibleUser
   } = useProcessUserManager();
 
   const [process, setProcess] = useState<Process | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [currentSectorResponsible, setCurrentSectorResponsible] = useState<string | null>(null);
-  const [isMainResponsible, setIsMainResponsible] = useState(false);
-  const [isSectorResponsible, setIsSectorResponsible] = useState(false);
-  const [hasResponsibleInCurrentDepartment, setHasResponsibleInCurrentDepartment] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     
     const loadProcess = async () => {
       await refreshProcesses();
-      await fetchResponsibleUser(id);
     };
     
     loadProcess();
@@ -70,56 +60,13 @@ const ProcessDetails = () => {
     
     setProcess(foundProcess);
     
-    // Verificar se o usuário atual é o responsável principal
-    if (foundProcess && responsibleUser) {
-      setIsMainResponsible(user.id === responsibleUser);
-    }
-
-    // Buscar o responsável do setor atual
-    const fetchSectorResponsible = async () => {
-      if (!foundProcess) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('processos_historico')
-          .select('*')
-          .eq('processo_id', id)
-          .eq('setor_id', foundProcess.currentDepartment)
-          .is('data_saida', null)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Erro ao buscar responsável do setor:', error);
-          return;
-        }
-
-        if (data && data.usuario_responsavel_setor) {
-          setCurrentSectorResponsible(data.usuario_responsavel_setor);
-          setIsSectorResponsible(data.usuario_responsavel_setor === user.id);
-          setHasResponsibleInCurrentDepartment(true); // Define que já existe um responsável no setor atual
-        } else {
-          setCurrentSectorResponsible(null);
-          setIsSectorResponsible(false);
-          setHasResponsibleInCurrentDepartment(false); // Define que não existe responsável no setor atual
-        }
-      } catch (error) {
-        console.error('Erro ao processar responsável do setor:', error);
-      }
-    };
-
-    fetchSectorResponsible();
-    
     if (foundProcess) {
       const userIds = foundProcess.history
         .map(h => h.userId)
         .filter(userId => userId && userId.length > 0);
       
-      if (responsibleUser) {
-        userIds.push(responsibleUser);
-      }
-      
-      if (currentSectorResponsible) {
-        userIds.push(currentSectorResponsible);
+      if (foundProcess.responsibleUser) {
+        userIds.push(foundProcess.responsibleUser);
       }
       
       const uniqueUserIds = [...new Set(userIds)];
@@ -127,24 +74,14 @@ const ProcessDetails = () => {
         fetchUserNames(uniqueUserIds);
       }
     }
-  }, [processes, id, responsibleUser, user, currentSectorResponsible, filterProcesses]);
+  }, [processes, id, user, filterProcesses]);
 
   const handleRefresh = async () => {
     if (isRefreshing) return;
     
     setIsRefreshing(true);
     await refreshProcesses();
-    if (id) {
-      await fetchResponsibleUser(id);
-    }
     setIsRefreshing(false);
-  };
-  
-  const handleProcessAccepted = () => {
-    if (id && process) {
-      fetchResponsibleUser(id);
-      setHasResponsibleInCurrentDepartment(true); // Atualiza o estado após aceitar o processo
-    }
   };
 
   if (isLoading && !process) {
@@ -158,9 +95,6 @@ const ProcessDetails = () => {
   if (!process) {
     return <ProcessNotFound />;
   }
-
-  const mainResponsibleUserName = responsibleUser ? getUserName(responsibleUser) : undefined;
-  const sectorResponsibleUserName = currentSectorResponsible ? getUserName(currentSectorResponsible) : undefined;
 
   return (
     <div className="space-y-6">
@@ -177,14 +111,7 @@ const ProcessDetails = () => {
         moveProcessToNextDepartment={moveProcessToNextDepartment}
         moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
         getUserName={getUserName}
-        mainResponsibleUserName={mainResponsibleUserName}
-        sectorResponsibleUserName={sectorResponsibleUserName}
         isRefreshing={isRefreshing}
-        onProcessAccepted={handleProcessAccepted}
-        hasResponsibleUser={hasResponsibleInCurrentDepartment} // Passamos o novo estado aqui
-        isMainResponsible={isMainResponsible}
-        isSectorResponsible={isSectorResponsible}
-        currentDepartmentId={process.currentDepartment}
       />
 
       <ProcessAutoRefresher 

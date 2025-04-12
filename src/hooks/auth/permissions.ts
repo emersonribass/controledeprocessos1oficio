@@ -1,93 +1,105 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+// Lista de emails de administradores
 export const adminEmails = [
-  "admin@nottar.com.br",
-  "maciel@nottar.com.br",
-  "dante@nottar.com.br"
+  "admin@nottar.com", 
+  "emerson.ribas@live.com"
 ];
 
-// Cache para armazenar resultados de verificação de administrador por email
-const adminCheckCache: Record<string, { result: boolean; timestamp: number }> = {};
-const CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minutos em milissegundos
+// Cache para reduzir chamadas ao banco de dados
+interface AdminCache {
+  [email: string]: {
+    isAdmin: boolean;
+    timestamp: number;
+  };
+}
+
+// Tempo de expiração do cache: 5 minutos
+const CACHE_EXPIRY_MS = 5 * 60 * 1000;
+
+// Cache local para manter os resultados das verificações
+const adminCache: AdminCache = {};
 
 /**
- * Verifica se o usuário é administrador consultando o banco de dados
- * @param email Email do usuário
+ * Verifica se um usuário é administrador pelo seu e-mail
+ * 
+ * Função assíncrona que verifica primeiro no cache, depois no banco
+ * 
+ * @param email Email do usuário a ser verificado
  * @returns Promise<boolean> indicando se o usuário é administrador
  */
 export const isAdmin = async (email: string): Promise<boolean> => {
-  if (!email) return false;
+  const lowerEmail = email.toLowerCase();
   
-  const normalizedEmail = email.toLowerCase();
+  // Verificar no cache primeiro
+  const now = Date.now();
+  const cachedValue = adminCache[lowerEmail];
   
-  // Verificar primeiro a lista de emails de administradores hard-coded
-  if (adminEmails.includes(normalizedEmail)) {
+  if (cachedValue && (now - cachedValue.timestamp < CACHE_EXPIRY_MS)) {
+    console.log(`Usando resultado em cache para: ${lowerEmail}`);
+    return cachedValue.isAdmin;
+  }
+
+  console.log(`Buscando permissões no banco de dados para: ${lowerEmail}`);
+
+  // Verificar se é um dos emails padrão de admin
+  if (adminEmails.includes(lowerEmail)) {
+    // Atualizar o cache
+    adminCache[lowerEmail] = {
+      isAdmin: true,
+      timestamp: now
+    };
     return true;
   }
 
-  // Verificar o cache antes de fazer a consulta ao banco de dados
-  const now = Date.now();
-  const cachedResult = adminCheckCache[normalizedEmail];
-  if (cachedResult && now - cachedResult.timestamp < CACHE_TIMEOUT) {
-    console.log(`Usando resultado em cache para: ${email}`);
-    return cachedResult.result;
-  }
-
-  console.log(`Buscando permissões no banco de dados para: ${email}`);
-  
   try {
+    // Verificar no banco de dados
     const { data, error } = await supabase
       .from('usuarios')
-      .select('is_admin')
-      .eq('email', normalizedEmail)
+      .select('perfil')
+      .eq('email', lowerEmail)
       .single();
-
-    if (error) {
-      console.error('Erro ao verificar permissões administrativas:', error);
-      return false;
-    }
-
-    const isAdminUser = !!data?.is_admin;
     
-    // Armazenar o resultado no cache
-    adminCheckCache[normalizedEmail] = {
-      result: isAdminUser,
+    if (error) throw error;
+    
+    // Verificar se o perfil é 'admin'
+    const isUserAdmin = data?.perfil === 'admin';
+    console.log(`Usuário é administrador pelo perfil na tabela: ${isUserAdmin}`);
+    
+    // Atualizar o cache
+    adminCache[lowerEmail] = {
+      isAdmin: isUserAdmin,
       timestamp: now
     };
-
-    console.log(`Usuário é administrador pelo perfil na tabela: ${isAdminUser}`);
     
-    return isAdminUser;
+    return isUserAdmin;
   } catch (error) {
-    console.error('Erro ao verificar permissões administrativas:', error);
+    console.error(`Erro ao verificar status de administrador para ${lowerEmail}:`, error);
     return false;
   }
 };
 
 /**
- * Versão síncrona da verificação de administrador, usando o cache
- * @param email Email do usuário
- * @returns boolean | null - true se o usuário for admin, false se não for, null se não houver dados no cache
+ * Versão síncrona para verificar se um email está na lista de administradores
+ * Útil para componentes React que não podem esperar por uma promise
+ * 
+ * @param email Email a ser verificado
+ * @returns boolean indicando se o email está na lista de admins
  */
-export const isAdminSync = (email: string): boolean | null => {
+export const isAdminSync = (email: string): boolean => {
   if (!email) return false;
   
-  const normalizedEmail = email.toLowerCase();
+  const lowerEmail = email.toLowerCase();
   
-  // Verificar primeiro a lista de emails de administradores hard-coded
-  if (adminEmails.includes(normalizedEmail)) {
-    return true;
-  }
-
-  // Verificar o cache
+  // Verificar no cache primeiro
   const now = Date.now();
-  const cachedResult = adminCheckCache[normalizedEmail];
+  const cachedValue = adminCache[lowerEmail];
   
-  if (cachedResult && now - cachedResult.timestamp < CACHE_TIMEOUT) {
-    return cachedResult.result;
+  if (cachedValue && (now - cachedValue.timestamp < CACHE_EXPIRY_MS)) {
+    return cachedValue.isAdmin;
   }
   
-  // Se não houver dados no cache, retornar null
-  return null;
+  // Se não estiver no cache, verifica apenas na lista padrão de emails
+  return adminEmails.includes(lowerEmail);
 };
