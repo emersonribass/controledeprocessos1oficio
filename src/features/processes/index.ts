@@ -10,7 +10,10 @@ export * from "./hooks/useProcessUpdate";
 export * from "./hooks/useProcessMovement";
 export * from "./hooks/useProcessDelete";
 export * from "./hooks/useProcessStart";
-export * from "./hooks/useProcessResponsibles";
+
+// Hooks de responsáveis
+// Removido a exportação direta de useProcessResponsibles para evitar duplicação
+// Agora exportamos apenas através do namespace 'responsible'
 export * from "./hooks/responsible";
 
 // Context
