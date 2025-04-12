@@ -12,6 +12,9 @@ interface AdminMenuProps {
 export const AdminMenu = ({ isAdmin }: AdminMenuProps) => {
   const { pathname } = useLocation();
 
+  // Verificando se o usuário é administrador e exibindo no console para depuração
+  console.log("AdminMenu - isAdmin:", isAdmin);
+  
   if (!isAdmin) return null;
 
   return (

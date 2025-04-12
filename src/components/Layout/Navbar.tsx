@@ -16,6 +16,7 @@ const Navbar = () => {
       if (user && user.email) {
         try {
           const adminStatus = await checkAdminStatus(user.email);
+          console.log("Status admin verificado:", adminStatus, "para usuário:", user.email);
           setUserIsAdmin(adminStatus);
         } catch (error) {
           console.error("Erro ao verificar status de administrador:", error);
@@ -34,7 +35,7 @@ const Navbar = () => {
       <div className="flex items-center">
         <NavbarBrand />
         <NavLinks />
-        <AdminMenu isAdmin={userIsAdmin} />
+        <AdminMenu isAdmin={userIsAdmin || (user && user.isAdmin) || false} />
       </div>
 
       <div className="flex items-center space-x-4">

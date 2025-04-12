@@ -39,7 +39,16 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     const verifyAdminStatus = async () => {
       if (user && user.email) {
         try {
+          // Verificar primeiro se o usuário já tem a propriedade isAdmin definida
+          if (user.isAdmin) {
+            setIsUserAdmin(true);
+            setIsCheckingAdmin(false);
+            return;
+          }
+          
+          // Se não tiver, verificar pelo email
           const adminStatus = await checkAdminStatus(user.email);
+          console.log("Routes - Status admin verificado:", adminStatus, "para usuário:", user.email);
           setIsUserAdmin(adminStatus);
         } catch (error) {
           console.error("Erro ao verificar status de administrador:", error);
@@ -92,6 +101,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (adminOnly && !isUserAdmin) {
+    console.log("Usuário não é admin, redirecionando para dashboard");
     return <Navigate to="/dashboard" replace />;
   }
   
