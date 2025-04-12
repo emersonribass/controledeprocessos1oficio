@@ -7,17 +7,17 @@ export const useProcessMovementHandler = (
   startProcessMovement: (processId: string) => Promise<boolean>,
   fetchProcesses: () => Promise<void>
 ) => {
-  const handleMoveProcessToNextDepartment = async (processId: string) => {
+  const handleMoveProcessToNextDepartment = async (processId: string): Promise<void> => {
     await moveToNext(processId);
     await fetchProcesses();
   };
 
-  const handleMoveProcessToPreviousDepartment = async (processId: string) => {
+  const handleMoveProcessToPreviousDepartment = async (processId: string): Promise<void> => {
     await moveToPrevious(processId);
     await fetchProcesses();
   };
   
-  const startProcess = async (processId: string) => {
+  const startProcess = async (processId: string): Promise<void> => {
     try {
       await startProcessMovement(processId);
       await fetchProcesses();
