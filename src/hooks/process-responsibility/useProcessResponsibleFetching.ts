@@ -8,6 +8,8 @@ export const useProcessResponsibleFetching = () => {
    */
   const getProcessResponsible = async (processId: string): Promise<ProcessResponsible | null> => {
     try {
+      console.log("Buscando responsável para o processo:", processId);
+      
       const { data: process, error: processError } = await supabase
         .from('processos')
         .select('usuario_responsavel')
@@ -15,10 +17,12 @@ export const useProcessResponsibleFetching = () => {
         .single();
 
       if (processError) {
-        throw processError;
+        console.error("Erro ao buscar processo:", processError);
+        return null;
       }
 
       if (!process || !process.usuario_responsavel) {
+        console.log("Processo não tem responsável definido");
         return null;
       }
 
@@ -29,7 +33,8 @@ export const useProcessResponsibleFetching = () => {
         .single();
 
       if (userError) {
-        throw userError;
+        console.error("Erro ao buscar usuário responsável:", userError);
+        return null;
       }
 
       return user;
@@ -44,6 +49,13 @@ export const useProcessResponsibleFetching = () => {
    */
   const getSectorResponsible = async (processId: string, sectorId: string): Promise<ProcessResponsible | null> => {
     try {
+      console.log("Buscando responsável para o processo no setor:", processId, sectorId);
+      
+      if (!processId || !sectorId) {
+        console.log("ID do processo ou setor não fornecido");
+        return null;
+      }
+      
       const { data, error } = await supabase
         .from('setor_responsaveis')
         .select('usuario_id')
@@ -51,10 +63,12 @@ export const useProcessResponsibleFetching = () => {
         .eq('setor_id', sectorId);
 
       if (error) {
-        throw error;
+        console.error("Erro ao buscar responsável no setor:", error);
+        return null;
       }
 
       if (!data || data.length === 0) {
+        console.log("Nenhum responsável encontrado para este setor");
         return null;
       }
 
@@ -65,7 +79,8 @@ export const useProcessResponsibleFetching = () => {
         .single();
 
       if (userError) {
-        throw userError;
+        console.error("Erro ao buscar dados do usuário responsável:", userError);
+        return null;
       }
 
       return user;

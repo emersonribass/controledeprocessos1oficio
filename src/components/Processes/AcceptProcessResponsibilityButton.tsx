@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
@@ -48,4 +47,3 @@ const AcceptProcessResponsibilityButton = ({
 };
 
 export default AcceptProcessResponsibilityButton;
-

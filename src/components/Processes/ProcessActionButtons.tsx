@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
-import { useState } from "react";
 
 interface ProcessActionButtonsProps {
   processId: string;
@@ -76,7 +75,7 @@ const ProcessActionButtons = ({
     );
   }
   
-  // Se não há responsável no setor, mostra apenas o botão de aceitar responsabilidade
+  // Se não há responsável no setor, mostra apenas o botão de aceitar processo
   if (!hasSectorResponsible && onAcceptResponsibility) {
     return (
       <div className="flex justify-center gap-2">
@@ -123,4 +122,3 @@ const ProcessActionButtons = ({
 };
 
 export default ProcessActionButtons;
-
