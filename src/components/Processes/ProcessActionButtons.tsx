@@ -133,7 +133,7 @@ const ProcessActionButtons = ({
         variant="ghost" 
         size="icon" 
         onClick={handleMoveToNext} 
-        disabled={isFirstDepartment || isCompleted} // Desabilitado se for primeiro departamento ou status concluído
+        disabled={isFirstDepartment || isCompleted} 
         title="Mover para próximo departamento"
         className={`process-action ${(isFirstDepartment || isCompleted) ? "opacity-50 cursor-not-allowed" : ""}`}
       >
