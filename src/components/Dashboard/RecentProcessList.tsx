@@ -6,10 +6,10 @@ import { ptBR } from "date-fns/locale";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useProcesses } from "@/hooks/useProcesses";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useProcesses } from "@/features/processes"; // Corrigindo o import
 
 const RecentProcessList = () => {
   const navigate = useNavigate();

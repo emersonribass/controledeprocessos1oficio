@@ -1,11 +1,11 @@
 
-import { useProcesses } from "@/hooks/useProcesses";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardCheck, AlertTriangle, BarChart, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth";
 import { Process, PROCESS_STATUS } from "@/types";
+import { useProcesses } from "@/features/processes"; // Corrigindo o import
 
 const DashboardSummary = () => {
   const { processes, filterProcesses } = useProcesses();

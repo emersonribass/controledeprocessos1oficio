@@ -1,11 +1,12 @@
+
 import { useState, useEffect } from "react";
-import { useProcesses } from "@/features/processes/hooks/useProcesses";
 import { Process, PROCESS_STATUS } from "@/types";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import ProcessTableResponsibles from "./ProcessTableResponsibles";
+import { useProcesses } from "@/features/processes"; // Corrigindo o import
 
 interface ProcessListProps {
   initialFilters?: {
