@@ -11,13 +11,16 @@ export const useNextDepartment = () => {
   const moveToNextDepartment = async (processId: string): Promise<boolean> => {
     try {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error("Usuário não autenticado", {
+          duration: 1500
+        });
         return false;
       }
 
-      // Toast inicial para feedback imediato ao usuário
-      toast.loading("Movendo processo...", {
-        duration: 1000
+      // Toast de carregamento com ID para poder descartá-lo depois
+      const loadingToastId = toast.loading("Movendo processo...", {
+        duration: 1500,
+        id: `next-${processId}`
       });
 
       // 1. Obter informações do processo e setores em paralelo para otimizar
@@ -40,6 +43,7 @@ export const useNextDepartment = () => {
 
       if (processoError || !processo) {
         console.error("Erro ao obter informações do processo:", processoError);
+        toast.dismiss(loadingToastId); // Dismiss loading toast
         toast.error("Erro ao mover processo", {
           duration: 1500
         });
@@ -48,6 +52,7 @@ export const useNextDepartment = () => {
 
       if (setoresError || !setores) {
         console.error("Erro ao obter setores:", setoresError);
+        toast.dismiss(loadingToastId); // Dismiss loading toast
         toast.error("Erro ao mover processo", {
           duration: 1500
         });
@@ -57,6 +62,7 @@ export const useNextDepartment = () => {
       // 3. Encontrar o departamento atual e o próximo
       const departamentoAtual = setores.find(s => s.id.toString() === processo.setor_atual);
       if (!departamentoAtual) {
+        toast.dismiss(loadingToastId); // Dismiss loading toast
         toast.error("Setor atual não encontrado", {
           duration: 1500
         });
@@ -67,6 +73,7 @@ export const useNextDepartment = () => {
         .sort((a, b) => a.order_num - b.order_num);
 
       if (proximos.length === 0) {
+        toast.dismiss(loadingToastId); // Dismiss loading toast
         toast.error("Não há próximo setor disponível", {
           duration: 1500
         });
@@ -122,11 +129,15 @@ export const useNextDepartment = () => {
       const erros = results.filter(r => r.error);
       if (erros.length > 0) {
         console.error("Erros ao atualizar banco de dados:", erros);
+        toast.dismiss(loadingToastId); // Dismiss loading toast
         toast.error("Erro ao atualizar processo", {
           duration: 1500
         });
         return false;
       }
+
+      // Dispensar o toast de carregamento
+      toast.dismiss(loadingToastId);
 
       // 7. Notificar usuários do novo departamento em segundo plano para não atrasar a resposta
       notifyDepartmentUsers(

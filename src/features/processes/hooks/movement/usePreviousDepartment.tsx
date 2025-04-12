@@ -11,13 +11,16 @@ export const usePreviousDepartment = () => {
   const moveToPreviousDepartment = async (processId: string): Promise<boolean> => {
     try {
       if (!user) {
-        toast.error("Usuário não autenticado");
+        toast.error("Usuário não autenticado", {
+          duration: 1500
+        });
         return false;
       }
 
-      // Toast inicial para feedback imediato ao usuário
-      toast.loading("Movendo processo...", {
-        duration: 1000
+      // Toast inicial para feedback imediato ao usuário com ID para poder descartá-lo depois
+      const loadingToastId = toast.loading("Movendo processo...", {
+        duration: 1500,
+        id: `prev-${processId}`
       });
 
       console.log("Iniciando movimentação para departamento anterior:", processId);
@@ -42,6 +45,7 @@ export const usePreviousDepartment = () => {
 
       if (processoError || !processo) {
         console.error("Erro ao obter informações do processo:", processoError);
+        toast.dismiss(loadingToastId); // Dismiss loading toast
         toast.error("Erro ao mover processo", {
           duration: 1500
         });
@@ -50,6 +54,7 @@ export const usePreviousDepartment = () => {
 
       if (setoresError || !setores) {
         console.error("Erro ao obter setores:", setoresError);
+        toast.dismiss(loadingToastId); // Dismiss loading toast
         toast.error("Erro ao mover processo", {
           duration: 1500
         });
@@ -59,6 +64,7 @@ export const usePreviousDepartment = () => {
       // 3. Encontrar o departamento atual e o anterior
       const departamentoAtual = setores.find(s => s.id.toString() === processo.setor_atual);
       if (!departamentoAtual) {
+        toast.dismiss(loadingToastId); // Dismiss loading toast
         toast.error("Setor atual não encontrado", {
           duration: 1500
         });
@@ -69,6 +75,7 @@ export const usePreviousDepartment = () => {
         .sort((a, b) => b.order_num - a.order_num);
 
       if (anteriores.length === 0) {
+        toast.dismiss(loadingToastId); // Dismiss loading toast
         toast.error("Não há setor anterior disponível", {
           duration: 1500
         });
@@ -123,11 +130,15 @@ export const usePreviousDepartment = () => {
       const erros = results.filter(r => r.error);
       if (erros.length > 0) {
         console.error("Erros ao atualizar banco de dados:", erros);
+        toast.dismiss(loadingToastId); // Dismiss loading toast
         toast.error("Erro ao atualizar processo", {
           duration: 1500
         });
         return false;
       }
+
+      // Dispensar o toast de carregamento
+      toast.dismiss(loadingToastId);
 
       // 7. Notificar usuários do departamento anterior em segundo plano para não atrasar a resposta
       notifyDepartmentUsers(
@@ -139,14 +150,14 @@ export const usePreviousDepartment = () => {
       });
 
       toast.success(`Processo retornado para ${departamentoAnterior.name}`, {
-        duration: 1500 // Set duration to 1.5 seconds
+        duration: 1500
       });
       console.log("Processo movido com sucesso para departamento anterior");
       return true;
     } catch (error) {
       console.error("Erro ao mover processo:", error);
       toast.error("Erro ao mover processo", {
-        duration: 1500 // Set duration to 1.5 seconds
+        duration: 1500
       });
       return false;
     }

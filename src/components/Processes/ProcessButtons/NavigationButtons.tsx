@@ -36,7 +36,7 @@ const NavigationButtons = ({
     // Reabilitar o botão após um período de tempo
     setTimeout(() => {
       if (button) button.disabled = false;
-    }, 2000);
+    }, 3000); // Aumentado para 3 segundos para dar mais tempo para a operação completar
   };
 
   const handleNextDepartment = (e: React.MouseEvent) => {
@@ -51,7 +51,7 @@ const NavigationButtons = ({
     // Reabilitar o botão após um período de tempo
     setTimeout(() => {
       if (button) button.disabled = false;
-    }, 2000);
+    }, 3000); // Aumentado para 3 segundos para dar mais tempo para a operação completar
   };
   
   if (showLabels) {
