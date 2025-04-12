@@ -20,7 +20,10 @@ export * from "./hooks/useProcessUpdate";
 export * from "./hooks/useSupabaseProcesses";
 export * from "./hooks/useProcessDelete";
 export * from "./hooks/useProcessStart";
-export * from "./hooks/responsible";
+
+// Responsible Hooks - using explicit export to avoid naming conflicts
+export { ProcessResponsiblesHookResult } from "./hooks/responsible/types";
+export { useProcessResponsibles } from "./hooks/responsible";
 
 // Context
 export * from "./context/ProcessesContext";
