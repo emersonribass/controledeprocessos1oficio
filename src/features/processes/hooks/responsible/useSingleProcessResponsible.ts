@@ -22,7 +22,7 @@ export const useSingleProcessResponsible = (processId?: string) => {
     try {
       // Buscar dados do processo
       const { data, error } = await supabase
-        .from('processes')
+        .from('processos')
         .select('*')
         .eq('id', processId)
         .single();
@@ -33,44 +33,44 @@ export const useSingleProcessResponsible = (processId?: string) => {
         setSingleProcess(data as unknown as Process);
         
         // Verificar se o usuário é o responsável principal
-        setIsMainResponsible(data.responsibleUser === user.id);
+        setIsMainResponsible(data.usuario_responsavel === user.id);
         
         // Buscar nome do responsável principal se existir
-        if (data.responsibleUser) {
+        if (data.usuario_responsavel) {
           const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('name, email')
-            .eq('id', data.responsibleUser)
+            .from('usuarios')
+            .select('nome, email')
+            .eq('id', data.usuario_responsavel)
             .single();
           
           if (!userError && userData) {
-            setMainResponsibleUserName(userData.name || userData.email);
+            setMainResponsibleUserName(userData.nome || userData.email);
           }
         }
         
-        // Buscar responsáveis de departamento
-        const { data: sectorResponsibles, error: sectorError } = await supabase
-          .from('department_responsibles')
+        // Buscar responsável de departamento
+        const { data: historicoAtual, error: historicoError } = await supabase
+          .from('processos_historico')
           .select('*')
-          .eq('process_id', processId)
-          .eq('department_id', data.currentDepartment);
+          .eq('processo_id', processId)
+          .eq('setor_id', data.setor_atual)
+          .is('data_saida', null)
+          .maybeSingle();
         
-        if (!sectorError && sectorResponsibles?.length) {
-          const sectorResp = sectorResponsibles[0];
-          
+        if (!historicoError && historicoAtual) {
           // Verificar se o usuário é responsável de setor
-          setIsSectorResponsible(sectorResp.user_id === user.id);
+          setIsSectorResponsible(historicoAtual.usuario_responsavel_setor === user.id);
           
           // Buscar nome do responsável de setor
-          if (sectorResp.user_id) {
+          if (historicoAtual.usuario_responsavel_setor) {
             const { data: sectorUserData, error: sectorUserError } = await supabase
-              .from('users')
-              .select('name, email')
-              .eq('id', sectorResp.user_id)
+              .from('usuarios')
+              .select('nome, email')
+              .eq('id', historicoAtual.usuario_responsavel_setor)
               .single();
             
             if (!sectorUserError && sectorUserData) {
-              setSectorResponsibleUserName(sectorUserData.name || sectorUserData.email);
+              setSectorResponsibleUserName(sectorUserData.nome || sectorUserData.email);
             }
           }
         } else {

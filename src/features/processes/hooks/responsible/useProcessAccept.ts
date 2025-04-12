@@ -17,30 +17,32 @@ export const useProcessAccept = (processId?: string, singleProcess: Process | nu
     try {
       // Verificar se já existe um responsável
       const { data: existingResp, error: checkError } = await supabase
-        .from('department_responsibles')
+        .from('processos_historico')
         .select('*')
-        .eq('process_id', processId)
-        .eq('department_id', singleProcess.currentDepartment);
+        .eq('processo_id', processId)
+        .eq('setor_id', singleProcess.currentDepartment)
+        .is('data_saida', null)
+        .maybeSingle();
       
       if (checkError) throw checkError;
       
-      if (existingResp && existingResp.length > 0) {
+      if (existingResp) {
         // Atualizar responsável existente
         const { error: updateError } = await supabase
-          .from('department_responsibles')
-          .update({ user_id: user.id })
-          .eq('process_id', processId)
-          .eq('department_id', singleProcess.currentDepartment);
+          .from('processos_historico')
+          .update({ usuario_responsavel_setor: user.id })
+          .eq('id', existingResp.id);
         
         if (updateError) throw updateError;
       } else {
         // Criar novo registro de responsável
         const { error: insertError } = await supabase
-          .from('department_responsibles')
+          .from('processos_historico')
           .insert({
-            process_id: processId,
-            department_id: singleProcess.currentDepartment,
-            user_id: user.id
+            processo_id: processId,
+            setor_id: singleProcess.currentDepartment,
+            usuario_id: null,
+            usuario_responsavel_setor: user.id
           });
         
         if (insertError) throw insertError;

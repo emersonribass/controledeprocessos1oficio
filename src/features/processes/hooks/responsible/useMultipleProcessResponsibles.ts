@@ -15,16 +15,17 @@ export const useMultipleProcessResponsibles = (processes: Process[] = []) => {
     try {
       const processIds = processes.map(p => p.id);
       const { data, error } = await supabase
-        .from('department_responsibles')
+        .from('processos_historico')
         .select('*')
-        .in('process_id', processIds);
+        .in('processo_id', processIds)
+        .is('data_saida', null); // Buscar apenas entradas atuais (sem data de saída)
       
       if (error) throw error;
       
       const newResponsibles: Record<string, string | null> = {};
       if (data) {
         data.forEach(item => {
-          newResponsibles[item.process_id] = item.user_id;
+          newResponsibles[item.processo_id] = item.usuario_responsavel_setor;
         });
       }
       
