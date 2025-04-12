@@ -23,7 +23,7 @@ interface MigrateUsuarioResponse {
 export const syncAuthWithUsuarios = async (email: string, password: string): Promise<boolean> => {
   try {
     // Corrigindo a tipagem da chamada RPC para resolver o erro TS2345
-    const { data, error } = await supabase.rpc<MigrateUsuarioResponse>(
+    const { data, error } = await supabase.rpc<MigrateUsuarioResponse, MigrateUsuarioParams>(
       'migrate_usuario_to_auth',
       {
         usuario_email: email, 

@@ -7,10 +7,8 @@ export const useProcessUpdate = () => {
 
   const updateProcessType = async (processId: string, newTypeId: string) => {
     try {
-      const now = new Date().toISOString();
-
       // Atualizar o tipo de processo
-      const { error } = await supabaseService.updateProcessType(processId, newTypeId);
+      const { error } = await supabaseService.updateProcessTypeById(processId, newTypeId);
 
       if (error) {
         throw error;
@@ -30,8 +28,6 @@ export const useProcessUpdate = () => {
 
   const updateProcessStatus = async (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => {
     try {
-      const now = new Date().toISOString();
-
       // Atualizar o status do processo
       const { error } = await supabaseService.updateProcessStatus(processId, newStatus);
 

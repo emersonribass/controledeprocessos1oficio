@@ -86,9 +86,11 @@ class SupabaseService {
    * Cria um novo tipo de processo
    */
   async createProcessType(name: string, description?: string) {
+    // Corrigido para incluir campo id que é obrigatório
+    const id = crypto.randomUUID();
     return await supabase
       .from('tipos_processo')
-      .insert([{ name, description }])
+      .insert([{ id, name, description }])
       .select();
   }
   
@@ -117,7 +119,7 @@ class SupabaseService {
   /**
    * Atualiza o tipo de um processo
    */
-  async updateProcessType(processId: string, newTypeId: string) {
+  async updateProcessTypeById(processId: string, newTypeId: string) {
     return await supabase
       .from('processos')
       .update({ tipo_processo: newTypeId })

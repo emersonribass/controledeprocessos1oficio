@@ -7,6 +7,7 @@ import { useProcessMovePrevious } from "./process-movement/useProcessMovePreviou
 import { useProcessDelete } from "./process-movement/useProcessDelete";
 import { useStartProcess } from "./process-movement/useStartProcess";
 import { useProcessesFetch } from "./useProcessesFetch";
+import { supabaseService } from "@/services/supabase";
 
 export const useSupabaseProcesses = () => {
   const { processes, isLoading, fetchProcesses, setProcesses } = useProcessesFetch();
@@ -47,10 +48,7 @@ export const useSupabaseProcesses = () => {
 
   const updateProcessType = async (processId: string, newTypeId: string): Promise<void> => {
     try {
-      const { error } = await supabase
-        .from('processos')
-        .update({ tipo_processo: newTypeId })
-        .eq('id', processId);
+      const { error } = await supabaseService.updateProcessTypeById(processId, newTypeId);
 
       if (error) {
         throw error;
@@ -83,10 +81,7 @@ export const useSupabaseProcesses = () => {
           throw new Error(`Status inválido: ${newStatus}`);
       }
 
-      const { error } = await supabase
-        .from('processos')
-        .update({ status: dbStatus })
-        .eq('id', processId);
+      const { error } = await supabaseService.updateProcessStatus(processId, dbStatus);
 
       if (error) {
         throw error;
