@@ -1,18 +1,10 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/auth";
+import { Tables } from "@/integrations/supabase/schema";
 
-type Notification = {
-  id: string;
-  usuario_id: string;
-  processo_id: string | null;
-  message: string;
-  tipo: string;
-  data_criacao: string;
-  lida: boolean;
-  respondida: boolean;
-};
+type Notification = Tables["notificacoes"];
 
 type NotificationsContextType = {
   notifications: Notification[];
@@ -28,6 +20,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { user } = useAuth();
+  const { getNotificacoes, updateNotificacao } = useSupabase();
 
   // Carregar notificações do usuário
   const fetchNotifications = async () => {
@@ -38,11 +31,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     }
 
     try {
-      const { data, error } = await supabase
-        .from('notificacoes')
-        .select('*')
-        .eq('usuario_id', user.id)
-        .order('data_criacao', { ascending: false });
+      const { data, error } = await getNotificacoes(user.id);
 
       if (error) throw error;
 
@@ -58,10 +47,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   // Marcar notificação como lida
   const markAsRead = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('notificacoes')
-        .update({ lida: true })
-        .eq('id', id);
+      const { error } = await updateNotificacao(id, { lida: true });
 
       if (error) throw error;
 
@@ -88,13 +74,12 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     if (!user || notifications.length === 0) return;
 
     try {
-      const { error } = await supabase
-        .from('notificacoes')
-        .update({ lida: true })
-        .eq('usuario_id', user.id)
-        .eq('lida', false);
-
-      if (error) throw error;
+      // Atualiza cada notificação não lida
+      const promises = notifications
+        .filter(n => !n.lida)
+        .map(n => updateNotificacao(n.id, { lida: true }));
+      
+      await Promise.all(promises);
 
       // Atualizar estado local
       setNotifications(prev => prev.map(notification => ({ ...notification, lida: true })));

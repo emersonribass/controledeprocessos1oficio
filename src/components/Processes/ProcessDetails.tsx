@@ -1,3 +1,4 @@
+
 import { useParams } from "react-router-dom";
 import { useProcesses } from "@/hooks/useProcesses";
 import ProcessHeader from "./ProcessHeader";
@@ -5,7 +6,7 @@ import ProcessCard from "./ProcessCard";
 import ProcessHistory from "./ProcessHistory";
 import ProcessNotFound from "./ProcessNotFound";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/auth";
 
 const ProcessDetails = () => {
@@ -13,6 +14,7 @@ const ProcessDetails = () => {
   console.log("Renderizando ProcessDetails");
   
   const { id } = useParams<{ id: string }>();
+  const { getUsuarios } = useSupabase();
   const [userNames, setUserNames] = useState<Record<string, string>>({});
   const [responsibleUser, setResponsibleUser] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -22,10 +24,7 @@ const ProcessDetails = () => {
     if (!userIds.length) return;
     
     try {
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('id, nome')
-        .in('id', userIds);
+      const { data, error } = await getUsuarios();
         
       if (error) {
         console.error('Erro ao buscar nomes de usuários:', error);
@@ -51,18 +50,17 @@ const ProcessDetails = () => {
   // Função para buscar usuário responsável pelo processo
   const fetchResponsibleUser = async (processId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('processos')
-        .select('*')
-        .eq('id', processId)
-        .single();
+      const { getProcessoById } = useSupabase();
+      const { data, error } = await getProcessoById(processId);
 
       if (error) {
         console.error('Erro ao buscar usuário responsável:', error);
         return;
       }
 
-      setResponsibleUser(data.usuario_responsavel);
+      if (data) {
+        setResponsibleUser(data.usuario_responsavel);
+      }
     } catch (error) {
       console.error('Erro ao processar usuário responsável:', error);
     }
@@ -101,7 +99,9 @@ const ProcessDetails = () => {
           .filter((id, index, self) => self.indexOf(id) === index);
           
         fetchUserNames(userIds);
-        fetchResponsibleUser(process.id);
+        if (id) {
+          fetchResponsibleUser(id);
+        }
       }
     }, [process?.id]);
 

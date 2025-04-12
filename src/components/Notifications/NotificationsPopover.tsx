@@ -66,12 +66,12 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 ${!notification.read ? "bg-primary/5" : ""} cursor-pointer`}
+                  className={`p-4 ${!notification.lida ? "bg-primary/5" : ""} cursor-pointer`}
                   onClick={() => markAsRead(notification.id)}
                 >
                   <p className="text-sm">{notification.message}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {format(new Date(notification.createdAt), "dd MMM, HH:mm", { locale: ptBR })}
+                    {format(new Date(notification.data_criacao), "dd MMM, HH:mm", { locale: ptBR })}
                   </p>
                 </div>
               ))}

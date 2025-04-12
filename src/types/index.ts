@@ -1,4 +1,6 @@
 
+import { Tables } from "@/integrations/supabase/schema";
+
 export type User = {
   id: string;
   email: string;
@@ -17,8 +19,8 @@ export type Department = {
 export type ProcessType = {
   id: string;
   name: string;
-  active?: boolean; // Adicionando propriedade 'active'
-  description?: string; // Adicionando propriedade opcional 'description'
+  active?: boolean;
+  description?: string;
 };
 
 export type Process = {
@@ -30,8 +32,8 @@ export type Process = {
   expectedEndDate: string;
   status: 'pending' | 'completed' | 'overdue' | 'not_started';
   history: ProcessHistory[];
-  userId?: string; // Adicionando o ID do usuário responsável
-  responsibleUserId?: string; // Adicionando o ID do usuário que aceitou o processo
+  userId?: string;
+  responsibleUserId?: string;
 };
 
 export type ProcessHistory = {
@@ -41,13 +43,34 @@ export type ProcessHistory = {
   userId: string;
 };
 
-export type Notification = {
-  id: string;
-  userId: string;
-  processId: string;
+// Utiliza o tipo de notificação do Supabase com pequenas adaptações
+export type Notification = Omit<Tables["notificacoes"], "mensagem"> & {
   message: string;
-  read: boolean;
-  createdAt: string;
-  type?: string;
-  responded?: boolean;
+};
+
+// Mapear os tipos do banco de dados para os tipos da aplicação
+export const mapSupabaseUserToUser = (dbUser: Tables["usuarios"]): User => {
+  return {
+    id: dbUser.id,
+    email: dbUser.email,
+    name: dbUser.nome,
+    departments: dbUser.setores_atribuidos || [],
+    createdAt: dbUser.created_at || new Date().toISOString()
+  };
+};
+
+export const mapSupabaseDepartmentToDepartment = (dbDepartment: Tables["setores"]): Department => {
+  return {
+    id: dbDepartment.id.toString(),
+    name: dbDepartment.name,
+    order: dbDepartment.order_num,
+    timeLimit: dbDepartment.time_limit
+  };
+};
+
+export const mapSupabaseNotificationToNotification = (dbNotification: Tables["notificacoes"]): Notification => {
+  return {
+    ...dbNotification,
+    message: dbNotification.mensagem
+  };
 };

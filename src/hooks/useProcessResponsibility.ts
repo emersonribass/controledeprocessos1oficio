@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useSupabase } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/auth";
 
 export const useProcessResponsibility = () => {
@@ -10,6 +10,15 @@ export const useProcessResponsibility = () => {
   const [isAccepting, setIsAccepting] = useState<boolean>(false);
   const { toast: uiToast } = useToast();
   const { user } = useAuth();
+  const {
+    updateProcesso,
+    getProcessoById,
+    updateSetorResponsavel,
+    createSetorResponsavel,
+    getSetorResponsaveis,
+    updateNotificacao,
+    getUsuarioById
+  } = useSupabase();
 
   /**
    * Atribui um usuário como responsável por um processo
@@ -27,12 +36,9 @@ export const useProcessResponsibility = () => {
     setIsAssigning(true);
 
     try {
-      const { error } = await supabase
-        .from('processos')
-        .update({ 
-          usuario_responsavel: userId 
-        } as any)
-        .eq('id', processId);
+      const { error } = await updateProcesso(processId, { 
+        usuario_responsavel: userId 
+      });
 
       if (error) {
         throw error;
@@ -70,23 +76,27 @@ export const useProcessResponsibility = () => {
 
     try {
       // Verificar se o processo já tem um responsável no setor atual
-      const { data: processData, error: processError } = await supabase
-        .from('processos')
-        .select('*, setor_responsaveis:setor_responsaveis(*)')
-        .eq('id', processId)
-        .single();
+      const { data: processData, error: processError } = await getProcessoById(processId);
 
       if (processError) {
         throw processError;
       }
 
+      if (!processData) {
+        throw new Error("Processo não encontrado");
+      }
+
       // Obter o departamento atual do processo
-      const currentDepartmentId = processData.current_department;
+      const currentDepartmentId = processData.setor_atual;
       
       // Verificar se já existe um responsável para este setor
-      const existingResponsible = processData.setor_responsaveis?.find(
-        resp => resp.setor_id === currentDepartmentId
-      );
+      const { data: existingResponsibles, error: responsibleError } = await getSetorResponsaveis(processId, currentDepartmentId);
+
+      if (responsibleError) {
+        throw responsibleError;
+      }
+
+      const existingResponsible = existingResponsibles && existingResponsibles.length > 0 ? existingResponsibles[0] : null;
 
       if (existingResponsible) {
         // Se o usuário atual já é o responsável, apenas retornar
@@ -99,27 +109,22 @@ export const useProcessResponsibility = () => {
         }
         
         // Se outro usuário é responsável, atualizar
-        const { error: updateError } = await supabase
-          .from('setor_responsaveis')
-          .update({ 
-            usuario_id: user.id,
-            data_atribuicao: new Date().toISOString()
-          })
-          .eq('id', existingResponsible.id);
+        const { error: updateError } = await updateSetorResponsavel(existingResponsible.id, { 
+          usuario_id: user.id,
+          data_atribuicao: new Date().toISOString()
+        });
 
         if (updateError) {
           throw updateError;
         }
       } else {
         // Se não existe responsável, criar novo
-        const { error: insertError } = await supabase
-          .from('setor_responsaveis')
-          .insert({ 
-            processo_id: processId,
-            setor_id: currentDepartmentId,
-            usuario_id: user.id,
-            data_atribuicao: new Date().toISOString()
-          });
+        const { error: insertError } = await createSetorResponsavel({ 
+          processo_id: processId,
+          setor_id: currentDepartmentId,
+          usuario_id: user.id,
+          data_atribuicao: new Date().toISOString()
+        });
 
         if (insertError) {
           throw insertError;
@@ -127,13 +132,9 @@ export const useProcessResponsibility = () => {
       }
 
       // Marcar notificações como respondidas
-      const { error: notificationError } = await supabase
-        .from('notificacoes')
-        .update({ 
-          respondida: true 
-        } as any)
-        .eq('processo_id', processId)
-        .eq('usuario_id', user.id);
+      const { error: notificationError } = await updateNotificacao(processId, { 
+        respondida: true 
+      });
 
       if (notificationError) {
         console.error("Erro ao atualizar notificações:", notificationError);
@@ -159,17 +160,13 @@ export const useProcessResponsibility = () => {
    */
   const isUserResponsibleForProcess = async (processId: string, userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('processos')
-        .select('usuario_responsavel')
-        .eq('id', processId)
-        .single();
+      const { data, error } = await getProcessoById(processId);
 
       if (error) {
         throw error;
       }
 
-      return data.usuario_responsavel === userId;
+      return data && data.usuario_responsavel === userId;
     } catch (error) {
       console.error("Erro ao verificar responsabilidade pelo processo:", error);
       return false;
@@ -181,22 +178,13 @@ export const useProcessResponsibility = () => {
    */
   const isUserResponsibleForSector = async (processId: string, sectorId: string, userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('setor_responsaveis')
-        .select('*')
-        .eq('processo_id', processId)
-        .eq('setor_id', sectorId)
-        .eq('usuario_id', userId)
-        .single();
+      const { data, error } = await getSetorResponsaveis(processId, sectorId);
 
       if (error) {
-        if (error.code === 'PGRST116') { // No rows returned
-          return false;
-        }
         throw error;
       }
 
-      return !!data;
+      return data && data.length > 0 && data[0].usuario_id === userId;
     } catch (error) {
       console.error("Erro ao verificar responsabilidade pelo setor:", error);
       return false;
@@ -208,25 +196,17 @@ export const useProcessResponsibility = () => {
    */
   const getProcessResponsible = async (processId: string) => {
     try {
-      const { data: process, error: processError } = await supabase
-        .from('processos')
-        .select('usuario_responsavel')
-        .eq('id', processId)
-        .single();
+      const { data: process, error: processError } = await getProcessoById(processId);
 
       if (processError) {
         throw processError;
       }
 
-      if (!process.usuario_responsavel) {
+      if (!process || !process.usuario_responsavel) {
         return null;
       }
 
-      const { data: user, error: userError } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('id', process.usuario_responsavel)
-        .single();
+      const { data: user, error: userError } = await getUsuarioById(process.usuario_responsavel);
 
       if (userError) {
         throw userError;
@@ -244,29 +224,17 @@ export const useProcessResponsibility = () => {
    */
   const getSectorResponsible = async (processId: string, sectorId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('setor_responsaveis')
-        .select('usuario_id')
-        .eq('processo_id', processId)
-        .eq('setor_id', sectorId)
-        .single();
+      const { data, error } = await getSetorResponsaveis(processId, sectorId);
 
       if (error) {
-        if (error.code === 'PGRST116') { // No rows returned
-          return null;
-        }
         throw error;
       }
 
-      if (!data.usuario_id) {
+      if (!data || data.length === 0 || !data[0].usuario_id) {
         return null;
       }
 
-      const { data: user, error: userError } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('id', data.usuario_id)
-        .single();
+      const { data: user, error: userError } = await getUsuarioById(data[0].usuario_id);
 
       if (userError) {
         throw userError;
