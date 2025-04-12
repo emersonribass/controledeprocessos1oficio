@@ -14,7 +14,9 @@ export function useUsuarios() {
     setIsLoading(true);
     try {
       console.log("Iniciando busca de usuários na tabela 'usuarios' do projeto controledeprocessos1oficio");
-      console.log("URL do Supabase:", supabase.url);
+      // Corrigindo o acesso à URL do Supabase
+      const supabaseUrl = supabase.getUrl(); // Usar método getUrl() em vez de .url
+      console.log("URL do Supabase:", supabaseUrl);
       
       const { data, error, count } = await supabase
         .from("usuarios")
@@ -189,4 +191,3 @@ export function useUsuarios() {
     saveUsuario
   };
 }
-

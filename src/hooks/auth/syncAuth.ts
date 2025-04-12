@@ -22,11 +22,14 @@ interface MigrateUsuarioResponse {
  */
 export const syncAuthWithUsuarios = async (email: string, password: string): Promise<boolean> => {
   try {
-    // Corrigindo a chamada do RPC com os tipos corretos
-    const { data, error } = await supabase.rpc('migrate_usuario_to_auth', {
-      usuario_email: email, 
-      usuario_senha: password
-    });
+    // Corrigindo a tipagem da chamada RPC para resolver o erro TS2345
+    const { data, error } = await supabase.rpc<MigrateUsuarioResponse, MigrateUsuarioParams>(
+      'migrate_usuario_to_auth',
+      {
+        usuario_email: email, 
+        usuario_senha: password
+      }
+    );
     
     if (error) {
       console.error('Erro na sincronização com autenticação:', error);
@@ -40,4 +43,3 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
     return false;
   }
 };
-
