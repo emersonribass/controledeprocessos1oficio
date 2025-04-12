@@ -132,9 +132,9 @@ const ProcessActionButtons = ({
         variant="ghost" 
         size="icon" 
         onClick={handleMoveToNext} 
-        disabled={isLastDepartment} 
+        disabled={true} // Sempre desabilitado para próximo setor
         title="Mover para próximo departamento"
-        className={`process-action ${isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}`}
+        className="opacity-50 cursor-not-allowed process-action"
       >
         <MoveRight className="h-4 w-4" />
       </Button>
@@ -143,3 +143,4 @@ const ProcessActionButtons = ({
 };
 
 export default ProcessActionButtons;
+
