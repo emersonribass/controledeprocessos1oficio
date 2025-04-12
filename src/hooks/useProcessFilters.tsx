@@ -1,5 +1,6 @@
-import { Process, PROCESS_STATUS } from "@/types";
-import { useAuth } from "@/features/auth";
+
+import { Process } from "@/types";
+import { useAuth } from "@/hooks/auth";
 
 export const useProcessFilters = (processes: Process[]) => {
   const { user, isAdmin } = useAuth();
@@ -10,37 +11,32 @@ export const useProcessFilters = (processes: Process[]) => {
       status?: string;
       processType?: string;
       search?: string;
-      showCompleted?: boolean;
+      excludeCompleted?: boolean;
     },
     processesToFilter?: Process[]
   ) => {
     // Se for fornecida uma lista personalizada, use-a, caso contrário use a lista padrão
     const listToFilter = processesToFilter || processes;
     
-    // Verificar antecipadamente se o usuário tem acesso administrativo
-    // para evitar verificações repetidas para cada processo
-    const userIsAdmin = user && user.isAdmin;
-    
     return listToFilter.filter((process) => {
-      // Verificar permissões de usuário apenas se não for admin e tiver departamentos atribuídos
-      if (user && !userIsAdmin && user.departments?.length > 0) {
-        // Para processos não iniciados, verificar o primeiro setor da sequência
-        if (process.status === PROCESS_STATUS.NOT_STARTED) {
-          // Verificar se o usuário tem acesso ao primeiro setor (Atendimento)
-          const firstDepartmentId = "1"; // ID do primeiro setor (Atendimento)
-          if (!user.departments.includes(firstDepartmentId)) {
-            return false; // Não mostrar processos não iniciados se o usuário não tiver acesso ao primeiro setor
-          }
-        } 
-        // Para processos em andamento ou em outros estados, verificar o setor atual
-        else if (!user.departments.includes(process.currentDepartment)) {
-          return false; // Não mostrar se o usuário não tem acesso ao setor atual
-        }
+      // Excluir processos concluídos se o filtro excludeCompleted estiver ativo
+      if (filters.excludeCompleted && process.status === 'completed') {
+        return false;
       }
 
-      // Ocultar processos concluídos se showCompleted for false
-      if (filters.showCompleted === false && process.status === PROCESS_STATUS.COMPLETED) {
-        return false;
+      // Verificar se o usuário tem permissão para ver este processo
+      if (user && !isAdmin(user.email) && user.departments?.length > 0) {
+        // Para processos não iniciados, apenas usuários do setor 1 (Atendimento) podem ver
+        if (process.status === 'not_started') {
+          // Se o usuário não tem o setor 1 em seus setores atribuídos, não mostrar
+          if (!user.departments.includes('1')) {
+            return false;
+          }
+        } 
+        // Para processos em andamento, só mostrar se o usuário pertence ao departamento atual
+        else if (!user.departments.includes(process.currentDepartment)) {
+          return false;
+        }
       }
 
       // Verificar filtro de departamento
@@ -55,13 +51,13 @@ export const useProcessFilters = (processes: Process[]) => {
         
         // Mapear os valores da UI para os valores internos do tipo Process
         if (filters.status === "pending") {
-          statusToMatch = PROCESS_STATUS.PENDING;
+          statusToMatch = "pending";
         } else if (filters.status === "completed") {
-          statusToMatch = PROCESS_STATUS.COMPLETED;
+          statusToMatch = "completed";
         } else if (filters.status === "overdue") {
-          statusToMatch = PROCESS_STATUS.OVERDUE;
+          statusToMatch = "overdue";
         } else if (filters.status === "not_started") {
-          statusToMatch = PROCESS_STATUS.NOT_STARTED;
+          statusToMatch = "not_started";
         }
         
         // Garantir que o status corresponda exatamente ao solicitado
@@ -91,7 +87,7 @@ export const useProcessFilters = (processes: Process[]) => {
   // além da data limite geral do processo
   const isProcessOverdue = (process: Process) => {
     // Se o status já foi determinado como 'overdue', respeitar essa decisão
-    if (process.status === PROCESS_STATUS.OVERDUE) {
+    if (process.status === 'overdue') {
       return true;
     }
     

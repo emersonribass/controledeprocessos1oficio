@@ -101,7 +101,6 @@ export type Database = {
           processo_id: string
           setor_id: string
           usuario_id: string | null
-          usuario_responsavel_setor: string | null
         }
         Insert: {
           created_at?: string | null
@@ -111,7 +110,6 @@ export type Database = {
           processo_id: string
           setor_id: string
           usuario_id?: string | null
-          usuario_responsavel_setor?: string | null
         }
         Update: {
           created_at?: string | null
@@ -121,7 +119,6 @@ export type Database = {
           processo_id?: string
           setor_id?: string
           usuario_id?: string | null
-          usuario_responsavel_setor?: string | null
         }
         Relationships: [
           {
@@ -207,7 +204,7 @@ export type Database = {
           created_at?: string
           email: string
           email_verificado?: boolean | null
-          id: string
+          id?: string
           nome: string
           perfil?: string
           senha: string

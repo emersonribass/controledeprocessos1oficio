@@ -1,77 +1,72 @@
 
+import LoginForm from "@/components/Auth/LoginForm";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/features/auth";
-import AuthLoginForm from "@/features/auth/components/LoginForm";
-import { ErrorBoundary } from "@/components/ErrorBoundary/ErrorBoundary";
-import { toast } from "sonner";
+import { useAuth } from "@/hooks/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const LoginPage = () => {
   const {
     user,
-    isLoading
+    isLoading,
+    setUser,
+    setSession
   } = useAuth();
   const navigate = useNavigate();
-  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
 
-  // Verificar autenticação e redirecionar se necessário
+  // Limpar localStorage de autenticação e estados ao montar o componente de login
   useEffect(() => {
-    // Se ainda está carregando, não faz nada
-    if (isLoading) {
-      console.log("LoginPage: Ainda carregando autenticação...");
-      return;
-    }
-    
-    // Marca que já verificamos a autenticação
-    setHasCheckedAuth(true);
-    
-    // Se o usuário está autenticado, redireciona para o dashboard
-    if (user) {
-      console.log("LoginPage: Usuário já autenticado, redirecionando para /dashboard");
-      navigate("/dashboard", { replace: true });
-    }
-  }, [user, isLoading, navigate]);
-
-  // Adicionando um timeout de segurança para evitar spinner infinito
-  useEffect(() => {
-    // Se não conseguimos carregar os dados de autenticação em 5 segundos, 
-    // assumimos que não há sessão ativa
-    const timeoutId = setTimeout(() => {
-      if (isLoading) {
-        console.log("LoginPage: Timeout de carregamento atingido, forçando estado de não-autenticado");
-        setHasCheckedAuth(true);
+    const clearAuthentication = async () => {
+      try {
+        // Limpar localStorage e cookies relacionados ao Supabase
+        localStorage.removeItem('supabase.auth.token');
+        localStorage.removeItem('supabase.auth.refreshToken');
+        localStorage.removeItem('sb-vwijryhqngyzgpgekgek-auth-token');
+        localStorage.removeItem('sb-refresh-token');
+        localStorage.removeItem('supabase.auth.expires_at');
+        
+        // Tentar fazer logout no Supabase (ignorando erros se não houver sessão)
+        try {
+          await supabase.auth.signOut();
+        } catch (error) {
+          console.log("Erro ao tentar signOut do Supabase (ignorando):", error);
+        }
+        
+        // Limpar estados de autenticação no contexto
+        setUser?.(null);
+        setSession?.(null);
+        
+        console.log("Login: Autenticação limpa ao montar componente");
+      } catch (error) {
+        console.error("Erro ao limpar autenticação:", error);
       }
-    }, 5000);
+    };
     
-    return () => clearTimeout(timeoutId);
-  }, [isLoading]);
+    clearAuthentication();
+  }, [setUser, setSession]);
 
-  // Mostrar indicador de carregamento apenas por um período razoável
-  if (isLoading && !hasCheckedAuth) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30" role="status" aria-live="polite">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" aria-hidden="true"></div>
-        <span className="mt-2">Carregando...</span>
-      </div>
-    );
+  useEffect(() => {
+    // Evitar redirecionamentos múltiplos
+    if (hasRedirected) return;
+    if (!isLoading && user) {
+      console.log("LoginPage: Usuário já autenticado, redirecionando para /dashboard");
+      setHasRedirected(true);
+      navigate("/dashboard", {
+        replace: true
+      });
+    }
+  }, [user, isLoading, navigate, hasRedirected]);
+
+  if (isLoading) {
+    return <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>;
   }
 
   return (
-    <div 
-      className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-muted/40 to-background"
-      role="main"
-      aria-labelledby="login-heading"
-    >
-      <h1 id="login-heading" className="sr-only">Login para o Sistema de Controle de Processos</h1>
-      <ErrorBoundary
-        onError={(error) => {
-          toast.error("Erro na autenticação", {
-            description: "Ocorreu um erro ao tentar autenticar. Por favor, tente novamente.",
-          });
-        }}
-      >
-        <AuthLoginForm />
-      </ErrorBoundary>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-muted/40 to-background">
+      <LoginForm />
     </div>
   );
 };

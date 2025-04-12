@@ -1,69 +1,53 @@
 
-export interface Department {
+export type User = {
+  id: string;
+  email: string;
+  name: string;
+  departments: string[];
+  createdAt: string;
+};
+
+export type Department = {
   id: string;
   name: string;
   order: number;
-  timeLimit: number;
-}
+  timeLimit: number; // in days
+};
 
-export interface ProcessType {
+export type ProcessType = {
   id: string;
   name: string;
-  description?: string;
-  active?: boolean;
-}
+  active?: boolean; // Adicionando propriedade 'active'
+  description?: string; // Adicionando propriedade opcional 'description'
+};
 
-export interface HistoryEntry {
-  id?: string;
-  processId: string;
-  departmentId: string;
-  userId: string;
-  userName: string;
-  entryDate: string;
-  exitDate?: string;
-  comments?: string;
-  usuario_responsavel_setor?: string | null;
-}
-
-// Constants for process status
-export const PROCESS_STATUS = {
-  NOT_STARTED: "Não iniciado",
-  PENDING: "Em andamento",
-  COMPLETED: "Concluído",
-  OVERDUE: "Atrasado"
-} as const;
-
-export type ProcessStatus = typeof PROCESS_STATUS[keyof typeof PROCESS_STATUS];
-
-export interface Process {
+export type Process = {
   id: string;
   protocolNumber: string;
   processType: string;
   currentDepartment: string;
   startDate: string;
   expectedEndDate: string;
-  status: ProcessStatus;
-  description?: string;
-  history: HistoryEntry[];
-  attachments?: string[];
-  responsibleUser?: string | null;
-  userId?: string;
-}
+  status: 'pending' | 'completed' | 'overdue' | 'not_started';
+  history: ProcessHistory[];
+  userId?: string; // Adicionando o ID do usuário responsável
+  responsibleUserId?: string; // Adicionando o ID do usuário que aceitou o processo
+};
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  departments: string[];
-  isAdmin: boolean;
-}
+export type ProcessHistory = {
+  departmentId: string;
+  entryDate: string;
+  exitDate: string | null;
+  userId: string;
+};
 
-export interface Notification {
+export type Notification = {
   id: string;
   userId: string;
   processId: string;
   message: string;
   read: boolean;
   createdAt: string;
-  respondida?: boolean;
-}
+  type?: string;
+  responded?: boolean;
+};

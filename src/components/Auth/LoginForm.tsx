@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/features/auth";
+import { useAuth } from "@/hooks/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +17,9 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const {
-    login
+    login,
+    setUser,
+    setSession
   } = useAuth();
   const navigate = useNavigate();
   const handleLogin = async (e: React.FormEvent) => {
@@ -31,6 +32,13 @@ const LoginForm = () => {
       console.log("Tentando login com:", email);
       const result = await login(email, password);
 
+      // Verificar se ocorreu algum erro durante o login
+      if (result.error) {
+        setError(result.error.message);
+        setIsSubmitting(false);
+        return;
+      }
+
       // Verificar se o login foi bem-sucedido antes de redirecionar
       if (result.session) {
         toast.success("Login efetuado com sucesso", {
@@ -38,18 +46,20 @@ const LoginForm = () => {
           duration: 3000,
           important: true
         });
+        console.log("Login bem-sucedido, redirecionando para /dashboard");
 
-        // Adicionar um pequeno atraso para garantir que a sessão seja processada corretamente
-        // antes de redirecionar
-        setTimeout(() => {
-          navigate("/dashboard", {
-            replace: true
-          });
-          setIsSubmitting(false);
-        }, 100);
+        // Forçar atualização do estado de autenticação antes de redirecionar
+        if (result.user) {
+          setUser(result.user);
+        }
+        setSession(result.session);
+
+        // Redirecionar imediatamente
+        navigate("/dashboard", {
+          replace: true
+        });
       } else {
         setError("Não foi possível obter uma sessão válida");
-        setIsSubmitting(false);
       }
     } catch (err: any) {
       console.error("Erro ao fazer login:", err);
@@ -63,6 +73,7 @@ const LoginForm = () => {
       } else {
         setError("Ocorreu um erro ao tentar fazer login. Tente novamente.");
       }
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -70,7 +81,7 @@ const LoginForm = () => {
     setShowPassword(!showPassword);
   };
   return <Card className="w-[380px] shadow-lg">
-      <CardContent className="pt-6 px-6 py-[14px]">
+      <CardContent className="pt-6 px-6 py-[12px]">
         <div className="flex flex-col items-center mb-6">
           <img src="/Logo Nottar vertical.png" alt="Logo Nottar" className="h-32 w-auto" />
           <h1 className="text-xl font-bold text-center mt-4">Controle de Processos</h1>

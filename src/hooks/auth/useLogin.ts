@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { LoginResult } from "./types";
 import { User } from "@/types";
 import { Session } from "@supabase/supabase-js";
-import { isAdmin, isAdminSync } from "./permissions";
 
 type UseLoginProps = {
   setUser: (user: User | null) => void;
@@ -65,13 +64,18 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
       let appUser = null;
       if (data.user) {
         appUser = await convertSupabaseUser(data.user);
+        setUser(appUser);
       }
+      
+      // Atualiza a sessão imediatamente para evitar problemas de redirecionamento
+      setSession(data.session);
       
       // Retorna os dados da autenticação no formato esperado
       return {
         user: appUser,
         session: data.session,
-        weakPassword: data.user?.user_metadata?.weakPassword || null
+        weakPassword: data.user?.user_metadata?.weakPassword || null,
+        error: null
       };
       
     } catch (error) {
@@ -87,7 +91,15 @@ export const useLogin = ({ setUser, setSession, setIsLoading }: UseLoginProps) =
         });
       }
       setIsLoading(false); // Garantir que isLoading volta para false em caso de erro
-      throw error;
+      
+      return {
+        user: null,
+        session: null,
+        weakPassword: null,
+        error: error instanceof Error ? error : new Error("Erro desconhecido ao fazer login")
+      };
+    } finally {
+      setIsLoading(false);
     }
   };
 

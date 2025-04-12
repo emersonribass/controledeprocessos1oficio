@@ -1,45 +1,35 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/features/auth";
+import { useAuth } from "@/hooks/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [hasAttemptedRedirect, setHasAttemptedRedirect] = useState(false);
-  
-  // Usar um efeito com timeout para evitar redirecionamentos em loop
+  const [hasRedirected, setHasRedirected] = useState(false);
+
   useEffect(() => {
-    // Se ainda estiver carregando e não tentamos redirecionar, aguarde
-    if (isLoading && !hasAttemptedRedirect) {
-      console.log("Index: Aguardando carregamento da autenticação...");
+    // Evitar redirecionamentos múltiplos
+    if (hasRedirected) return;
+    
+    // Se ainda estiver carregando, não faça nada
+    if (isLoading) {
+      console.log("Index: Autenticação carregando...");
       return;
     }
     
-    // Evitar múltiplos redirecionamentos
-    if (hasAttemptedRedirect) return;
-    
-    // Configurar um timeout para garantir que não ficará preso
-    const redirectTimeout = setTimeout(() => {
-      try {
-        console.log("Index: Tentando redirecionar. User:", !!user, "isLoading:", isLoading);
-        setHasAttemptedRedirect(true);
-        
-        if (user) {
-          console.log("Index: Usuário autenticado, redirecionando para /dashboard");
-          navigate("/dashboard", { replace: true });
-        } else {
-          console.log("Index: Usuário não autenticado, redirecionando para /login");
-          navigate("/login", { replace: true });
-        }
-      } catch (error) {
-        console.error("Erro ao tentar redirecionar:", error);
-      }
-    }, 1500); // Dar um tempo para o estado de autenticação ser definido
-    
-    return () => clearTimeout(redirectTimeout);
-  }, [user, isLoading, navigate, hasAttemptedRedirect]);
+    // Após determinar o estado de autenticação, redirecione adequadamente
+    if (user) {
+      console.log("Index: Usuário autenticado, redirecionando para /dashboard");
+      setHasRedirected(true);
+      navigate("/dashboard", { replace: true });
+    } else {
+      console.log("Index: Usuário não autenticado, redirecionando para /login");
+      setHasRedirected(true);
+      navigate("/login", { replace: true });
+    }
+  }, [user, isLoading, navigate, hasRedirected]);
 
   // Mostrar tela de carregamento enquanto verifica autenticação
   return (

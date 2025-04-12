@@ -1,15 +1,15 @@
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useProcesses } from "@/hooks/useProcesses";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useProcesses } from "@/features/processes"; // Corrigindo o import
 
 const RecentProcessList = () => {
   const navigate = useNavigate();
@@ -19,47 +19,38 @@ const RecentProcessList = () => {
     getProcessTypeName,
     filterProcesses
   } = useProcesses();
-  const [limit] = useState(5);
+  const [limit, setLimit] = useState(5);
 
-  // Memoizar os resultados das filtragens e ordenações para evitar recálculos desnecessários
-  const filteredProcesses = useMemo(() => {
-    return filterProcesses({});
-  }, [filterProcesses, processes]);
+  // Aplicar filtros por departamento e status conforme a permissão do usuário
+  const filteredProcesses = filterProcesses({});
   
-  // Get the most recent processes com memoização
-  const recentProcesses = useMemo(() => {
-    return [...filteredProcesses]
-      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
-      .slice(0, limit);
-  }, [filteredProcesses, limit]);
+  // Get the most recent processes
+  const recentProcesses = [...filteredProcesses]
+    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+    .slice(0, limit);
 
-  // Memoizar a função para evitar recriações desnecessárias
-  const getStatusBadge = useMemo(() => {
-    return (status: string) => {
-      switch (status) {
-        case "completed":
-          return <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">Concluído</Badge>;
-        case "overdue":
-          return <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-100">Atrasado</Badge>;
-        case "pending":
-          return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Em andamento</Badge>;
-        case "not_started":
-          return <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100">Não iniciado</Badge>;
-        default:
-          return <Badge variant="outline">Desconhecido</Badge>;
-      }
-    };
-  }, []);
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "completed":
+        return <Badge variant="outline" className="bg-green-100 text-green-800 hover:bg-green-100">Concluído</Badge>;
+      case "overdue":
+        return <Badge variant="outline" className="bg-red-100 text-red-800 hover:bg-red-100">Atrasado</Badge>;
+      case "pending":
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Em andamento</Badge>;
+      case "not_started":
+        return <Badge variant="outline" className="bg-blue-100 text-blue-800 hover:bg-blue-100">Não iniciado</Badge>;
+      default:
+        return <Badge variant="outline">Desconhecido</Badge>;
+    }
+  };
 
-  // Memoizar a função para obter a cor de fundo
-  const getItemBackgroundColor = useMemo(() => {
-    return (status: string) => {
-      if (status === "completed") return "bg-green-200";
-      if (status === "overdue") return "bg-red-200";
-      if (status === "pending") return "bg-blue-200";
-      return "";
-    };
-  }, []);
+  // Função para obter a cor de fundo baseada no status
+  const getItemBackgroundColor = (status: string) => {
+    if (status === "completed") return "bg-green-200";
+    if (status === "overdue") return "bg-red-200";
+    if (status === "pending") return "bg-blue-200";
+    return "";
+  };
 
   return (
     <Card className="col-span-2">

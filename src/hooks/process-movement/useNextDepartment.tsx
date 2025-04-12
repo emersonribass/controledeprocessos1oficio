@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Process, PROCESS_STATUS } from "@/types";
+import { Process } from "@/types";
 import { Department } from "@/types";
 import { useNotificationsService } from "@/hooks/useNotificationsService";
 
@@ -29,19 +29,6 @@ export const useNextDepartment = (departments: Department[]) => {
         });
         return false;
       }
-
-      // Buscar o responsável principal do processo
-      const { data: processData, error: processError } = await supabase
-        .from('processos')
-        .select('usuario_responsavel')
-        .eq('id', process.id)
-        .single();
-
-      if (processError) {
-        throw processError;
-      }
-
-      const mainResponsibleUser = processData.usuario_responsavel;
 
       // Atualizar saída no histórico atual
       const now = new Date().toISOString();
@@ -79,8 +66,7 @@ export const useNextDepartment = (departments: Department[]) => {
           setor_id: nextDept.id,
           data_entrada: now,
           data_saida: null,
-          usuario_id: mainResponsibleUser || process.userId || "1", // Usar o responsável principal
-          usuario_responsavel_setor: null // Sem responsável de setor ainda
+          usuario_id: process.userId || "1" // Usar o ID do usuário que está movendo o processo
         });
 
       if (newHistoryError) {
@@ -91,14 +77,14 @@ export const useNextDepartment = (departments: Department[]) => {
       const isCompleted = nextDept.order === departments.length;
       const newStatus = isCompleted ? "Concluído" : "Em andamento";
 
-      // Atualizar o processo, mantendo o usuário responsável principal
+      // Atualizar o processo, resetando o usuário responsável
       const { error: updateProcessError } = await supabase
         .from('processos')
         .update({ 
           setor_atual: nextDept.id,
           status: newStatus,
-          updated_at: now
-          // Mantém o usuário responsável principal inalterado
+          updated_at: now,
+          usuario_responsavel: null // Resetar o usuário responsável ao mudar de departamento
         })
         .eq('id', process.id);
 

@@ -1,12 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { Process, PROCESS_STATUS } from "@/types";
+import { useProcesses } from "@/hooks/useProcesses";
+import { Process } from "@/types";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/features/auth";
-import ProcessTableResponsibles from "./ProcessTableResponsibles";
-import { useProcesses } from "@/features/processes"; // Corrigindo o import
+import { useAuth } from "@/hooks/auth";
 
 interface ProcessListProps {
   initialFilters?: {
@@ -14,7 +13,6 @@ interface ProcessListProps {
     status?: string;
     processType?: string;
     search?: string;
-    showCompleted?: boolean;
   };
 }
 
@@ -34,43 +32,36 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     startProcess
   } = useProcesses();
 
-  const { user } = useAuth();
-  
-  const [userIsAdmin, setUserIsAdmin] = useState(false);
+  const { user, isAdmin } = useAuth();
   
   const [filters, setFilters] = useState<{
     department?: string;
     status?: string;
     processType?: string;
     search?: string;
-    showCompleted?: boolean;
-  }>({ ...initialFilters, showCompleted: false });
+  }>(initialFilters);
 
   const [sortField, setSortField] = useState<keyof Process>("protocolNumber");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   useEffect(() => {
     if (Object.keys(initialFilters).length > 0) {
-      setFilters({ ...initialFilters, showCompleted: initialFilters.showCompleted ?? false });
+      setFilters(initialFilters);
     }
   }, [initialFilters]);
-  
-  useEffect(() => {
-    if (user) {
-      setUserIsAdmin(user.isAdmin || false);
-    }
-  }, [user]);
 
   const filteredProcesses = filterProcesses(filters, processes);
 
   const sortedProcesses = [...filteredProcesses].sort((a, b) => {
-    if (a.status === PROCESS_STATUS.NOT_STARTED && b.status !== PROCESS_STATUS.NOT_STARTED) {
-      return 1;
+    // Primeiro, ordenar por status: processos iniciados (não 'not_started') vêm primeiro
+    if (a.status === 'not_started' && b.status !== 'not_started') {
+      return 1; // a (não iniciado) vem depois
     }
-    if (a.status !== PROCESS_STATUS.NOT_STARTED && b.status === PROCESS_STATUS.NOT_STARTED) {
-      return -1;
+    if (a.status !== 'not_started' && b.status === 'not_started') {
+      return -1; // a (iniciado) vem antes
     }
     
+    // Se ambos têm o mesmo status de iniciação, usar a ordenação por campo selecionado
     if (sortField === "startDate" || sortField === "expectedEndDate") {
       const dateA = new Date(a[sortField]).getTime();
       const dateB = new Date(b[sortField]).getTime();
@@ -101,8 +92,6 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     }
   };
 
-  const responsiblesManager = ProcessTableResponsibles({ processes: sortedProcesses });
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -111,7 +100,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     );
   }
 
-  const availableDepartments = userIsAdmin || !user?.departments?.length 
+  const availableDepartments = isAdmin(user?.email || "") || !user?.departments?.length 
     ? departments 
     : departments.filter(dept => user?.departments.includes(dept.id));
 
@@ -146,7 +135,6 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
           updateProcessStatus={updateProcessStatus}
           departments={departments}
           startProcess={startProcess}
-          responsiblesManager={responsiblesManager}
         />
       )}
     </div>

@@ -2,7 +2,6 @@
 import { useSession } from "./useSession";
 import { useLogin } from "./useLogin";
 import { useLogout } from "./useLogout";
-import { isAdmin, isAdminSync } from "./permissions";
 
 export const useAuthProvider = () => {
   const { user, session, isLoading, setUser, setSession, setIsLoading } = useSession();
@@ -15,7 +14,8 @@ export const useAuthProvider = () => {
     isLoading,
     login,
     logout,
-    isAdmin,
-    isAdminSync
+    setUser,
+    setSession,
+    setIsLoading
   };
 };

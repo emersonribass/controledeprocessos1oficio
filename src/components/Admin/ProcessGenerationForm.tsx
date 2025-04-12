@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/form";
 
 const formSchema = z.object({
-  initialNumber: z.coerce.number().min(1, "Número inicial deve ser maior que zero"),
-  quantity: z.coerce.number().min(1, "Quantidade deve ser maior que zero").max(100, "Máximo de 100 processos por vez"),
+  initialNumber: z.coerce.number().positive("Número inicial deve ser positivo"),
+  quantity: z.coerce.number().positive("Quantidade deve ser positiva").max(100, "Máximo de 100 processos por vez"),
 });
 
 const ProcessGenerationForm = () => {
@@ -111,4 +111,3 @@ const ProcessGenerationForm = () => {
 };
 
 export default ProcessGenerationForm;
-

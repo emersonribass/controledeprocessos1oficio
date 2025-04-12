@@ -1,23 +1,12 @@
 
 import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
-import { useAuth } from "@/features/auth";
-import { NotificationsProvider } from "@/hooks/NotificationsProvider";
-import { ErrorBoundary } from "../ErrorBoundary/ErrorBoundary";
-import { toast } from "sonner";
-import { useEffect } from "react";
+import { useAuth } from "@/hooks/auth";
+import { NotificationsProvider } from "@/hooks/useNotifications";
 
-// Componente de apresentação pura
-export const LayoutPresentation = ({
-  isLoading,
-  hasUser,
-  children
-}: {
-  isLoading: boolean;
-  hasUser: boolean;
-  children: React.ReactNode;
-}) => {
-  // Limitar o tempo de exibição do spinner para evitar bloqueios infinitos
+const Layout = () => {
+  const { user, isLoading } = useAuth();
+
   if (isLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center">
@@ -26,8 +15,8 @@ export const LayoutPresentation = ({
     );
   }
 
-  if (!hasUser) {
-    return <>{children}</>;
+  if (!user) {
+    return <Outlet />;
   }
 
   return (
@@ -35,37 +24,10 @@ export const LayoutPresentation = ({
       <div className="h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 overflow-y-auto bg-background p-6">
-          <ErrorBoundary 
-            onError={(error) => {
-              toast.error("Ocorreu um erro", {
-                description: "Um erro inesperado aconteceu na aplicação.",
-                duration: 5000,
-              });
-            }}
-          >
-            {children}
-          </ErrorBoundary>
+          <Outlet />
         </main>
       </div>
     </NotificationsProvider>
-  );
-};
-
-// Componente container que gerencia a lógica
-const Layout = () => {
-  const { user, isLoading } = useAuth();
-  
-  useEffect(() => {
-    console.log("Layout renderizado. User:", !!user, "isLoading:", isLoading);
-  }, [user, isLoading]);
-
-  return (
-    <LayoutPresentation 
-      isLoading={isLoading} 
-      hasUser={!!user}
-    >
-      <Outlet />
-    </LayoutPresentation>
   );
 };
 

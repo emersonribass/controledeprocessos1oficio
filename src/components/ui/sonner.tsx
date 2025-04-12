@@ -10,10 +10,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
-      duration={1500} // Set default duration to 1.5 seconds
       className="toaster group"
-      closeButton // Adicionando o botão de fechar para toasts que possam ficar presos
-      richColors // Cores melhoradas para distinguir tipos de toasts
       toastOptions={{
         classNames: {
           toast:

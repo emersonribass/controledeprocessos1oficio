@@ -1,5 +1,5 @@
 
-import { Department, Process, ProcessType, User, PROCESS_STATUS } from "@/types";
+import { Department, Process, ProcessType, User } from "@/types";
 
 export const mockUsers: User[] = [
   {
@@ -7,21 +7,21 @@ export const mockUsers: User[] = [
     email: "admin@nottar.com",
     name: "Admin",
     departments: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-    isAdmin: true
+    createdAt: new Date().toISOString(),
   },
   {
     id: "2",
     email: "joao@nottar.com",
     name: "João Silva",
     departments: ["1", "2"],
-    isAdmin: false
+    createdAt: new Date().toISOString(),
   },
   {
     id: "3",
     email: "maria@nottar.com",
     name: "Maria Oliveira",
     departments: ["3", "4"],
-    isAdmin: false
+    createdAt: new Date().toISOString(),
   },
 ];
 
@@ -39,12 +39,12 @@ export const mockDepartments: Department[] = [
 ];
 
 export const mockProcessTypes: ProcessType[] = [
-  { id: "1", name: "Escritura", active: true },
-  { id: "2", name: "Procuração", active: true },
-  { id: "3", name: "Testamento", active: true },
-  { id: "4", name: "Ata Notarial", active: true },
-  { id: "5", name: "Reconhecimento de Firma", active: true },
-  { id: "6", name: "Autenticação", active: true },
+  { id: "1", name: "Escritura" },
+  { id: "2", name: "Procuração" },
+  { id: "3", name: "Testamento" },
+  { id: "4", name: "Ata Notarial" },
+  { id: "5", name: "Reconhecimento de Firma" },
+  { id: "6", name: "Autenticação" },
 ];
 
 // Generate a random date between start and end dates
@@ -61,16 +61,6 @@ export const mockProcesses: Process[] = Array.from({ length: 20 }).map((_, index
   const isOverdue = Math.random() > 0.7;
   const isCompleted = departmentId === "10";
   
-  let status: typeof PROCESS_STATUS[keyof typeof PROCESS_STATUS];
-  
-  if (isCompleted) {
-    status = PROCESS_STATUS.COMPLETED;
-  } else if (isOverdue) {
-    status = PROCESS_STATUS.OVERDUE;
-  } else {
-    status = PROCESS_STATUS.PENDING;
-  }
-  
   return {
     id: String(index + 1),
     protocolNumber: `PROC-${(10000 + index).toString()}`,
@@ -78,23 +68,19 @@ export const mockProcesses: Process[] = Array.from({ length: 20 }).map((_, index
     currentDepartment: departmentId,
     startDate: startDate.toISOString(),
     expectedEndDate: new Date(startDate.getTime() + 1000 * 60 * 60 * 24 * 15).toISOString(), // 15 days after start
-    status,
+    status: isCompleted ? "completed" : (isOverdue ? "overdue" : "pending"),
     history: [
       {
-        processId: String(index + 1),
         departmentId: "1",
         entryDate: startDate.toISOString(),
         exitDate: new Date(startDate.getTime() + 1000 * 60 * 60 * 24 * 2).toISOString(),
         userId: String(Math.floor(Math.random() * 3) + 1),
-        userName: `Usuário ${Math.floor(Math.random() * 3) + 1}`
       },
       ...(parseInt(departmentId) > 1 ? [{
-        processId: String(index + 1),
         departmentId: departmentId,
         entryDate: new Date(startDate.getTime() + 1000 * 60 * 60 * 24 * 3).toISOString(),
         exitDate: null,
         userId: String(Math.floor(Math.random() * 3) + 1),
-        userName: `Usuário ${Math.floor(Math.random() * 3) + 1}`
       }] : []),
     ],
   };

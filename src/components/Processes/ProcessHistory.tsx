@@ -1,33 +1,25 @@
-
-import { HistoryEntry } from "@/types";
+import { ProcessHistory as ProcessHistoryType } from "@/types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, User, Users } from "lucide-react";
+import { Clock, User } from "lucide-react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import AcceptProcessButton from "./ProcessButtons/AcceptProcessButton";
-import { useAuth } from "@/features/auth";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import AcceptProcessButton from "./AcceptProcessButton";
+import { useAuth } from "@/hooks/auth";
 
-interface ProcessHistoryProps {
-  history: HistoryEntry[];
+type ProcessHistoryProps = {
+  history: ProcessHistoryType[];
   getDepartmentName: (id: string) => string;
   getUserName?: (id: string) => string;
   processId: string;
   protocolNumber: string;
   hasResponsibleUser: boolean;
   onProcessAccepted: () => void;
-  currentDepartmentId?: string;
-}
-
-interface HistoryEntryWithSectorResponsible extends HistoryEntry {
-  usuario_responsavel_setor?: string | null;
-}
+};
 
 const ProcessHistory = ({ 
   history, 
@@ -36,45 +28,11 @@ const ProcessHistory = ({
   processId,
   protocolNumber,
   hasResponsibleUser,
-  onProcessAccepted,
-  currentDepartmentId
+  onProcessAccepted
 }: ProcessHistoryProps) => {
   const { user } = useAuth();
-  const [historyWithResponsibles, setHistoryWithResponsibles] = useState<HistoryEntryWithSectorResponsible[]>([]);
-
-  useEffect(() => {
-    const fetchHistoryWithResponsibles = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('processos_historico')
-          .select('*')
-          .eq('processo_id', processId);
-
-        if (error) {
-          console.error('Erro ao buscar histórico completo:', error);
-          return;
-        }
-
-        const completeHistory = data.map(item => ({
-          id: item.id,
-          processId: item.processo_id,
-          departmentId: item.setor_id,
-          userId: item.usuario_id || "",
-          userName: getUserName ? getUserName(item.usuario_id || "") : "Usuário",
-          entryDate: item.data_entrada,
-          exitDate: item.data_saida,
-          usuario_responsavel_setor: item.usuario_responsavel_setor
-        }));
-
-        setHistoryWithResponsibles(completeHistory);
-      } catch (error) {
-        console.error('Erro ao processar histórico:', error);
-      }
-    };
-
-    fetchHistoryWithResponsibles();
-  }, [processId, getUserName, history]);
   
+  // Verificar se o usuário está no departamento atual
   const currentDeptEntry = history.find(entry => !entry.exitDate);
   const isUserInCurrentDept = user && user.departments.includes(currentDeptEntry?.departmentId || "");
   
@@ -85,22 +43,18 @@ const ProcessHistory = ({
           <Clock className="mr-2 h-5 w-5" />
           Histórico do Processo
         </CardTitle>
-        {isUserInCurrentDept && !hasResponsibleUser && (
+        {isUserInCurrentDept && (
           <AcceptProcessButton 
             processId={processId}
             protocolNumber={protocolNumber}
-            currentDepartmentId={currentDepartmentId}
+            hasResponsibleUser={hasResponsibleUser}
             onAccept={onProcessAccepted}
           />
         )}
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {historyWithResponsibles.map((entry, index) => {
-            const sectorResponsibleName = entry.usuario_responsavel_setor && getUserName ? 
-              getUserName(entry.usuario_responsavel_setor) : null;
-            
-            return (
+          {history.map((entry, index) => (
             <div key={index} className="relative pl-6 pb-4">
               <div className="absolute left-0 top-0 h-full w-px bg-border"></div>
               <div className="absolute left-0 top-1 h-2 w-2 rounded-full bg-primary"></div>
@@ -111,13 +65,7 @@ const ProcessHistory = ({
                 {entry.userId && getUserName && (
                   <p className="text-sm flex items-center">
                     <User className="h-3 w-3 mr-1" /> 
-                    Responsável principal: {getUserName(entry.userId)}
-                  </p>
-                )}
-                {sectorResponsibleName && (
-                  <p className="text-sm flex items-center">
-                    <Users className="h-3 w-3 mr-1" /> 
-                    Responsável no setor: {sectorResponsibleName}
+                    Responsável: {getUserName(entry.userId)}
                   </p>
                 )}
                 <p className="text-sm text-muted-foreground">
@@ -130,7 +78,7 @@ const ProcessHistory = ({
                 )}
               </div>
             </div>
-          )})}
+          ))}
         </div>
       </CardContent>
     </Card>

@@ -1,9 +1,6 @@
 
-import React from 'react';
-import { PROCESS_STATUS } from "@/types";
-import StartProcessButton from "./ProcessButtons/StartProcessButton";
-import NavigationButtons from "./ProcessButtons/NavigationButtons";
-import AcceptProcessButton from "./ProcessButtons/AcceptProcessButton";
+import { Button } from "@/components/ui/button";
+import { MoveLeft, MoveRight, Play } from "lucide-react";
 
 interface ProcessActionButtonsProps {
   processId: string;
@@ -15,13 +12,6 @@ interface ProcessActionButtonsProps {
   isEditing: boolean;
   status: string;
   startProcess?: (processId: string) => Promise<void>;
-  protocolNumber?: string;
-  hasResponsibleUser?: boolean;
-  onAccept?: () => void;
-  currentDepartmentId?: string;
-  isMainResponsible?: boolean;
-  isSectorResponsible?: boolean;
-  showLabels?: boolean;
 }
 
 const ProcessActionButtons = ({
@@ -30,63 +20,52 @@ const ProcessActionButtons = ({
   moveProcessToNextDepartment,
   isFirstDepartment,
   isLastDepartment,
+  setIsEditing,
+  isEditing,
   status,
-  startProcess,
-  protocolNumber = "",
-  hasResponsibleUser = false,
-  onAccept,
-  currentDepartmentId,
-  isMainResponsible = false,
-  isSectorResponsible = false,
-  showLabels = false
+  startProcess
 }: ProcessActionButtonsProps) => {
+  const isNotStarted = status === "not_started";
   
-  // Se o processo não foi iniciado, mostrar apenas botão de iniciar
-  if (status === PROCESS_STATUS.NOT_STARTED) {
-    return (
-      <div className="flex justify-center gap-2">
-        <StartProcessButton 
-          processId={processId} 
-          startProcess={startProcess} 
-        />
-      </div>
-    );
-  }
-  
-  // Sempre mostrar botões de navegação se o usuário é responsável (principal ou setor),
-  // independente do status do processo
-  if (isMainResponsible || isSectorResponsible) {
-    return (
-      <div className="flex justify-center gap-2">
-        <NavigationButtons 
-          processId={processId}
-          isFirstDepartment={isFirstDepartment}
-          isLastDepartment={isLastDepartment}
-          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-          moveProcessToNextDepartment={moveProcessToNextDepartment}
-          showLabels={showLabels}
-        />
-      </div>
-    );
-  }
-  
-  // Se o processo está em andamento (não é concluído) e não tem responsável, 
-  // mostrar botão de aceitar
-  if (status === PROCESS_STATUS.PENDING && !hasResponsibleUser) {
-    return (
-      <div className="flex justify-center gap-2">
-        <AcceptProcessButton
-          processId={processId}
-          protocolNumber={protocolNumber}
-          currentDepartmentId={currentDepartmentId}
-          onAccept={onAccept}
-        />
-      </div>
-    );
-  }
-  
-  // Caso não caia em nenhum dos casos acima, não mostra nenhum botão
-  return null;
+  return (
+    <div className="flex justify-center gap-2">
+      {isNotStarted ? (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => startProcess && startProcess(processId)} 
+          title="Iniciar processo" 
+          className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1"
+        >
+          <Play className="h-3 w-3" />
+          Iniciar
+        </Button>
+      ) : (
+        <>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => moveProcessToPreviousDepartment(processId)} 
+            disabled={isFirstDepartment} 
+            title="Mover para departamento anterior"
+            className={isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}
+          >
+            <MoveLeft className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => moveProcessToNextDepartment(processId)} 
+            disabled={isLastDepartment} 
+            title="Mover para próximo departamento"
+            className={isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}
+          >
+            <MoveRight className="h-4 w-4" />
+          </Button>
+        </>
+      )}
+    </div>
+  );
 };
 
 export default ProcessActionButtons;

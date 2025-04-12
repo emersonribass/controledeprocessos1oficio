@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, ClipboardList, Users, Settings, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/features/auth";
+import { useAuth } from "@/hooks/auth";
 
 type SidebarLink = {
   title: string;
@@ -19,7 +20,6 @@ const Sidebar = () => {
   const [userIsAdmin, setUserIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Verificar status de administrador apenas quando o usuário mudar
     const checkAdminStatus = async () => {
       if (user && user.email) {
         try {

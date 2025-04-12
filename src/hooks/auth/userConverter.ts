@@ -1,56 +1,28 @@
 
 import { User as SupabaseUser } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
-import { isAdmin, isAdminSync } from "./permissions";
+import { supabase } from "@/integrations/supabase/client";
 
-export const convertSupabaseUser = async (supabaseUser: SupabaseUser): Promise<User> => {
-  try {
-    // Buscar informações do usuário na tabela usuarios
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('email', supabaseUser.email)
-      .single();
-
-    if (error) {
-      console.error('Erro ao buscar dados do usuário:', error);
-      // Em caso de erro, retornar apenas os dados básicos do Supabase
-      return {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        name: supabaseUser.user_metadata?.name || supabaseUser.email || 'Usuário',
-        departments: [],
-        isAdmin: false
-      };
-    }
-
-    // Verificar status admin - primeiro tenta o cache sincronizado
-    const email = supabaseUser.email || '';
-    let adminStatus = isAdminSync(email);
-    
-    // Se não estiver no cache, faz a verificação completa
-    if (adminStatus === null) {
-      adminStatus = await isAdmin(email);
-    }
-
-    // Retornar o usuário com informações de ambas as fontes
-    return {
-      id: supabaseUser.id,
-      email: supabaseUser.email || '',
-      name: data.nome || supabaseUser.user_metadata?.name || supabaseUser.email || 'Usuário',
-      departments: data.setores_atribuidos || [],
-      isAdmin: adminStatus
-    };
-  } catch (error) {
-    console.error('Erro ao converter dados do usuário:', error);
-    // Em caso de erro, retornar apenas os dados básicos do Supabase
-    return {
-      id: supabaseUser.id,
-      email: supabaseUser.email || '',
-      name: supabaseUser.user_metadata?.name || supabaseUser.email || 'Usuário',
-      departments: [],
-      isAdmin: false
-    };
+// Função para converter usuário do Supabase para nosso tipo User
+export const convertSupabaseUser = async (supabaseUser: SupabaseUser | null): Promise<User | null> => {
+  if (!supabaseUser) return null;
+  
+  // Buscar informações adicionais do usuário na tabela usuarios
+  const { data: userData, error: userError } = await supabase
+    .from('usuarios')
+    .select('setores_atribuidos, perfil')
+    .eq('email', supabaseUser.email)
+    .single();
+  
+  if (userError && userError.code !== 'PGRST116') {
+    console.error('Erro ao buscar dados do usuário:', userError);
   }
+  
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email || "",
+    name: supabaseUser.user_metadata?.nome || supabaseUser.user_metadata?.full_name || "Usuário",
+    departments: userData?.setores_atribuidos || [],
+    createdAt: supabaseUser.created_at,
+  };
 };
