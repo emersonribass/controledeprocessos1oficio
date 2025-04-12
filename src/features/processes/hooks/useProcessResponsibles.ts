@@ -24,7 +24,7 @@ interface ProcessResponsiblesProps {
   processes?: Array<{ id: string }>;
 }
 
-export const useProcessResponsibles = ({ processId, processes }: ProcessResponsiblesProps): ProcessResponsiblesHookResult => {
+export const useProcessResponsibles = ({ processId, processes = [] }: ProcessResponsiblesProps): ProcessResponsiblesHookResult => {
   const { user } = useAuth();
   const [mainResponsibleUserName, setMainResponsibleUserName] = useState<string | null>(null);
   const [sectorResponsibleUserName, setSectorResponsibleUserName] = useState<string | null>(null);
@@ -95,10 +95,10 @@ export const useProcessResponsibles = ({ processId, processes }: ProcessResponsi
 
   // Verificar responsáveis para múltiplos processos
   const checkMultipleProcessResponsibles = useCallback(async () => {
-    if (!processes || !processes.length || !user) return;
+    if (!processes.length || !user) return;
 
     try {
-      const newResponsibles: Record<string, unknown> = {};
+      const newResponsibles: Record<string, string | null> = {};
 
       for (const process of processes) {
         const { data: historico } = await supabase
@@ -182,42 +182,6 @@ export const useProcessResponsibles = ({ processId, processes }: ProcessResponsi
       return false;
     }
   }, [processId, user]);
-
-  // Verificar responsáveis para múltiplos processos
-  const checkMultipleProcessResponsibles = useCallback(async () => {
-    if (!processes || !processes.length || !user) return;
-
-    try {
-      const newResponsibles: Record<string, string | null> = {};
-
-      for (const process of processes) {
-        const { data: historico } = await supabase
-          .from('processos_historico')
-          .select('usuario_responsavel_setor')
-          .eq('processo_id', process.id)
-          .is('data_saida', null)
-          .maybeSingle();
-
-        if (historico?.usuario_responsavel_setor) {
-          newResponsibles[process.id] = historico.usuario_responsavel_setor;
-        }
-      }
-
-      setProcessResponsibles(newResponsibles);
-    } catch (error) {
-      console.error("Erro ao verificar responsáveis dos processos:", error);
-    }
-  }, [processes, user]);
-
-  // Verificar se um processo específico tem um responsável
-  const hasProcessResponsible = useCallback((processId: string): boolean => {
-    return !!processResponsibles[processId];
-  }, [processResponsibles]);
-
-  // Verificar se o usuário atual é responsável por um processo específico
-  const isUserProcessResponsible = useCallback((processId: string): boolean => {
-    return processResponsibles[processId] === user?.id;
-  }, [processResponsibles, user]);
 
   // Atualizar os dados de responsabilidade
   const refreshResponsibility = useCallback(async () => {
