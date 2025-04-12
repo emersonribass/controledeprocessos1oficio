@@ -80,7 +80,7 @@ const ProcessActionButtons = ({
     );
   }
   
-  // Se é o departamento "Concluído(a)", mostra apenas o botão de voltar
+ /* // Se é o departamento "Concluído(a)", mostra apenas o botão de voltar
   if (isLastDepartment) {
     return (
       <div className="flex justify-center gap-2 process-action">
@@ -95,7 +95,7 @@ const ProcessActionButtons = ({
         </Button>
       </div>
     );
-  }
+  }*/
   
   // Se não há responsável no setor, mostra apenas o botão de aceitar processo
   if (!hasSectorResponsible && onAcceptResponsibility) {
