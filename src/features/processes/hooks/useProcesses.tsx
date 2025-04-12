@@ -1,3 +1,3 @@
 
 // Este arquivo é apenas para exportar o contexto 
-export { useProcesses } from "../context/ProcessesContext";
+export { useProcesses, ProcessesProvider } from "../context/ProcessesContext";

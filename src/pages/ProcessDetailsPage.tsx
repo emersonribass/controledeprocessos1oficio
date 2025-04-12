@@ -1,10 +1,12 @@
 
 import ProcessDetails from "@/components/Processes/ProcessDetails";
-import { ProcessesProvider } from "@/hooks/useProcesses";
+import { ProcessesProvider } from "@/features/processes/context/ProcessesContext";
 
 const ProcessDetailsPage = () => {
   return (
-    <ProcessDetails />
+    <ProcessesProvider>
+      <ProcessDetails />
+    </ProcessesProvider>
   );
 };
 
