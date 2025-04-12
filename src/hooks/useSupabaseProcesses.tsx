@@ -14,12 +14,15 @@ export const useSupabaseProcesses = () => {
     fetchProcesses 
   } = useProcessesFetch();
   
-  const { 
-    moveProcessToNextDepartment: moveToNext, 
-    moveProcessToPreviousDepartment: moveToPrevious 
-  } = useProcessMovement(() => {
+  const processMovementHook = useProcessMovement(() => {
     fetchProcesses();
   });
+  
+  const { 
+    moveProcessToNextDepartment: moveToNext, 
+    moveProcessToPreviousDepartment: moveToPrevious,
+    startProcess: startProcessMovement
+  } = processMovementHook;
   
   const { 
     updateProcessType,
@@ -62,60 +65,10 @@ export const useSupabaseProcesses = () => {
   
   const startProcess = async (processId: string) => {
     try {
-      const firstDept = departments.find(d => d.order === 1);
-      
-      if (!firstDept) {
-        throw new Error("Setor de atendimento não encontrado");
-      }
-      
-      const now = new Date().toISOString();
-      
-      if (!user || !user.id) {
-        throw new Error("Usuário não autenticado");
-      }
-      
-      const { error: updateError } = await supabase
-        .from('processos')
-        .update({ 
-          setor_atual: firstDept.id,
-          status: "Em andamento",
-          data_inicio: now,
-          updated_at: now
-        })
-        .eq('id', processId);
-        
-      if (updateError) {
-        throw updateError;
-      }
-      
-      const { error: historyError } = await supabase
-        .from('processos_historico')
-        .insert({
-          processo_id: processId,
-          setor_id: firstDept.id,
-          data_entrada: now,
-          data_saida: null,
-          usuario_id: user.id
-        });
-        
-      if (historyError) {
-        throw historyError;
-      }
-      
-      toast({
-        title: "Sucesso",
-        description: `Processo iniciado e movido para ${firstDept.name}`
-      });
-      
+      await startProcessMovement(processId);
       await fetchProcesses();
-      
     } catch (error) {
       console.error('Erro ao iniciar processo:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível iniciar o processo.",
-        variant: "destructive"
-      });
       throw error;
     }
   };

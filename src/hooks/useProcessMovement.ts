@@ -34,7 +34,7 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
       const { data: currentDepartment, error: currentDeptError } = await supabase
         .from('setores')
         .select('*')
-        .eq('id', process.setor_atual)
+        .eq('id', parseInt(process.setor_atual, 10))
         .single();
 
       if (currentDeptError) throw currentDeptError;
@@ -62,7 +62,7 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
           usuario_id: user.id
         })
         .eq('processo_id', processId)
-        .eq('setor_id', currentDepartment.id.toString())
+        .eq('setor_id', process.setor_atual)
         .is('data_saida', null);
 
       if (historyError) throw historyError;
@@ -135,7 +135,7 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
       const { data: currentDepartment, error: currentDeptError } = await supabase
         .from('setores')
         .select('*')
-        .eq('id', process.setor_atual)
+        .eq('id', parseInt(process.setor_atual, 10))
         .single();
 
       if (currentDeptError) throw currentDeptError;
@@ -163,7 +163,7 @@ export const useProcessMovement = (onProcessUpdated: () => void) => {
           usuario_id: user.id
         })
         .eq('processo_id', processId)
-        .eq('setor_id', currentDepartment.id.toString())
+        .eq('setor_id', process.setor_atual)
         .is('data_saida', null);
 
       if (historyError) throw historyError;

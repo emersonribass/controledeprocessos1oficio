@@ -86,7 +86,7 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
           exitDate: h.data_saida,
           userId: h.usuario_id || '',
         })),
-        userId: data.usuario_id,
+        userId: data.usuario_responsavel,
         responsibleUserId: data.usuario_responsavel,
       };
       
