@@ -1,22 +1,29 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Interface para definir os tipos de parâmetros da função RPC
+/**
+ * Interface para definir os tipos de parâmetros da função RPC
+ */
 interface MigrateUsuarioParams {
   usuario_email: string;
   usuario_senha: string;
 }
 
-// Interface para a resposta esperada da função RPC
+/**
+ * Interface para a resposta esperada da função RPC
+ */
 interface MigrateUsuarioResponse {
   success: boolean;
-  // Adicione outras propriedades que a resposta possa ter
+  message?: string;
 }
 
+/**
+ * Função para sincronizar usuário da tabela usuarios com o auth.users do Supabase
+ */
 export const syncAuthWithUsuarios = async (email: string, password: string): Promise<boolean> => {
   try {
-    // Corrigido: Usar o tipo correto para a função RPC
-    const { data, error } = await supabase.rpc<MigrateUsuarioResponse, MigrateUsuarioParams>(
+    // Usando os tipos genéricos adequados
+    const { data, error } = await supabase.rpc<MigrateUsuarioResponse>(
       'migrate_usuario_to_auth',
       {
         usuario_email: email, 
@@ -29,6 +36,7 @@ export const syncAuthWithUsuarios = async (email: string, password: string): Pro
       return false;
     }
     
+    console.log('Sincronização bem-sucedida:', data);
     return true;
   } catch (error) {
     console.error('Erro ao sincronizar com autenticação:', error);

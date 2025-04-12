@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Session } from "@supabase/supabase-js";
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import { convertSupabaseUser } from "./utils";
+import { convertSupabaseUser } from "./userConverter";
 
 export const useSession = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -21,13 +21,13 @@ export const useSession = () => {
         // Primeiro configurar listener para mudanças de estado de autenticação
         // Isso deve ser feito antes de verificar a sessão atual
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          (_event, currentSession) => {
+          async (_event, currentSession) => {
             console.log("Evento de autenticação:", _event);
             
             // Atualizar o estado da sessão
             setSession(currentSession);
             
-            // Processar dados do usuário de forma síncrona
+            // Processar dados do usuário
             if (currentSession?.user) {
               // Usar setTimeout para evitar bloqueios na atualização do estado
               setTimeout(async () => {
@@ -47,7 +47,7 @@ export const useSession = () => {
           }
         );
         
-        // Depois verificar se há uma sessão existente
+        // Verificar se há uma sessão existente
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -56,11 +56,22 @@ export const useSession = () => {
           return () => subscription.unsubscribe();
         }
         
-        console.log("Sessão inicial:", sessionData.session ? "Existe" : "Não existe");
+        // Se há uma sessão inicial, atualizar os estados
+        if (sessionData.session) {
+          console.log("Sessão inicial encontrada");
+          setSession(sessionData.session);
+          
+          try {
+            const userData = await convertSupabaseUser(sessionData.session.user);
+            setUser(userData);
+          } catch (error) {
+            console.error("Erro ao converter dados do usuário inicial:", error);
+          }
+        } else {
+          console.log("Nenhuma sessão inicial encontrada");
+        }
         
-        // Não atualizamos o estado aqui diretamente para evitar conflitos com o listener
-        // O listener será responsável por atualizar o estado quando receber o evento INITIAL_SESSION
-        
+        setIsLoading(false);
         return () => subscription.unsubscribe();
       } catch (error) {
         console.error("Erro ao inicializar autenticação:", error);

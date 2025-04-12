@@ -1,10 +1,11 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
@@ -33,35 +34,6 @@ const LoginForm = () => {
     setConnectionError(null);
     try {
       console.log("Tentando login com:", email);
-      
-      // Se for o primeiro acesso e não houver usuários, criar um administrador
-      if (email === "admin@sistema.com" && password === "admin123") {
-        console.log("Tentando criar usuário admin padrão...");
-        try {
-          // Verificar se já existe um usuário admin
-          const { data: adminCheck } = await supabase
-            .from('usuarios')
-            .select('id')
-            .eq('email', 'admin@sistema.com')
-            .maybeSingle();
-          
-          if (!adminCheck) {
-            // Criar usuário admin na tabela usuarios
-            await supabase.from('usuarios').insert({
-              nome: 'Administrador',
-              email: 'admin@sistema.com',
-              senha: 'admin123',
-              ativo: true,
-              perfil: 'administrador',
-              setores_atribuidos: []
-            });
-            
-            console.log("Usuário admin criado com sucesso na tabela usuarios");
-          }
-        } catch (adminError) {
-          console.error("Erro ao criar usuário admin:", adminError);
-        }
-      }
       
       const result = await login(email, password);
 
@@ -179,9 +151,8 @@ const LoginForm = () => {
         </form>
 
         <div className="mt-4 text-xs text-center text-muted-foreground">
-          <p>Para o primeiro acesso, utilize:</p>
-          <p className="font-semibold mt-1">Email: admin@sistema.com</p>
-          <p className="font-semibold">Senha: admin123</p>
+          <p>Para acessar, crie um usuário no Supabase Auth</p>
+          <p className="font-semibold mt-1">ou através do console administrativo</p>
         </div>
       </CardContent>
     </Card>
