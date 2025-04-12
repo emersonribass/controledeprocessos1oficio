@@ -4,8 +4,8 @@ import { MoveLeft, MoveRight, Play } from "lucide-react";
 
 interface ProcessActionButtonsProps {
   processId: string;
-  moveProcessToPreviousDepartment: (processId: string) => void;
-  moveProcessToNextDepartment: (processId: string) => void;
+  moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
+  moveProcessToNextDepartment: (processId: string) => Promise<void>;
   isFirstDepartment: boolean;
   isLastDepartment: boolean;
   setIsEditing: (value: boolean) => void;
@@ -27,13 +27,27 @@ const ProcessActionButtons = ({
 }: ProcessActionButtonsProps) => {
   const isNotStarted = status === "not_started";
   
+  const handleMoveToNext = async () => {
+    await moveProcessToNextDepartment(processId);
+  };
+  
+  const handleMoveToPrevious = async () => {
+    await moveProcessToPreviousDepartment(processId);
+  };
+  
+  const handleStartProcess = async () => {
+    if (startProcess) {
+      await startProcess(processId);
+    }
+  };
+  
   return (
     <div className="flex justify-center gap-2">
       {isNotStarted ? (
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => startProcess && startProcess(processId)} 
+          onClick={handleStartProcess} 
           title="Iniciar processo" 
           className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1"
         >
@@ -45,7 +59,7 @@ const ProcessActionButtons = ({
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => moveProcessToPreviousDepartment(processId)} 
+            onClick={handleMoveToPrevious} 
             disabled={isFirstDepartment} 
             title="Mover para departamento anterior"
             className={isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}
@@ -55,7 +69,7 @@ const ProcessActionButtons = ({
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => moveProcessToNextDepartment(processId)} 
+            onClick={handleMoveToNext} 
             disabled={isLastDepartment} 
             title="Mover para próximo departamento"
             className={isLastDepartment ? "opacity-50 cursor-not-allowed" : ""}

@@ -16,6 +16,22 @@ const ProcessDetailsPage = () => {
   const [process, setProcess] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   
+  // Criando adaptadores para converter Promise<boolean> para Promise<void>
+  const adaptMoveToNext = async (processId: string): Promise<void> => {
+    if (!id) return;
+    await moveProcessToNextDepartment(processId);
+  };
+  
+  const adaptMoveToPrevious = async (processId: string): Promise<void> => {
+    if (!id) return;
+    await moveProcessToPreviousDepartment(processId);
+  };
+  
+  const adaptStartProcess = async (processId: string): Promise<void> => {
+    if (!id) return;
+    await startProcess(processId);
+  };
+  
   const { moveProcessToNextDepartment, moveProcessToPreviousDepartment, startProcess } = useProcessMovement(() => {
     refreshProcesses();
     loadProcess();
@@ -76,12 +92,12 @@ const ProcessDetailsPage = () => {
             process={process}
             getDepartmentName={getDepartmentName}
             getProcessTypeName={getProcessTypeName}
-            moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-            moveProcessToNextDepartment={moveProcessToNextDepartment}
+            moveProcessToPreviousDepartment={adaptMoveToPrevious}
+            moveProcessToNextDepartment={adaptMoveToNext}
             isFirstDepartment={isFirstDepartment}
             isLastDepartment={isLastDepartment}
             isNotStarted={isNotStarted}
-            startProcess={startProcess}
+            startProcess={adaptStartProcess}
           />
           
           <ProcessDetailsTabs 
