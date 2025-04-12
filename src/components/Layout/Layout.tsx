@@ -5,6 +5,7 @@ import { useAuth } from "@/features/auth";
 import { NotificationsProvider } from "@/hooks/NotificationsProvider";
 import { ErrorBoundary } from "../ErrorBoundary/ErrorBoundary";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 // Componente de apresentação pura
 export const LayoutPresentation = ({
@@ -52,6 +53,10 @@ export const LayoutPresentation = ({
 // Componente container que gerencia a lógica
 const Layout = () => {
   const { user, isLoading } = useAuth();
+  
+  useEffect(() => {
+    console.log("Layout renderizado. User:", !!user, "isLoading:", isLoading);
+  }, [user, isLoading]);
 
   return (
     <LayoutPresentation 

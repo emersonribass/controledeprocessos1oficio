@@ -7,20 +7,27 @@ import { Routes } from "./routes/Routes";
 import { AuthProvider } from "@/features/auth";
 import { BrowserRouter } from "react-router-dom";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutos
+      retry: 1,
+    },
+  },
+});
 
 const App = () => {
   console.log("Renderizando App");
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <AuthProvider>
-          <BrowserRouter>
+        <BrowserRouter>
+          <AuthProvider>
             <Routes />
-          </BrowserRouter>
-        </AuthProvider>
+            <Toaster />
+            <Sonner />
+          </AuthProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );

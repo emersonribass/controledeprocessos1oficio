@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { AuthContextType, UserData } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { useLogin } from "./useLogin";
@@ -13,6 +13,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const authInitialized = useRef(false);
 
   const { getSession, handleSessionChange } = useSession();
   const { handleLogin } = useLogin();
@@ -42,7 +43,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Sincronizar o estado do usuário com a sessão do Supabase
   useEffect(() => {
+    if (authInitialized.current) return;
+    
     let isMounted = true; // Variável para prevenir atualizações de estado após desmontagem
+    authInitialized.current = true;
     
     const initAuth = async () => {
       setIsLoading(true);
@@ -83,6 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } else {
           setUser(null);
         }
+        setIsLoading(false);
       }
     });
 
