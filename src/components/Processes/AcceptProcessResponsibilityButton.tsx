@@ -38,13 +38,14 @@ const AcceptProcessResponsibilityButton = ({
     <Button
       onClick={handleAcceptProcess}
       disabled={isAccepting || !user}
-      className="bg-green-600 hover:bg-green-700 text-white"
+      className="bg-green-600 hover:bg-green-700"
       size="sm"
     >
       <CheckCircle className="mr-2 h-4 w-4" />
-      {isAccepting ? "Processando..." : "Aceitar Responsabilidade"}
+      {isAccepting ? "Processando..." : "Aceitar Processo"}
     </Button>
   );
 };
 
 export default AcceptProcessResponsibilityButton;
+
