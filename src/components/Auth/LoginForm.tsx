@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AlertCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+
 const LoginForm = () => {
   // Login state
   const [email, setEmail] = useState("");
@@ -22,6 +24,7 @@ const LoginForm = () => {
     setSession
   } = useAuth();
   const navigate = useNavigate();
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -30,6 +33,36 @@ const LoginForm = () => {
     setConnectionError(null);
     try {
       console.log("Tentando login com:", email);
+      
+      // Se for o primeiro acesso e não houver usuários, criar um administrador
+      if (email === "admin@sistema.com" && password === "admin123") {
+        console.log("Tentando criar usuário admin padrão...");
+        try {
+          // Verificar se já existe um usuário admin
+          const { data: adminCheck } = await supabase
+            .from('usuarios')
+            .select('id')
+            .eq('email', 'admin@sistema.com')
+            .maybeSingle();
+          
+          if (!adminCheck) {
+            // Criar usuário admin na tabela usuarios
+            await supabase.from('usuarios').insert({
+              nome: 'Administrador',
+              email: 'admin@sistema.com',
+              senha: 'admin123',
+              ativo: true,
+              perfil: 'administrador',
+              setores_atribuidos: []
+            });
+            
+            console.log("Usuário admin criado com sucesso na tabela usuarios");
+          }
+        } catch (adminError) {
+          console.error("Erro ao criar usuário admin:", adminError);
+        }
+      }
+      
       const result = await login(email, password);
 
       // Verificar se ocorreu algum erro durante o login
@@ -77,10 +110,13 @@ const LoginForm = () => {
       setIsSubmitting(false);
     }
   };
+
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-  return <Card className="w-[380px] shadow-lg">
+
+  return (
+    <Card className="w-[380px] shadow-lg">
       <CardContent className="pt-6 px-6 py-[12px]">
         <div className="flex flex-col items-center mb-6">
           <img src="/Logo Nottar vertical.png" alt="Logo Nottar" className="h-32 w-auto" />
@@ -90,12 +126,15 @@ const LoginForm = () => {
           </CardDescription>
         </div>
 
-        {error && <Alert variant="destructive" className="mb-4">
+        {error && (
+          <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
-          </Alert>}
-        
-        {connectionError && <Alert variant="destructive" className="mb-4">
+          </Alert>
+        )}
+
+        {connectionError && (
+          <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               {connectionError}
@@ -104,7 +143,8 @@ const LoginForm = () => {
                 alguma alteração nas credenciais de acesso.
               </p>
             </AlertDescription>
-          </Alert>}
+          </Alert>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
@@ -127,15 +167,25 @@ const LoginForm = () => {
           </div>
           
           <Button className="w-full bg-blue-500 hover:bg-blue-600" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <span className="flex items-center gap-2">
+            {isSubmitting ? (
+              <span className="flex items-center gap-2">
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
                 Entrando...
-              </span> : "Entrar"}
+              </span>
+            ) : (
+              "Entrar"
+            )}
           </Button>
         </form>
 
-        
+        <div className="mt-4 text-xs text-center text-muted-foreground">
+          <p>Para o primeiro acesso, utilize:</p>
+          <p className="font-semibold mt-1">Email: admin@sistema.com</p>
+          <p className="font-semibold">Senha: admin123</p>
+        </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export default LoginForm;
