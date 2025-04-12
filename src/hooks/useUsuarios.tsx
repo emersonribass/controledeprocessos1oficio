@@ -1,7 +1,8 @@
+
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { UsuarioSupabase, FormUsuario } from "@/types/usuario";
+import { supabaseService } from "@/services/supabase";
 
 export function useUsuarios() {
   const [usuarios, setUsuarios] = useState<UsuarioSupabase[]>([]);
@@ -13,13 +14,10 @@ export function useUsuarios() {
     setIsLoading(true);
     try {
       console.log("Iniciando busca de usuários na tabela 'usuarios' do projeto controledeprocessos1oficio");
-      const supabaseUrl = supabase.getUrl();
+      const supabaseUrl = supabaseService.getUrl();
       console.log("URL do Supabase:", supabaseUrl);
       
-      const { data, error, count } = await supabase
-        .from("usuarios")
-        .select("*", { count: 'exact' })
-        .order("nome");
+      const { data, error, count } = await supabaseService.fetchUsuarios();
 
       if (error) {
         throw error;
@@ -31,7 +29,7 @@ export function useUsuarios() {
         console.log("Nenhum usuário encontrado na tabela 'usuarios'. Verificando auth.users...");
         
         try {
-          const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+          const { data: authUsers, error: authError } = await supabaseService.checkAuthUsers();
           
           if (authError) {
             console.error("Erro ao buscar usuários autenticados:", authError);
@@ -61,10 +59,7 @@ export function useUsuarios() {
 
   const handleToggleAtivo = async (usuario: UsuarioSupabase) => {
     try {
-      const { error } = await supabase
-        .from("usuarios")
-        .update({ ativo: !usuario.ativo })
-        .eq("id", usuario.id);
+      const { error } = await supabaseService.toggleUsuarioAtivo(usuario.id, usuario.ativo);
 
       if (error) {
         throw error;
@@ -88,10 +83,7 @@ export function useUsuarios() {
 
   const handleDeleteUsuario = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from("usuarios")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabaseService.deleteUsuario(id);
 
       if (error) {
         throw error;
@@ -130,10 +122,7 @@ export function useUsuarios() {
           updateData.senha = data.senha;
         }
 
-        const { error } = await supabase
-          .from("usuarios")
-          .update(updateData)
-          .eq("id", usuarioId);
+        const { error } = await supabaseService.updateUsuario(usuarioId, updateData);
 
         if (error) throw error;
 
@@ -142,7 +131,7 @@ export function useUsuarios() {
           description: "Usuário atualizado com sucesso!",
         });
       } else {
-        const { error } = await supabase.from("usuarios").insert({
+        const { error } = await supabaseService.createUsuario({
           nome: data.nome,
           email: data.email,
           senha: data.senha,

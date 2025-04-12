@@ -1,6 +1,6 @@
 
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { supabaseService } from "@/services/supabase";
 
 export const useProcessUpdate = () => {
   const { toast } = useToast();
@@ -10,13 +10,7 @@ export const useProcessUpdate = () => {
       const now = new Date().toISOString();
 
       // Atualizar o tipo de processo
-      const { error } = await supabase
-        .from('processos')
-        .update({ 
-          tipo_processo: newTypeId,
-          updated_at: now
-        })
-        .eq('id', processId);
+      const { error } = await supabaseService.updateProcessType(processId, newTypeId);
 
       if (error) {
         throw error;
@@ -39,13 +33,7 @@ export const useProcessUpdate = () => {
       const now = new Date().toISOString();
 
       // Atualizar o status do processo
-      const { error } = await supabase
-        .from('processos')
-        .update({ 
-          status: newStatus,
-          updated_at: now
-        })
-        .eq('id', processId);
+      const { error } = await supabaseService.updateProcessStatus(processId, newStatus);
 
       if (error) {
         throw error;

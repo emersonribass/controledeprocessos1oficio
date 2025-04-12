@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { ProcessType } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { supabaseService } from "@/services/supabase";
 
 export const useProcessTypes = () => {
   const [processTypes, setProcessTypes] = useState<ProcessType[]>([]);
@@ -17,12 +17,7 @@ export const useProcessTypes = () => {
     try {
       setIsLoading(true);
       
-      // Usando 'as any' para contornar as restrições de tipo temporariamente
-      // Isso é necessário porque o tipo Types do Supabase não foi atualizado para incluir 'tipos_processo'
-      const { data, error } = await (supabase as any)
-        .from('tipos_processo')
-        .select('*')
-        .order('name');
+      const { data, error } = await supabaseService.fetchProcessTypes();
         
       if (error) {
         throw error;
@@ -57,11 +52,7 @@ export const useProcessTypes = () => {
   // Adicionar função para criar novo tipo de processo
   const createProcessType = async (name: string) => {
     try {
-      // Usando 'as any' para contornar as restrições de tipo
-      const { data, error } = await (supabase as any)
-        .from('tipos_processo')
-        .insert([{ name }])
-        .select();
+      const { data, error } = await supabaseService.createProcessType(name);
         
       if (error) {
         throw error;
@@ -90,11 +81,7 @@ export const useProcessTypes = () => {
   // Adicionar função para atualizar tipo de processo
   const updateProcessType = async (id: string, name: string) => {
     try {
-      // Usando 'as any' para contornar as restrições de tipo
-      const { error } = await (supabase as any)
-        .from('tipos_processo')
-        .update({ name })
-        .eq('id', id);
+      const { error } = await supabaseService.updateProcessType(id, { name });
         
       if (error) {
         throw error;
@@ -123,11 +110,7 @@ export const useProcessTypes = () => {
   // Adicionar função para desativar/ativar tipo de processo
   const toggleProcessTypeActive = async (id: string, active: boolean) => {
     try {
-      // Usando 'as any' para contornar as restrições de tipo
-      const { error } = await (supabase as any)
-        .from('tipos_processo')
-        .update({ active })
-        .eq('id', id);
+      const { error } = await supabaseService.toggleProcessTypeActive(id, active);
         
       if (error) {
         throw error;

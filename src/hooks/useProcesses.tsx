@@ -1,11 +1,10 @@
-
 import { createContext, useContext, ReactNode } from "react";
 import { Process } from "@/types";
 import { useDepartmentsData } from "@/hooks/useDepartmentsData";
 import { useProcessFilters } from "@/hooks/useProcessFilters";
 import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { useSupabaseProcesses } from "@/hooks/useSupabaseProcesses";
-import { supabase } from "@/integrations/supabase/client";
+import { supabaseService } from "@/services/supabase";
 
 type ProcessesContextType = {
   processes: Process[];
@@ -27,7 +26,6 @@ type ProcessesContextType = {
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   updateProcessStatus: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
   startProcess: (processId: string) => Promise<void>;
-  // Novas funções para excluir processos
   deleteProcess: (processId: string) => Promise<boolean>;
   deleteManyProcesses: (processIds: string[]) => Promise<boolean>;
   getProcess: (processId: string) => Promise<Process | null>;
@@ -52,7 +50,6 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   } = useSupabaseProcesses();
   const { filterProcesses, isProcessOverdue } = useProcessFilters(processes);
   
-  // Adaptadores para transformar os retornos boolean em void para a interface do contexto
   const moveProcessToNextDepartment = async (processId: string): Promise<void> => {
     await moveNext(processId);
   };
@@ -64,23 +61,14 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const startProcess = async (processId: string): Promise<void> => {
     await startP(processId);
   };
-  
-  // Adicionar a função getProcess
+
   const getProcess = async (processId: string): Promise<Process | null> => {
     try {
-      const { data, error } = await supabase
-        .from('processos')
-        .select(`
-          *,
-          processos_historico(*)
-        `)
-        .eq('id', processId)
-        .single();
+      const { data, error } = await supabaseService.getProcess(processId);
         
       if (error) throw error;
       if (!data) return null;
       
-      // Converter para o formato Process
       const formattedProcess: Process = {
         id: data.id,
         protocolNumber: data.numero_protocolo,
