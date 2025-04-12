@@ -21,7 +21,10 @@ export * from './hooks/useProcessUpdate';
 export * from './hooks/useSupabaseProcesses';
 export * from './hooks/useProcessDelete';
 export * from './hooks/useProcessStart';
-export * from './hooks/useProcessResponsibles';
+
+// Exportar o hook de responsáveis diretamente, não re-exportando o tipo
+// que já é exportado pelo próprio hook
+export { default as useProcessResponsibles } from './hooks/useProcessResponsibles';
 
 // Exportar tipos
 export * from './types';
