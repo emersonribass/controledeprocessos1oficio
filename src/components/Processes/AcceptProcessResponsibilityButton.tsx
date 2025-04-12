@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 
 interface AcceptProcessResponsibilityButtonProps {
   processId: string;
@@ -23,12 +23,12 @@ const AcceptProcessResponsibilityButton = memo(({
   const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const { user } = useAuth();
 
-  const handleAcceptProcess = async () => {
+  const handleAcceptProcess = useCallback(async () => {
     const success = await acceptProcessResponsibility(processId, protocolNumber);
     if (success) {
       onAccept();
     }
-  };
+  }, [processId, protocolNumber, acceptProcessResponsibility, onAccept]);
 
   if (hasResponsibleUser) {
     return null;

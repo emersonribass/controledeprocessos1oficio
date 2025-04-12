@@ -9,6 +9,7 @@ import ProcessMainDetails from "@/components/Processes/ProcessMainDetails";
 import ProcessDetailsTabs from "@/components/Processes/ProcessDetailsTabs";
 import ProcessDetailsSkeleton from "@/components/Processes/ProcessDetailsSkeleton";
 import ProcessDeadlineCard from "@/components/Processes/ProcessDeadlineCard";
+import { useProcessDetailsResponsibility } from "@/hooks/useProcessDetailsResponsibility";
 
 const ProcessDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -61,7 +62,7 @@ const ProcessDetailsPage = () => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       refreshProcesses();
-    }, 30000); // Atualizar a cada 30 segundos
+    }, 60000); // Aumentado para 60 segundos para reduzir chamadas
     
     return () => clearInterval(intervalId);
   }, [refreshProcesses]);
@@ -107,11 +108,13 @@ const ProcessDetailsPage = () => {
         </div>
         
         <div>
-          <ProcessResponsibleInfo 
-            processId={process.id}
-            protocolNumber={process.protocolNumber}
-            sectorId={process.currentDepartment}
-          />
+          {process && process.id && process.currentDepartment && (
+            <ProcessResponsibleInfo 
+              processId={process.id}
+              protocolNumber={process.protocolNumber}
+              sectorId={process.currentDepartment}
+            />
+          )}
           
           <ProcessDeadlineCard process={process} />
         </div>

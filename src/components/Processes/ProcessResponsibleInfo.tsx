@@ -6,6 +6,7 @@ import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
 import AcceptProcessResponsibilityButton from "./AcceptProcessResponsibilityButton";
 import { User } from "lucide-react";
+import { memo } from "react";
 
 interface ProcessResponsibleInfoProps {
   processId: string;
@@ -13,7 +14,7 @@ interface ProcessResponsibleInfoProps {
   sectorId: string;
 }
 
-const ProcessResponsibleInfo = ({
+const ProcessResponsibleInfo = memo(({
   processId,
   protocolNumber,
   sectorId,
@@ -31,8 +32,10 @@ const ProcessResponsibleInfo = ({
     setIsLoading(true);
     try {
       // Executando as chamadas em paralelo para melhorar a performance
-      const processResp = await getProcessResponsible(processId);
-      const sectorResp = await getSectorResponsible(processId, sectorId);
+      const [processResp, sectorResp] = await Promise.all([
+        getProcessResponsible(processId),
+        getSectorResponsible(processId, sectorId)
+      ]);
       
       setProcessResponsible(processResp);
       setSectorResponsible(sectorResp);
@@ -45,7 +48,9 @@ const ProcessResponsibleInfo = ({
 
   // Carrega os responsáveis apenas quando os IDs mudam
   useEffect(() => {
+    const controller = new AbortController();
     loadResponsibles();
+    return () => controller.abort();
   }, [loadResponsibles]);
 
   const handleResponsibilityAccepted = useCallback(() => {
@@ -121,6 +126,9 @@ const ProcessResponsibleInfo = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+// Adicionando displayName para facilitar debugging
+ProcessResponsibleInfo.displayName = 'ProcessResponsibleInfo';
 
 export default ProcessResponsibleInfo;
