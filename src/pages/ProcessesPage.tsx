@@ -37,6 +37,8 @@ const ProcessesPage = () => {
     navigate("/processes?status=not_started");
   };
 
+  const shouldShowNewProcessButton = userIsAdmin || (user?.departments?.length === 0);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -58,7 +60,7 @@ const ProcessesPage = () => {
           </Button>
           
           {/* Botão para criar novo processo - apenas para admin ou usuários sem departamento atribuído */}
-          {(userIsAdmin || user?.departments?.length === 0) && (
+          {shouldShowNewProcessButton && (
             <Button 
               onClick={() => navigate("/admin/process-settings")} 
               className="flex items-center gap-1 px-[10px] text-sm text-center bg-blue-600 hover:bg-blue-500 rounded text-white font-medium"

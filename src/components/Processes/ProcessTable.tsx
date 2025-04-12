@@ -3,7 +3,6 @@ import { Table } from "@/components/ui/table";
 import { Department, Process, ProcessType } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { useProcessTableUtilities } from "./ProcessTableUtilities";
 import ProcessTableBody from "./ProcessTableBody";
 import ProcessTableResponsibles from "./ProcessTableResponsibles";
@@ -40,10 +39,9 @@ const ProcessTable = ({
 }: ProcessTableProps) => {
   const navigate = useNavigate();
   const { sortedDepartments, concludedDept } = useProcessTableUtilities(departments);
-  const [processResponsibles, setProcessResponsibles] = useState<Record<string, string | null>>({});
-
+  
   // Use o hook que gerencia os responsáveis dos processos
-  const { hasProcessResponsible } = ProcessTableResponsibles({ processes });
+  const responsiblesManager = ProcessTableResponsibles({ processes });
 
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -66,9 +64,7 @@ const ProcessTable = ({
           processTypes={processTypes}
           updateProcessType={updateProcessType}
           startProcess={startProcess}
-          hasProcessResponsible={hasProcessResponsible}
-          processResponsibles={processResponsibles}
-          setProcessResponsibles={setProcessResponsibles}
+          responsiblesManager={responsiblesManager}
         />
       </Table>
     </div>

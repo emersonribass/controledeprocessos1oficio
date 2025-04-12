@@ -1,50 +1,81 @@
 
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 import { Process } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/auth";
 
-interface ProcessTableResponsiblesProps {
+export interface ProcessResponsiblesHookResult {
+  hasProcessResponsible: (processId: string) => boolean;
+  isUserProcessResponsible: (processId: string) => boolean;
+  processResponsibles: Record<string, string | null>;
+  setProcessResponsibles: React.Dispatch<React.SetStateAction<Record<string, string | null>>>;
+}
+
+interface ProcessResponsiblesHookProps {
   processes: Process[];
 }
 
-const ProcessTableResponsibles = ({ processes }: ProcessTableResponsiblesProps) => {
+const ProcessTableResponsibles = ({ processes }: ProcessResponsiblesHookProps): ProcessResponsiblesHookResult => {
   const [processResponsibles, setProcessResponsibles] = useState<Record<string, string | null>>({});
-
-  // Efeito para buscar responsáveis dos processos
+  const { user } = useAuth();
+  
+  // Efeito para buscar informações sobre responsáveis de processos
   useEffect(() => {
-    const fetchResponsibles = async () => {
+    const checkProcessResponsibles = async () => {
       try {
-        if (processes.length === 0) return;
+        // Obter IDs de todos os processos
+        const processIds = processes.map(process => process.id);
         
+        if (processIds.length === 0) return;
+        
+        // Buscar informações de responsáveis para todos os processos
         const { data, error } = await supabase
           .from('processos')
-          .select('id, usuario_responsavel')
-          .in('id', processes.map(p => p.id));
-          
+          .select('id, usuario_responsavel, resp_departamento_atual')
+          .in('id', processIds);
+        
         if (error) {
           console.error("Erro ao buscar responsáveis dos processos:", error);
           return;
         }
         
-        const responsibles: Record<string, string | null> = {};
-        data.forEach(p => {
-          responsibles[p.id] = p.usuario_responsavel;
+        // Mapear os resultados para o estado
+        const newResponsibles: Record<string, string | null> = {};
+        data.forEach(item => {
+          // Marcar como tendo responsável se tiver usuário_responsavel OU resp_departamento_atual
+          newResponsibles[item.id] = item.usuario_responsavel || item.resp_departamento_atual || null;
         });
         
-        setProcessResponsibles(responsibles);
+        setProcessResponsibles(newResponsibles);
       } catch (error) {
-        console.error("Erro ao processar responsáveis dos processos:", error);
+        console.error("Erro ao verificar responsáveis dos processos:", error);
       }
     };
     
-    fetchResponsibles();
+    checkProcessResponsibles();
   }, [processes]);
 
+  /**
+   * Verifica se um processo tem algum responsável
+   */
   const hasProcessResponsible = (processId: string): boolean => {
     return !!processResponsibles[processId];
   };
+  
+  /**
+   * Verifica se o usuário atual é responsável pelo processo
+   */
+  const isUserProcessResponsible = (processId: string): boolean => {
+    const process = processes.find(p => p.id === processId);
+    return !!user && !!process && process.responsibleUser === user.id;
+  };
 
-  return { processResponsibles, hasProcessResponsible };
+  return { 
+    hasProcessResponsible, 
+    isUserProcessResponsible,
+    processResponsibles, 
+    setProcessResponsibles 
+  };
 };
 
 export default ProcessTableResponsibles;

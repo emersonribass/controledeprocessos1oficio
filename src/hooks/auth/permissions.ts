@@ -1,94 +1,93 @@
 
-// Lista de emails de administradores
 import { supabase } from "@/integrations/supabase/client";
 
-// Lista expandida de emails administrativos para garantir acesso
-export const adminEmails = ["emerson.ribas@live.com", "emerson@nottar.com.br"];
+export const adminEmails = [
+  "admin@nottar.com.br",
+  "maciel@nottar.com.br",
+  "dante@nottar.com.br"
+];
 
-// Cache aprimorado para armazenar resultados de verificações administrativas
-const adminStatusCache: Record<string, {
-  status: boolean;
-  timestamp: number;
-}> = {};
+// Cache para armazenar resultados de verificação de administrador por email
+const adminCheckCache: Record<string, { result: boolean; timestamp: number }> = {};
+const CACHE_TIMEOUT = 5 * 60 * 1000; // 5 minutos em milissegundos
 
-// Tempo de expiração do cache em milissegundos (30 minutos)
-const CACHE_EXPIRATION = 30 * 60 * 1000;
-
-// Função para verificar se um email pertence a um administrador da lista fixa
-export const isAdminByEmail = (email: string): boolean => {
-  return adminEmails.includes(email);
-};
-
-// Função para limpar entradas expiradas do cache
-const cleanExpiredCache = () => {
-  const now = Date.now();
-  Object.keys(adminStatusCache).forEach(email => {
-    if (now - adminStatusCache[email].timestamp > CACHE_EXPIRATION) {
-      delete adminStatusCache[email];
-    }
-  });
-};
-
-// Versão sincronizada que não faz chamadas ao banco se já tivermos a resposta no cache
-export const isAdminSync = (email: string): boolean | null => {
-  if (!email) return false;
-  
-  // Verificar se existe no cache e se não está expirado
-  const now = Date.now();
-  if (adminStatusCache[email] && (now - adminStatusCache[email].timestamp < CACHE_EXPIRATION)) {
-    return adminStatusCache[email].status;
-  }
-  
-  // Verificar lista fixa de administradores sem consulta ao banco
-  if (isAdminByEmail(email)) {
-    // Armazenar no cache
-    adminStatusCache[email] = { status: true, timestamp: now };
-    return true;
-  }
-  
-  // Se não está no cache e não é admin pela lista fixa, retorna null para indicar
-  // que precisamos de verificação no banco de dados
-  return null;
-};
-
-// Função para verificar se um usuário é administrador
-// Verifica tanto a lista fixa quanto o perfil do usuário na tabela
+/**
+ * Verifica se o usuário é administrador consultando o banco de dados
+ * @param email Email do usuário
+ * @returns Promise<boolean> indicando se o usuário é administrador
+ */
 export const isAdmin = async (email: string): Promise<boolean> => {
   if (!email) return false;
   
-  // Primeiro, tentar obter do cache ou verificações sincronizadas
-  const cachedResult = isAdminSync(email);
-  if (cachedResult !== null) {
-    return cachedResult;
+  const normalizedEmail = email.toLowerCase();
+  
+  // Verificar primeiro a lista de emails de administradores hard-coded
+  if (adminEmails.includes(normalizedEmail)) {
+    return true;
   }
-  
+
+  // Verificar o cache antes de fazer a consulta ao banco de dados
   const now = Date.now();
+  const cachedResult = adminCheckCache[normalizedEmail];
+  if (cachedResult && now - cachedResult.timestamp < CACHE_TIMEOUT) {
+    console.log(`Usando resultado em cache para: ${email}`);
+    return cachedResult.result;
+  }
+
+  console.log(`Buscando permissões no banco de dados para: ${email}`);
   
-  // Se chegou aqui, precisamos verificar no banco de dados
   try {
     const { data, error } = await supabase
       .from('usuarios')
-      .select('perfil')
-      .eq('email', email)
+      .select('is_admin')
+      .eq('email', normalizedEmail)
       .single();
 
     if (error) {
-      adminStatusCache[email] = { status: false, timestamp: now };
+      console.error('Erro ao verificar permissões administrativas:', error);
       return false;
     }
 
-    const isAdminUser = data?.perfil === 'administrador';
+    const isAdminUser = !!data?.is_admin;
     
-    // Armazenar no cache
-    adminStatusCache[email] = { status: isAdminUser, timestamp: now };
-    
-    // Limpar entradas expiradas do cache periodicamente
-    cleanExpiredCache();
+    // Armazenar o resultado no cache
+    adminCheckCache[normalizedEmail] = {
+      result: isAdminUser,
+      timestamp: now
+    };
+
+    console.log(`Usuário é administrador pelo perfil na tabela: ${isAdminUser}`);
     
     return isAdminUser;
   } catch (error) {
-    // Em caso de erro, cachear como não administrador para evitar consultas repetidas
-    adminStatusCache[email] = { status: false, timestamp: now };
+    console.error('Erro ao verificar permissões administrativas:', error);
     return false;
   }
+};
+
+/**
+ * Versão síncrona da verificação de administrador, usando o cache
+ * @param email Email do usuário
+ * @returns boolean | null - true se o usuário for admin, false se não for, null se não houver dados no cache
+ */
+export const isAdminSync = (email: string): boolean | null => {
+  if (!email) return false;
+  
+  const normalizedEmail = email.toLowerCase();
+  
+  // Verificar primeiro a lista de emails de administradores hard-coded
+  if (adminEmails.includes(normalizedEmail)) {
+    return true;
+  }
+
+  // Verificar o cache
+  const now = Date.now();
+  const cachedResult = adminCheckCache[normalizedEmail];
+  
+  if (cachedResult && now - cachedResult.timestamp < CACHE_TIMEOUT) {
+    return cachedResult.result;
+  }
+  
+  // Se não houver dados no cache, retornar null
+  return null;
 };

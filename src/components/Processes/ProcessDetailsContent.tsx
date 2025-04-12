@@ -2,6 +2,8 @@
 import { Process } from "@/types";
 import ProcessCard from "./ProcessCard";
 import ProcessHistory from "./ProcessHistory";
+import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
+import { useState } from "react";
 
 interface ProcessDetailsContentProps {
   process: Process;
@@ -10,14 +12,7 @@ interface ProcessDetailsContentProps {
   moveProcessToNextDepartment: (processId: string) => void;
   moveProcessToPreviousDepartment: (processId: string) => void;
   getUserName: (userId: string) => string;
-  mainResponsibleUserName?: string;
-  sectorResponsibleUserName?: string;
   isRefreshing: boolean;
-  onProcessAccepted: () => void;
-  hasResponsibleUser: boolean;
-  isMainResponsible: boolean;
-  isSectorResponsible: boolean;
-  currentDepartmentId?: string;
 }
 
 const ProcessDetailsContent = ({
@@ -27,15 +22,29 @@ const ProcessDetailsContent = ({
   moveProcessToNextDepartment,
   moveProcessToPreviousDepartment,
   getUserName,
-  mainResponsibleUserName,
-  sectorResponsibleUserName,
   isRefreshing,
-  onProcessAccepted,
-  hasResponsibleUser,
-  isMainResponsible,
-  isSectorResponsible,
-  currentDepartmentId
 }: ProcessDetailsContentProps) => {
+  const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Usar o hook de responsabilidade
+  const {
+    isMainResponsible,
+    isSectorResponsible,
+    hasResponsibleUser,
+    mainResponsibleUserName,
+    sectorResponsibleUserName,
+    refreshResponsibility,
+    acceptProcess
+  } = useProcessResponsibility({ processId: process.id });
+
+  const handleProcessAccepted = async () => {
+    const success = await acceptProcess();
+    if (success) {
+      await refreshResponsibility();
+      setRefreshKey(prev => prev + 1);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <ProcessCard
@@ -52,14 +61,15 @@ const ProcessDetailsContent = ({
       />
 
       <ProcessHistory 
+        key={refreshKey}
         history={process.history} 
         getDepartmentName={getDepartmentName} 
         getUserName={getUserName}
         processId={process.id}
         protocolNumber={process.protocolNumber}
         hasResponsibleUser={hasResponsibleUser}
-        onProcessAccepted={onProcessAccepted}
-        currentDepartmentId={currentDepartmentId}
+        onProcessAccepted={handleProcessAccepted}
+        currentDepartmentId={process.currentDepartment}
       />
     </div>
   );

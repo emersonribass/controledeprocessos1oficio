@@ -1,3 +1,4 @@
+
 import { TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { Department, Process, ProcessType, PROCESS_STATUS } from "@/types";
@@ -6,8 +7,8 @@ import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
 import ProcessTableEmpty from "./ProcessTableEmpty";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { useAuth } from "@/hooks/auth";
+import { ProcessResponsiblesHookResult } from "./ProcessTableResponsibles";
 
 interface ProcessTableBodyProps {
   processes: Process[];
@@ -21,9 +22,7 @@ interface ProcessTableBodyProps {
   processTypes: ProcessType[];
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   startProcess?: (processId: string) => Promise<void>;
-  hasProcessResponsible: (processId: string) => boolean;
-  setProcessResponsibles?: (newState: Record<string, string | null>) => void;
-  processResponsibles: Record<string, string | null>;
+  responsiblesManager: ProcessResponsiblesHookResult;
 }
 
 const ProcessTableBody = ({
@@ -38,12 +37,16 @@ const ProcessTableBody = ({
   processTypes,
   updateProcessType,
   startProcess,
-  hasProcessResponsible,
-  processResponsibles,
-  setProcessResponsibles
+  responsiblesManager
 }: ProcessTableBodyProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { 
+    hasProcessResponsible, 
+    isUserProcessResponsible,
+    processResponsibles,
+    setProcessResponsibles
+  } = responsiblesManager;
 
   const getMostRecentEntryDate = (process: Process, departmentId: string): string | null => {
     const departmentEntries = process.history
