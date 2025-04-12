@@ -23,7 +23,7 @@ export const useProcessOperations = (onProcessUpdated: () => void) => {
   const { 
     updateProcessType,
     updateProcessStatus
-  } = useProcessUpdate(onProcessUpdated);
+  } = useProcessUpdate();
 
   // Busca um processo específico
   const getProcess = async (processId: string): Promise<Process | null> => {

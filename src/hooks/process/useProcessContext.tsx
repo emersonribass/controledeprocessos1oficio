@@ -48,15 +48,39 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   
   // Hook de operações de processos
   const { 
-    moveProcessToNextDepartment,
-    moveProcessToPreviousDepartment,
-    startProcess,
+    moveProcessToNextDepartment: moveNext,
+    moveProcessToPreviousDepartment: movePrevious,
+    startProcess: startProcessBase,
     deleteProcess,
     deleteManyProcesses,
-    updateProcessType,
-    updateProcessStatus,
+    updateProcessType: updateType,
+    updateProcessStatus: updateStatus,
     getProcess
-  } = useProcessOperations(fetchProcesses);
+  } = useProcessOperations(() => fetchProcesses());
+
+  // Adaptadores para converter Promise<boolean> para Promise<void>
+  const moveProcessToNextDepartment = async (processId: string): Promise<void> => {
+    await moveNext(processId);
+  };
+
+  const moveProcessToPreviousDepartment = async (processId: string): Promise<void> => {
+    await movePrevious(processId);
+  };
+
+  const startProcess = async (processId: string): Promise<void> => {
+    await startProcessBase(processId);
+  };
+
+  const updateProcessType = async (processId: string, newTypeId: string): Promise<void> => {
+    await updateType(processId, newTypeId);
+  };
+
+  const updateProcessStatus = async (
+    processId: string, 
+    newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado'
+  ): Promise<void> => {
+    await updateStatus(processId, newStatus);
+  };
 
   return (
     <ProcessesContext.Provider
