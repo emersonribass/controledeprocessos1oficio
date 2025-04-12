@@ -133,9 +133,9 @@ const ProcessActionButtons = ({
         variant="ghost" 
         size="icon" 
         onClick={handleMoveToNext} 
-        disabled={isFirstDepartment || isCompleted} 
+        disabled={isCompleted} 
         title="Mover para próximo departamento"
-        className={`process-action ${(isFirstDepartment || isCompleted) ? "opacity-50 cursor-not-allowed" : ""}`}
+        className={`process-action ${isCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <MoveRight className="h-4 w-4" />
       </Button>
@@ -144,4 +144,3 @@ const ProcessActionButtons = ({
 };
 
 export default ProcessActionButtons;
-
