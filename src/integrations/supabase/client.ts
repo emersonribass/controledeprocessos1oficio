@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+// Atualizando para o projeto correto: controledeprocessos1oficio
 const SUPABASE_URL = "https://vwijryhqngyzgpgekgek.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ3aWpyeWhxbmd5emdwZ2VrZ2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNzM2ODAsImV4cCI6MjA1ODc0OTY4MH0.fO0f3bkEvOFG79AUSz8q5dFzC3zNoAxjli7xyF_xT7w";
 

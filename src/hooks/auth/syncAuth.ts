@@ -23,10 +23,7 @@ interface MigrateUsuarioResponse {
 export const syncAuthWithUsuarios = async (email: string, password: string): Promise<boolean> => {
   try {
     // Usando os tipos genéricos adequados e corrigindo o erro de tipagem
-    const { data, error } = await supabase.rpc<{
-      success: boolean;
-      message?: string;
-    }>(
+    const { data, error } = await supabase.rpc<MigrateUsuarioResponse, MigrateUsuarioParams>(
       'migrate_usuario_to_auth',
       {
         usuario_email: email, 
