@@ -1,117 +1,95 @@
 
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 
 export const useProcessDelete = () => {
-  const [isDeleting, setIsDeleting] = useState(false);
+  const { handleError } = useErrorHandler();
 
   // Função para excluir um processo
-  const deleteProcess = async (processId: string): Promise<boolean> => {
+  const deleteProcess = async (processId: string) => {
     try {
-      setIsDeleting(true);
-
-      // 1. Primeiro excluir os registros de histórico relacionados ao processo
-      const { error: historicoError } = await supabase
-        .from("processos_historico")
+      // Primeiro, excluímos o histórico do processo
+      const { error: historyError } = await supabase
+        .from('processos_historico')
         .delete()
-        .eq("processo_id", processId);
-
-      if (historicoError) {
-        console.error("Erro ao excluir histórico do processo:", historicoError);
-        toast.error("Erro ao excluir histórico do processo");
-        return false;
-      }
-
-      // 2. Excluir notificações relacionadas ao processo
-      const { error: notificacoesError } = await supabase
-        .from("notificacoes")
+        .eq('processo_id', processId);
+        
+      if (historyError) throw historyError;
+      
+      // Em seguida, excluímos as notificações relacionadas ao processo
+      const { error: notificationsError } = await supabase
+        .from('notificacoes')
         .delete()
-        .eq("processo_id", processId);
-
-      if (notificacoesError) {
-        console.error("Erro ao excluir notificações do processo:", notificacoesError);
-        toast.error("Erro ao excluir notificações do processo");
-        return false;
-      }
-
-      // 3. Finalmente excluir o processo
-      const { error: processoError } = await supabase
-        .from("processos")
+        .eq('processo_id', processId);
+        
+      if (notificationsError) throw notificationsError;
+      
+      // Por fim, excluímos o processo
+      const { error: processError } = await supabase
+        .from('processos')
         .delete()
-        .eq("id", processId);
-
-      if (processoError) {
-        console.error("Erro ao excluir processo:", processoError);
-        toast.error("Erro ao excluir processo");
-        return false;
-      }
-
-      toast.success("Processo excluído com sucesso");
+        .eq('id', processId);
+        
+      if (processError) throw processError;
+      
+      toast.success("Sucesso", {
+        description: "Processo excluído com sucesso"
+      });
+      
       return true;
     } catch (error) {
-      console.error("Erro ao excluir processo:", error);
-      toast.error("Erro ao excluir processo");
+      handleError(error, {
+        showToast: true,
+        toastDuration: 4000,
+        logError: true
+      });
       return false;
-    } finally {
-      setIsDeleting(false);
     }
   };
 
-  // Função para excluir vários processos
-  const deleteManyProcesses = async (processIds: string[]): Promise<boolean> => {
+  // Função para excluir múltiplos processos de uma vez
+  const deleteManyProcesses = async (processIds: string[]) => {
     try {
-      setIsDeleting(true);
-
-      // 1. Primeiro excluir os registros de histórico relacionados aos processos
-      const { error: historicoError } = await supabase
-        .from("processos_historico")
+      // Primeiro, excluímos o histórico dos processos
+      const { error: historyError } = await supabase
+        .from('processos_historico')
         .delete()
-        .in("processo_id", processIds);
-
-      if (historicoError) {
-        console.error("Erro ao excluir histórico dos processos:", historicoError);
-        toast.error("Erro ao excluir histórico dos processos");
-        return false;
-      }
-
-      // 2. Excluir notificações relacionadas aos processos
-      const { error: notificacoesError } = await supabase
-        .from("notificacoes")
+        .in('processo_id', processIds);
+        
+      if (historyError) throw historyError;
+      
+      // Em seguida, excluímos as notificações relacionadas aos processos
+      const { error: notificationsError } = await supabase
+        .from('notificacoes')
         .delete()
-        .in("processo_id", processIds);
-
-      if (notificacoesError) {
-        console.error("Erro ao excluir notificações dos processos:", notificacoesError);
-        toast.error("Erro ao excluir notificações dos processos");
-        return false;
-      }
-
-      // 3. Finalmente excluir os processos
-      const { error: processoError } = await supabase
-        .from("processos")
+        .in('processo_id', processIds);
+        
+      if (notificationsError) throw notificationsError;
+      
+      // Por fim, excluímos os processos
+      const { error: processError } = await supabase
+        .from('processos')
         .delete()
-        .in("id", processIds);
-
-      if (processoError) {
-        console.error("Erro ao excluir processos:", processoError);
-        toast.error("Erro ao excluir processos");
-        return false;
-      }
-
-      toast.success(`${processIds.length} processos excluídos com sucesso`);
+        .in('id', processIds);
+        
+      if (processError) throw processError;
+      
+      toast.success("Sucesso", {
+        description: `${processIds.length} processos excluídos com sucesso`
+      });
+      
       return true;
     } catch (error) {
-      console.error("Erro ao excluir processos:", error);
-      toast.error("Erro ao excluir processos");
+      handleError(error, {
+        showToast: true,
+        toastDuration: 4000,
+      });
       return false;
-    } finally {
-      setIsDeleting(false);
     }
   };
 
   return {
-    isDeleting,
     deleteProcess,
     deleteManyProcesses
   };

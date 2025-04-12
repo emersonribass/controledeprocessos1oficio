@@ -3,6 +3,8 @@ import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import { useAuth } from "@/features/auth";
 import { NotificationsProvider } from "@/hooks/NotificationsProvider";
+import { ErrorBoundary } from "../ErrorBoundary/ErrorBoundary";
+import { toast } from "sonner";
 
 // Componente de apresentação pura
 export const LayoutPresentation = ({
@@ -31,7 +33,16 @@ export const LayoutPresentation = ({
       <div className="h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 overflow-y-auto bg-background p-6">
-          {children}
+          <ErrorBoundary 
+            onError={(error) => {
+              toast.error("Ocorreu um erro", {
+                description: "Um erro inesperado aconteceu na aplicação.",
+                duration: 5000,
+              });
+            }}
+          >
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
     </NotificationsProvider>
