@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { useProcesses } from "@/hooks/useProcesses";
+import { useProcesses } from "@/features/processes/hooks/useProcesses";
 import { Process, PROCESS_STATUS } from "@/types";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
@@ -55,26 +54,22 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     }
   }, [initialFilters]);
   
-  // Usar o status admin já armazenado no objeto user
   useEffect(() => {
     if (user) {
       setUserIsAdmin(user.isAdmin || false);
     }
   }, [user]);
 
-  // Filtragem rigorosa aplicando as regras de permissão de usuário
   const filteredProcesses = filterProcesses(filters, processes);
 
   const sortedProcesses = [...filteredProcesses].sort((a, b) => {
-    // Primeiro, ordenar por status: processos iniciados (não 'Não iniciado') vêm primeiro
     if (a.status === PROCESS_STATUS.NOT_STARTED && b.status !== PROCESS_STATUS.NOT_STARTED) {
-      return 1; // a (não iniciado) vem depois
+      return 1;
     }
     if (a.status !== PROCESS_STATUS.NOT_STARTED && b.status === PROCESS_STATUS.NOT_STARTED) {
-      return -1; // a (iniciado) vem antes
+      return -1;
     }
     
-    // Se ambos têm o mesmo status de iniciação, usar a ordenação por campo selecionado
     if (sortField === "startDate" || sortField === "expectedEndDate") {
       const dateA = new Date(a[sortField]).getTime();
       const dateB = new Date(b[sortField]).getTime();
@@ -105,7 +100,6 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     }
   };
 
-  // Usando o hook de responsáveis
   const responsiblesManager = ProcessTableResponsibles({ processes: sortedProcesses });
 
   if (isLoading) {
@@ -116,7 +110,6 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     );
   }
 
-  // Filtrar os departamentos baseado nos departamentos do usuário
   const availableDepartments = userIsAdmin || !user?.departments?.length 
     ? departments 
     : departments.filter(dept => user?.departments.includes(dept.id));

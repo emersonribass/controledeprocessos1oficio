@@ -1,3 +1,4 @@
 
-export { useNotifications } from "./hooks/useNotifications";
-export { useNotificationsService } from "./hooks/useNotificationsService";
+export * from "./hooks/useNotifications";
+export * from "./hooks/useNotificationsService";
+export * from "./types";

@@ -2,12 +2,35 @@
 import { createContext, useContext, ReactNode } from "react";
 import { Process } from "@/types";
 import { useDepartmentsData } from "@/features/departments/hooks/useDepartmentsData";
-import { useProcessFilters } from "../hooks/useProcessFilters";
-import { useProcessTypes } from "../hooks/useProcessTypes";
-import { useSupabaseProcesses } from "../hooks/useSupabaseProcesses";
-import { ProcessesContextType } from "../types";
+import { useProcessFilters } from "@/features/processes/hooks/useProcessFilters";
+import { useProcessTypes } from "@/features/processes/hooks/useProcessTypes";
+import { useSupabaseProcesses } from "@/features/processes/hooks/useSupabaseProcesses";
 
-// Criando o contexto
+type ProcessesContextType = {
+  processes: Process[];
+  filterProcesses: (filters: {
+    department?: string;
+    status?: string;
+    processType?: string;
+    search?: string;
+  }, processesToFilter?: Process[]) => Process[];
+  getDepartmentName: (id: string) => string;
+  getProcessTypeName: (id: string) => string;
+  moveProcessToNextDepartment: (processId: string) => void;
+  moveProcessToPreviousDepartment: (processId: string) => void;
+  isProcessOverdue: (process: Process) => boolean;
+  departments: ReturnType<typeof useDepartmentsData>["departments"];
+  processTypes: ReturnType<typeof useProcessTypes>["processTypes"];
+  isLoading: boolean;
+  refreshProcesses: () => Promise<void>;
+  updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
+  updateProcessStatus: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
+  startProcess: (processId: string) => Promise<void>;
+  // Novas funções para excluir processos
+  deleteProcess: (processId: string) => Promise<boolean>;
+  deleteManyProcesses: (processIds: string[]) => Promise<boolean>;
+};
+
 const ProcessesContext = createContext<ProcessesContextType | undefined>(undefined);
 
 export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
