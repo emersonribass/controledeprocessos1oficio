@@ -1,8 +1,8 @@
 
-import LoginForm from "@/components/Auth/LoginForm";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/features/auth";
+import AuthLoginForm from "@/features/auth/components/AuthLoginForm";
 
 const LoginPage = () => {
   const {
@@ -46,7 +46,7 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-muted/40 to-background">
-      <LoginForm />
+      <AuthLoginForm />
     </div>
   );
 };
