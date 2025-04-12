@@ -33,7 +33,8 @@ export const useProcessFiltering = (processes: Process[]) => {
 
       // Verificar se o usuário tem permissão para ver este processo
       if (user && !isAdmin(user.email) && user.departments?.length > 0) {
-        const isUserProfileRegular = user.profile === 'usuario';
+        // Verificar se o usuário é do perfil "usuario" (utilizando o sistema de permissões)
+        const isUserProfileRegular = !isAdmin(user.email);
         const userHasAttendanceSector = user.departments.includes('1');
         
         // Para processos não iniciados, apenas usuários do setor 1 (Atendimento) podem ver
