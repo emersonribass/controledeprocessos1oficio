@@ -22,7 +22,7 @@ export * from "./hooks/useProcessDelete";
 export * from "./hooks/useProcessStart";
 
 // Responsible Hooks - using explicit export to avoid naming conflicts
-export { ProcessResponsiblesHookResult } from "./hooks/responsible/types";
+export type { ProcessResponsiblesHookResult } from "./hooks/responsible/types";
 export { useProcessResponsibles } from "./hooks/responsible";
 
 // Context
