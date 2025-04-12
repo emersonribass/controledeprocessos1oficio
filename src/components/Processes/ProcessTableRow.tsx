@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Department, Process, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -37,6 +38,10 @@ const ProcessTableRow = ({
 }: ProcessTableRowProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  
+  const [sectorResponsible, setSectorResponsible] = useState<any>(null);
+  const [isLoadingResponsible, setIsLoadingResponsible] = useState(false);
 
   const isNotStarted = process.status === "not_started";
   const isCompleted = process.status === "completed";
@@ -51,6 +56,40 @@ const ProcessTableRow = ({
   const lastVisibleDept = sortedDepartments[sortedDepartments.length - 1];
   
   const concludedDept = departments.find(dept => dept.name === "Concluído(a)");
+
+  // Carrega o responsável pelo processo no setor atual
+  const loadSectorResponsible = async () => {
+    if (!process.currentDepartment) return;
+    
+    setIsLoadingResponsible(true);
+    try {
+      const responsible = await getSectorResponsible(process.id, process.currentDepartment);
+      setSectorResponsible(responsible);
+    } catch (error) {
+      console.error("Erro ao carregar responsável:", error);
+    } finally {
+      setIsLoadingResponsible(false);
+    }
+  };
+
+  // Carrega o responsável quando o componente é montado ou quando o departamento atual muda
+  useEffect(() => {
+    loadSectorResponsible();
+  }, [process.id, process.currentDepartment]);
+
+  // Função para aceitar a responsabilidade pelo processo
+  const handleAcceptResponsibility = async () => {
+    if (!user || !process.protocolNumber) return;
+    
+    const success = await acceptProcessResponsibility(process.id, process.protocolNumber);
+    if (success) {
+      await loadSectorResponsible();
+      toast({
+        title: "Sucesso",
+        description: "Você aceitou a responsabilidade pelo processo."
+      });
+    }
+  };
 
   const getMostRecentEntryDate = (departmentId: string): string | null => {
     const departmentEntries = process.history
@@ -162,6 +201,7 @@ const ProcessTableRow = ({
       <TableCell className="text-right">
         <ProcessActionButtons
           processId={process.id}
+          protocolNumber={process.protocolNumber}
           moveProcessToPreviousDepartment={handleMoveToPrevious}
           moveProcessToNextDepartment={handleMoveToNext}
           isFirstDepartment={isFirstDepartment}
@@ -170,6 +210,10 @@ const ProcessTableRow = ({
           isEditing={false}
           status={process.status}
           startProcess={handleStartProcess}
+          hasSectorResponsible={!!sectorResponsible}
+          onAcceptResponsibility={handleAcceptResponsibility}
+          isAccepting={isAccepting}
+          sectorId={process.currentDepartment}
         />
       </TableCell>
     </TableRow>
