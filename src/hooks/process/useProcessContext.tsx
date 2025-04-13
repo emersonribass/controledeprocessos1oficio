@@ -57,10 +57,9 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const isUserResponsibleForSector = (process: Process, userId: string): boolean => {
-    // Implementação que verifica se o usuário está associado ao setor atual do processo
-    if (!user || !user.departments) return false;
-    return user.departments.includes(process.currentDepartment);
-  };
+  if (!user?.departments?.length) return false;
+  return user.departments.includes(process.currentDepartment);
+};
   
   // Passar funções de verificação para o hook
   const { filterProcesses, isProcessOverdue } = useProcessFiltering(processes, {
