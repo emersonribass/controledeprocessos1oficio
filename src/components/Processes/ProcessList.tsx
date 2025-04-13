@@ -8,6 +8,7 @@ import { Process } from "@/types"; // Adicionar importação explícita do tipo 
 import ProcessListHeader from "./ProcessListHeader";
 import ProcessListContent from "./ProcessListContent";
 import { useProcessFiltering } from "@/hooks/useProcessResponsibility";
+import { useProcessFiltering } from "@/hooks/useProcessFiltering";
 
 interface ProcessListProps {
   initialFilters?: {
@@ -33,12 +34,20 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     updateProcessType,
     updateProcessStatus,
     departments,
-    startProcess
+    startProcess,
+    isUserResponsibleForProcess, //  Função síncrona do useProcesses
+    isUserResponsibleForSector   //  Função síncrona do useProcesses
   } = useProcesses();
 
   const { user, isAdmin } = useAuth();
   const { filters, setFilters } = useProcessListFilters(initialFilters);
   const { sortField, sortDirection, toggleSort, sortProcesses } = useProcessListSorting();
+
+  // USANDO o hook de filtragem com funções de verificação
+  const { filterProcesses } = useProcessFiltering(processes, {
+    isUserResponsibleForProcess,
+    isUserResponsibleForSector,
+  });
 
   // IMPORTANTE: Primeiro aplicar filtros, depois ordenar os resultados
   // Isso garante que processos recém-iniciados apareçam no topo da lista
