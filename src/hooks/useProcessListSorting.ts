@@ -17,8 +17,8 @@ export const useProcessListSorting = (initialSortField: keyof Process = "protoco
 
   const sortProcesses = (processes: Process[]) => {
     return [...processes].sort((a, b) => {
-      
       if (sortField === "protocolNumber") {
+        // Extrai números do protocolo para comparação numérica
         const numA = parseInt(a.protocolNumber.replace(/\D/g, ""));
         const numB = parseInt(b.protocolNumber.replace(/\D/g, ""));
         return sortDirection === "asc" ? numA - numB : numB - numA;

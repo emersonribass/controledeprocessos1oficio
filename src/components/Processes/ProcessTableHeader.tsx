@@ -1,3 +1,4 @@
+
 import { ArrowUpDown } from "lucide-react";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Process } from "@/types";
@@ -16,9 +17,19 @@ const ProcessTableHeader = ({
 }: ProcessTableHeaderProps) => {
   // Ordenar departamentos por ordem e filtrar o departamento "Concluído"
   const sortedDepartments = [...departments].filter(dept => dept.name !== "Concluído(a)").sort((a, b) => a.order - b.order);
+  
+  // Handler de clique para ordenação
+  const handleSortClick = (field: keyof Process, event: React.MouseEvent) => {
+    event.stopPropagation(); // Impede a propagação do evento para células
+    toggleSort(field);
+  };
+  
   return <TableHeader>
       <TableRow>
-        <TableHead className="cursor-pointer whitespace-nowrap" onClick={() => toggleSort("protocolNumber")}>
+        <TableHead 
+          className="cursor-pointer whitespace-nowrap" 
+          onClick={(e) => handleSortClick("protocolNumber", e)}
+        >
           <div className="flex items-center">
             Protocolo
             <ArrowUpDown className="ml-2 h-4 w-4" />
