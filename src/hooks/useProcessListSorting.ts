@@ -21,19 +21,34 @@ export const useProcessListSorting = (initialSortField: keyof Process = "protoco
       // 1. Em andamento (pendentes/overdue)
       // 2. Não iniciados
       // 3. Concluídos
+      
+      // Verificar se os processos têm status diferentes para decidir a ordem
       if (a.status !== b.status) {
-        // Se um processo for concluído e outro não
-        if (a.status === 'completed' && b.status !== 'completed') return 1;
-        if (a.status !== 'completed' && b.status === 'completed') return -1;
+        // Se o processo está concluído, colocar por último
+        if (a.status === 'completed') return 1;
+        if (b.status === 'completed') return -1;
         
-        // Se um processo for não iniciado e outro estiver em andamento
+        // Entre processos em andamento e não iniciados, priorizar os em andamento
         if (a.status === 'not_started' && (b.status === 'pending' || b.status === 'overdue')) return 1;
         if ((a.status === 'pending' || a.status === 'overdue') && b.status === 'not_started') return -1;
       }
+      
+      // Para processos com mesmo status, ordenar por data de início (mais recente primeiro)
+      // para garantir que processos recém-iniciados apareçam primeiro
+      if (a.status === 'pending' && b.status === 'pending') {
+        // Apenas se não estivermos ordenando explicitamente por outro campo
+        if (sortField !== "protocolNumber" && sortField !== "startDate" && sortField !== "expectedEndDate") {
+          // Converter para datas apenas se forem strings válidas
+          if (typeof a.startDate === 'string' && typeof b.startDate === 'string') {
+            const dateA = new Date(a.startDate).getTime();
+            const dateB = new Date(b.startDate).getTime();
+            // Ordenar do mais recente (maior timestamp) para o mais antigo (menor timestamp)
+            return dateB - dateA;
+          }
+        }
+      }
 
-      // Após ordenar por estado, ordenar por número de protocolo dentro de cada grupo
-      // Sempre do menor para o maior, independente da direção de ordenação selecionada
-      // para manter consistência em todas as páginas
+      // Agora ordenar por número de protocolo dentro de cada grupo
       const numA = parseInt(a.protocolNumber.replace(/\D/g, ""));
       const numB = parseInt(b.protocolNumber.replace(/\D/g, ""));
       

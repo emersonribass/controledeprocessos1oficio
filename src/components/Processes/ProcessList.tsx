@@ -19,6 +19,7 @@ interface ProcessListProps {
 
 const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const {
+    processes,
     filterProcesses,
     getDepartmentName,
     getProcessTypeName,
@@ -28,7 +29,6 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     processTypes,
     updateProcessType,
     updateProcessStatus,
-    processes,
     departments,
     startProcess
   } = useProcesses();
@@ -37,8 +37,8 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const { filters, setFilters } = useProcessListFilters(initialFilters);
   const { sortField, sortDirection, toggleSort, sortProcesses } = useProcessListSorting();
 
-  // Aplicar os filtros e ordenação
-  // Vamos ajustar para passar apenas processes e ordenar o resultado após a filtragem com responsabilidades
+  // IMPORTANTE: Primeiro aplicar filtros, depois ordenar os resultados
+  // Não ordenar antes de filtrar para garantir que a lista esteja completa durante a filtragem
   const filteredProcesses = sortProcesses(filterProcesses(filters, processes));
 
   // Determinar os departamentos disponíveis para o usuário atual
