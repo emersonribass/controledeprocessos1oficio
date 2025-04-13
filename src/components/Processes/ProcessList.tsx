@@ -4,6 +4,7 @@ import { useProcesses } from "@/hooks/useProcesses";
 import { useProcessListFilters } from "@/hooks/useProcessListFilters";
 import { useProcessListSorting } from "@/hooks/useProcessListSorting";
 import { useAuth } from "@/hooks/auth";
+import { Process } from "@/types"; // Adicionar importação explícita do tipo Process
 import ProcessListHeader from "./ProcessListHeader";
 import ProcessListContent from "./ProcessListContent";
 
@@ -61,7 +62,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
         setFilters={setFilters}
         sortField={sortField}
         sortDirection={sortDirection}
-        toggleSort={toggleSort}
+        toggleSort={toggleSort as (field: keyof Process) => void} // Tipagem explícita para garantir compatibilidade
         getDepartmentName={getDepartmentName}
         getProcessTypeName={getProcessTypeName}
         moveProcessToNextDepartment={moveProcessToNextDepartment}

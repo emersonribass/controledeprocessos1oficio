@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Process } from "@/types/process";
+import { Process } from "@/types"; // Corrigindo o caminho de importação
 
 // Tipos para controle do campo e direção de ordenação
 export const useProcessListSorting = () => {
