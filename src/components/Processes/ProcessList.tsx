@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/auth";
 import { Process } from "@/types"; // Adicionar importação explícita do tipo Process
 import ProcessListHeader from "./ProcessListHeader";
 import ProcessListContent from "./ProcessListContent";
-import { useProcessFiltering } from "@/hooks/useProcessFiltering";
+import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
 
 interface ProcessListProps {
   initialFilters?: {
