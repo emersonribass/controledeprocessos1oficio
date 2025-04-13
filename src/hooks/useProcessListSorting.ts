@@ -23,7 +23,7 @@ export const useProcessListSorting = () => {
     const getStatusOrder = (status: string) => {
       switch (status) {
         case "pending":
-        case "overdue":
+        //case "overdue":
           return 0; // Prioridade mais alta → aparece primeiro
         case "not_started":
           return 1; // Depois dos iniciados
