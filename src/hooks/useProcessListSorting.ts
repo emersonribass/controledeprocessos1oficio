@@ -21,7 +21,11 @@ export const useProcessListSorting = (initialSortField: keyof Process = "protoco
       if (sortField === "protocolNumber") {
         const numA = parseInt(a.protocolNumber.replace(/\D/g, ""));
         const numB = parseInt(b.protocolNumber.replace(/\D/g, ""));
-        return sortDirection === "asc" ? numA - numB : numB - numA;
+
+      if (numA !== numB) {
+        return numA - numB; // sempre ASC
+        
+//return sortDirection === "asc" ? numA - numB : numB - numA;
       }
       
       if (sortField === "startDate" || sortField === "expectedEndDate") {
