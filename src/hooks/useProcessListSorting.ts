@@ -29,8 +29,6 @@ export const useProcessListSorting = () => {
           return 1; // Depois dos iniciados
         case "completed":
           return 2; // Sempre por último
-        default:
-          return 1; // Tratar qualquer outro como “Não iniciado” por segurança
       }
     };
 
