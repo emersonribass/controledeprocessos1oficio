@@ -17,15 +17,6 @@ export const useProcessListSorting = (initialSortField: keyof Process = "protoco
 
   const sortProcesses = (processes: Process[]) => {
     return [...processes].sort((a, b) => {
-      // Primeiro, ordenar por status: processos iniciados (não 'not_started') vêm primeiro
-      if (a.status === 'not_started' && b.status !== 'not_started') {
-        return 1; // a (não iniciado) vem depois
-      }
-      if (a.status !== 'not_started' && b.status === 'not_started') {
-        return -1; // a (iniciado) vem antes
-      }
-      
-      // Se ambos têm o mesmo status de iniciação, usar a ordenação por campo selecionado
       if (sortField === "startDate" || sortField === "expectedEndDate") {
         const dateA = new Date(a[sortField]).getTime();
         const dateB = new Date(b[sortField]).getTime();
