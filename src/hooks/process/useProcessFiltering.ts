@@ -20,10 +20,17 @@ export const useProcessFiltering = (
   
   // Valores padrão para as funções de verificação caso não sejam fornecidas
   const isUserResponsibleForProcess = checkers.isUserResponsibleForProcess || 
-    ((process: Process, userId: string) => true); // Padrão: permite acesso
+    ((process: Process, userId: string) => {
+      // Verificação rigorosa: usuário deve ser o responsável direto pelo processo
+      return process.userId === userId || process.responsibleUserId === userId;
+    });
   
   const isUserResponsibleForSector = checkers.isUserResponsibleForSector || 
-    ((process: Process, userId: string) => true); // Padrão: permite acesso
+    ((process: Process, userId: string) => {
+      // Verificação rigorosa: usuário deve estar associado ao setor atual do processo
+      if (!user || !user.departments) return false;
+      return user.departments.includes(process.currentDepartment);
+    });
 
   const filterProcesses = useMemo(() => (
     filters: {
@@ -40,6 +47,8 @@ export const useProcessFiltering = (
     //FILTRO DE VISIBILIDADE — verifica se o usuário pode ver o processo
     const visibleProcesses = baseList.filter((process) => {
       if (user && !isAdmin(user.email)) {
+        // Verificação mais estrita: o usuário deve ser responsável direto pelo processo
+        // OU responsável pelo setor atual do processo
         const isResponsible = isUserResponsibleForProcess(process, user.id);
         const isSectorResponsible = isUserResponsibleForSector(process, user.id);
 

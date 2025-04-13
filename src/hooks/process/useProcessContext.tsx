@@ -50,14 +50,15 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   
   // Funções síncronas para verificar responsabilidade
   const isUserResponsibleForProcess = (process: Process, userId: string): boolean => {
-    // Implementação corrigida - consideramos o usuário responsável se tiver o mesmo ID do usuário responsável
+    // Implementação estrita - usuário deve ser o responsável direto pelo processo
     return process.userId === userId || process.responsibleUserId === userId;
   };
   
   const isUserResponsibleForSector = (process: Process, userId: string): boolean => {
-    // Implementação simples - se o usuário for responsável pelo setor atual do processo
-    // Esta é uma implementação simplificada. Na implementação real, você verificaria a tabela de responsáveis por setor
-    return true; // Por enquanto, permitimos acesso para todos os usuários nos seus setores atribuídos
+    // Implementação que verifica se o usuário está associado ao setor atual do processo
+    const { user } = useAuth();
+    if (!user || !user.departments) return false;
+    return user.departments.includes(process.currentDepartment);
   };
   
   // Passar funções de verificação para o hook
