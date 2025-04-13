@@ -24,11 +24,11 @@ export const useProcessListSorting = (initialSortField: keyof Process = "protoco
         return sortDirection === "asc" ? numA - numB : numB - numA;
       }
       
-      if (sortField === "startDate" || sortField === "expectedEndDate") {
+      /*if (sortField === "startDate" || sortField === "expectedEndDate") {
         const dateA = new Date(a[sortField]).getTime();
         const dateB = new Date(b[sortField]).getTime();
         return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
-      }
+      }*/
 
       /*if (a[sortField] < b[sortField]) {
         return sortDirection === "asc" ? -1 : 1;
