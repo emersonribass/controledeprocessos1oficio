@@ -2,7 +2,6 @@
 import { Process } from "@/types";
 import { useAuth } from "@/hooks/auth";
 import { useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Hook para filtrar processos com base em critérios específicos

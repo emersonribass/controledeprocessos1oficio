@@ -38,7 +38,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const { sortField, sortDirection, toggleSort, sortProcesses } = useProcessListSorting();
 
   // IMPORTANTE: Primeiro aplicar filtros, depois ordenar os resultados
-  // Não ordenar antes de filtrar para garantir que a lista esteja completa durante a filtragem
+  // Isso garante que processos recém-iniciados apareçam no topo da lista
   const filteredProcesses = sortProcesses(filterProcesses(filters, processes));
 
   // Determinar os departamentos disponíveis para o usuário atual
