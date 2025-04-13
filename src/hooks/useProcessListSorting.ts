@@ -19,10 +19,11 @@ export const useProcessListSorting = () => {
   // Função que aplica a ordenação aos processos
   const sortProcesses = (data: Process[]): Process[] => {
   return [...data].sort((a, b) => {
-    // 1. Definir a ordem: Em andamento → 0, Não iniciado → 1, Concluído → 2
+    // 1. Definir a ordem: Em andamento e atrasado → 0, Não iniciado → 1, Concluído → 2
     const getStatusOrder = (status: string) => {
       switch (status) {
         case "pending":
+        case "overdue":
           return 0; // Prioridade mais alta → aparece primeiro
         case "not_started":
           return 1; // Depois dos iniciados
