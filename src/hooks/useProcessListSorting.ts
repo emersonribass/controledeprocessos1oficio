@@ -18,29 +18,33 @@ export const useProcessListSorting = () => {
 
   // Função que aplica a ordenação aos processos
   const sortProcesses = (data: Process[]): Process[] => {
-    return [...data].sort((a, b) => {
-      // Definimos uma ordem de prioridade:
-      // 0 = iniciado, 1 = não iniciado, 2 = concluído
-      const getStatusOrder = (process: Process) => {
-        if (process.status === "completed") return 2;
-        if (!process.startedAt) return 1; // se não tiver data de início, ainda não começou
-        return 0;
-      };
+  return [...data].sort((a, b) => {
+    // 1. Definir a ordem: Em andamento → 0, Não iniciado → 1, Concluído → 2
+    const getStatusOrder = (status: string) => {
+      switch (status) {
+        case "Em andamento":
+          return 0; // Prioridade mais alta → aparece primeiro
+        case "Não iniciado":
+          return 1; // Depois dos iniciados
+        case "Concluído":
+          return 2; // Sempre por último
+        default:
+          return 1; // Tratar qualquer outro como “Não iniciado” por segurança
+      }
+    };
 
-      // Compara os status
-      const statusA = getStatusOrder(a);
-      const statusB = getStatusOrder(b);
+    const statusA = getStatusOrder(a.status);
+    const statusB = getStatusOrder(b.status);
 
-      // Se forem diferentes, aplica a ordem definida
-      if (statusA !== statusB) return statusA - statusB;
+    if (statusA !== statusB) return statusA - statusB;
 
-      // Caso estejam no mesmo grupo, ordena pelo número de protocolo (sempre crescente)
-      const protocolA = a.protocolNumber || "";
-      const protocolB = b.protocolNumber || "";
+    // 2. Dentro do mesmo grupo, ordenar por número de protocolo crescente
+    const protocolA = a.protocolNumber || "";
+    const protocolB = b.protocolNumber || "";
 
-      return protocolA.localeCompare(protocolB, "pt-BR", { numeric: true });
-    });
-  };
+    return protocolA.localeCompare(protocolB, "pt-BR", { numeric: true });
+  });
+};
 
   return {
     sortField,
