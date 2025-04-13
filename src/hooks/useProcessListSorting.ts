@@ -30,13 +30,13 @@ export const useProcessListSorting = (initialSortField: keyof Process = "protoco
         return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
       }
 
-      if (a[sortField] < b[sortField]) {
+      /*if (a[sortField] < b[sortField]) {
         return sortDirection === "asc" ? -1 : 1;
       }
       if (a[sortField] > b[sortField]) {
         return sortDirection === "asc" ? 1 : -1;
       }
-      return 0;
+      return 0;*/
     });
   };
 
