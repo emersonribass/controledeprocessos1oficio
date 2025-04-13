@@ -45,12 +45,12 @@ export const useProcessFiltering = (
     const baseList = processesToFilter || processes;
 
     //FILTRO DE VISIBILIDADE — verifica se o usuário pode ver o processo
-    const visibleProcesses = baseList.filter((process) => {
-      if (user && !isAdmin(user.email)) {
-        // Verificação mais estrita: o usuário deve ser responsável direto pelo processo
-        // OU responsável pelo setor atual do processo
-        const isResponsible = isUserResponsibleForProcess(process, user.id);
-        const isSectorResponsible = isUserResponsibleForSector(process, user.id);
+const visibleProcesses = baseList.filter((process) => {
+  if (!user) return false; // Não autenticado não vê nada
+  if (isAdmin(user.email)) return true; // Admin vê tudo
+  return isUserResponsibleForProcess(process, user.id) || 
+         isUserResponsibleForSector(process, user.id);
+});
 
         return isResponsible || isSectorResponsible;
       }
