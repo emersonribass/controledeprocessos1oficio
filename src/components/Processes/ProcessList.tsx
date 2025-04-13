@@ -1,10 +1,10 @@
+
 import { useEffect } from "react";
 import { useProcesses } from "@/hooks/useProcesses";
 import { useProcessListFilters } from "@/hooks/useProcessListFilters";
 import { useProcessListSorting } from "@/hooks/useProcessListSorting";
 import { useAuth } from "@/hooks/auth";
-import { useProcessFiltering } from "@/hooks/useProcessFiltering";
-import { Process } from "@/types";
+import { Process } from "@/types"; // Adicionar importação explícita do tipo Process
 import ProcessListHeader from "./ProcessListHeader";
 import ProcessListContent from "./ProcessListContent";
 
@@ -21,8 +21,8 @@ interface ProcessListProps {
 const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const {
     processes,
-    processesResponsibles, // Adicionado para filtrar visibilidade corretamente
-    filterProcesses, // Ainda pode ser útil se você quiser aplicar outros filtros em algum momento
+    processesResponsibles,
+    filterProcesses,
     getDepartmentName,
     getProcessTypeName,
     moveProcessToNextDepartment,
@@ -39,17 +39,13 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const { filters, setFilters } = useProcessListFilters(initialFilters);
   const { sortField, sortDirection, toggleSort, sortProcesses } = useProcessListSorting();
 
-  // Novo: aplicando o filtro de visibilidade do usuário
-  const { filterProcesses: filterVisibleProcesses } = useProcessFiltering(processes);
-
-  // Primeiro aplicar filtros, depois ordenar os resultados
-  const filteredProcesses = sortProcesses(
-    filterVisibleProcesses(filters, undefined, processesResponsibles)
-  );
+  // IMPORTANTE: Primeiro aplicar filtros, depois ordenar os resultados
+  // Isso garante que processos recém-iniciados apareçam no topo da lista
+  const filteredProcesses = sortProcesses(filterProcesses(filters, processes));
 
   // Determinar os departamentos disponíveis para o usuário atual
-  const availableDepartments = isAdmin(user?.email || "") || !user?.departments?.length
-    ? departments
+  const availableDepartments = isAdmin(user?.email || "") || !user?.departments?.length 
+    ? departments 
     : departments.filter(dept => user?.departments.includes(dept.id));
 
   return (
@@ -67,7 +63,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
         setFilters={setFilters}
         sortField={sortField}
         sortDirection={sortDirection}
-        toggleSort={toggleSort as (field: keyof Process) => void}
+        toggleSort={toggleSort as (field: keyof Process) => void} // Tipagem explícita para garantir compatibilidade
         getDepartmentName={getDepartmentName}
         getProcessTypeName={getProcessTypeName}
         moveProcessToNextDepartment={moveProcessToNextDepartment}
@@ -76,9 +72,9 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
         updateProcessType={updateProcessType}
         updateProcessStatus={updateProcessStatus}
         departments={departments}
-        availableDepartments={availableDepartments}
         startProcess={startProcess}
-        filterProcesses={filterVisibleProcesses}
+        availableDepartments={availableDepartments}
+        filterProcesses={filterProcesses}
       />
     </div>
   );
