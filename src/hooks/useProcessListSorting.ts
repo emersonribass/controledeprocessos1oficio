@@ -23,7 +23,7 @@ export const useProcessListSorting = () => {
       // 0 = iniciado, 1 = não iniciado, 2 = concluído
       const getStatusOrder = (process: Process) => {
         if (process.status === "completed") return 2;
-        if (process.status === "not_started" || !process.startedAt) return 1; // se não tiver data de início, ainda não começou
+        if (!process.startedAt) return 1; // se não tiver data de início, ainda não começou
         return 0;
       };
 
