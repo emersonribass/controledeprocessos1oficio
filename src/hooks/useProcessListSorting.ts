@@ -40,11 +40,11 @@ export const useProcessListSorting = (initialSortField: keyof Process = "protoco
       }
       
       // Se o campo de ordenação for data
-      /*if (sortField === "startDate" || sortField === "expectedEndDate") {
+      if (sortField === "startDate" || sortField === "expectedEndDate") {
         const dateA = new Date(a[sortField]).getTime();
         const dateB = new Date(b[sortField]).getTime();
         return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
-      }*/
+      }
 
       // Para outros campos
       if (a[sortField] < b[sortField]) {
