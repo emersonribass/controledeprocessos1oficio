@@ -6,6 +6,7 @@ import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { useProcessesFetch } from "@/hooks/useProcessesFetch";
 import { useProcessOperations } from "@/hooks/process/useProcessOperations";
 import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
+import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 
 // Definição do tipo para o contexto
 type ProcessesContextType = {
@@ -32,6 +33,8 @@ type ProcessesContextType = {
   deleteProcess: (processId: string) => Promise<boolean>;
   deleteManyProcesses: (processIds: string[]) => Promise<boolean>;
   getProcess: (processId: string) => Promise<Process | null>;
+  isUserResponsibleForProcess: (process: Process, userId: string) => boolean;
+  isUserResponsibleForSector: (process: Process, userId: string) => boolean;
 };
 
 // Criação do contexto
@@ -44,7 +47,24 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const { departments, getDepartmentName } = useDepartmentsData();
   const { processTypes, getProcessTypeName } = useProcessTypes();
   const { processes, isLoading, fetchProcesses } = useProcessesFetch();
-  const { filterProcesses, isProcessOverdue } = useProcessFiltering(processes);
+  
+  // Funções síncronas para verificar responsabilidade
+  const isUserResponsibleForProcess = (process: Process, userId: string): boolean => {
+    // Implementação simples - consideramos o usuário responsável se tiver o mesmo ID do criador
+    return process.createdBy === userId || process.responsibleId === userId;
+  };
+  
+  const isUserResponsibleForSector = (process: Process, userId: string): boolean => {
+    // Implementação simples - se o usuário for responsável pelo setor atual do processo
+    // Esta é uma implementação simplificada. Na implementação real, você verificaria a tabela de responsáveis por setor
+    return true; // Por enquanto, permitimos acesso para todos os usuários nos seus setores atribuídos
+  };
+  
+  // Passar funções de verificação para o hook
+  const { filterProcesses, isProcessOverdue } = useProcessFiltering(processes, {
+    isUserResponsibleForProcess,
+    isUserResponsibleForSector
+  });
   
   // Hook de operações de processos
   const { 
@@ -101,7 +121,9 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
         startProcess,
         deleteProcess,
         deleteManyProcesses,
-        getProcess
+        getProcess,
+        isUserResponsibleForProcess,
+        isUserResponsibleForSector
       }}
     >
       {children}

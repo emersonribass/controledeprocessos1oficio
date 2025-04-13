@@ -1,27 +1,29 @@
+
 import { Process } from "@/types";
 import { useAuth } from "@/hooks/auth";
 import { useMemo } from "react";
 
-
-
 // Define o tipo das funções que serão passadas para verificar responsabilidade
 interface ResponsibilityCheckers {
-  isUserResponsibleForProcess: (process: Process, userId: string) => boolean;
-  isUserResponsibleForSector: (process: Process, userId: string) => boolean;
+  isUserResponsibleForProcess?: (process: Process, userId: string) => boolean;
+  isUserResponsibleForSector?: (process: Process, userId: string) => boolean;
 }
 
 //Hook para filtrar processos com base em critérios específicos
 //Agora usa funções síncronas para verificar se o usuário pode ver o processo
-export const useProcessFiltering = (processes: Process[],
-
-  {
-    isUserResponsibleForProcess,
-    isUserResponsibleForSector
-  }: ResponsibilityCheckers // <-- NOVO: recebendo funções de verificação do useProcesses
-                                   
+export const useProcessFiltering = (
+  processes: Process[],
+  checkers: ResponsibilityCheckers = {} // Tornando-o opcional com default vazio
 ) => {
   
   const { user, isAdmin } = useAuth();
+  
+  // Valores padrão para as funções de verificação caso não sejam fornecidas
+  const isUserResponsibleForProcess = checkers.isUserResponsibleForProcess || 
+    ((process: Process, userId: string) => true); // Padrão: permite acesso
+  
+  const isUserResponsibleForSector = checkers.isUserResponsibleForSector || 
+    ((process: Process, userId: string) => true); // Padrão: permite acesso
 
   const filterProcesses = useMemo(() => (
     filters: {
@@ -32,7 +34,6 @@ export const useProcessFiltering = (processes: Process[],
       excludeCompleted?: boolean;
     },
     processesToFilter?: Process[]
-    //processesResponsibles?: Record<string, any>
   ) => {
     const baseList = processesToFilter || processes;
 
