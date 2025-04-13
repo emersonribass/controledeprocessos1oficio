@@ -2,10 +2,25 @@ import { Process } from "@/types";
 import { useAuth } from "@/hooks/auth";
 import { useMemo } from "react";
 
-/**
- * Hook para filtrar processos com base em critérios específicos
- */
-export const useProcessFiltering = (processes: Process[]) => {
+
+
+// Define o tipo das funções que serão passadas para verificar responsabilidade
+interface ResponsibilityCheckers {
+  isUserResponsibleForProcess: (process: Process, userId: string) => boolean;
+  isUserResponsibleForSector: (process: Process, userId: string) => boolean;
+}
+
+//Hook para filtrar processos com base em critérios específicos
+//Agora usa funções síncronas para verificar se o usuário pode ver o processo
+export const useProcessFiltering = (processes: Process[],
+
+  {
+    isUserResponsibleForProcess,
+    isUserResponsibleForSector
+  }: ResponsibilityCheckers // <-- NOVO: recebendo funções de verificação do useProcesses
+                                   
+) => {
+  
   const { user, isAdmin } = useAuth();
 
   const filterProcesses = useMemo(() => (
@@ -16,19 +31,18 @@ export const useProcessFiltering = (processes: Process[]) => {
       search?: string;
       excludeCompleted?: boolean;
     },
-    processesToFilter?: Process[],
-    processesResponsibles?: Record<string, any>
+    processesToFilter?: Process[]
+    //processesResponsibles?: Record<string, any>
   ) => {
     const baseList = processesToFilter || processes;
 
-    // Aplica filtro de visibilidade (usuário responsável ou admin)
+    //FILTRO DE VISIBILIDADE — verifica se o usuário pode ver o processo
     const visibleProcesses = baseList.filter((process) => {
       if (user && !isAdmin(user.email)) {
-        const isUserResponsibleForProcess = process.responsibleUserId === user.id;
-        const isUserResponsibleForCurrentSector =
-          processesResponsibles?.[process.id]?.[process.currentDepartment]?.usuario_id === user.id;
+        const isResponsible = isUserResponsibleForProcess(process, user.id);
+        const isSectorResponsible = isUserResponsibleForSector(process, user.id);
 
-        return isUserResponsibleForProcess || isUserResponsibleForCurrentSector;
+        return isResponsible || isSectorResponsible;
       }
       return true; // Admins veem tudo
     });
@@ -68,7 +82,7 @@ export const useProcessFiltering = (processes: Process[]) => {
 
       return true;
     });
-  }, [processes, user, isAdmin]);
+  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector]); //MEMO DEPENDENTE DAS FUNÇÕES
 
   const isProcessOverdue = (process: Process) => {
     if (process.status === 'overdue') return true;
