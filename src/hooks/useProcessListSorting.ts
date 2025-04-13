@@ -21,7 +21,8 @@ export const useProcessListSorting = (initialSortField: keyof Process = "protoco
       if (sortField === "protocolNumber") {
         const numA = parseInt(a.protocolNumber.replace(/\D/g, ""));
         const numB = parseInt(b.protocolNumber.replace(/\D/g, ""));
-
+      }
+      
       if (numA !== numB) {
         return numA - numB; // sempre ASC
         
