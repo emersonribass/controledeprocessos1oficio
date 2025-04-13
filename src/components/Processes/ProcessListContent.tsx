@@ -109,7 +109,7 @@ const ProcessListContent = ({
       />
 
       <ProcessTable
-        processes={processes}
+        processes={filteredProcesses}
         sortField={sortField}
         sortDirection={sortDirection}
         toggleSort={toggleSort}
