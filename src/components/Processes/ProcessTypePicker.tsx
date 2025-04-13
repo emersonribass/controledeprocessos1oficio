@@ -36,6 +36,7 @@ const ProcessTypePicker = ({
       toast({
         title: "Sucesso",
         description: "Tipo de processo atualizado com sucesso"
+        variant: "destructive"
       });
     } catch (error) {
       console.error("Erro ao atualizar tipo de processo:", error);
