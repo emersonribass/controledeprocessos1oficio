@@ -32,7 +32,6 @@ export const useProcessFiltering = (processes: Process[]) => {
 
       // Verificar se o usuário tem permissão para ver este processo
       if (user && !isAdmin(user.email)) {
-        // Para administradores, mostra todos os processos
         // Para usuários regulares, mostra apenas processos onde:
         
         // 1. O usuário é responsável pelo processo inteiro

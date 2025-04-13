@@ -24,7 +24,7 @@ const RecentProcessList = () => {
   // Aplicar filtros por departamento e status conforme a permissão do usuário
   const filteredProcesses = filterProcesses({});
   
-  // Get the most recent processes
+  // Obter os processos mais recentes, ordenados por data de início (mais recente primeiro)
   const recentProcesses = [...filteredProcesses]
     .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
     .slice(0, limit);
