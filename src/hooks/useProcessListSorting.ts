@@ -24,9 +24,9 @@ export const useProcessListSorting = () => {
       switch (status) {
         case "Em andamento":
           return 0; // Prioridade mais alta → aparece primeiro
-        case "Não iniciado":
+        case "not_started":
           return 1; // Depois dos iniciados
-        case "Concluído":
+        case "completed":
           return 2; // Sempre por último
         default:
           return 1; // Tratar qualquer outro como “Não iniciado” por segurança
