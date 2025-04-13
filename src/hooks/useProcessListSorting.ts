@@ -43,13 +43,19 @@ export const useProcessListSorting = (initialSortField: keyof Process = "protoco
       }
       
       // Para ordenação padrão dentro dos grupos, sempre usar crescente
-      return numA - numB;
+      if (sortField !== "startDate" && sortField !== "expectedEndDate") {
+        return numA - numB;
+      }
       
-      // A partir daqui, só é executado se não estiver ordenando por protocolNumber
-      // ou se os protocolos forem iguais
+      // Para os campos de data, garantir que estamos trabalhando com strings de data
       if (sortField === "startDate" || sortField === "expectedEndDate") {
-        const dateA = new Date(a[sortField]).getTime();
-        const dateB = new Date(b[sortField]).getTime();
+        // Verificar e garantir que os valores são strings antes de criar objetos Date
+        const dateValueA = typeof a[sortField] === 'string' ? a[sortField] as string : '';
+        const dateValueB = typeof b[sortField] === 'string' ? b[sortField] as string : '';
+        
+        const dateA = dateValueA ? new Date(dateValueA).getTime() : 0;
+        const dateB = dateValueB ? new Date(dateValueB).getTime() : 0;
+        
         return sortDirection === "asc" ? dateA - dateB : dateB - dateA;
       }
 
@@ -60,7 +66,9 @@ export const useProcessListSorting = (initialSortField: keyof Process = "protoco
       if (a[sortField] > b[sortField]) {
         return sortDirection === "asc" ? 1 : -1;
       }
-      return 0;
+      
+      // Se tudo for igual, manter ordenação de protocolo
+      return numA - numB;
     });
   };
 
