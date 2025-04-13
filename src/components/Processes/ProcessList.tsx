@@ -22,7 +22,6 @@ interface ProcessListProps {
 const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const {
     processes,
-    processesResponsibles,
     filterProcesses,
     getDepartmentName,
     getProcessTypeName,
