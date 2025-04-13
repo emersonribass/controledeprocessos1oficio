@@ -19,7 +19,7 @@ const ProcessCardInfo = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <InfoItem 
-        label="Departamento Atual"
+        label="Setor Atual"
         value={getDepartmentName(process.currentDepartment)}
       />
       <InfoItem 
