@@ -7,6 +7,7 @@ import { useProcessesFetch } from "@/hooks/useProcessesFetch";
 import { useProcessOperations } from "@/hooks/process/useProcessOperations";
 import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
+import { useAuth } from "@/hooks/auth"; // Adicionando a importação do hook useAuth
 
 // Definição do tipo para o contexto
 type ProcessesContextType = {
@@ -47,6 +48,7 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const { departments, getDepartmentName } = useDepartmentsData();
   const { processTypes, getProcessTypeName } = useProcessTypes();
   const { processes, isLoading, fetchProcesses } = useProcessesFetch();
+  const { user } = useAuth(); // Usando o hook useAuth aqui para obter o usuário logado
   
   // Funções síncronas para verificar responsabilidade
   const isUserResponsibleForProcess = (process: Process, userId: string): boolean => {
@@ -56,7 +58,6 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   
   const isUserResponsibleForSector = (process: Process, userId: string): boolean => {
     // Implementação que verifica se o usuário está associado ao setor atual do processo
-    const { user } = useAuth();
     if (!user || !user.departments) return false;
     return user.departments.includes(process.currentDepartment);
   };
