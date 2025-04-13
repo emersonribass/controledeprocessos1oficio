@@ -50,8 +50,8 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   
   // Funções síncronas para verificar responsabilidade
   const isUserResponsibleForProcess = (process: Process, userId: string): boolean => {
-    // Implementação simples - consideramos o usuário responsável se tiver o mesmo ID do criador
-    return process.createdBy === userId || process.responsibleId === userId;
+    // Implementação corrigida - consideramos o usuário responsável se tiver o mesmo ID do usuário responsável
+    return process.userId === userId || process.responsibleUserId === userId;
   };
   
   const isUserResponsibleForSector = (process: Process, userId: string): boolean => {
