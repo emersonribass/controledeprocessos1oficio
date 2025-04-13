@@ -22,7 +22,7 @@ export const useProcessListSorting = () => {
     // 1. Definir a ordem: Em andamento → 0, Não iniciado → 1, Concluído → 2
     const getStatusOrder = (status: string) => {
       switch (status) {
-        case "Em andamento":
+        case "pending":
           return 0; // Prioridade mais alta → aparece primeiro
         case "not_started":
           return 1; // Depois dos iniciados
