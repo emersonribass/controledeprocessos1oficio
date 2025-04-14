@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useEffect } from "react";
+import { createContext, useContext, ReactNode, useState } from "react";
 import { Process } from "@/types";
 import { useDepartmentsData } from "@/hooks/useDepartmentsData";
 import { useProcessTypes } from "@/hooks/useProcessTypes";
@@ -6,8 +6,8 @@ import { useProcessesFetch } from "@/hooks/useProcessesFetch";
 import { useProcessOperations } from "@/hooks/process/useProcessOperations";
 import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
-import { useAuth } from "@/hooks/auth"; // Importação do hook useAuth
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/auth";
+import { useUserProfile } from "@/hooks/auth/useUserProfile";
 
 // Definição do tipo para o contexto
 type ProcessesContextType = {
@@ -48,35 +48,8 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const { departments, getDepartmentName } = useDepartmentsData();
   const { processTypes, getProcessTypeName } = useProcessTypes();
   const { processes, isLoading, fetchProcesses } = useProcessesFetch();
-  const { user } = useAuth(); // Usando o hook useAuth para obter o usuário logado
-  const [userProfile, setUserProfile] = useState<{ setores_atribuidos: string[] } | null>(null);
-  
-  // Buscar perfil do usuário na tabela usuarios
-  useEffect(() => {
-    if (!user) return;
-    
-    const fetchUserProfile = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('usuarios')
-          .select('setores_atribuidos')
-          .eq('id', user.id)
-          .single();
-        
-        if (error) {
-          console.error('Erro ao buscar perfil do usuário:', error);
-          return;
-        }
-        
-        setUserProfile(data);
-        console.log('Perfil do usuário carregado no contexto:', data);
-      } catch (err) {
-        console.error('Erro ao processar perfil do usuário:', err);
-      }
-    };
-    
-    fetchUserProfile();
-  }, [user]);
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile();
   
   // Funções síncronas para verificar responsabilidade
   const isUserResponsibleForProcess = (process: Process, userId: string): boolean => {

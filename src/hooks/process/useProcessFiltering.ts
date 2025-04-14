@@ -1,7 +1,8 @@
+
 import { Process } from "@/types";
 import { useAuth } from "@/hooks/auth";
-import { useMemo, useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useMemo } from "react";
+import { useUserProfile } from "@/hooks/auth/useUserProfile";
 
 interface ResponsibilityCheckers {
   isUserResponsibleForProcess?: (process: Process, userId: string) => boolean;
@@ -12,34 +13,8 @@ export const useProcessFiltering = (
   processes: Process[],
   checkers: ResponsibilityCheckers = {}
 ) => {
-  const { user, isAdmin } = useAuth();
-  const [userProfile, setUserProfile] = useState<{ perfil: string, setores_atribuidos: string[] } | null>(null);
-  
-  useEffect(() => {
-    if (!user) return;
-    
-    const fetchUserProfile = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('usuarios')
-          .select('perfil, setores_atribuidos')
-          .eq('id', user.id)
-          .single();
-        
-        if (error) {
-          console.error('Erro ao buscar perfil do usuário:', error);
-          return;
-        }
-        
-        setUserProfile(data);
-        console.log('Perfil do usuário carregado:', data);
-      } catch (err) {
-        console.error('Erro ao processar perfil do usuário:', err);
-      }
-    };
-    
-    fetchUserProfile();
-  }, [user]);
+  const { user } = useAuth();
+  const { userProfile, isAdmin } = useUserProfile();
   
   const isUserResponsibleForProcess = checkers.isUserResponsibleForProcess || 
     ((process: Process, userId: string) => {
@@ -65,18 +40,32 @@ export const useProcessFiltering = (
     ): Process[] => {
       const baseList = processesToFilter || processes;
 
+      // Primeiro filtrar por permissões do usuário
       const visibleProcesses = baseList.filter((process) => {
         if (!user) return false; // Não autenticado não vê nada
         
-        const isUserAdmin = userProfile?.perfil === 'administrador' || isAdmin(user.email);
-        if (isUserAdmin) return true; // Admin vê tudo
+        // Verificar se o usuário é administrador
+        const isUserAdmin = isAdmin();
+        if (isUserAdmin) {
+          console.log("Usuário é administrador, mostrando todos os processos");
+          return true;
+        }
         
+        // Verificar se o usuário é responsável direto pelo processo
         const isResponsibleForProcess = isUserResponsibleForProcess(process, user.id);
+        
+        // Verificar se o usuário pertence ao setor atual do processo
         const isResponsibleForCurrentSector = isUserResponsibleForSector(process, user.id);
+        
+        // Debugar decisão
+        if (isResponsibleForProcess || isResponsibleForCurrentSector) {
+          console.log(`Usuário tem acesso ao processo ${process.protocolNumber} por motivo: ${isResponsibleForProcess ? 'responsabilidade direta' : 'pertence ao setor'}`);
+        }
         
         return isResponsibleForProcess || isResponsibleForCurrentSector;
       });
 
+      // Depois aplicar os filtros selecionados pelo usuário
       return visibleProcesses.filter((process) => {
         if (filters.excludeCompleted && process.status === 'completed') {
           return false;
