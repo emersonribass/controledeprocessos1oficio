@@ -5,7 +5,7 @@ import { useToast } from "./use-toast";
 import { useAuth } from "./auth";
 import { useProcesses } from "./useProcesses";
 
-export const useProcessRowResponsibility = (processId: string, currentDepartment?: string) => {
+export const useProcessRowResponsibility = (processId: string, sectorId?: string) => {
   const { getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   // Usar filterProcesses do useProcesses para verificações de responsabilidade
   const { filterProcesses } = useProcesses();
@@ -16,29 +16,29 @@ export const useProcessRowResponsibility = (processId: string, currentDepartment
 
   // Carrega o responsável pelo processo no setor atual
   const loadSectorResponsible = useCallback(async () => {
-    if (!currentDepartment || !processId) return;
+    if (!sectorId || !processId) return;
     
     setIsLoadingResponsible(true);
     try {
-      const responsible = await getSectorResponsible(processId, currentDepartment);
+      const responsible = await getSectorResponsible(processId, sectorId);
       setSectorResponsible(responsible);
     } catch (error) {
       console.error("Erro ao carregar responsável:", error);
     } finally {
       setIsLoadingResponsible(false);
     }
-  }, [processId, currentDepartment, getSectorResponsible]);
+  }, [processId, sectorId, getSectorResponsible]);
 
   // Carrega o responsável quando o componente é montado ou quando o departamento atual muda
   useEffect(() => {
-    if (processId && currentDepartment) {
+    if (processId && sectorId) {
       loadSectorResponsible();
     }
   }, [loadSectorResponsible]);
 
   // Função para aceitar a responsabilidade pelo processo
   const handleAcceptResponsibility = async (protocolNumber?: string) => {
-    if (!user || !protocolNumber || !currentDepartment) return;
+    if (!user || !protocolNumber || !sectorId) return;
     
     const success = await acceptProcessResponsibility(processId, protocolNumber);
     if (success) {

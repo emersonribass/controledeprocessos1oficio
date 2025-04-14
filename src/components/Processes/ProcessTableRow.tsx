@@ -20,6 +20,7 @@ interface ProcessTableRowProps {
   startProcess?: (processId: string) => Promise<void>;
   onAcceptResponsibility: () => Promise<void>;
   isAccepting: boolean;
+  hasSectorResponsible?: boolean; // Adicionando esta propriedade que estava faltando
 }
 
 const ProcessTableRow = ({
@@ -32,12 +33,16 @@ const ProcessTableRow = ({
   updateProcessType,
   startProcess,
   onAcceptResponsibility,
-  isAccepting
+  isAccepting,
+  hasSectorResponsible = false // Valor padrão
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
   
-  // Usar o hook para verificar responsabilidade
-  const { hasSectorResponsible } = useProcessRowResponsibility(process);
+  // Usar o hook para obter informações sobre responsabilidade
+  const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
+  
+  // Verificar se há um responsável para o setor atual
+  const hasResponsible = hasSectorResponsible || !!sectorResponsible;
   
   const {
     sortedDepartments,
@@ -109,7 +114,7 @@ const ProcessTableRow = ({
         isLastDepartment={isLastDepartment}
         status={process.status}
         startProcess={startProcess}
-        hasSectorResponsible={hasSectorResponsible}
+        hasSectorResponsible={hasResponsible}
         onAcceptResponsibility={onAcceptResponsibility}
         isAccepting={isAccepting}
         sectorId={process.currentDepartment}
