@@ -33,14 +33,13 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
   }, [processId, sectorId, getProcessResponsible, getSectorResponsible]);
 
   // Aceitar responsabilidade pelo processo
-  const handleAcceptResponsibility = useCallback(async (protocolNumber: string) => {
-    if (!processId || !protocolNumber) return false;
+  const handleAcceptResponsibility = useCallback(async (protocolNumber: string): Promise<void> => {
+    if (!processId || !protocolNumber) return;
     
     const success = await acceptProcessResponsibility(processId, protocolNumber);
     if (success) {
       await loadResponsibles();
     }
-    return success;
   }, [processId, acceptProcessResponsibility, loadResponsibles]);
 
   // Carregar responsáveis ao inicializar
