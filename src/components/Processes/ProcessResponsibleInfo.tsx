@@ -1,10 +1,12 @@
 
-import { memo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
+import { useAuth } from "@/hooks/auth";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, User } from "lucide-react";
-import { useProcessDetailsResponsibility } from "@/hooks/useProcessDetailsResponsibility";
+import { memo } from "react";
 
 interface ProcessResponsibleInfoProps {
   processId: string;
@@ -17,13 +19,53 @@ const ProcessResponsibleInfo = memo(({
   protocolNumber,
   sectorId
 }: ProcessResponsibleInfoProps) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [processResponsible, setProcessResponsible] = useState<any>(null);
+  const [sectorResponsible, setSectorResponsible] = useState<any>(null);
   const {
-    isLoading,
-    processResponsible,
-    sectorResponsible,
-    handleAcceptResponsibility,
+    getProcessResponsible,
+    getSectorResponsible,
+    acceptProcessResponsibility,
     isAccepting
-  } = useProcessDetailsResponsibility(processId, sectorId);
+  } = useProcessResponsibility();
+  const {
+    user
+  } = useAuth();
+
+  // Usando useCallback para evitar recriações desnecessárias da função
+  const loadResponsibles = useCallback(async () => {
+    if (!processId || !sectorId) return;
+    setIsLoading(true);
+    try {
+      // Executando as chamadas em paralelo para melhorar a performance
+      const [processResp, sectorResp] = await Promise.all([
+        getProcessResponsible(processId), 
+        getSectorResponsible(processId, sectorId)
+      ]);
+      setProcessResponsible(processResp);
+      setSectorResponsible(sectorResp);
+    } catch (error) {
+      console.error("Erro ao carregar responsáveis:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [processId, sectorId, getProcessResponsible, getSectorResponsible]);
+
+  // Carrega os responsáveis apenas quando os IDs mudam
+  useEffect(() => {
+    const controller = new AbortController();
+    loadResponsibles();
+    return () => controller.abort();
+  }, [loadResponsibles, processId, sectorId]); // Adicionando processId e sectorId como dependências para garantir atualização
+
+  const handleAcceptResponsibility = async (): Promise<void> => {
+    if (!processId || !protocolNumber) return;
+    
+    const success = await acceptProcessResponsibility(processId, protocolNumber);
+    if (success) {
+      await loadResponsibles();
+    }
+  };
 
   if (isLoading) {
     return <Card>
@@ -67,11 +109,11 @@ const ProcessResponsibleInfo = memo(({
                 Sem responsável no setor atual
               </Badge>
               
-              {!sectorResponsible && <div className="mt-2">
+              {user && !sectorResponsible && <div className="mt-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => handleAcceptResponsibility(protocolNumber)} 
+                    onClick={handleAcceptResponsibility} 
                     disabled={isAccepting}
                     title="Aceitar processo" 
                     className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1"

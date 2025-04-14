@@ -20,8 +20,8 @@ interface ProcessTableRowProps {
   startProcess?: (processId: string) => Promise<void>;
   onAcceptResponsibility: () => Promise<void>;
   isAccepting: boolean;
-  hasSectorResponsible?: boolean; 
-  canInitiateProcesses?: boolean; 
+  hasSectorResponsible?: boolean; // Adicionando esta propriedade que estava faltando
+  canInitiateProcesses?: boolean; // Nova propriedade para controlar se o usuário pode iniciar processos
 }
 
 const ProcessTableRow = ({
@@ -35,8 +35,8 @@ const ProcessTableRow = ({
   startProcess,
   onAcceptResponsibility,
   isAccepting,
-  hasSectorResponsible = false,
-  canInitiateProcesses = false
+  hasSectorResponsible = false, // Valor padrão
+  canInitiateProcesses = false  // Valor padrão
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
   
@@ -44,8 +44,6 @@ const ProcessTableRow = ({
   const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
   
   // Verificar se há um responsável para o setor atual
-  // Importante: verificamos tanto o hasSectorResponsible (que pode vir de um contexto mais amplo)
-  // quanto o sectorResponsible (que é buscado diretamente por este componente)
   const hasResponsible = hasSectorResponsible || !!sectorResponsible;
   
   const {
@@ -62,9 +60,9 @@ const ProcessTableRow = ({
 
   // Função para definir a cor de fundo com base no status
   const getRowBackgroundColor = (status: string) => {
-    if (status === "completed") return "bg-green-50";
-    if (status === "overdue") return "bg-red-50";
-    if (status === "pending") return "bg-blue-50";
+    if (status === "completed") return "bg-green-200";
+    if (status === "overdue") return "bg-red-200";
+    if (status === "pending") return "bg-blue-200";
     return "";
   };
 

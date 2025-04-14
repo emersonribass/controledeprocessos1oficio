@@ -2,12 +2,17 @@
 import { useState, useEffect, useCallback } from "react";
 import { useProcessResponsibility } from "./useProcessResponsibility";
 import { useToast } from "./use-toast";
+import { useAuth } from "./auth";
+import { useProcesses } from "./useProcesses";
 
 export const useProcessRowResponsibility = (processId: string, sectorId?: string) => {
   const { getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  // Usar filterProcesses do useProcesses para verificações de responsabilidade
+  const { filterProcesses } = useProcesses();
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
   const [isLoadingResponsible, setIsLoadingResponsible] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Carrega o responsável pelo processo no setor atual
   const loadSectorResponsible = useCallback(async () => {
@@ -32,8 +37,8 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
   }, [loadSectorResponsible]);
 
   // Função para aceitar a responsabilidade pelo processo
-  const handleAcceptResponsibility = async (protocolNumber?: string): Promise<void> => {
-    if (!protocolNumber || !sectorId) return;
+  const handleAcceptResponsibility = async (protocolNumber?: string) => {
+    if (!user || !protocolNumber || !sectorId) return;
     
     const success = await acceptProcessResponsibility(processId, protocolNumber);
     if (success) {
@@ -49,7 +54,6 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     sectorResponsible,
     isLoadingResponsible,
     handleAcceptResponsibility,
-    isAccepting,
-    refreshResponsible: loadSectorResponsible
+    isAccepting
   };
 };
