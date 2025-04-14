@@ -84,7 +84,7 @@ const LoginForm = () => {
   return <Card className="w-[380px] shadow-lg">
       <CardContent className="pt-6 px-6 py-[12px]">
         <div className="flex flex-col items-center mb-6">
-          <img src="/Logo Nottar vertical.png" alt="Logo Nottar" className="h-32 w-auto" />
+          <img src="/Logo_Nottar_vertical.svg" alt="Logo Nottar" className="h-32 w-auto" />
           <h1 className="text-xl font-bold text-center mt-4">Controle de Processos</h1>
           <CardDescription className="text-center mt-1">
             Entre com suas credenciais para acessar o sistema
