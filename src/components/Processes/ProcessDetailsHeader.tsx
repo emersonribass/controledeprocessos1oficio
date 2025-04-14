@@ -1,24 +1,18 @@
-
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Printer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProcessStatusBadge from "./ProcessStatusBadge";
-
 interface ProcessDetailsHeaderProps {
   process: any;
   getProcessTypeName: (id: string) => string;
 }
-
-const ProcessDetailsHeader = ({ process, getProcessTypeName }: ProcessDetailsHeaderProps) => {
+const ProcessDetailsHeader = ({
+  process,
+  getProcessTypeName
+}: ProcessDetailsHeaderProps) => {
   const navigate = useNavigate();
-  
-  return (
-    <div className="mb-6">
-      <Button 
-        variant="outline" 
-        onClick={() => navigate(-1)} 
-        className="mb-4"
-      >
+  return <div className="mb-6">
+      <Button variant="outline" onClick={() => navigate(-1)} className="mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" />
         Voltar
       </Button>
@@ -39,14 +33,12 @@ const ProcessDetailsHeader = ({ process, getProcessTypeName }: ProcessDetailsHea
             <Printer className="h-4 w-4" />
             <span className="hidden md:inline">Imprimir</span>
           </Button>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-1 text-white bg-blue-600 hover:bg-blue-500">
             <Download className="h-4 w-4" />
             <span className="hidden md:inline">Exportar</span>
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ProcessDetailsHeader;
