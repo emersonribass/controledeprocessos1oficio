@@ -1,69 +1,39 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Process } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
+import { useProcessResponsibility } from "./useProcessResponsibility";
 
-/**
- * Hook para gerenciar o estado da tabela de processos
- */
 export const useProcessTableState = (processes: Process[]) => {
-  const [processesResponsibles, setProcessesResponsibles] = useState<Record<string, Record<string, any>>>({});
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Buscar responsáveis para todos os processos visíveis
+  const [processesResponsibles, setProcessesResponsibles] = useState<Record<string, any>>({});
+  const { getSectorResponsible } = useProcessResponsibility();
+  
+  // Função para buscar responsáveis de todos os processos
   const fetchResponsibles = useCallback(async () => {
-    if (!processes.length) return;
+    const newResponsibles: Record<string, any> = {};
     
-    setIsLoading(true);
-    try {
-      // Buscar todos os responsáveis de setor em uma única consulta
-      const { data, error } = await supabase
-        .from('setor_responsaveis')
-        .select('*')
-        .in('processo_id', processes.map(p => p.id));
-      
-      if (error) {
-        console.error("Erro ao buscar responsáveis:", error);
-        return;
-      }
-      
-      // Organizar os dados por processo e setor para acesso rápido
-      const responsiblesMap: Record<string, Record<string, any>> = {};
-      
-      if (data) {
-        data.forEach(resp => {
-          if (!responsiblesMap[resp.processo_id]) {
-            responsiblesMap[resp.processo_id] = {};
+    // Para cada processo, buscar o responsável do setor atual
+    const promises = processes.map(async (process) => {
+      try {
+        if (process.currentDepartment) {
+          const responsible = await getSectorResponsible(process.id, process.currentDepartment);
+          if (responsible) {
+            newResponsibles[process.id] = responsible;
           }
-          responsiblesMap[resp.processo_id][resp.setor_id] = resp;
-        });
+        }
+      } catch (error) {
+        console.error(`Erro ao buscar responsável para o processo ${process.id}:`, error);
       }
-      
-      setProcessesResponsibles(responsiblesMap);
-    } catch (error) {
-      console.error("Erro ao processar responsáveis:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [processes]);
+    });
+    
+    // Aguardar todas as consultas serem concluídas
+    await Promise.all(promises);
+    
+    // Atualizar o estado com os responsáveis encontrados
+    setProcessesResponsibles(newResponsibles);
+  }, [processes, getSectorResponsible]);
   
-  // Verificar se um processo tem responsável em um setor específico
-  const hasResponsibleInSector = useCallback((processId: string, sectorId: string): boolean => {
-    return !!(
-      processesResponsibles[processId] && 
-      processesResponsibles[processId][sectorId]
-    );
-  }, [processesResponsibles]);
-  
-  // Buscar responsáveis quando a lista de processos mudar
-  useEffect(() => {
-    fetchResponsibles();
-  }, [fetchResponsibles]);
-
   return {
     processesResponsibles,
-    isLoading,
-    fetchResponsibles,
-    hasResponsibleInSector
+    fetchResponsibles
   };
 };

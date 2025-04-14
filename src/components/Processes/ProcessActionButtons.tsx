@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
-import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
 
 interface ProcessActionButtonsProps {
@@ -38,7 +37,6 @@ const ProcessActionButtons = ({
   sectorId
 }: ProcessActionButtonsProps) => {
   const { user } = useAuth();
-  const { isUserResponsibleForSector } = useProcessResponsibility();
 
   const isNotStarted = status === "not_started";
   const isCompleted = status === "completed";
@@ -86,7 +84,7 @@ const ProcessActionButtons = ({
   }
   
   // Se não há responsável no setor e o processo não está concluído, mostra o botão de aceitar processo
-  if (!hasSectorResponsible && onAcceptResponsibility && !isCompleted) {
+  if (!hasSectorResponsible && onAcceptResponsibility && !isCompleted && !isNotStarted) {
     return (
       <div className="flex justify-center gap-2 process-action">
         <Button 
@@ -121,9 +119,9 @@ const ProcessActionButtons = ({
         variant="ghost" 
         size="icon" 
         onClick={handleMoveToNext} 
-        disabled={isCompleted} 
+        disabled={isCompleted || isLastDepartment} 
         title="Mover para próximo setor"
-        className={`process-action ${isCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
+        className={`process-action ${(isCompleted || isLastDepartment) ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <MoveRight className="h-4 w-4" />
       </Button>
