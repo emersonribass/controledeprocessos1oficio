@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
-import AcceptProcessResponsibilityButton from "./AcceptProcessResponsibilityButton";
-import { User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, User } from "lucide-react";
 import { memo } from "react";
 
 interface ProcessResponsibleInfoProps {
@@ -24,7 +24,9 @@ const ProcessResponsibleInfo = memo(({
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
   const {
     getProcessResponsible,
-    getSectorResponsible
+    getSectorResponsible,
+    acceptProcessResponsibility,
+    isAccepting
   } = useProcessResponsibility();
   const {
     user
@@ -56,9 +58,14 @@ const ProcessResponsibleInfo = memo(({
     return () => controller.abort();
   }, [loadResponsibles, processId, sectorId]); // Adicionando processId e sectorId como dependências para garantir atualização
 
-  const handleResponsibilityAccepted = useCallback(() => {
-    loadResponsibles();
-  }, [loadResponsibles]);
+  const handleAcceptResponsibility = async () => {
+    if (!processId || !protocolNumber) return;
+    
+    const success = await acceptProcessResponsibility(processId, protocolNumber);
+    if (success) {
+      await loadResponsibles();
+    }
+  };
 
   if (isLoading) {
     return <Card>
@@ -103,13 +110,17 @@ const ProcessResponsibleInfo = memo(({
               </Badge>
               
               {user && !sectorResponsible && <div className="mt-2">
-                  <AcceptProcessResponsibilityButton 
-                    processId={processId} 
-                    protocolNumber={protocolNumber} 
-                    sectorId={sectorId} 
-                    hasResponsibleUser={!!sectorResponsible} 
-                    onAccept={handleResponsibilityAccepted} 
-                  />
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleAcceptResponsibility} 
+                    disabled={isAccepting}
+                    title="Aceitar processo" 
+                    className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1"
+                  >
+                    <CheckCircle className="h-3 w-3" />
+                    {isAccepting ? "Processando..." : "Aceitar Processo"}
+                  </Button>
                 </div>}
             </div>}
         </div>

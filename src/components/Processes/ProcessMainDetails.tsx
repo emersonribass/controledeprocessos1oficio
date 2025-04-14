@@ -5,7 +5,7 @@ import { Calendar, Clock, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import ProcessActionButtons from "./ProcessActionButtons";
-import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
+import { useProcessDetailsResponsibility } from "@/hooks/useProcessDetailsResponsibility";
 
 interface ProcessMainDetailsProps {
   process: any;
@@ -30,12 +30,12 @@ const ProcessMainDetails = ({
   isNotStarted,
   startProcess
 }: ProcessMainDetailsProps) => {
-  // Usando o hook otimizado para evitar chamadas duplicadas
+  // Usando o hook para obter informações de responsabilidade
   const { 
     sectorResponsible, 
     handleAcceptResponsibility, 
     isAccepting 
-  } = useProcessRowResponsibility(process.id, process.currentDepartment);
+  } = useProcessDetailsResponsibility(process.id, process.currentDepartment);
 
   return (
     <Card>
