@@ -86,9 +86,7 @@ const LoginForm = () => {
         <div className="flex flex-col items-center mb-6">
           <img src="/Logo_Nottar_vertical.svg" alt="Logo Nottar" className="h-48 w-auto mx-auto" />
           <h1 className="text-xl font-bold text-center mt-4">Controle de Processos</h1>
-          <CardDescription className="text-center mt-1">
-            Entre com suas credenciais para acessar o sistema
-          </CardDescription>
+          
         </div>
 
         {error && <Alert variant="destructive" className="mb-4">
