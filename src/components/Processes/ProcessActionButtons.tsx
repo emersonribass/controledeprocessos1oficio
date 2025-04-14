@@ -1,6 +1,8 @@
 
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
+import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
+import { useAuth } from "@/hooks/auth";
 
 interface ProcessActionButtonsProps {
   processId: string;
@@ -35,9 +37,11 @@ const ProcessActionButtons = ({
   isAccepting = false,
   sectorId
 }: ProcessActionButtonsProps) => {
+  const { user } = useAuth();
+  const { isUserResponsibleForSector } = useProcessResponsibility();
+
   const isNotStarted = status === "not_started";
   const isCompleted = status === "completed";
-  const isPending = status === "pending";
   
   const handleMoveToNext = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -62,7 +66,7 @@ const ProcessActionButtons = ({
       await onAcceptResponsibility();
     }
   };
-  
+
   // Se o processo não está iniciado E o usuário tem permissão para iniciar (startProcess está disponível)
   if (isNotStarted && startProcess) {
     return (
@@ -82,7 +86,7 @@ const ProcessActionButtons = ({
   }
   
   // Se não há responsável no setor e o processo não está concluído, mostra o botão de aceitar processo
-  if (!hasSectorResponsible && onAcceptResponsibility && !isCompleted) {
+  if ((!hasSectorResponsible || !user) && onAcceptResponsibility && !isCompleted) {
     return (
       <div className="flex justify-center gap-2 process-action">
         <Button 
