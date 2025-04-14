@@ -29,7 +29,7 @@ const ProcessDetailsHeader = ({
         </div>
         
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2 bg-green-600 hover:bg-green-500 text-white">
             <Printer className="h-4 w-4" />
             <span className="hidden md:inline">Imprimir</span>
           </Button>
