@@ -84,7 +84,7 @@ const LoginForm = () => {
   return <Card className="w-[380px] shadow-lg">
       <CardContent className="pt-6 px-6 py-[12px]">
         <div className="flex flex-col items-center mb-6">
-          <img src="/Logo_Nottar_horizontal.svg" alt="Logo Nottar" className="h-48 w-auto mx-auto" />
+          <img src="/Logo_Nottar_horizontal.svg" alt="Logo Nottar" className="h-24 w-auto max-auto " />
           <h1 className="font-bold text-center mt-4 text-2xl">Controle de Processos</h1>
           
         </div>
