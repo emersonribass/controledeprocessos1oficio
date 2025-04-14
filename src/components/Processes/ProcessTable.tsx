@@ -4,7 +4,7 @@ import { Process, ProcessType, Department } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
 import ProcessTableBody from "./ProcessTableBody";
 import { useProcessTableState } from "@/hooks/useProcessTableState";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
 
 interface ProcessTableProps {
@@ -55,8 +55,11 @@ const ProcessTable = ({
     }
   }, [processes, fetchResponsibles]);
   
-  // Aplicar filtros considerando as responsabilidades
-  const filteredProcesses = filterProcesses(filters, processes, processesResponsibles);
+  // Memorizar processos filtrados para evitar recálculos desnecessários
+  const filteredProcesses = useMemo(() => 
+    filterProcesses(filters, processes, processesResponsibles),
+    [filters, processes, processesResponsibles, filterProcesses]
+  );
   
   return (
     <div className="rounded-md border overflow-x-auto">

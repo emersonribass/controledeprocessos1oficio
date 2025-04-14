@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useProcessResponsibility } from "./useProcessResponsibility";
 import { useToast } from "./use-toast";
@@ -6,7 +7,6 @@ import { useProcesses } from "./useProcesses";
 
 export const useProcessRowResponsibility = (processId: string, sectorId?: string) => {
   const { getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
-    // Usar filterProcesses do useProcesses para verificações de responsabilidade
   const { filterProcesses } = useProcesses();
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
   const [isLoadingResponsible, setIsLoadingResponsible] = useState(false);
@@ -15,7 +15,10 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
 
   // Carrega o responsável pelo processo no setor atual
   const loadSectorResponsible = useCallback(async () => {
-    if (!sectorId || !processId) return;
+    if (!sectorId || !processId) {
+      setSectorResponsible(null);
+      return;
+    }
     
     setIsLoadingResponsible(true);
     try {
@@ -23,6 +26,7 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
       setSectorResponsible(responsible);
     } catch (error) {
       console.error("Erro ao carregar responsável:", error);
+      setSectorResponsible(null);
     } finally {
       setIsLoadingResponsible(false);
     }
@@ -30,24 +34,39 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
 
   // Carrega o responsável quando o componente é montado ou quando o departamento atual muda
   useEffect(() => {
+    const controller = new AbortController();
+    
     if (processId && sectorId) {
       loadSectorResponsible();
     }
+    
+    return () => {
+      controller.abort();
+    };
   }, [loadSectorResponsible]);
 
   // Função para aceitar a responsabilidade pelo processo
-  const handleAcceptResponsibility = async (protocolNumber?: string) => {
+  const handleAcceptResponsibility = useCallback(async (protocolNumber?: string) => {
     if (!user || !protocolNumber || !sectorId) return;
     
-    const success = await acceptProcessResponsibility(processId, protocolNumber);
-    if (success) {
-      await loadSectorResponsible();
+    try {
+      const success = await acceptProcessResponsibility(processId, protocolNumber);
+      if (success) {
+        await loadSectorResponsible();
+        toast({
+          title: "Sucesso",
+          description: "Você aceitou a responsabilidade pelo processo."
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao aceitar responsabilidade:", error);
       toast({
-        title: "Sucesso",
-        description: "Você aceitou a responsabilidade pelo processo."
+        title: "Erro",
+        description: "Não foi possível aceitar a responsabilidade.",
+        variant: "destructive"
       });
     }
-  };
+  }, [user, sectorId, processId, acceptProcessResponsibility, loadSectorResponsible, toast]);
 
   return {
     sectorResponsible,

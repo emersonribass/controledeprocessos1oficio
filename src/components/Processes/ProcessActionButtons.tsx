@@ -1,7 +1,9 @@
+
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
+import { memo } from "react";
 
 interface ProcessActionButtonsProps {
   processId: string;
@@ -20,7 +22,7 @@ interface ProcessActionButtonsProps {
   sectorId?: string;
 }
 
-const ProcessActionButtons = ({
+const ProcessActionButtons = memo(({
   processId,
   protocolNumber,
   moveProcessToPreviousDepartment,
@@ -41,27 +43,31 @@ const ProcessActionButtons = ({
   const isNotStarted = status === "not_started";
   const isCompleted = status === "completed";
   
-  const handleMoveToNext = async (e: React.MouseEvent) => {
+  const handleMoveToNext = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
-    await moveProcessToNextDepartment(processId);
+    moveProcessToNextDepartment(processId);
   };
   
-  const handleMoveToPrevious = async (e: React.MouseEvent) => {
+  const handleMoveToPrevious = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
-    await moveProcessToPreviousDepartment(processId);
+    moveToPreviousDepartment(processId);
   };
   
-  const handleStartProcess = async (e: React.MouseEvent) => {
+  const handleStartProcess = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     if (startProcess) {
-      await startProcess(processId);
+      startProcess(processId);
     }
   };
   
-  const handleAcceptResponsibility = async (e: React.MouseEvent) => {
+  const handleAcceptResponsibility = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     if (onAcceptResponsibility) {
-      await onAcceptResponsibility();
+      onAcceptResponsibility();
     }
   };
 
@@ -127,6 +133,9 @@ const ProcessActionButtons = ({
       </Button>
     </div>
   );
-};
+});
+
+// Adicionando displayName para facilitar debugging
+ProcessActionButtons.displayName = 'ProcessActionButtons';
 
 export default ProcessActionButtons;

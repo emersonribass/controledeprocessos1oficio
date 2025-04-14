@@ -1,15 +1,21 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Process } from "@/types";
 import { supabase } from "@/integrations/supabase/client"; //Hook para gerenciar o estado da tabela de processos
 
 export const useProcessTableState = (processes: Process[]) => {
   const [processesResponsibles, setProcessesResponsibles] = useState<Record<string, Record<string, any>>>({});
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Memorizar os IDs dos processos para evitar recálculos desnecessários
+  const processIds = useMemo(() => 
+    processes.map(p => p.id),
+    [processes]
+  );
 
   // Buscar responsáveis para todos os processos visíveis
   const fetchResponsibles = useCallback(async () => {
-    if (!processes.length) return;
+    if (!processIds.length) return;
     
     setIsLoading(true);
     try {
@@ -17,7 +23,7 @@ export const useProcessTableState = (processes: Process[]) => {
       const { data, error } = await supabase
         .from('setor_responsaveis')
         .select('*')
-        .in('processo_id', processes.map(p => p.id));
+        .in('processo_id', processIds);
       
       if (error) {
         console.error("Erro ao buscar responsáveis:", error);
@@ -42,7 +48,7 @@ export const useProcessTableState = (processes: Process[]) => {
     } finally {
       setIsLoading(false);
     }
-  }, [processes]);
+  }, [processIds]);
   
   // Verificar se um processo tem responsável em um setor específico
   const hasResponsibleInSector = useCallback((processId: string, sectorId: string): boolean => {
@@ -54,8 +60,10 @@ export const useProcessTableState = (processes: Process[]) => {
   
   // Buscar responsáveis quando a lista de processos mudar
   useEffect(() => {
-    fetchResponsibles();
-  }, [fetchResponsibles]);
+    if (processIds.length > 0) {
+      fetchResponsibles();
+    }
+  }, [fetchResponsibles, processIds]);
 
   return {
     processesResponsibles,
