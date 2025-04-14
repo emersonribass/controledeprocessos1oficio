@@ -1,13 +1,13 @@
 
 import { Process } from "@/types";
 import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
-import { useProcesses } from "@/hooks/useProcesses";
 
+/**
+ * Hook simplificado que utiliza o useProcessFiltering
+ * Mantido para compatibilidade com código existente
+ */
 export const useProcessFilters = (processes: Process[]) => {
-  const { isUserResponsibleForProcess } = useProcesses();
-  
-  // Usar o hook useProcessFiltering com as funções de verificação de responsabilidade
-  return useProcessFiltering(processes, {
-    isUserResponsibleForProcess // A função isUserResponsibleForSector virá do useUserProfile interno
-  });
+  // Agora não precisamos mais passar as funções de verificação aqui
+  // pois useProcessFiltering já usa o useUserProfile internamente
+  return useProcessFiltering(processes);
 };

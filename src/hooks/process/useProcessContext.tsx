@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode, useState } from "react";
 import { Process } from "@/types";
 import { useDepartmentsData } from "@/hooks/useDepartmentsData";
@@ -5,9 +6,7 @@ import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { useProcessesFetch } from "@/hooks/useProcessesFetch";
 import { useProcessOperations } from "@/hooks/process/useProcessOperations";
 import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
-import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
-import { useUserProfile } from "@/hooks/auth/useUserProfile";
 
 // Definição do tipo para o contexto
 type ProcessesContextType = {
@@ -49,25 +48,15 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const { processTypes, getProcessTypeName } = useProcessTypes();
   const { processes, isLoading, fetchProcesses } = useProcessesFetch();
   const { user } = useAuth();
-  const { userProfile } = useUserProfile();
   
-  // Funções síncronas para verificar responsabilidade
-  const isUserResponsibleForProcess = (process: Process, userId: string): boolean => {
-    // Implementação estrita - usuário deve ser o responsável direto pelo processo
-    return process.userId === userId || process.responsibleUserId === userId;
-  };
-  
-  const isUserResponsibleForSector = (process: Process, userId: string): boolean => {
-    if (!userProfile || !userProfile.setores_atribuidos || !userProfile.setores_atribuidos.length) return false;
-    // Verifica se o usuário pertence ao departamento atual do processo - usando dados da tabela 'usuarios'
-    return userProfile.setores_atribuidos.includes(process.currentDepartment);
-  };
-  
-  // Passar funções de verificação para o hook
-  const { filterProcesses, isProcessOverdue } = useProcessFiltering(processes, {
+  // Agora usamos o useProcessFiltering diretamente, sem precisar implementar
+  // as funções de verificação por responsabilidade manualmente
+  const { 
+    filterProcesses, 
+    isProcessOverdue,
     isUserResponsibleForProcess,
-    isUserResponsibleForSector
-  });
+    isUserResponsibleForSector 
+  } = useProcessFiltering(processes);
   
   // Hook de operações de processos
   const { 

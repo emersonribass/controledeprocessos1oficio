@@ -16,6 +16,7 @@ export const useProcessFiltering = (
   const { user } = useAuth();
   const { userProfile, isAdmin } = useUserProfile();
   
+  // Usar as funções de verificação passadas ou usar as implementações padrão
   const isUserResponsibleForProcess = checkers.isUserResponsibleForProcess || 
     ((process: Process, userId: string) => {
       return process.userId === userId || process.responsibleUserId === userId;
@@ -46,21 +47,13 @@ export const useProcessFiltering = (
         
         // Verificar se o usuário é administrador
         const isUserAdmin = isAdmin();
-        if (isUserAdmin) {
-          console.log("Usuário é administrador, mostrando todos os processos");
-          return true;
-        }
+        if (isUserAdmin) return true;
         
         // Verificar se o usuário é responsável direto pelo processo
         const isResponsibleForProcess = isUserResponsibleForProcess(process, user.id);
         
         // Verificar se o usuário pertence ao setor atual do processo
         const isResponsibleForCurrentSector = isUserResponsibleForSector(process, user.id);
-        
-        // Debugar decisão
-        if (isResponsibleForProcess || isResponsibleForCurrentSector) {
-          console.log(`Usuário tem acesso ao processo ${process.protocolNumber} por motivo: ${isResponsibleForProcess ? 'responsabilidade direta' : 'pertence ao setor'}`);
-        }
         
         return isResponsibleForProcess || isResponsibleForCurrentSector;
       });
@@ -113,5 +106,8 @@ export const useProcessFiltering = (
   return {
     filterProcesses,
     isProcessOverdue,
+    // Exportar as funções de verificação para reuso
+    isUserResponsibleForProcess,
+    isUserResponsibleForSector
   };
 };

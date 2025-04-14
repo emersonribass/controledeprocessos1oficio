@@ -3,9 +3,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useProcessResponsibility } from "./useProcessResponsibility";
 import { useToast } from "./use-toast";
 import { useAuth } from "./auth";
+import { useProcesses } from "./useProcesses";
 
 export const useProcessRowResponsibility = (processId: string, currentDepartment?: string) => {
   const { getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  // Usar filterProcesses do useProcesses para verificações de responsabilidade
+  const { filterProcesses } = useProcesses();
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
   const [isLoadingResponsible, setIsLoadingResponsible] = useState(false);
   const { toast } = useToast();
