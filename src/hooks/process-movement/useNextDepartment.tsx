@@ -73,7 +73,9 @@ export const useNextDepartment = (departments: Department[]) => {
         throw newHistoryError;
       }
 
-      // Limpar o responsável do setor destino se existir
+      // IMPORTANTE: Sempre deletar o responsável do setor destino se existir
+      // Isso garante que o usuário precise aceitar novamente a responsabilidade
+      // Mesmo que ele já tenha sido responsável anteriormente
       const { error: deleteResponsibleError } = await supabase
         .from('setor_responsaveis')
         .delete()

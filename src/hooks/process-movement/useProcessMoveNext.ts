@@ -81,11 +81,9 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
       if (newHistoryError) throw newHistoryError;
 
       // Verificar se o próximo departamento é o "Concluído(a)"
-      // Obter o nome do departamento para verificar se é "Concluído(a)"
       const isConcludedDept = nextDepartment.name === "Concluído(a)";
       
       // Atualizar o departamento atual do processo e o status se for o departamento "Concluído(a)"
-      // Não alteramos o usuario_responsavel mais, mantendo o responsável original do processo
       const updateData: {
         setor_atual: string;
         updated_at: string;
@@ -107,7 +105,9 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
 
       if (updateError) throw updateError;
 
-      // Remover qualquer responsável de setor existente para o próximo setor
+      // IMPORTANTE: Sempre remover qualquer responsável de setor existente para o próximo setor
+      // Este é o ponto chave - queremos garantir que o usuário tenha que aceitar novamente
+      // Independentemente de ter sido responsável anteriormente
       const { error: deleteResponsibleError } = await supabase
         .from('setor_responsaveis')
         .delete()

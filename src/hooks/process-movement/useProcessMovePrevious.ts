@@ -98,7 +98,6 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
       }
 
       // Atualizar o departamento atual do processo
-      // Mantemos o usuário responsável (não alteramos usuario_responsavel)
       const { error: updateError } = await supabase
         .from('processos')
         .update({
@@ -110,7 +109,9 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
 
       if (updateError) throw updateError;
 
-      // Remover qualquer responsável de setor existente para o departamento anterior
+      // IMPORTANTE: Sempre remover qualquer responsável de setor existente para o departamento anterior
+      // Isso garante que o usuário precise aceitar novamente a responsabilidade
+      // Mesmo que ele já tenha sido responsável anteriormente
       const { error: deleteResponsibleError } = await supabase
         .from('setor_responsaveis')
         .delete()
