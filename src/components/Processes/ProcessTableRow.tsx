@@ -62,9 +62,9 @@ const ProcessTableRow = ({
 
   // Função para definir a cor de fundo com base no status
   const getRowBackgroundColor = (status: string) => {
-    if (status === "completed") return "bg-green-50";
-    if (status === "overdue") return "bg-red-50";
-    if (status === "pending") return "bg-blue-50";
+    if (status === "completed") return "bg-green-200";
+    if (status === "overdue") return "bg-red-200";
+    if (status === "pending") return "bg-blue-200";
     return "";
   };
 
