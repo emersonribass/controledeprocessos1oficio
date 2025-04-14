@@ -37,6 +37,7 @@ const ProcessActionButtons = ({
 }: ProcessActionButtonsProps) => {
   const isNotStarted = status === "not_started";
   const isCompleted = status === "completed";
+  const isPending = status === "pending";
   
   const handleMoveToNext = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -81,7 +82,7 @@ const ProcessActionButtons = ({
   }
   
   // Se não há responsável no setor e o processo não está concluído, mostra o botão de aceitar processo
-  if (!hasSectorResponsible && onAcceptResponsibility && !isCompleted) {
+  if (!hasSectorResponsible && onAcceptResponsibility && !isCompleted && isPending) {
     return (
       <div className="flex justify-center gap-2 process-action">
         <Button 
