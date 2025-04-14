@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { ProcessResponsible } from "./types";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 
 export const useProcessResponsibleFetching = () => {
   // Cache para armazenar os responsáveis já buscados
@@ -11,11 +11,14 @@ export const useProcessResponsibleFetching = () => {
   // Controle de requisições em andamento para evitar chamadas duplicadas
   const pendingProcessRequests = useRef<Record<string, Promise<ProcessResponsible | null>>>({});
   const pendingSectorRequests = useRef<Record<string, Promise<ProcessResponsible | null>>>({});
+  
+  // Flag para evitar multiplas requisições
+  const isFetchingRef = useRef<Record<string, boolean>>({});
 
   /**
-   * Obtém o usuário responsável pelo processo
+   * Obtém o usuário responsável pelo processo com controle de cache melhorado
    */
-  const getProcessResponsible = async (processId: string): Promise<ProcessResponsible | null> => {
+  const getProcessResponsible = useCallback(async (processId: string): Promise<ProcessResponsible | null> => {
     // Verifica se já temos o resultado em cache
     if (processResponsibleCache[processId] !== undefined) {
       return processResponsibleCache[processId];
@@ -25,6 +28,13 @@ export const useProcessResponsibleFetching = () => {
     if (pendingProcessRequests.current[processId]) {
       return pendingProcessRequests.current[processId];
     }
+    
+    // Evita requisições duplicadas para o mesmo processo
+    if (isFetchingRef.current[`process_${processId}`]) {
+      return null;
+    }
+    
+    isFetchingRef.current[`process_${processId}`] = true;
 
     try {
       console.log("Buscando responsável para o processo:", processId);
@@ -68,6 +78,7 @@ export const useProcessResponsibleFetching = () => {
         } finally {
           // Remove a requisição da lista de pendentes quando terminar
           delete pendingProcessRequests.current[processId];
+          delete isFetchingRef.current[`process_${processId}`];
         }
       })();
 
@@ -75,14 +86,15 @@ export const useProcessResponsibleFetching = () => {
     } catch (error) {
       console.error("Erro ao obter responsável pelo processo:", error);
       setProcessResponsibleCache(prev => ({ ...prev, [processId]: null }));
+      delete isFetchingRef.current[`process_${processId}`];
       return null;
     }
-  };
+  }, [processResponsibleCache]);
 
   /**
-   * Obtém o usuário responsável pelo processo em um setor específico
+   * Obtém o usuário responsável pelo processo em um setor específico com controle de cache melhorado
    */
-  const getSectorResponsible = async (processId: string, sectorId: string): Promise<ProcessResponsible | null> => {
+  const getSectorResponsible = useCallback(async (processId: string, sectorId: string): Promise<ProcessResponsible | null> => {
     // Cria uma chave única para o cache
     const cacheKey = `${processId}-${sectorId}`;
     
@@ -96,12 +108,20 @@ export const useProcessResponsibleFetching = () => {
       return pendingSectorRequests.current[cacheKey];
     }
     
+    // Evita requisições duplicadas para o mesmo setor
+    if (isFetchingRef.current[`sector_${cacheKey}`]) {
+      return null;
+    }
+    
+    isFetchingRef.current[`sector_${cacheKey}`] = true;
+    
     try {
       console.log("Buscando responsável para o processo no setor:", processId, sectorId);
       
       if (!processId || !sectorId) {
         console.log("ID do processo ou setor não fornecido");
         setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: null }));
+        delete isFetchingRef.current[`sector_${cacheKey}`];
         return null;
       }
       
@@ -144,6 +164,7 @@ export const useProcessResponsibleFetching = () => {
         } finally {
           // Remove a requisição da lista de pendentes quando terminar
           delete pendingSectorRequests.current[cacheKey];
+          delete isFetchingRef.current[`sector_${cacheKey}`];
         }
       })();
 
@@ -151,19 +172,21 @@ export const useProcessResponsibleFetching = () => {
     } catch (error) {
       console.error("Erro ao obter responsável pelo setor:", error);
       setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: null }));
+      delete isFetchingRef.current[`sector_${cacheKey}`];
       return null;
     }
-  };
+  }, [sectorResponsibleCache]);
 
   /**
    * Limpa o cache de responsáveis
    */
-  const clearCache = () => {
+  const clearCache = useCallback(() => {
     setProcessResponsibleCache({});
     setSectorResponsibleCache({});
     pendingProcessRequests.current = {};
     pendingSectorRequests.current = {};
-  };
+    isFetchingRef.current = {};
+  }, []);
 
   return {
     getProcessResponsible,

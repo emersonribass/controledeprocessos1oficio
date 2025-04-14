@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useProcesses } from "@/hooks/useProcesses";
 import { useProcessMovement } from "@/hooks/useProcessMovement";
@@ -9,7 +9,6 @@ import ProcessMainDetails from "@/components/Processes/ProcessMainDetails";
 import ProcessDetailsTabs from "@/components/Processes/ProcessDetailsTabs";
 import ProcessDetailsSkeleton from "@/components/Processes/ProcessDetailsSkeleton";
 import ProcessDeadlineCard from "@/components/Processes/ProcessDeadlineCard";
-import { useProcessDetailsResponsibility } from "@/hooks/useProcessDetailsResponsibility";
 
 const ProcessDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -38,7 +37,8 @@ const ProcessDetailsPage = () => {
     loadProcess();
   });
   
-  const loadProcess = async () => {
+  // Usando useCallback para evitar recriações desnecessárias da função
+  const loadProcess = useCallback(async () => {
     if (!id) return;
     
     setIsLoading(true);
@@ -50,19 +50,20 @@ const ProcessDetailsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id, getProcess]);
   
+  // Efeito para carregar o processo quando o id mudar
   useEffect(() => {
-    if (!isLoadingProcesses) {
+    if (!isLoadingProcesses && id) {
       loadProcess();
     }
-  }, [id, isLoadingProcesses]);
+  }, [id, isLoadingProcesses, loadProcess]);
   
-  // Efeito para atualizar a lista de processos periodicamente
+  // Efeito para atualizar a lista de processos periodicamente com intervalo maior
   useEffect(() => {
     const intervalId = setInterval(() => {
       refreshProcesses();
-    }, 60000); // Aumentado para 60 segundos para reduzir chamadas
+    }, 120000); // Aumentado para 2 minutos para reduzir chamadas
     
     return () => clearInterval(intervalId);
   }, [refreshProcesses]);
@@ -110,6 +111,7 @@ const ProcessDetailsPage = () => {
         <div>
           {process && process.id && process.currentDepartment && (
             <ProcessResponsibleInfo 
+              key={`${process.id}-${process.currentDepartment}`}
               processId={process.id}
               protocolNumber={process.protocolNumber}
               sectorId={process.currentDepartment}
