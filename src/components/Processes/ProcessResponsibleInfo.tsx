@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,36 +6,34 @@ import { useAuth } from "@/hooks/auth";
 import AcceptProcessResponsibilityButton from "./AcceptProcessResponsibilityButton";
 import { User } from "lucide-react";
 import { memo } from "react";
-
 interface ProcessResponsibleInfoProps {
   processId: string;
   protocolNumber: string;
   sectorId: string;
 }
-
 const ProcessResponsibleInfo = memo(({
   processId,
   protocolNumber,
-  sectorId,
+  sectorId
 }: ProcessResponsibleInfoProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [processResponsible, setProcessResponsible] = useState<any>(null);
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
-  const { getProcessResponsible, getSectorResponsible } = useProcessResponsibility();
-  const { user } = useAuth();
+  const {
+    getProcessResponsible,
+    getSectorResponsible
+  } = useProcessResponsibility();
+  const {
+    user
+  } = useAuth();
 
   // Usando useCallback para evitar recriações desnecessárias da função
   const loadResponsibles = useCallback(async () => {
     if (!processId || !sectorId) return;
-    
     setIsLoading(true);
     try {
       // Executando as chamadas em paralelo para melhorar a performance
-      const [processResp, sectorResp] = await Promise.all([
-        getProcessResponsible(processId),
-        getSectorResponsible(processId, sectorId)
-      ]);
-      
+      const [processResp, sectorResp] = await Promise.all([getProcessResponsible(processId), getSectorResponsible(processId, sectorId)]);
       setProcessResponsible(processResp);
       setSectorResponsible(sectorResp);
     } catch (error) {
@@ -52,14 +49,11 @@ const ProcessResponsibleInfo = memo(({
     loadResponsibles();
     return () => controller.abort();
   }, [loadResponsibles]);
-
   const handleResponsibilityAccepted = useCallback(() => {
     loadResponsibles();
   }, [loadResponsibles]);
-
   if (isLoading) {
-    return (
-      <Card>
+    return <Card>
         <CardHeader>
           <CardTitle>Responsáveis</CardTitle>
         </CardHeader>
@@ -68,67 +62,46 @@ const ProcessResponsibleInfo = memo(({
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   }
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <CardTitle>Responsáveis</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
           <h3 className="text-sm font-medium mb-2">Responsável pelo Processo</h3>
-          {processResponsible ? (
-            <div className="flex items-center">
+          {processResponsible ? <div className="flex items-center">
               <Badge variant="default" className="gap-1 px-2 py-1">
                 <User className="h-3 w-3" />
                 {processResponsible.nome}
               </Badge>
-            </div>
-          ) : (
-            <Badge variant="outline" className="text-muted-foreground">
+            </div> : <Badge variant="outline" className="text-muted-foreground">
               Sem responsável definido
-            </Badge>
-          )}
+            </Badge>}
         </div>
 
         <div>
           <h3 className="text-sm font-medium mb-2">Responsável no Setor Atual</h3>
-          {sectorResponsible ? (
-            <div className="flex items-center">
-              <Badge variant="secondary" className="gap-1 px-2 py-1">
+          {sectorResponsible ? <div className="flex items-center">
+              <Badge variant="secondary" className="gap-1 px-2 py-1 bg-green-500">
                 <User className="h-3 w-3" />
                 {sectorResponsible.nome}
               </Badge>
-            </div>
-          ) : (
-            <div className="space-y-2">
+            </div> : <div className="space-y-2">
               <Badge variant="outline" className="text-muted-foreground">
                 Sem responsável no setor atual
               </Badge>
               
-              {user && !sectorResponsible && (
-                <div className="mt-2">
-                  <AcceptProcessResponsibilityButton
-                    processId={processId}
-                    protocolNumber={protocolNumber}
-                    sectorId={sectorId}
-                    hasResponsibleUser={!!sectorResponsible}
-                    onAccept={handleResponsibilityAccepted}
-                  />
-                </div>
-              )}
-            </div>
-          )}
+              {user && !sectorResponsible && <div className="mt-2">
+                  <AcceptProcessResponsibilityButton processId={processId} protocolNumber={protocolNumber} sectorId={sectorId} hasResponsibleUser={!!sectorResponsible} onAccept={handleResponsibilityAccepted} />
+                </div>}
+            </div>}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 });
 
 // Adicionando displayName para facilitar debugging
 ProcessResponsibleInfo.displayName = 'ProcessResponsibleInfo';
-
 export default ProcessResponsibleInfo;
