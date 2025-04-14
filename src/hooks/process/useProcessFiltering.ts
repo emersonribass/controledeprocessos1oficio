@@ -1,7 +1,7 @@
-
 import { Process } from "@/types";
 import { useAuth } from "@/hooks/auth";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ResponsibilityCheckers {
   isUserResponsibleForProcess?: (process: Process, userId: string) => boolean;
@@ -13,18 +13,43 @@ export const useProcessFiltering = (
   checkers: ResponsibilityCheckers = {}
 ) => {
   const { user, isAdmin } = useAuth();
+  const [userProfile, setUserProfile] = useState<{ perfil: string, setores_atribuidos: string[] } | null>(null);
   
-  // Função para verificar se o usuário é diretamente responsável pelo processo
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchUserProfile = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('usuarios')
+          .select('perfil, setores_atribuidos')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) {
+          console.error('Erro ao buscar perfil do usuário:', error);
+          return;
+        }
+        
+        setUserProfile(data);
+        console.log('Perfil do usuário carregado:', data);
+      } catch (err) {
+        console.error('Erro ao processar perfil do usuário:', err);
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user]);
+  
   const isUserResponsibleForProcess = checkers.isUserResponsibleForProcess || 
     ((process: Process, userId: string) => {
       return process.userId === userId || process.responsibleUserId === userId;
     });
   
-  // Função para verificar se o usuário pertence ao setor atual do processo
   const isUserResponsibleForSector = checkers.isUserResponsibleForSector || 
     ((process: Process, userId: string) => {
-      if (!user || !user.departments || !user.departments.length) return false;
-      return user.departments.includes(process.currentDepartment);
+      if (!userProfile || !userProfile.setores_atribuidos || !userProfile.setores_atribuidos.length) return false;
+      return userProfile.setores_atribuidos.includes(process.currentDepartment);
     });
 
   const filterProcesses = useMemo(() => {
@@ -40,19 +65,18 @@ export const useProcessFiltering = (
     ): Process[] => {
       const baseList = processesToFilter || processes;
 
-      // Filtro de visibilidade - este é o ponto crítico
       const visibleProcesses = baseList.filter((process) => {
         if (!user) return false; // Não autenticado não vê nada
-        if (isAdmin(user.email)) return true; // Admin vê tudo
         
-        // Verificação rigorosa: usuário deve ser responsável pelo processo OU pertencer ao setor atual
+        const isUserAdmin = userProfile?.perfil === 'administrador' || isAdmin(user.email);
+        if (isUserAdmin) return true; // Admin vê tudo
+        
         const isResponsibleForProcess = isUserResponsibleForProcess(process, user.id);
         const isResponsibleForCurrentSector = isUserResponsibleForSector(process, user.id);
         
         return isResponsibleForProcess || isResponsibleForCurrentSector;
       });
 
-      // Aplica os demais filtros
       return visibleProcesses.filter((process) => {
         if (filters.excludeCompleted && process.status === 'completed') {
           return false;
@@ -87,7 +111,7 @@ export const useProcessFiltering = (
         return true;
       });
     };
-  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector]);
+  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector, userProfile]);
 
   const isProcessOverdue = (process: Process) => {
     if (process.status === 'overdue') return true;

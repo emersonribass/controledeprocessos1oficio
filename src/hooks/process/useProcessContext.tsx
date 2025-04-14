@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { Process } from "@/types";
 import { useDepartmentsData } from "@/hooks/useDepartmentsData";
@@ -8,6 +7,7 @@ import { useProcessOperations } from "@/hooks/process/useProcessOperations";
 import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth"; // Importação do hook useAuth
+import { supabase } from "@/integrations/supabase/client";
 
 // Definição do tipo para o contexto
 type ProcessesContextType = {
@@ -49,6 +49,34 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const { processTypes, getProcessTypeName } = useProcessTypes();
   const { processes, isLoading, fetchProcesses } = useProcessesFetch();
   const { user } = useAuth(); // Usando o hook useAuth para obter o usuário logado
+  const [userProfile, setUserProfile] = useState<{ setores_atribuidos: string[] } | null>(null);
+  
+  // Buscar perfil do usuário na tabela usuarios
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchUserProfile = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('usuarios')
+          .select('setores_atribuidos')
+          .eq('id', user.id)
+          .single();
+        
+        if (error) {
+          console.error('Erro ao buscar perfil do usuário:', error);
+          return;
+        }
+        
+        setUserProfile(data);
+        console.log('Perfil do usuário carregado no contexto:', data);
+      } catch (err) {
+        console.error('Erro ao processar perfil do usuário:', err);
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user]);
   
   // Funções síncronas para verificar responsabilidade
   const isUserResponsibleForProcess = (process: Process, userId: string): boolean => {
@@ -57,9 +85,9 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const isUserResponsibleForSector = (process: Process, userId: string): boolean => {
-    if (!user || !user.departments || !user.departments.length) return false;
-    // Verifica se o usuário pertence ao departamento atual do processo
-    return user.departments.includes(process.currentDepartment);
+    if (!userProfile || !userProfile.setores_atribuidos || !userProfile.setores_atribuidos.length) return false;
+    // Verifica se o usuário pertence ao departamento atual do processo - usando dados da tabela 'usuarios'
+    return userProfile.setores_atribuidos.includes(process.currentDepartment);
   };
   
   // Passar funções de verificação para o hook
