@@ -52,7 +52,7 @@ const ProcessActionButtons = memo(({
   const handleMoveToPrevious = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    moveToPreviousDepartment(processId);
+    moveProcessToPreviousDepartment(processId);
   };
   
   const handleStartProcess = (e: React.MouseEvent) => {
