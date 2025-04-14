@@ -84,7 +84,7 @@ const ProcessResponsibleInfo = memo(({
         <div>
           <h3 className="text-sm font-medium mb-2">Responsável no Setor Atual</h3>
           {sectorResponsible ? <div className="flex items-center">
-              <Badge variant="secondary" className="gap-1 px-2 py-1 bg-green-500 text-white">
+              <Badge variant="secondary" className="gap-1 px-2 py-1 bg-green-500">
                 <User className="h-3 w-3" />
                 {sectorResponsible.nome}
               </Badge>
