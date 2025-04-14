@@ -2,20 +2,17 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { toast } from "sonner";
 import { useAuth } from "@/hooks/auth";
-import { useNotificationService } from "./useNotificationService";
 
 export const useStartProcess = (onProcessUpdated: () => void) => {
   const [isStarting, setIsStarting] = useState(false);
   const { toast: uiToast } = useToast();
   const { user } = useAuth();
-  const { sendNotificationsToSectorUsers } = useNotificationService();
 
   /**
-   * Inicia um processo que está com status não iniciado
+   * Inicia um processo, movendo-o para o primeiro departamento e definindo o usuário como responsável
    */
-  const startProcess = async (processId: string) => {
+  const startProcess = async (processId: string): Promise<boolean> => {
     if (!user) return false;
     
     setIsStarting(true);
@@ -29,17 +26,33 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
 
       if (processError) throw processError;
 
-      // Obter o departamento inicial (geralmente o de menor ordem)
-      const { data: firstDepartment, error: deptError } = await supabase
+      if (!process) throw new Error("Processo não encontrado");
+
+      // Obter o primeiro departamento
+      const { data: firstDepartment, error: firstDeptError } = await supabase
         .from('setores')
         .select('*')
         .order('order_num', { ascending: true })
         .limit(1)
         .single();
 
-      if (deptError) throw deptError;
+      if (firstDeptError) throw firstDeptError;
 
-      // Inserir entrada inicial no histórico
+      // Atualizar o processo
+      const { error: updateError } = await supabase
+        .from('processos')
+        .update({
+          setor_atual: firstDepartment.id.toString(),
+          updated_at: new Date().toISOString(),
+          status: "Em andamento",
+          data_inicio: new Date().toISOString(),
+          usuario_responsavel: user.id // Definir o usuário atual como responsável pelo processo
+        })
+        .eq('id', processId);
+
+      if (updateError) throw updateError;
+
+      // Criar entrada no histórico
       const { error: historyError } = await supabase
         .from('processos_historico')
         .insert({
@@ -52,7 +65,7 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
 
       if (historyError) throw historyError;
 
-      // Também atribuir o usuário como responsável pelo setor
+      // Atribuir o usuário como responsável no primeiro setor também
       const { error: responsibleError } = await supabase
         .from('setor_responsaveis')
         .insert({
@@ -62,32 +75,15 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
         });
 
       if (responsibleError) {
-        console.error("Erro ao atribuir responsável do setor:", responsibleError);
-        // Não bloquear o processo se essa operação falhar
+        console.error("Erro ao atribuir responsável de setor:", responsibleError);
+        // Continuamos mesmo se houver erro aqui, não é crítico
       }
 
-      // Atualizar o status do processo para Em andamento e atribuir responsável
-      const { error: updateError } = await supabase
-        .from('processos')
-        .update({
-          status: 'Em andamento',
-          setor_atual: firstDepartment.id.toString(),
-          usuario_responsavel: user.id,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', processId);
-
-      if (updateError) throw updateError;
-
-      // Enviar notificações para usuários do setor
-      await sendNotificationsToSectorUsers(
-        processId, 
-        firstDepartment.id.toString(), 
-        process.numero_protocolo
-      );
-
-      toast.success(`Processo iniciado em ${firstDepartment.name}`);
       onProcessUpdated();
+      uiToast({
+        title: "Sucesso",
+        description: "Processo iniciado com sucesso"
+      });
       return true;
     } catch (error) {
       console.error("Erro ao iniciar processo:", error);

@@ -89,16 +89,15 @@ export const usePreviousDepartment = (departments: Department[]) => {
         // Não bloquear o processo se essa operação falhar
       }
 
-      // Atualizar o processo, resetando o usuário responsável
+      // Atualizar o processo, mantendo o usuário responsável
       const updateData: {
         setor_atual: string;
         status?: string;
         updated_at: string;
-        usuario_responsavel: null;
       } = { 
         setor_atual: prevDept.id,
-        updated_at: now,
-        usuario_responsavel: null // Resetar o usuário responsável ao mudar de departamento
+        updated_at: now
+        // Não alteramos mais usuario_responsavel
       };
 
       // Se o processo vier do departamento "Concluído(a)" ou se seu status for "completed", alterar para "Em andamento"

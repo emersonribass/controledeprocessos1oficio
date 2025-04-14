@@ -27,7 +27,7 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
         .single();
 
       if (processError) throw processError;
-      
+
       if (!process) throw new Error("Processo não encontrado");
 
       // Obter a ordem do departamento atual
@@ -38,14 +38,24 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
         .single();
 
       if (currentDeptError) throw currentDeptError;
-      
+
       if (!currentDepartment) throw new Error("Departamento atual não encontrado");
 
+      // Se já estiver no primeiro departamento, não pode voltar
+      if (currentDepartment.order_num <= 1) {
+        uiToast({
+          title: "Aviso",
+          description: "Este processo já está no primeiro departamento.",
+          variant: "destructive"
+        });
+        setIsMoving(false);
+        return false;
+      }
+
       const currentOrder = currentDepartment.order_num;
-      const isFromConcludedDept = currentDepartment.name === "Concluído(a)";
 
       // Buscar o departamento anterior
-      const { data: prevDepartment, error: prevDeptError } = await supabase
+      const { data: previousDepartment, error: prevDeptError } = await supabase
         .from('setores')
         .select('*')
         .lt('order_num', currentOrder)
@@ -73,7 +83,7 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
         .from('processos_historico')
         .insert({
           processo_id: processId,
-          setor_id: prevDepartment.id.toString(),
+          setor_id: previousDepartment.id.toString(),
           data_entrada: new Date().toISOString(),
           data_saida: null,
           usuario_id: user.id
@@ -81,26 +91,21 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
 
       if (newHistoryError) throw newHistoryError;
 
-      // Atualizar o departamento atual do processo e o status se vier do departamento "Concluído(a)"
-      const updateData: {
-        setor_atual: string;
-        updated_at: string;
-        status?: string;
-        usuario_responsavel: null; // Removendo o responsável ao mudar de setor
-      } = {
-        setor_atual: prevDepartment.id.toString(),
-        updated_at: new Date().toISOString(),
-        usuario_responsavel: null // Garantindo que o responsável seja removido
-      };
-
-      // Se o processo veio do departamento "Concluído(a)", altera o status para "Em andamento"
-      if (isFromConcludedDept || process.status === "Concluído") {
-        updateData.status = "Em andamento";
+      // Se o processo estiver "Concluído" e estiver voltando do último departamento, mudar para "Em andamento"
+      let newStatus = process.status;
+      if (process.status === "Concluído" || currentDepartment.name === "Concluído(a)") {
+        newStatus = "Em andamento";
       }
 
+      // Atualizar o departamento atual do processo
+      // Mantemos o usuário responsável (não alteramos usuario_responsavel)
       const { error: updateError } = await supabase
         .from('processos')
-        .update(updateData)
+        .update({
+          setor_atual: previousDepartment.id.toString(),
+          updated_at: new Date().toISOString(),
+          status: newStatus
+        })
         .eq('id', processId);
 
       if (updateError) throw updateError;
@@ -110,21 +115,20 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
         .from('setor_responsaveis')
         .delete()
         .eq('processo_id', processId)
-        .eq('setor_id', prevDepartment.id.toString());
+        .eq('setor_id', previousDepartment.id.toString());
 
       if (deleteResponsibleError) {
         console.error("Erro ao remover responsável do setor:", deleteResponsibleError);
         // Continuamos mesmo se houver erro aqui, não é crítico
       }
 
-      // Enviar notificações para usuários do setor
+      // Enviar notificações para usuários do setor anterior
       await sendNotificationsToSectorUsers(
         processId, 
-        prevDepartment.id.toString(), 
+        previousDepartment.id.toString(), 
         process.numero_protocolo
       );
 
-      // Removido toast de confirmação
       onProcessUpdated();
       return true;
     } catch (error) {

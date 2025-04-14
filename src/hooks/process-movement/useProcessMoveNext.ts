@@ -85,15 +85,14 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
       const isConcludedDept = nextDepartment.name === "Concluído(a)";
       
       // Atualizar o departamento atual do processo e o status se for o departamento "Concluído(a)"
+      // Não alteramos o usuario_responsavel mais, mantendo o responsável original do processo
       const updateData: {
         setor_atual: string;
         updated_at: string;
         status?: string;
-        usuario_responsavel: null; // Removendo o responsável ao mudar de setor
       } = {
         setor_atual: nextDepartment.id.toString(),
-        updated_at: new Date().toISOString(),
-        usuario_responsavel: null // Garantindo que o responsável seja removido
+        updated_at: new Date().toISOString()
       };
       
       // Se for o departamento "Concluído(a)", atualiza o status

@@ -89,14 +89,14 @@ export const useNextDepartment = (departments: Department[]) => {
       const isCompleted = nextDept.order === departments.length;
       const newStatus = isCompleted ? "Concluído" : "Em andamento";
 
-      // Atualizar o processo, resetando o usuário responsável
+      // Atualizar o processo, mantendo o usuário responsável
       const { error: updateProcessError } = await supabase
         .from('processos')
         .update({ 
           setor_atual: nextDept.id,
           status: newStatus,
-          updated_at: now,
-          usuario_responsavel: null // Resetar o usuário responsável ao mudar de departamento
+          updated_at: now
+          // Não alteramos mais usuario_responsavel
         })
         .eq('id', process.id);
 
