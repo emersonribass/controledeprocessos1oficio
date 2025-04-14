@@ -33,7 +33,7 @@ const ProcessActionButtons = memo(({
   isEditing,
   status,
   startProcess,
-  hasSectorResponsible = true,
+  hasSectorResponsible = false, // Alterado para false por padrão para garantir que o botão apareça quando não tiver responsável
   onAcceptResponsibility,
   isAccepting = false,
   sectorId
@@ -90,7 +90,8 @@ const ProcessActionButtons = memo(({
   }
   
   // Se não há responsável no setor e o processo não está concluído, mostra o botão de aceitar processo
-  if (!hasSectorResponsible && onAcceptResponsibility && !isCompleted) {
+  // Removida a verificação de !isCompleted para que o botão apareça em processos "Em andamento"
+  if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed") {
     return (
       <div className="flex justify-center gap-2 process-action">
         <Button 

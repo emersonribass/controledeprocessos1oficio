@@ -58,6 +58,14 @@ const ProcessTableBody = ({
     }
   };
 
+  // Função para verificar se existe um responsável para o processo no setor atual
+  const hasSectorResponsible = (processId: string, currentDepartment: string) => {
+    return !!(
+      processesResponsibles[processId] && 
+      processesResponsibles[processId][currentDepartment]
+    );
+  };
+
   if (processes.length === 0) {
     return (
       <TableBody>
@@ -83,7 +91,7 @@ const ProcessTableBody = ({
           getProcessTypeName={getProcessTypeName}
           updateProcessType={updateProcessType}
           startProcess={startProcess}
-          hasSectorResponsible={!!processesResponsibles[process.id]}
+          hasSectorResponsible={hasSectorResponsible(process.id, process.currentDepartment)}
           onAcceptResponsibility={() => handleAcceptResponsibility(process.id, process.protocolNumber)}
           isAccepting={isAccepting && acceptingProcessId === process.id}
           canInitiateProcesses={isUserInAttendanceSector()}
