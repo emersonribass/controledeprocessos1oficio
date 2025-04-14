@@ -1,3 +1,4 @@
+
 import { Process } from "@/types";
 import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
 import { useProcesses } from "@/hooks/useProcesses";
@@ -11,6 +12,7 @@ export const useProcessFilters = (processes: Process[]) => {
     isUserResponsibleForProcess,
     isUserResponsibleForSector: (process: Process, userId: string) => {
       if (!user || !user.departments || !user.departments.length) return false;
+      // Verificação estrita para garantir que o usuário pertence ao departamento atual do processo
       return user.departments.includes(process.currentDepartment);
     }
   });

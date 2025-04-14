@@ -1,3 +1,4 @@
+
 import { Process } from "@/types";
 import { useAuth } from "@/hooks/auth";
 import { useMemo } from "react";
@@ -13,14 +14,16 @@ export const useProcessFiltering = (
 ) => {
   const { user, isAdmin } = useAuth();
   
+  // Função para verificar se o usuário é diretamente responsável pelo processo
   const isUserResponsibleForProcess = checkers.isUserResponsibleForProcess || 
     ((process: Process, userId: string) => {
       return process.userId === userId || process.responsibleUserId === userId;
     });
   
+  // Função para verificar se o usuário pertence ao setor atual do processo
   const isUserResponsibleForSector = checkers.isUserResponsibleForSector || 
     ((process: Process, userId: string) => {
-      if (!user || !user.departments) return false;
+      if (!user || !user.departments || !user.departments.length) return false;
       return user.departments.includes(process.currentDepartment);
     });
 
@@ -37,14 +40,16 @@ export const useProcessFiltering = (
     ): Process[] => {
       const baseList = processesToFilter || processes;
 
-      // Filtro de visibilidade
+      // Filtro de visibilidade - este é o ponto crítico
       const visibleProcesses = baseList.filter((process) => {
         if (!user) return false; // Não autenticado não vê nada
         if (isAdmin(user.email)) return true; // Admin vê tudo
-        return (
-          isUserResponsibleForProcess(process, user.id) || 
-          isUserResponsibleForSector(process, user.id)
-        );
+        
+        // Verificação rigorosa: usuário deve ser responsável pelo processo OU pertencer ao setor atual
+        const isResponsibleForProcess = isUserResponsibleForProcess(process, user.id);
+        const isResponsibleForCurrentSector = isUserResponsibleForSector(process, user.id);
+        
+        return isResponsibleForProcess || isResponsibleForCurrentSector;
       });
 
       // Aplica os demais filtros
@@ -93,7 +98,7 @@ export const useProcessFiltering = (
   };
 
   return {
-    filterProcesses, // Corrigido o nome para match com o retorno
+    filterProcesses,
     isProcessOverdue,
   };
 };

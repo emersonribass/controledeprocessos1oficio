@@ -7,7 +7,7 @@ import { useProcessesFetch } from "@/hooks/useProcessesFetch";
 import { useProcessOperations } from "@/hooks/process/useProcessOperations";
 import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
-import { useAuth } from "@/hooks/auth"; // Adicionando a importação do hook useAuth
+import { useAuth } from "@/hooks/auth"; // Importação do hook useAuth
 
 // Definição do tipo para o contexto
 type ProcessesContextType = {
@@ -48,7 +48,7 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const { departments, getDepartmentName } = useDepartmentsData();
   const { processTypes, getProcessTypeName } = useProcessTypes();
   const { processes, isLoading, fetchProcesses } = useProcessesFetch();
-  const { user } = useAuth(); // Usando o hook useAuth aqui para obter o usuário logado
+  const { user } = useAuth(); // Usando o hook useAuth para obter o usuário logado
   
   // Funções síncronas para verificar responsabilidade
   const isUserResponsibleForProcess = (process: Process, userId: string): boolean => {
@@ -57,9 +57,10 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const isUserResponsibleForSector = (process: Process, userId: string): boolean => {
-  if (!user?.departments?.length) return false;
-  return user.departments.includes(process.currentDepartment);
-};
+    if (!user || !user.departments || !user.departments.length) return false;
+    // Verifica se o usuário pertence ao departamento atual do processo
+    return user.departments.includes(process.currentDepartment);
+  };
   
   // Passar funções de verificação para o hook
   const { filterProcesses, isProcessOverdue } = useProcessFiltering(processes, {
