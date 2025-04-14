@@ -58,7 +58,7 @@ const ProcessResponsibleInfo = memo(({
     return () => controller.abort();
   }, [loadResponsibles, processId, sectorId]); // Adicionando processId e sectorId como dependências para garantir atualização
 
-  const handleAcceptResponsibility = async (): Promise<void> => {
+  const handleAcceptResponsibility = async () => {
     if (!processId || !protocolNumber) return;
     
     const success = await acceptProcessResponsibility(processId, protocolNumber);
