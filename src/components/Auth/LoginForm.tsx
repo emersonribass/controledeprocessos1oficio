@@ -4,11 +4,10 @@ import { useAuth } from "@/hooks/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 const LoginForm = () => {
   // Login state
   const [email, setEmail] = useState("");
@@ -81,19 +80,21 @@ const LoginForm = () => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-  return <Card className="w-[380px] shadow-lg">
+  return <Card className="h-auto w-auto shadow-lg">
       <CardContent className="pt-6 px-6 py-[12px]">
         <div className="flex flex-col items-center mb-6">
-          <img src="/Logo_Nottar_horizontal.svg" alt="Logo Nottar" className="h-24 w-auto max-auto " />
-          <h1 className="font-bold text-center mt-4 text-2xl">Controle de Processos</h1>
-          
+          <img src="/Logo_Nottar_horizontal.svg" alt="Logo Nottar" className="h-20 w-auto max-auto " />
+          <h1 className="text-2xl font-bold text-center">Controle de Processos</h1>
+          <CardDescription className="text-center mt-1">
+            Entre com suas credenciais para acessar o sistema
+          </CardDescription>
         </div>
 
         {error && <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>}
-
+        
         {connectionError && <Alert variant="destructive" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -132,9 +133,10 @@ const LoginForm = () => {
               </span> : "Entrar"}
           </Button>
         </form>
-
-        
       </CardContent>
+        <CardFooter className="flex flex-col justify-center text-sm text-muted-foreground space-y-2">
+          <div>Sistema de Controle de Processos</div>
+        </CardFooter>
     </Card>;
 };
 export default LoginForm;
