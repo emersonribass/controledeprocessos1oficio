@@ -5,6 +5,7 @@ import ProcessTableHeader from "./ProcessTableHeader";
 import ProcessTableBody from "./ProcessTableBody";
 import { useProcessTableState } from "@/hooks/useProcessTableState";
 import { useEffect } from "react";
+import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
 
 interface ProcessTableProps {
   processes: Process[];
@@ -45,6 +46,7 @@ const ProcessTable = ({
   filters
 }: ProcessTableProps) => {
   const { processesResponsibles, fetchResponsibles } = useProcessTableState(processes);
+  const { isUserInAttendanceSector } = useProcessFiltering(processes);
   
   // Buscar responsáveis quando os processos mudarem
   useEffect(() => {
@@ -75,6 +77,7 @@ const ProcessTable = ({
           updateProcessType={updateProcessType}
           startProcess={startProcess}
           processesResponsibles={processesResponsibles}
+          isUserInAttendanceSector={isUserInAttendanceSector}
         />
       </Table>
     </div>

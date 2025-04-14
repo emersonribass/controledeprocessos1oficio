@@ -21,6 +21,7 @@ interface ProcessTableRowProps {
   onAcceptResponsibility: () => Promise<void>;
   isAccepting: boolean;
   hasSectorResponsible?: boolean; // Adicionando esta propriedade que estava faltando
+  canInitiateProcesses?: boolean; // Nova propriedade para controlar se o usuário pode iniciar processos
 }
 
 const ProcessTableRow = ({
@@ -34,7 +35,8 @@ const ProcessTableRow = ({
   startProcess,
   onAcceptResponsibility,
   isAccepting,
-  hasSectorResponsible = false // Valor padrão
+  hasSectorResponsible = false, // Valor padrão
+  canInitiateProcesses = false  // Valor padrão
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
   
@@ -113,7 +115,7 @@ const ProcessTableRow = ({
         isFirstDepartment={isFirstDepartment}
         isLastDepartment={isLastDepartment}
         status={process.status}
-        startProcess={startProcess}
+        startProcess={canInitiateProcesses || process.status !== "not_started" ? startProcess : undefined}
         hasSectorResponsible={hasResponsible}
         onAcceptResponsibility={onAcceptResponsibility}
         isAccepting={isAccepting}

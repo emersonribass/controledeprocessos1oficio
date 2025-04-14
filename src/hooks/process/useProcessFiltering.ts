@@ -27,6 +27,11 @@ export const useProcessFiltering = (
       if (!userProfile || !userProfile.setores_atribuidos || !userProfile.setores_atribuidos.length) return false;
       return userProfile.setores_atribuidos.includes(process.currentDepartment);
     });
+    
+  // Verificar se o usuário pertence ao setor de atendimento (assumindo que o setor 1 é o de atendimento)
+  const isUserInAttendanceSector = () => {
+    return userProfile?.setores_atribuidos?.includes("1") || false;
+  };
 
   const filterProcesses = useMemo(() => {
     return (
@@ -48,6 +53,11 @@ export const useProcessFiltering = (
         // Verificar se o usuário é administrador
         const isUserAdmin = isAdmin();
         if (isUserAdmin) return true;
+        
+        // Usuários do setor de atendimento podem ver processos não iniciados
+        if (process.status === 'not_started' && isUserInAttendanceSector()) {
+          return true;
+        }
         
         // Verificar se o usuário é responsável direto pelo processo
         const isResponsibleForProcess = isUserResponsibleForProcess(process, user.id);
@@ -93,7 +103,7 @@ export const useProcessFiltering = (
         return true;
       });
     };
-  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector, userProfile]);
+  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector, userProfile, isUserInAttendanceSector]);
 
   const isProcessOverdue = (process: Process) => {
     if (process.status === 'overdue') return true;
@@ -108,6 +118,7 @@ export const useProcessFiltering = (
     isProcessOverdue,
     // Exportar as funções de verificação para reuso
     isUserResponsibleForProcess,
-    isUserResponsibleForSector
+    isUserResponsibleForSector,
+    isUserInAttendanceSector
   };
 };

@@ -52,6 +52,20 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
 
       if (historyError) throw historyError;
 
+      // Também atribuir o usuário como responsável pelo setor
+      const { error: responsibleError } = await supabase
+        .from('setor_responsaveis')
+        .insert({
+          processo_id: processId,
+          setor_id: firstDepartment.id.toString(),
+          usuario_id: user.id
+        });
+
+      if (responsibleError) {
+        console.error("Erro ao atribuir responsável do setor:", responsibleError);
+        // Não bloquear o processo se essa operação falhar
+      }
+
       // Atualizar o status do processo para Em andamento e atribuir responsável
       const { error: updateError } = await supabase
         .from('processos')

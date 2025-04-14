@@ -31,7 +31,8 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     updateProcessStatus,
     departments,
     startProcess,
-    filterProcesses
+    filterProcesses,
+    isUserInAttendanceSector
   } = useProcesses();
 
   const { user, isAdmin } = useAuth();
@@ -74,6 +75,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
         startProcess={startProcess}
         availableDepartments={availableDepartments}
         filterProcesses={filterProcesses}
+        isUserInAttendanceSector={isUserInAttendanceSector}
       />
     </div>
   );

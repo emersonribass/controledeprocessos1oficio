@@ -62,8 +62,8 @@ const ProcessActionButtons = ({
     }
   };
   
-  // Se o processo não está iniciado, mostra apenas o botão de iniciar
-  if (isNotStarted) {
+  // Se o processo não está iniciado E o usuário tem permissão para iniciar (startProcess está disponível)
+  if (isNotStarted && startProcess) {
     return (
       <div className="flex justify-center gap-2 process-action">
         <Button 

@@ -17,6 +17,7 @@ interface ProcessTableBodyProps {
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   startProcess?: (processId: string) => Promise<void>;
   processesResponsibles: Record<string, any>;
+  isUserInAttendanceSector?: () => boolean;
 }
 
 const ProcessTableBody = ({
@@ -28,7 +29,8 @@ const ProcessTableBody = ({
   getProcessTypeName,
   updateProcessType,
   startProcess,
-  processesResponsibles
+  processesResponsibles,
+  isUserInAttendanceSector = () => false
 }: ProcessTableBodyProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -84,6 +86,7 @@ const ProcessTableBody = ({
           hasSectorResponsible={!!processesResponsibles[process.id]}
           onAcceptResponsibility={() => handleAcceptResponsibility(process.id, process.protocolNumber)}
           isAccepting={isAccepting && acceptingProcessId === process.id}
+          canInitiateProcesses={isUserInAttendanceSector()}
         />
       ))}
     </TableBody>

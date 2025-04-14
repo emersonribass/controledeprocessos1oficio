@@ -1,3 +1,4 @@
+
 import { Loader2 } from "lucide-react";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
@@ -39,6 +40,7 @@ interface ProcessListContentProps {
     processes: Process[], 
     processesResponsibles?: Record<string, any>
   ) => Process[];
+  isUserInAttendanceSector?: () => boolean; // Nova propriedade
 }
 
 const ProcessListContent = ({
@@ -60,7 +62,8 @@ const ProcessListContent = ({
   departments,
   startProcess,
   availableDepartments,
-  filterProcesses
+  filterProcesses,
+  isUserInAttendanceSector
 }: ProcessListContentProps) => {
   if (isLoading) {
     return (
