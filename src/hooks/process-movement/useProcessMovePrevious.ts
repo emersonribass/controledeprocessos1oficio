@@ -86,9 +86,11 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
         setor_atual: string;
         updated_at: string;
         status?: string;
+        usuario_responsavel: null; // Removendo o responsável ao mudar de setor
       } = {
         setor_atual: prevDepartment.id.toString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        usuario_responsavel: null // Garantindo que o responsável seja removido
       };
 
       // Se o processo veio do departamento "Concluído(a)", altera o status para "Em andamento"
@@ -102,6 +104,18 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
         .eq('id', processId);
 
       if (updateError) throw updateError;
+
+      // Remover qualquer responsável de setor existente para o departamento anterior
+      const { error: deleteResponsibleError } = await supabase
+        .from('setor_responsaveis')
+        .delete()
+        .eq('processo_id', processId)
+        .eq('setor_id', prevDepartment.id.toString());
+
+      if (deleteResponsibleError) {
+        console.error("Erro ao remover responsável do setor:", deleteResponsibleError);
+        // Continuamos mesmo se houver erro aqui, não é crítico
+      }
 
       // Enviar notificações para usuários do setor
       await sendNotificationsToSectorUsers(

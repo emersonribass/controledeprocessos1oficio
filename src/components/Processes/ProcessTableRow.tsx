@@ -7,6 +7,7 @@ import ProcessTypePicker from "./ProcessTypePicker";
 import ProcessDepartmentsSection from "./ProcessDepartmentsSection";
 import ProcessRowActions from "./ProcessRowActions";
 import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
+import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -17,7 +18,6 @@ interface ProcessTableRowProps {
   getProcessTypeName: (id: string) => string;
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   startProcess?: (processId: string) => Promise<void>;
-  hasSectorResponsible: boolean;
   onAcceptResponsibility: () => Promise<void>;
   isAccepting: boolean;
 }
@@ -31,11 +31,13 @@ const ProcessTableRow = ({
   getProcessTypeName,
   updateProcessType,
   startProcess,
-  hasSectorResponsible,
   onAcceptResponsibility,
   isAccepting
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
+  
+  // Usar o hook para verificar responsabilidade
+  const { hasSectorResponsible } = useProcessRowResponsibility(process);
   
   const {
     sortedDepartments,

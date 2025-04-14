@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,11 +7,13 @@ import { useAuth } from "@/hooks/auth";
 import AcceptProcessResponsibilityButton from "./AcceptProcessResponsibilityButton";
 import { User } from "lucide-react";
 import { memo } from "react";
+
 interface ProcessResponsibleInfoProps {
   processId: string;
   protocolNumber: string;
   sectorId: string;
 }
+
 const ProcessResponsibleInfo = memo(({
   processId,
   protocolNumber,
@@ -33,7 +36,10 @@ const ProcessResponsibleInfo = memo(({
     setIsLoading(true);
     try {
       // Executando as chamadas em paralelo para melhorar a performance
-      const [processResp, sectorResp] = await Promise.all([getProcessResponsible(processId), getSectorResponsible(processId, sectorId)]);
+      const [processResp, sectorResp] = await Promise.all([
+        getProcessResponsible(processId), 
+        getSectorResponsible(processId, sectorId)
+      ]);
       setProcessResponsible(processResp);
       setSectorResponsible(sectorResp);
     } catch (error) {
@@ -48,10 +54,12 @@ const ProcessResponsibleInfo = memo(({
     const controller = new AbortController();
     loadResponsibles();
     return () => controller.abort();
-  }, [loadResponsibles]);
+  }, [loadResponsibles, processId, sectorId]); // Adicionando processId e sectorId como dependências para garantir atualização
+
   const handleResponsibilityAccepted = useCallback(() => {
     loadResponsibles();
   }, [loadResponsibles]);
+
   if (isLoading) {
     return <Card>
         <CardHeader>
@@ -64,6 +72,7 @@ const ProcessResponsibleInfo = memo(({
         </CardContent>
       </Card>;
   }
+
   return <Card>
       <CardHeader>
         <CardTitle>Responsáveis</CardTitle>
@@ -94,7 +103,13 @@ const ProcessResponsibleInfo = memo(({
               </Badge>
               
               {user && !sectorResponsible && <div className="mt-2">
-                  <AcceptProcessResponsibilityButton processId={processId} protocolNumber={protocolNumber} sectorId={sectorId} hasResponsibleUser={!!sectorResponsible} onAccept={handleResponsibilityAccepted} />
+                  <AcceptProcessResponsibilityButton 
+                    processId={processId} 
+                    protocolNumber={protocolNumber} 
+                    sectorId={sectorId} 
+                    hasResponsibleUser={!!sectorResponsible} 
+                    onAccept={handleResponsibilityAccepted} 
+                  />
                 </div>}
             </div>}
         </div>

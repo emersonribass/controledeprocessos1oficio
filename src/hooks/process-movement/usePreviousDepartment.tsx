@@ -77,6 +77,18 @@ export const usePreviousDepartment = (departments: Department[]) => {
       const isFromConcludedDept = currentDept.name === "Concluído(a)";
       const isProcessCompleted = process.status === "completed";
 
+      // Limpar o responsável do setor destino se existir
+      const { error: deleteResponsibleError } = await supabase
+        .from('setor_responsaveis')
+        .delete()
+        .eq('processo_id', process.id)
+        .eq('setor_id', prevDept.id);
+
+      if (deleteResponsibleError) {
+        console.error("Erro ao limpar responsável do setor:", deleteResponsibleError);
+        // Não bloquear o processo se essa operação falhar
+      }
+
       // Atualizar o processo, resetando o usuário responsável
       const updateData: {
         setor_atual: string;
