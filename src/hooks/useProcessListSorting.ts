@@ -33,7 +33,7 @@ export const useProcessListSorting = () => {
         }
       };
 
-      const statusA = getStatusOrder(a.status);
+      /*const statusA = getStatusOrder(a.status);
       const statusB = getStatusOrder(b.status);
 
       // Se o status for diferente, ordena por status primeiro
@@ -55,7 +55,7 @@ export const useProcessListSorting = () => {
         else if (b.startDate) {
           return 1; // B vem primeiro
         }
-      }
+      }*/
       
       // 3. Para todos os outros grupos, ou se datas forem iguais no grupo pendente,
       // ordenar por número de protocolo crescente
