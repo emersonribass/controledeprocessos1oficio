@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/schema";
 
 export const useProcessFetcher = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -10,7 +9,7 @@ export const useProcessFetcher = () => {
     try {
       setIsLoading(true);
       
-      // Buscar processos
+      // Buscar processos - agora as políticas RLS vão filtrar automaticamente
       const { data: processesData, error: processesError } = await supabase
         .from('processos')
         .select(`
@@ -19,6 +18,7 @@ export const useProcessFetcher = () => {
         `);
 
       if (processesError) {
+        console.error('Erro ao buscar processos:', processesError);
         throw processesError;
       }
 
@@ -28,6 +28,7 @@ export const useProcessFetcher = () => {
         .select('*');
 
       if (departmentsError) {
+        console.error('Erro ao buscar setores:', departmentsError);
         throw departmentsError;
       }
 

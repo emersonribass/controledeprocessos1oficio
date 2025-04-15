@@ -46,29 +46,11 @@ export const useProcessFiltering = (
     ): Process[] => {
       const baseList = processesToFilter || processes;
 
-      // Primeiro filtrar por permissões do usuário
-      const visibleProcesses = baseList.filter((process) => {
-        if (!user) return false; // Não autenticado não vê nada
-        
-        // Verificar se o usuário é administrador
-        const isUserAdmin = isAdmin();
-        if (isUserAdmin) return true;
-        
-        // Usuários do setor de atendimento podem ver processos não iniciados
-        if (process.status === 'not_started' && isUserInAttendanceSector()) {
-          return true;
-        }
-        
-        // Verificar se o usuário é responsável direto pelo processo
-        const isResponsibleForProcess = isUserResponsibleForProcess(process, user.id);
-        
-        // Verificar se o usuário pertence ao setor atual do processo
-        const isResponsibleForCurrentSector = isUserResponsibleForSector(process, user.id);
-        
-        return isResponsibleForProcess || isResponsibleForCurrentSector;
-      });
+      // Com as políticas RLS, não precisamos mais filtrar por permissões do usuário
+      // As consultas já estão retornando apenas os processos que o usuário tem permissão para ver
+      const visibleProcesses = baseList;
 
-      // Depois aplicar os filtros selecionados pelo usuário
+      // Aplicar apenas os filtros selecionados pelo usuário
       return visibleProcesses.filter((process) => {
         if (filters.excludeCompleted && process.status === 'completed') {
           return false;
@@ -103,7 +85,7 @@ export const useProcessFiltering = (
         return true;
       });
     };
-  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector, userProfile, isUserInAttendanceSector]);
+  }, [processes]);
 
   const isProcessOverdue = (process: Process) => {
     if (process.status === 'overdue') return true;

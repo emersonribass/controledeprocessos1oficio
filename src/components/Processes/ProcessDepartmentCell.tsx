@@ -26,6 +26,7 @@ const ProcessDepartmentCell = ({
 }: ProcessDepartmentCellProps) => {
   // Calcular dias restantes se for o departamento atual
   let remainingDays = 0;
+  
   if (isProcessStarted && isCurrentDepartment && entryDate && departmentTimeLimit > 0) {
     const entryDateTime = new Date(entryDate).getTime();
     const deadlineTime = entryDateTime + departmentTimeLimit * 24 * 60 * 60 * 1000;
