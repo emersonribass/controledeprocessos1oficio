@@ -1,9 +1,7 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { Calendar, Clock, User } from "lucide-react";
+import { formatBrasiliaTime } from "@/lib/timezone";
 
 interface ProcessDetailsTabsProps {
   process: any;
@@ -44,14 +42,14 @@ const ProcessDetailsTabs = ({ process, getDepartmentName }: ProcessDetailsTabsPr
                       <div className="flex items-center text-sm text-muted-foreground mb-1">
                         <Calendar className="mr-1 h-3 w-3" />
                         <span>
-                          Entrada: {format(new Date(entry.entryDate), "dd/MM/yyyy HH:mm")}
+                          Entrada: {formatBrasiliaTime(new Date(entry.entryDate), "dd/MM/yyyy HH:mm")}
                         </span>
                       </div>
                       {entry.exitDate && (
                         <div className="flex items-center text-sm text-muted-foreground">
                           <Clock className="mr-1 h-3 w-3" />
                           <span>
-                            Saída: {format(new Date(entry.exitDate), "dd/MM/yyyy HH:mm")}
+                            Saída: {formatBrasiliaTime(new Date(entry.exitDate), "dd/MM/yyyy HH:mm")}
                           </span>
                         </div>
                       )}

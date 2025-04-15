@@ -1,7 +1,8 @@
+
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { Clock } from "lucide-react";
+import { formatBrasiliaTime } from "@/lib/timezone";
+
 interface ProcessDepartmentCellProps {
   departmentId: string;
   isCurrentDepartment: boolean;
@@ -12,6 +13,7 @@ interface ProcessDepartmentCellProps {
   departmentTimeLimit?: number;
   isProcessStarted?: boolean;
 }
+
 const ProcessDepartmentCell = ({
   departmentId,
   isCurrentDepartment,
@@ -30,20 +32,39 @@ const ProcessDepartmentCell = ({
     const currentTime = new Date().getTime();
     remainingDays = Math.ceil((deadlineTime - currentTime) / (24 * 60 * 60 * 1000));
   }
-  return <div className="text-center">
-      {showDate && entryDate && <div className="text-xs text-black">
-          {format(new Date(entryDate), "dd/MM/yyyy", {
-        locale: ptBR
-      })}
-        </div>}
-      {isCurrentDepartment && isProcessStarted && <div className={cn("text-xs font-medium", isDepartmentOverdue ? "text-red-600" : "text-blue-600")}>
-          {isDepartmentOverdue ? <span className="flex items-center justify-center gap-1">
+
+  return (
+    <div className="text-center">
+      {showDate && entryDate && (
+        <div className="text-xs text-black">
+          {formatBrasiliaTime(entryDate, "dd/MM/yyyy")}
+        </div>
+      )}
+      {isCurrentDepartment && isProcessStarted && (
+        <div
+          className={cn(
+            "text-xs font-medium",
+            isDepartmentOverdue ? "text-red-600" : "text-blue-600"
+          )}
+        >
+          {isDepartmentOverdue ? (
+            <span className="flex items-center justify-center gap-1">
               <Clock className="h-3 w-3" /> Prazo expirado
-            </span> : <span>Em andamento</span>}
-          {!isDepartmentOverdue && departmentTimeLimit > 0 && <div className="text-xs mt-1">
-              {remainingDays > 0 ? `${remainingDays} dia(s) restante(s)` : "Vence hoje"}
-            </div>}
-        </div>}
-    </div>;
+            </span>
+          ) : (
+            <span>Em andamento</span>
+          )}
+          {!isDepartmentOverdue && departmentTimeLimit > 0 && (
+            <div className="text-xs mt-1">
+              {remainingDays > 0
+                ? `${remainingDays} dia(s) restante(s)`
+                : "Vence hoje"}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
+
 export default ProcessDepartmentCell;

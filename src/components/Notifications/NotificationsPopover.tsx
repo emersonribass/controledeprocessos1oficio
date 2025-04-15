@@ -1,7 +1,5 @@
 
 import { ReactNode } from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { BellOff, CheckCheck } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -9,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
+import { formatBrasiliaTime } from "@/lib/timezone";
 
 interface NotificationsPopoverProps {
   children: ReactNode;
@@ -71,7 +70,7 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
                 >
                   <p className="text-sm">{notification.mensagem}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {format(new Date(notification.data_criacao), "dd MMM, HH:mm", { locale: ptBR })}
+                    {formatBrasiliaTime(new Date(notification.data_criacao), "dd MMM, HH:mm")}
                   </p>
                 </div>
               ))}

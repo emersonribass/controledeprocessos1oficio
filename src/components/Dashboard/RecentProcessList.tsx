@@ -1,15 +1,13 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ExternalLink, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProcesses } from "@/hooks/useProcesses";
-import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { formatDistanceToBrasiliaTime } from "@/lib/timezone";
 
 const RecentProcessList = () => {
   const navigate = useNavigate();
@@ -83,10 +81,7 @@ const RecentProcessList = () => {
                   {getProcessTypeName(process.processType)} • {getDepartmentName(process.currentDepartment)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Iniciado {formatDistanceToNow(new Date(process.startDate), {
-                    addSuffix: true,
-                    locale: ptBR
-                  })}
+                  Iniciado {formatDistanceToBrasiliaTime(process.startDate)}
                 </p>
               </div>
               <Button 
