@@ -3,11 +3,14 @@ import { Process } from "@/types";
 import { useProcessMovement } from "@/hooks/useProcessMovement";
 import { useProcessUpdate } from "@/hooks/useProcessUpdate";
 import { supabaseService } from "@/services/supabase";
+import { useAuth } from "@/hooks/auth";
 
 /**
  * Hook que centraliza operações de processos: movimentação, atualização e busca individual
  */
 export const useProcessOperations = (onProcessUpdated: () => void) => {
+  const { user } = useAuth();
+  
   // Operações de movimentação
   const { 
     moveProcessToNextDepartment, 
@@ -28,10 +31,20 @@ export const useProcessOperations = (onProcessUpdated: () => void) => {
   // Busca um processo específico
   const getProcess = async (processId: string): Promise<Process | null> => {
     try {
+      // Verificar se o usuário está autenticado
+      if (!user) throw new Error("Usuário não autenticado");
+      
+      console.log(`Buscando processo ${processId} para usuário ${user.id}`);
+      
       const { data, error } = await supabaseService.getProcess(processId);
         
       if (error) throw error;
-      if (!data) return null;
+      if (!data) {
+        console.warn(`Processo ${processId} não encontrado ou acesso negado`);
+        return null;
+      }
+      
+      console.log(`Processo encontrado:`, data);
       
       const formattedProcess: Process = {
         id: data.id,

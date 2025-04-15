@@ -9,7 +9,7 @@ export const useProcessFetcher = () => {
     try {
       setIsLoading(true);
       
-      // Buscar processos - agora as políticas RLS vão filtrar automaticamente
+      // Buscar processos - as políticas RLS vão filtrar automaticamente no banco de dados
       const { data: processesData, error: processesError } = await supabase
         .from('processos')
         .select(`
@@ -21,6 +21,8 @@ export const useProcessFetcher = () => {
         console.error('Erro ao buscar processos:', processesError);
         throw processesError;
       }
+
+      console.log('Processos filtrados pelo RLS:', processesData?.length, processesData?.map(p => p.numero_protocolo));
 
       // Buscar todos os setores separadamente
       const { data: departmentsData, error: departmentsError } = await supabase

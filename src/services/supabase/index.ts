@@ -138,8 +138,10 @@ class SupabaseService {
   
   /**
    * Busca um processo específico com seu histórico
+   * As políticas RLS já garantem que apenas processos autorizados sejam retornados
    */
   async getProcess(processId: string) {
+    console.log(`Executando consulta para processo ${processId} com RLS ativo`);
     return await supabase
       .from('processos')
       .select(`
@@ -147,7 +149,26 @@ class SupabaseService {
         processos_historico(*)
       `)
       .eq('id', processId)
-      .single();
+      .maybeSingle(); // Usando maybeSingle para evitar erros se o processo não for encontrado
+  }
+  
+  /**
+   * Verifica se um usuário tem acesso a um processo específico
+   */
+  async checkProcessAccess(processId: string) {
+    console.log(`Verificando acesso ao processo ${processId}`);
+    const { data, error } = await supabase
+      .from('processos')
+      .select('id')
+      .eq('id', processId)
+      .maybeSingle();
+      
+    if (error) {
+      console.error('Erro ao verificar acesso:', error);
+      return false;
+    }
+    
+    return !!data; // Se o dado existir, o usuário tem acesso
   }
 }
 
