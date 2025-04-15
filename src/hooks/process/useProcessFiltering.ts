@@ -46,12 +46,16 @@ export const useProcessFiltering = (
     ): Process[] => {
       const baseList = processesToFilter || processes;
 
-      // O RLS já está filtrando no banco de dados, mas fazemos uma segunda verificação aqui
-      // para garantir a segurança em camadas
+      // Aplicar regras de visibilidade - PONTO CRÍTICO DA APLICAÇÃO
+      // Usuários só podem ver processos que:
+      // 1. São administradores (veem tudo)
+      // 2. São responsáveis pelo processo
+      // 3. Pertencem ao setor atual do processo
+      // 4. Pertencem ao setor de atendimento E o processo não está iniciado
       const visibleProcesses = baseList.filter((process) => {
         if (!user) return false; // Não autenticado não vê nada
         
-        // Verificar se o usuário é administrador
+        // Administradores veem todos os processos
         if (isAdmin) return true;
         
         // Usuários do setor de atendimento podem ver processos não iniciados
@@ -59,17 +63,19 @@ export const useProcessFiltering = (
           return true;
         }
         
-        // Verificar se o usuário é responsável direto pelo processo
+        // Usuário é responsável direto pelo processo
         if (isUserResponsibleForProcess(process, user.id)) return true;
         
-        // Verificar se o usuário pertence ao setor atual do processo
+        // Usuário pertence ao setor atual do processo
         if (isUserResponsibleForSector(process, user.id)) return true;
         
         // Se não satisfaz nenhuma condição acima, não deve ver o processo
         return false;
       });
 
-      // Aplicar os filtros selecionados pelo usuário
+      console.log(`Processos visíveis após filtro de permissões: ${visibleProcesses.length}`);
+
+      // Aplicar os filtros selecionados pelo usuário na interface
       return visibleProcesses.filter((process) => {
         if (filters.excludeCompleted && process.status === 'completed') {
           return false;

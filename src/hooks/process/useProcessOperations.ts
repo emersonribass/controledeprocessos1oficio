@@ -4,6 +4,7 @@ import { useProcessMovement } from "@/hooks/useProcessMovement";
 import { useProcessUpdate } from "@/hooks/useProcessUpdate";
 import { supabaseService } from "@/services/supabase";
 import { useAuth } from "@/hooks/auth";
+import { toast } from "@/hooks/use-toast";
 
 /**
  * Hook que centraliza operações de processos: movimentação, atualização e busca individual
@@ -32,19 +33,41 @@ export const useProcessOperations = (onProcessUpdated: () => void) => {
   const getProcess = async (processId: string): Promise<Process | null> => {
     try {
       // Verificar se o usuário está autenticado
-      if (!user) throw new Error("Usuário não autenticado");
+      if (!user) {
+        console.error("Usuário não autenticado ao tentar acessar processo");
+        toast({
+          title: "Acesso negado",
+          description: "Você precisa estar autenticado para acessar este processo",
+          variant: "destructive"
+        });
+        throw new Error("Usuário não autenticado");
+      }
       
       console.log(`Buscando processo ${processId} para usuário ${user.id}`);
       
       const { data, error } = await supabaseService.getProcess(processId);
         
-      if (error) throw error;
+      if (error) {
+        console.error(`Erro ao buscar processo: ${error.message}`);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os dados do processo",
+          variant: "destructive"
+        });
+        throw error;
+      }
+      
       if (!data) {
-        console.warn(`Processo ${processId} não encontrado ou acesso negado`);
+        console.warn(`Processo ${processId} não encontrado ou acesso negado para usuário ${user.id}`);
+        toast({
+          title: "Acesso negado",
+          description: "Você não tem permissão para visualizar este processo",
+          variant: "destructive"
+        });
         return null;
       }
       
-      console.log(`Processo encontrado:`, data);
+      console.log(`Processo encontrado: ${data.numero_protocolo}`);
       
       const formattedProcess: Process = {
         id: data.id,
@@ -75,6 +98,20 @@ export const useProcessOperations = (onProcessUpdated: () => void) => {
     }
   };
 
+  // Verificar se o usuário tem acesso a um processo específico
+  const checkProcessAccess = async (processId: string): Promise<boolean> => {
+    try {
+      if (!user) return false;
+      
+      // Usar o serviço que respeita as RLS policies
+      const result = await supabaseService.checkProcessAccess(processId);
+      return result;
+    } catch (error) {
+      console.error('Erro ao verificar acesso ao processo:', error);
+      return false;
+    }
+  };
+
   return {
     // Operações de movimentação
     moveProcessToNextDepartment,
@@ -87,8 +124,9 @@ export const useProcessOperations = (onProcessUpdated: () => void) => {
     updateProcessType,
     updateProcessStatus,
     
-    // Busca individual
+    // Busca individual e verificação de acesso
     getProcess,
+    checkProcessAccess,
     
     // Estados
     isMoving,

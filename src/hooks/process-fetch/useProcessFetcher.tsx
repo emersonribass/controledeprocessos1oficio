@@ -1,13 +1,22 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/auth";
 
 export const useProcessFetcher = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
   const fetchProcessesData = async () => {
     try {
+      if (!user) {
+        console.error("Tentativa de buscar processos sem usuário autenticado");
+        return [];
+      }
+      
       setIsLoading(true);
+      
+      console.log(`Buscando processos para usuário: ${user.id}`);
       
       // Buscar processos - as políticas RLS vão filtrar automaticamente no banco de dados
       const { data: processesData, error: processesError } = await supabase
@@ -22,7 +31,15 @@ export const useProcessFetcher = () => {
         throw processesError;
       }
 
-      console.log('Processos filtrados pelo RLS:', processesData?.length, processesData?.map(p => p.numero_protocolo));
+      if (!processesData) {
+        console.warn('Nenhum processo encontrado ou acesso negado');
+        return [];
+      }
+
+      console.log(`Processos filtrados pelo RLS: ${processesData.length}`);
+      if (processesData.length > 0) {
+        console.log('Amostra de protocolo:', processesData[0].numero_protocolo);
+      }
 
       // Buscar todos os setores separadamente
       const { data: departmentsData, error: departmentsError } = await supabase

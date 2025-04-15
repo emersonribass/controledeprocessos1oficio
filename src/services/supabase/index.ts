@@ -154,12 +154,14 @@ class SupabaseService {
   
   /**
    * Verifica se um usuário tem acesso a um processo específico
+   * Esta função confia nas regras RLS para garantir que apenas processos 
+   * visíveis para o usuário atual sejam retornados
    */
   async checkProcessAccess(processId: string) {
     console.log(`Verificando acesso ao processo ${processId}`);
     const { data, error } = await supabase
       .from('processos')
-      .select('id')
+      .select('id, numero_protocolo, usuario_responsavel, setor_atual')
       .eq('id', processId)
       .maybeSingle();
       
@@ -168,7 +170,25 @@ class SupabaseService {
       return false;
     }
     
-    return !!data; // Se o dado existir, o usuário tem acesso
+    // Se retornou dados, o usuário tem acesso (RLS garantiu isso)
+    const hasAccess = !!data;
+    console.log(`Acesso ao processo ${processId}: ${hasAccess ? 'Permitido' : 'Negado'}`);
+    if (hasAccess) {
+      console.log(`Informações do processo: Protocolo ${data.numero_protocolo}, Responsável: ${data.usuario_responsavel}, Setor: ${data.setor_atual}`);
+    }
+    
+    return hasAccess;
+  }
+  
+  /**
+   * Busca o perfil de um usuário pelo ID
+   */
+  async getUserProfile(userId: string) {
+    return await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
   }
 }
 
