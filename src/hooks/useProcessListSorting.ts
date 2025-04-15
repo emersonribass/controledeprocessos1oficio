@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Process } from "@/types"; // Corrigindo o caminho de importação
 
-// Tipos para controle do campo e direção de ordenação
+/*// Tipos para controle do campo e direção de ordenação
 export const useProcessListSorting = () => {
   const [sortField, setSortField] = useState<keyof Process>("protocolNumber");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -15,7 +15,7 @@ export const useProcessListSorting = () => {
       setSortField(field);
       setSortDirection("asc");
     }
-  };
+  };*/
 
   // Função que aplica a ordenação aos processos
   const sortProcesses = (data: Process[]): Process[] => {
