@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AlertCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+
 const LoginForm = () => {
   // Login state
   const [email, setEmail] = useState("");
@@ -16,18 +18,22 @@ const LoginForm = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const loginSuccessful = useRef(false);
+  
   const {
     login,
     setUser,
     setSession
   } = useAuth();
   const navigate = useNavigate();
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
     setError(null);
     setConnectionError(null);
+    
     try {
       console.log("Tentando login com:", email);
       const result = await login(email, password);
@@ -41,6 +47,8 @@ const LoginForm = () => {
 
       // Verificar se o login foi bem-sucedido antes de redirecionar
       if (result.session) {
+        loginSuccessful.current = true;
+        
         toast.success("Login efetuado com sucesso", {
           description: "Bem-vindo de volta!",
           duration: 3000,
@@ -74,12 +82,16 @@ const LoginForm = () => {
         setError("Ocorreu um erro ao tentar fazer login. Tente novamente.");
       }
     } finally {
-      setIsSubmitting(false);
+      if (!loginSuccessful.current) {
+        setIsSubmitting(false);
+      }
     }
   };
+  
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+  
   return <Card className="h-auto w-auto shadow-lg">
       <CardContent className="pt-6 px-6 py-[12px]">
         <div className="flex flex-col items-center mb-6">
@@ -139,4 +151,5 @@ const LoginForm = () => {
         </CardFooter>
     </Card>;
 };
+
 export default LoginForm;

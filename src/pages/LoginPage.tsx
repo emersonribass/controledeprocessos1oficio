@@ -1,9 +1,9 @@
 
 import LoginForm from "@/components/Auth/LoginForm";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuthUtils } from "@/hooks/auth/useAuthUtils";
 
 const LoginPage = () => {
   const {
@@ -12,45 +12,41 @@ const LoginPage = () => {
     setUser,
     setSession
   } = useAuth();
+  const { clearAuthenticationData } = useAuthUtils();
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
+  const isSuccessfulLogin = useRef(false);
 
   // Limpar localStorage de autenticação e estados ao montar o componente de login
+  // mas apenas se não tivermos acabado de fazer login com sucesso
   useEffect(() => {
-    const clearAuthentication = async () => {
-      try {
-        // Limpar localStorage e cookies relacionados ao Supabase
-        localStorage.removeItem('supabase.auth.token');
-        localStorage.removeItem('supabase.auth.refreshToken');
-        localStorage.removeItem('sb-vwijryhqngyzgpgekgek-auth-token');
-        localStorage.removeItem('sb-refresh-token');
-        localStorage.removeItem('supabase.auth.expires_at');
-        
-        // Tentar fazer logout no Supabase (ignorando erros se não houver sessão)
-        try {
-          await supabase.auth.signOut();
-        } catch (error) {
-          console.log("Erro ao tentar signOut do Supabase (ignorando):", error);
-        }
-        
-        // Limpar estados de autenticação no contexto
+    // Não limpar a autenticação se o componente for desmontado devido a um login bem-sucedido
+    if (!isSuccessfulLogin.current) {
+      const clearAuthentication = async () => {
+        // Definir setUser e setSession como null apenas se não estivermos em processo de login
+        await clearAuthenticationData(false); // Não chamar signOut do Supabase
         setUser?.(null);
         setSession?.(null);
         
         console.log("Login: Autenticação limpa ao montar componente");
-      } catch (error) {
-        console.error("Erro ao limpar autenticação:", error);
-      }
-    };
+      };
+      
+      clearAuthentication();
+    }
     
-    clearAuthentication();
-  }, [setUser, setSession]);
+    // Não queremos executar a limpeza durante o desmonte se tivermos feito login com sucesso
+    return () => {
+      console.log("LoginPage desmontando, login bem-sucedido:", isSuccessfulLogin.current);
+    };
+  }, [setUser, setSession, clearAuthenticationData]);
 
   useEffect(() => {
     // Evitar redirecionamentos múltiplos
     if (hasRedirected) return;
+    
     if (!isLoading && user) {
       console.log("LoginPage: Usuário já autenticado, redirecionando para /dashboard");
+      isSuccessfulLogin.current = true; // Marcar como login bem-sucedido
       setHasRedirected(true);
       navigate("/dashboard", {
         replace: true
