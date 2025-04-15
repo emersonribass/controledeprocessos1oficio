@@ -153,9 +153,7 @@ class SupabaseService {
   }
   
   /**
-   * Verifica se um usuário tem acesso a um processo específico
-   * Esta função confia nas regras RLS para garantir que apenas processos 
-   * visíveis para o usuário atual sejam retornados
+   * Verifica se um usuário tem acesso a um processo específico baseado em RLS
    */
   async checkProcessAccess(processId: string) {
     console.log(`Verificando acesso ao processo ${processId}`);
@@ -181,12 +179,43 @@ class SupabaseService {
   }
   
   /**
-   * Busca o perfil de um usuário pelo ID
+   * Busca responsáveis por processos em seus setores atuais
+   * Útil para exibir informações de responsabilidade na interface
+   */
+  async getProcessResponsibles(processId: string, sectorId: string) {
+    console.log(`Buscando responsável para o processo ${processId} no setor ${sectorId}`);
+    
+    const { data, error } = await supabase
+      .from('setor_responsaveis')
+      .select(`
+        *,
+        usuarios:usuario_id (id, nome, email)
+      `)
+      .eq('processo_id', processId)
+      .eq('setor_id', sectorId);
+      
+    if (error) {
+      console.error('Erro ao buscar responsáveis:', error);
+      return null;
+    }
+    
+    if (!data || data.length === 0) {
+      console.log('Nenhum responsável encontrado para este setor');
+      return null;
+    }
+    
+    // Retorna o primeiro responsável encontrado
+    return data[0];
+  }
+  
+  /**
+   * Busca perfil do usuário pelo ID
    */
   async getUserProfile(userId: string) {
+    console.log(`Buscando perfil do usuário: ${userId}`);
     return await supabase
       .from('usuarios')
-      .select('*')
+      .select('id, perfil, setores_atribuidos, nome, email')
       .eq('id', userId)
       .maybeSingle();
   }

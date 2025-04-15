@@ -5,12 +5,14 @@ import { useProcessUpdate } from "@/hooks/useProcessUpdate";
 import { supabaseService } from "@/services/supabase";
 import { useAuth } from "@/hooks/auth";
 import { toast } from "@/hooks/use-toast";
+import { useUserProfile } from "@/hooks/auth/useUserProfile";
 
 /**
  * Hook que centraliza operações de processos: movimentação, atualização e busca individual
  */
 export const useProcessOperations = (onProcessUpdated: () => void) => {
   const { user } = useAuth();
+  const { userProfile, isAdmin } = useUserProfile();
   
   // Operações de movimentação
   const { 
@@ -44,7 +46,22 @@ export const useProcessOperations = (onProcessUpdated: () => void) => {
       }
       
       console.log(`Buscando processo ${processId} para usuário ${user.id}`);
+      console.log(`Perfil do usuário: ${userProfile?.perfil}, Setores: ${JSON.stringify(userProfile?.setores_atribuidos)}`);
       
+      // Primeiro verifica explicitamente se o usuário tem acesso ao processo
+      const hasAccess = await checkProcessAccess(processId);
+      
+      if (!hasAccess) {
+        console.warn(`Processo ${processId} - acesso negado para usuário ${user.id}`);
+        toast({
+          title: "Acesso negado",
+          description: "Você não tem permissão para visualizar este processo",
+          variant: "destructive"
+        });
+        return null;
+      }
+      
+      // Se tem acesso, busca os dados completos
       const { data, error } = await supabaseService.getProcess(processId);
         
       if (error) {
@@ -60,14 +77,14 @@ export const useProcessOperations = (onProcessUpdated: () => void) => {
       if (!data) {
         console.warn(`Processo ${processId} não encontrado ou acesso negado para usuário ${user.id}`);
         toast({
-          title: "Acesso negado",
-          description: "Você não tem permissão para visualizar este processo",
+          title: "Processo não encontrado",
+          description: "O processo solicitado não existe ou você não tem permissão para visualizá-lo",
           variant: "destructive"
         });
         return null;
       }
       
-      console.log(`Processo encontrado: ${data.numero_protocolo}`);
+      console.log(`Processo encontrado: ${data.numero_protocolo}, Setor atual: ${data.setor_atual}, Responsável: ${data.usuario_responsavel}`);
       
       const formattedProcess: Process = {
         id: data.id,
@@ -103,9 +120,22 @@ export const useProcessOperations = (onProcessUpdated: () => void) => {
     try {
       if (!user) return false;
       
-      // Usar o serviço que respeita as RLS policies
-      const result = await supabaseService.checkProcessAccess(processId);
-      return result;
+      // Administradores têm acesso a todos os processos
+      if (isAdmin()) {
+        console.log(`Usuário ${user.id} é administrador - acesso garantido ao processo ${processId}`);
+        return true;
+      }
+      
+      // Usar o serviço que respeita as RLS policies para verificar acesso
+      const hasAccess = await supabaseService.checkProcessAccess(processId);
+      
+      if (hasAccess) {
+        console.log(`Acesso concedido ao processo ${processId} para usuário ${user.id}`);
+      } else {
+        console.warn(`Acesso negado ao processo ${processId} para usuário ${user.id}`);
+      }
+      
+      return hasAccess;
     } catch (error) {
       console.error('Erro ao verificar acesso ao processo:', error);
       return false;

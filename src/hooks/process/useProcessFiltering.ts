@@ -24,13 +24,14 @@ export const useProcessFiltering = (
   
   const isUserResponsibleForSector = checkers.isUserResponsibleForSector || 
     ((process: Process, userId: string) => {
-      if (!userProfile || !userProfile.setores_atribuidos || !userProfile.setores_atribuidos.length) return false;
+      if (!userProfile || !userProfile.setores_atribuidos) return false;
       return userProfile.setores_atribuidos.includes(process.currentDepartment);
     });
     
-  // Verificar se o usuário pertence ao setor de atendimento (assumindo que o setor 1 é o de atendimento)
+  // Verificar se o usuário pertence ao setor de atendimento (setor 1)
   const isUserInAttendanceSector = () => {
-    return userProfile?.setores_atribuidos?.includes("1") || false;
+    if (!userProfile || !userProfile.setores_atribuidos) return false;
+    return userProfile.setores_atribuidos.includes("1");
   };
 
   const filterProcesses = useMemo(() => {
@@ -56,24 +57,39 @@ export const useProcessFiltering = (
         if (!user) return false; // Não autenticado não vê nada
         
         // Administradores veem todos os processos
-        if (isAdmin) return true;
+        if (isAdmin()) {
+          console.log(`Usuário ${user.id} é admin - processo ${process.protocolNumber} visível`);
+          return true;
+        }
         
         // Usuários do setor de atendimento podem ver processos não iniciados
         if (process.status === 'not_started' && isUserInAttendanceSector()) {
+          console.log(`Processo ${process.protocolNumber} não iniciado e usuário ${user.id} é do setor de atendimento - visível`);
           return true;
         }
         
         // Usuário é responsável direto pelo processo
-        if (isUserResponsibleForProcess(process, user.id)) return true;
+        if (isUserResponsibleForProcess(process, user.id)) {
+          console.log(`Usuário ${user.id} é responsável pelo processo ${process.protocolNumber} - visível`);
+          return true;
+        }
         
         // Usuário pertence ao setor atual do processo
-        if (isUserResponsibleForSector(process, user.id)) return true;
+        if (isUserResponsibleForSector(process, user.id)) {
+          console.log(`Usuário ${user.id} pertence ao setor ${process.currentDepartment} do processo ${process.protocolNumber} - visível`);
+          return true;
+        }
         
+        console.log(`Processo ${process.protocolNumber} não visível para usuário ${user.id}`);
         // Se não satisfaz nenhuma condição acima, não deve ver o processo
         return false;
       });
 
-      console.log(`Processos visíveis após filtro de permissões: ${visibleProcesses.length}`);
+      console.log(`Processos visíveis após filtro de permissões: ${visibleProcesses.length} de ${baseList.length}`);
+      
+      if (userProfile) {
+        console.log(`Setores do usuário: ${JSON.stringify(userProfile.setores_atribuidos)}`);
+      }
 
       // Aplicar os filtros selecionados pelo usuário na interface
       return visibleProcesses.filter((process) => {
@@ -110,7 +126,7 @@ export const useProcessFiltering = (
         return true;
       });
     };
-  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector, isUserInAttendanceSector]);
+  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector, isUserInAttendanceSector, userProfile]);
 
   const isProcessOverdue = (process: Process) => {
     if (process.status === 'overdue') return true;
