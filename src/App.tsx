@@ -33,9 +33,9 @@ const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: 
   
   useEffect(() => {
     const checkAdminStatus = async () => {
-      if (user && user.email) {
+      if (user) {
         try {
-          const adminStatus = await isAdmin(user.email);
+          const adminStatus = await isAdmin(user.id);
           setIsUserAdmin(adminStatus);
         } catch (error) {
           console.error("Erro ao verificar status de administrador:", error);
