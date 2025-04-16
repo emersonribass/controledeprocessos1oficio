@@ -1,29 +1,30 @@
 
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import AcceptProcessResponsibilityButton from "./AcceptProcessResponsibilityButton";
+import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
+import { useAuth } from "@/hooks/auth";
+import { memo } from "react";
 
 interface ProcessActionButtonsProps {
   processId: string;
+  protocolNumber?: string;
   moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
   isFirstDepartment: boolean;
   isLastDepartment: boolean;
-  setIsEditing: (isEditing: boolean) => void;
+  setIsEditing: (value: boolean) => void;
   isEditing: boolean;
   status: string;
   startProcess?: (processId: string) => Promise<void>;
   hasSectorResponsible?: boolean;
-  protocolNumber?: string;
   onAcceptResponsibility?: () => Promise<void>;
   isAccepting?: boolean;
   sectorId?: string;
-  isSectorResponsible?: boolean;
 }
 
-const ProcessActionButtons = ({
+const ProcessActionButtons = memo(({
   processId,
+  protocolNumber,
   moveProcessToPreviousDepartment,
   moveProcessToNextDepartment,
   isFirstDepartment,
@@ -32,90 +33,110 @@ const ProcessActionButtons = ({
   isEditing,
   status,
   startProcess,
-  hasSectorResponsible = false,
-  protocolNumber,
+  hasSectorResponsible = false, // Alterado para false por padrão para garantir que o botão apareça quando não tiver responsável
   onAcceptResponsibility,
   isAccepting = false,
-  sectorId,
-  isSectorResponsible = false
+  sectorId
 }: ProcessActionButtonsProps) => {
-  const canMoveProcess = status !== "not_started" && status !== "completed" && isSectorResponsible;
+  const { user } = useAuth();
+  const { isUserResponsibleForSector } = useProcessResponsibility();
+  const isNotStarted = status === "not_started";
+  const isCompleted = status === "completed";
   
+  const handleMoveToNext = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    moveProcessToNextDepartment(processId);
+  };
+  
+  const handleMoveToPrevious = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    moveProcessToPreviousDepartment(processId);
+  };
+  
+  const handleStartProcess = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (startProcess) {
+      startProcess(processId);
+    }
+  };
+  
+  const handleAcceptResponsibility = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onAcceptResponsibility) {
+      onAcceptResponsibility();
+    }
+  };
+
+  // Se o processo não está iniciado E o usuário tem permissão para iniciar (startProcess está disponível)
+  if (isNotStarted && startProcess) {
+    return (
+      <div className="flex justify-center gap-2 process-action">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleStartProcess} 
+          title="Iniciar processo" 
+          className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action"
+        >
+          <Play className="h-3 w-3" />
+          Iniciar
+        </Button>
+      </div>
+    );
+  }
+  
+  // Se não há responsável no setor e o processo não está concluído, mostra o botão de aceitar processo
+  // Removida a verificação de !isCompleted para que o botão apareça em processos "Em andamento"
+  if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed") {
+    return (
+      <div className="flex justify-center gap-2 process-action">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleAcceptResponsibility} 
+          disabled={isAccepting}
+          title="Aceitar processo" 
+          className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action"
+        >
+          <CheckCircle className="h-3 w-3" />
+          {isAccepting ? "Processando..." : "Aceitar Processo"}
+        </Button>
+      </div>
+    );
+  }
+  
+  // Caso contrário, mostra os botões de navegação entre departamentos
   return (
-    <div className="flex gap-2 justify-center">
-      {status === "not_started" && startProcess && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                startProcess(processId);
-              }}
-              className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action"
-              data-testid="start-process"
-            >
-              <Play className="h-3 w-3" />
-              Iniciar
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Iniciar processo</TooltipContent>
-        </Tooltip>
-      )}
-
-      {status !== "not_started" && status !== "completed" && !hasSectorResponsible && onAcceptResponsibility && (
-        <AcceptProcessResponsibilityButton
-          processId={processId}
-          protocolNumber={protocolNumber}
-          sectorId={sectorId}
-          hasResponsibleUser={hasSectorResponsible}
-          onAccept={onAcceptResponsibility}
-          isAccepting={isAccepting}
-        />
-      )}
-
-      {canMoveProcess && !isFirstDepartment && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                moveProcessToPreviousDepartment(processId);
-              }}
-              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-              data-testid="move-previous"
-            >
-              <MoveLeft className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Mover para departamento anterior</TooltipContent>
-        </Tooltip>
-      )}
-
-      {canMoveProcess && !isLastDepartment && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                moveProcessToNextDepartment(processId);
-              }}
-              className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-              data-testid="move-next"
-            >
-              <MoveRight className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Mover para próximo departamento</TooltipContent>
-        </Tooltip>
-      )}
+    <div className="flex justify-center gap-2 process-action">
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={handleMoveToPrevious} 
+        disabled={isFirstDepartment} 
+        title="Mover para setor anterior"
+        className={`process-action ${isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}`}
+      >
+        <MoveLeft className="h-4 w-4" />
+      </Button>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={handleMoveToNext} 
+        disabled={isCompleted} 
+        title="Mover para próximo setor"
+        className={`process-action ${isCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
+      >
+        <MoveRight className="h-4 w-4" />
+      </Button>
     </div>
   );
-};
+});
+
+// Adicionando displayName para facilitar debugging
+ProcessActionButtons.displayName = 'ProcessActionButtons';
 
 export default ProcessActionButtons;
