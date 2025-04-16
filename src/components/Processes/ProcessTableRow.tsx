@@ -40,7 +40,7 @@ const ProcessTableRow = ({
   canInitiateProcesses = false
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   
   // Usar o hook para obter informações sobre responsabilidade
   const { sectorResponsible, isSectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
@@ -89,8 +89,10 @@ const ProcessTableRow = ({
     return "";
   };
 
-  // Verificar se o usuário é administrador (com verificação de segurança)
-  const isUserAdmin = isAdmin ? isAdmin() : false;
+  // Verificar se o usuário é administrador - usando o email atual
+  // Precisamos passar o email do usuário como argumento para isAdmin
+  const userEmail = user?.email || "";
+  const isUserAdmin = user ? user.isAdmin || false : false;
 
   return (
     <TableRow 
