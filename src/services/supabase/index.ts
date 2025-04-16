@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/schema";
 import { UsuarioSupabase } from "@/types/usuario";
@@ -150,6 +149,32 @@ class SupabaseService {
       `)
       .eq('id', processId)
       .maybeSingle(); // Usando maybeSingle para evitar erros se o processo não for encontrado
+  }
+  
+  /**
+   * Verifica se um processo está no status "Não iniciado"
+   * Útil para o setor de atendimento verificar processos que pode iniciar
+   */
+  async checkProcessNotStarted(processId: string) {
+    console.log(`Verificando se processo ${processId} está não iniciado`);
+    return await supabase
+      .from('processos')
+      .select('id, status')
+      .eq('id', processId)
+      .eq('status', 'Não iniciado')
+      .maybeSingle();
+  }
+  
+  /**
+   * Obtém informações básicas sobre um processo para verificação de acesso
+   */
+  async getProcessBasicInfo(processId: string) {
+    console.log(`Obtendo informações básicas do processo ${processId} para verificação de acesso`);
+    return await supabase
+      .from('processos')
+      .select('id, numero_protocolo, usuario_responsavel, setor_atual, status')
+      .eq('id', processId)
+      .maybeSingle();
   }
   
   /**

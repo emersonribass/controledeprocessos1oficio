@@ -126,7 +126,41 @@ export const useProcessOperations = (onProcessUpdated: () => void) => {
         return true;
       }
       
-      // Usar o serviço que respeita as RLS policies para verificar acesso
+      // Se é do setor de atendimento, verificar se o processo está "não iniciado"
+      if (userProfile?.setores_atribuidos?.includes("1")) {
+        const { data } = await supabaseService.checkProcessNotStarted(processId);
+        if (data && data.status === 'Não iniciado') {
+          console.log(`Usuário ${user.id} é do setor de atendimento e processo está não iniciado - acesso garantido`);
+          return true;
+        }
+      }
+      
+      // Se tem perfil usuário, verificar se é responsável ou pertence ao setor atual
+      if (userProfile?.perfil === 'usuario') {
+        const { data: processo } = await supabaseService.getProcessBasicInfo(processId);
+        
+        if (!processo) {
+          console.warn(`Processo ${processId} não encontrado para verificação de acesso`);
+          return false;
+        }
+        
+        // Verificar se é responsável pelo processo
+        if (processo.usuario_responsavel === user.id) {
+          console.log(`Usuário ${user.id} é responsável pelo processo ${processId} - acesso garantido`);
+          return true;
+        }
+        
+        // Verificar se pertence ao setor atual do processo
+        if (userProfile.setores_atribuidos?.includes(processo.setor_atual)) {
+          console.log(`Usuário ${user.id} pertence ao setor ${processo.setor_atual} do processo ${processId} - acesso garantido`);
+          return true;
+        }
+        
+        console.warn(`Usuário ${user.id} com perfil 'usuario' não tem acesso ao processo ${processId}`);
+        return false;
+      }
+      
+      // Para outros perfis, usar o serviço que respeita as RLS policies para verificar acesso
       const hasAccess = await supabaseService.checkProcessAccess(processId);
       
       if (hasAccess) {

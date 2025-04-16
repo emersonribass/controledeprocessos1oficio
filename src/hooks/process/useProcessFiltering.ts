@@ -1,7 +1,8 @@
- import { Process } from "@/types";
- import { useAuth } from "@/hooks/auth";
- import { useMemo } from "react";
- import { useUserProfile } from "@/hooks/auth/useUserProfile";
+
+import { Process } from "@/types";
+import { useAuth } from "@/hooks/auth";
+import { useMemo } from "react";
+import { useUserProfile } from "@/hooks/auth/useUserProfile";
 
 interface ResponsibilityCheckers {
   isUserResponsibleForProcess?: (process: Process, userId: string) => boolean;
@@ -46,12 +47,7 @@ export const useProcessFiltering = (
     ): Process[] => {
       const baseList = processesToFilter || processes;
 
-      // Aplicar regras de visibilidade - PONTO CRÍTICO DA APLICAÇÃO
-      // Usuários só podem ver processos que:
-      // 1. São administradores (veem tudo)
-      // 2. São responsáveis pelo processo
-      // 3. Pertencem ao setor atual do processo
-      // 4. Pertencem ao setor de atendimento E o processo não está iniciado
+      // Aplicar regras de visibilidade conforme perfil do usuário
       const visibleProcesses = baseList.filter((process) => {
         if (!user) return false; // Não autenticado não vê nada
         
@@ -67,15 +63,30 @@ export const useProcessFiltering = (
           return true;
         }
         
-        // Usuário é responsável direto pelo processo
+        // Usuários com perfil "usuario" só podem ver processos que são responsáveis ou estão no setor atual
+        if (userProfile?.perfil === 'usuario') {
+          // Usuário é responsável direto pelo processo
+          if (isUserResponsibleForProcess(process, user.id)) {
+            console.log(`Usuário ${user.id} é responsável pelo processo ${process.protocolNumber} - visível`);
+            return true;
+          }
+          
+          // Usuário pertence ao setor atual do processo
+          if (isUserResponsibleForSector(process, user.id)) {
+            console.log(`Usuário ${user.id} pertence ao setor ${process.currentDepartment} do processo ${process.protocolNumber} - visível`);
+            return true;
+          }
+          
+          console.log(`Processo ${process.protocolNumber} não visível para usuário ${user.id} com perfil 'usuario'`);
+          return false;
+        }
+        
+        // Para outros perfis não especificados, manter a lógica original
         if (isUserResponsibleForProcess(process, user.id)) {
-          console.log(`Usuário ${user.id} é responsável pelo processo ${process.protocolNumber} - visível`);
           return true;
         }
         
-        // Usuário pertence ao setor atual do processo
         if (isUserResponsibleForSector(process, user.id)) {
-          console.log(`Usuário ${user.id} pertence ao setor ${process.currentDepartment} do processo ${process.protocolNumber} - visível`);
           return true;
         }
         
@@ -87,10 +98,10 @@ export const useProcessFiltering = (
       console.log(`Processos visíveis após filtro de permissões: ${visibleProcesses.length} de ${baseList.length}`);
       
       if (userProfile) {
-        console.log(`Setores do usuário: ${JSON.stringify(userProfile.setores_atribuidos)}`);
+        console.log(`Perfil do usuário: ${userProfile.perfil}, Setores: ${JSON.stringify(userProfile.setores_atribuidos)}`);
       }
 
-       // Aplicar os filtros selecionados pelo usuário na interface
+      // Aplicar os filtros selecionados pelo usuário na interface
       return visibleProcesses.filter((process) => {
         if (filters.excludeCompleted && process.status === 'completed') {
           return false;
@@ -127,15 +138,17 @@ export const useProcessFiltering = (
     };
   }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector, isUserInAttendanceSector, userProfile]);
 
-  const now = new Date();
-  const expectedEndDate = new Date(process.expectedEndDate);
-  return now > expectedEndDate;
-};
+  const isProcessOverdue = (process: Process) => {
+    const now = new Date();
+    const expectedEndDate = new Date(process.expectedEndDate);
+    return now > expectedEndDate;
+  };
 
-return {
-  filterProcesses,
-  isProcessOverdue,
-  isUserResponsibleForProcess,
-  isUserResponsibleForSector,
-  isUserInAttendanceSector
-    };
+  return {
+    filterProcesses,
+    isProcessOverdue,
+    isUserResponsibleForProcess,
+    isUserResponsibleForSector,
+    isUserInAttendanceSector
+  };
+};
