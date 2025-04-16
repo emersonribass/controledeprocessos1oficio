@@ -10,8 +10,8 @@ interface AcceptProcessResponsibilityButtonProps {
   protocolNumber?: string;
   sectorId?: string;
   hasResponsibleUser?: boolean;
-  onAccept: () => void;
-  isAccepting?: boolean; // Adicionando essa propriedade como opcional
+  onAccept: () => Promise<void>;
+  isAccepting?: boolean;
 }
 
 const AcceptProcessResponsibilityButton = memo(({
@@ -20,12 +20,13 @@ const AcceptProcessResponsibilityButton = memo(({
   sectorId,
   hasResponsibleUser = false,
   onAccept,
-  isAccepting = false, // Definindo um valor padrão
+  isAccepting = false,
 }: AcceptProcessResponsibilityButtonProps) => {
   const { acceptProcessResponsibility } = useProcessResponsibility();
   const { user } = useAuth();
 
-  const handleAcceptProcess = useCallback(async () => {
+  const handleAcceptProcess = useCallback(async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (processId && protocolNumber) {
       const success = await acceptProcessResponsibility(processId, protocolNumber);
       if (success) {
@@ -45,10 +46,11 @@ const AcceptProcessResponsibilityButton = memo(({
     <Button
       onClick={handleAcceptProcess}
       disabled={isAccepting || !user}
-      className="bg-green-600 hover:bg-green-700"
+      className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action"
       size="sm"
+      variant="outline"
     >
-      <CheckCircle className="mr-2 h-4 w-4" />
+      <CheckCircle className="mr-2 h-3 w-3" />
       {isAccepting ? "Processando..." : "Aceitar Processo"}
     </Button>
   );

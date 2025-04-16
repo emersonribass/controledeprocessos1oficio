@@ -1,7 +1,6 @@
 
 import { TableCell } from "@/components/ui/table";
 import ProcessActionButtons from "./ProcessActionButtons";
-import ProcessStatusBadge from "./ProcessStatusBadge";
 
 interface ProcessRowActionsProps {
   processId: string;
