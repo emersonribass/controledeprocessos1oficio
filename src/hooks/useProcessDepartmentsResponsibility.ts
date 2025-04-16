@@ -6,7 +6,7 @@ import { Department } from "@/types";
 
 /**
  * Hook para gerenciar responsáveis por departamentos em um processo
- * Utiliza a mesma estratégia de cache e paralelismo do useProcessDetailsResponsibility
+ * Implementa carregamento eficiente com cache e requisições em paralelo
  */
 export const useProcessDepartmentsResponsibility = (
   processId: string,
@@ -36,7 +36,8 @@ export const useProcessDepartmentsResponsibility = (
     try {
       console.log(`Carregando responsáveis para o processo: ${processId}`);
       
-      // Buscar apenas departamentos relevantes (atuais ou já passados)
+      // Filtrar apenas departamentos relevantes (atuais ou já passados)
+      // para otimizar o número de requisições
       const relevantDepartments = departments.filter(dept => 
         isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)
       );
@@ -47,7 +48,7 @@ export const useProcessDepartmentsResponsibility = (
         return;
       }
       
-      // Executar consultas em paralelo usando Promise.all
+      // Executar consultas em paralelo usando Promise.all para melhor desempenho
       const promises = [
         getProcessResponsible(processId),
         ...relevantDepartments.map(dept => 
@@ -59,7 +60,7 @@ export const useProcessDepartmentsResponsibility = (
       
       const results = await Promise.all(promises);
       
-      // Processar os resultados - corrigindo o problema de tipo aqui
+      // Processar os resultados
       // O primeiro resultado é o responsável pelo processo
       const processResp = results[0] as ProcessResponsible | null;
       setProcessResponsible(processResp);
@@ -90,11 +91,8 @@ export const useProcessDepartmentsResponsibility = (
 
   // Carregar responsáveis ao inicializar o componente ou quando o ID do processo muda
   useEffect(() => {
-    if (processId) {
-      // Redefine o estado quando o ID do processo muda
-      if (!loadedRef.current) {
-        loadResponsibles();
-      }
+    if (processId && !loadedRef.current) {
+      loadResponsibles();
     }
     
     return () => {

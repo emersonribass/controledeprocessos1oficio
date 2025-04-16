@@ -1,14 +1,23 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useProcessResponsibility } from "./useProcessResponsibility";
+import { ProcessResponsible } from "./process-responsibility/types";
 
+/**
+ * Hook para gerenciar responsáveis de um processo específico com carregamento eficiente
+ */
 export const useProcessDetailsResponsibility = (processId: string, sectorId: string) => {
   const [isLoading, setIsLoading] = useState(true);
-  const [processResponsible, setProcessResponsible] = useState<any>(null);
-  const [sectorResponsible, setSectorResponsible] = useState<any>(null);
-  const { getProcessResponsible, getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  const [processResponsible, setProcessResponsible] = useState<ProcessResponsible | null>(null);
+  const [sectorResponsible, setSectorResponsible] = useState<ProcessResponsible | null>(null);
+  const { 
+    getProcessResponsible, 
+    getSectorResponsible, 
+    acceptProcessResponsibility, 
+    isAccepting 
+  } = useProcessResponsibility();
   
-  // Referências para controlar se os dados já foram carregados
+  // Referências para controlar o estado de carregamento
   const loadedRef = useRef(false);
   const loadingInProgressRef = useRef(false);
   
@@ -25,7 +34,7 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
     try {
       console.log(`Carregando responsáveis: processo=${processId}, setor=${sectorId}`);
       
-      // Executar consultas em paralelo
+      // Carregar os responsáveis em paralelo para melhor desempenho
       const [processResp, sectorResp] = await Promise.all([
         getProcessResponsible(processId),
         getSectorResponsible(processId, sectorId)
@@ -46,13 +55,18 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
   const handleAcceptResponsibility = useCallback(async (protocolNumber: string): Promise<void> => {
     if (!processId || !protocolNumber) return;
     
-    const success = await acceptProcessResponsibility(processId, protocolNumber);
-    if (success) {
-      await loadResponsibles();
+    try {
+      const success = await acceptProcessResponsibility(processId, protocolNumber);
+      if (success) {
+        // Recarregar os responsáveis após aceitar a responsabilidade
+        await loadResponsibles();
+      }
+    } catch (error) {
+      console.error("Erro ao aceitar responsabilidade:", error);
     }
   }, [processId, acceptProcessResponsibility, loadResponsibles]);
 
-  // Carregar responsáveis uma única vez ao inicializar
+  // Carregar responsáveis ao inicializar ou quando as dependências mudarem
   useEffect(() => {
     // Resetar o estado quando os IDs mudam
     if (processId && sectorId && !loadedRef.current) {
