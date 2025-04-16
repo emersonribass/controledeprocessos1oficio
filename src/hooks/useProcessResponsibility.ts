@@ -3,11 +3,10 @@ import { useProcessResponsibleAssignment } from "./process-responsibility/usePro
 import { useProcessResponsibilityAcceptance } from "./process-responsibility/useProcessResponsibilityAcceptance";
 import { useProcessResponsibilityVerification } from "./process-responsibility/useProcessResponsibilityVerification";
 import { useProcessResponsibleFetching } from "./process-responsibility/useProcessResponsibleFetching";
-import { useProcessResponsibleBatchLoader } from "./process-responsibility/useProcessResponsibleBatchLoader";
 
 /**
  * Hook unificado para gerenciar responsabilidade em processos
- * Agora incluindo suporte para carregamento em lote
+ * Mantido para compatibilidade, mas com implementação revisada para evitar duplicação
  */
 export const useProcessResponsibility = () => {
   // Hook para atribuir responsáveis
@@ -16,14 +15,12 @@ export const useProcessResponsibility = () => {
   // Hook para aceitar responsabilidade
   const { isAccepting, acceptProcessResponsibility } = useProcessResponsibilityAcceptance();
   
-  // Hook para verificar responsabilidade
+  // Hook para verificar responsabilidade - agora estamos apenas reexportando 
+  // estas funções do hook useProcessFiltering via useProcesses
   const { isUserResponsibleForProcess, isUserResponsibleForSector } = useProcessResponsibilityVerification();
   
   // Hook para buscar responsáveis
-  const { getProcessResponsible, getSectorResponsible, clearCache } = useProcessResponsibleFetching();
-  
-  // Hook para carregamento em lote
-  const { loadProcessResponsibleBatch, loadSectorResponsibleBatch } = useProcessResponsibleBatchLoader();
+  const { getProcessResponsible, getSectorResponsible } = useProcessResponsibleFetching();
 
   return {
     // Estados
@@ -40,15 +37,8 @@ export const useProcessResponsibility = () => {
     isUserResponsibleForProcess,
     isUserResponsibleForSector,
     
-    // Busca individual
+    // Busca
     getProcessResponsible,
-    getSectorResponsible,
-    
-    // Busca em lote
-    loadProcessResponsibleBatch,
-    loadSectorResponsibleBatch,
-    
-    // Limpeza de cache
-    clearCache
+    getSectorResponsible
   };
 };

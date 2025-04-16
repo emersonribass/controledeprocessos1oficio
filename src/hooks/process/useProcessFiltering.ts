@@ -1,9 +1,8 @@
 
 import { Process } from "@/types";
 import { useAuth } from "@/hooks/auth";
-import { useMemo, useCallback, useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useUserProfile } from "@/hooks/auth/useUserProfile";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ResponsibilityCheckers {
   isUserResponsibleForProcess?: (process: Process, userId: string) => boolean;
@@ -16,69 +15,24 @@ export const useProcessFiltering = (
 ) => {
   const { user } = useAuth();
   const { userProfile, isAdmin } = useUserProfile();
-  const [sectorResponsibles, setSectorResponsibles] = useState<Record<string, Record<string, string[]>>>({});
   
-  // Fetch sector responsibles once when component mounts
-  useEffect(() => {
-    const fetchSectorResponsibles = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('setor_responsaveis')
-          .select('processo_id, setor_id, usuario_id');
-          
-        if (error) {
-          console.error("Erro ao buscar responsáveis por setor:", error);
-          return;
-        }
-        
-        // Organizar os dados por processo e setor
-        const responsiblesMap: Record<string, Record<string, string[]>> = {};
-        
-        data.forEach(resp => {
-          if (!responsiblesMap[resp.processo_id]) {
-            responsiblesMap[resp.processo_id] = {};
-          }
-          
-          if (!responsiblesMap[resp.processo_id][resp.setor_id]) {
-            responsiblesMap[resp.processo_id][resp.setor_id] = [];
-          }
-          
-          responsiblesMap[resp.processo_id][resp.setor_id].push(resp.usuario_id);
-        });
-        
-        setSectorResponsibles(responsiblesMap);
-      } catch (error) {
-        console.error("Erro ao processar responsáveis por setor:", error);
-      }
-    };
-    
-    fetchSectorResponsibles();
-  }, [user]);
+  // Usar as funções de verificação passadas ou usar as implementações padrão
+  const isUserResponsibleForProcess = checkers.isUserResponsibleForProcess || 
+    ((process: Process, userId: string) => {
+      return process.userId === userId || process.responsibleUserId === userId;
+    });
   
-  // Implementação da função isUserResponsibleForProcess com cache interno
-  const isUserResponsibleForProcess = useCallback((process: Process, userId: string) => {
-    // Verificar somente responsabilidade direta pelo processo (atual)
-    return process.userId === userId || process.responsibleUserId === userId;
-  }, []);
-  
-  // Nova implementação da função isUserResponsibleForSector que verifica a tabela setor_responsaveis
-  const isUserResponsibleForSector = useCallback((process: Process, userId: string) => {
-    // Verificar na tabela setor_responsaveis se o usuário está associado ao setor atual do processo
-    if (!sectorResponsibles[process.id] || !sectorResponsibles[process.id][process.currentDepartment]) {
-      return false;
-    }
-    
-    return sectorResponsibles[process.id][process.currentDepartment].includes(userId);
-  }, [sectorResponsibles]);
+  const isUserResponsibleForSector = checkers.isUserResponsibleForSector || 
+    ((process: Process, userId: string) => {
+      if (!userProfile || !userProfile.setores_atribuidos || !userProfile.setores_atribuidos.length) return false;
+      return userProfile.setores_atribuidos.includes(process.currentDepartment);
+    });
     
   // Verificar se o usuário pertence ao setor de atendimento (assumindo que o setor 1 é o de atendimento)
-  const isUserInAttendanceSector = useCallback(() => {
+  const isUserInAttendanceSector = () => {
     return userProfile?.setores_atribuidos?.includes("1") || false;
-  }, [userProfile]);
+  };
 
-  // Função de filtro memoizada para melhor performance
   const filterProcesses = useMemo(() => {
     return (
       filters: {
@@ -105,16 +59,13 @@ export const useProcessFiltering = (
           return true;
         }
         
-        // Verificar se o usuário é responsável direto pelo processo (atual)
+        // Verificar se o usuário é responsável direto pelo processo
         const isResponsibleForProcess = isUserResponsibleForProcess(process, user.id);
-        if (isResponsibleForProcess) return true;
         
-        // Verificar se o usuário é responsável pelo setor atual do processo na tabela setor_responsaveis
+        // Verificar se o usuário pertence ao setor atual do processo
         const isResponsibleForCurrentSector = isUserResponsibleForSector(process, user.id);
-        if (isResponsibleForCurrentSector) return true;
         
-        // Se nenhuma das condições acima for verdadeira, o usuário não deve ver o processo
-        return false;
+        return isResponsibleForProcess || isResponsibleForCurrentSector;
       });
 
       // Depois aplicar os filtros selecionados pelo usuário
@@ -152,7 +103,7 @@ export const useProcessFiltering = (
         return true;
       });
     };
-  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector, isUserInAttendanceSector, sectorResponsibles]);
+  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector, userProfile, isUserInAttendanceSector]);
 
   const isProcessOverdue = (process: Process) => {
     if (process.status === 'overdue') return true;

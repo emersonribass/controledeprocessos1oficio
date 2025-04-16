@@ -1,6 +1,7 @@
 
 import { TableCell } from "@/components/ui/table";
 import ProcessActionButtons from "./ProcessActionButtons";
+import ProcessStatusBadge from "./ProcessStatusBadge";
 
 interface ProcessRowActionsProps {
   processId: string;
@@ -15,10 +16,6 @@ interface ProcessRowActionsProps {
   onAcceptResponsibility: () => Promise<void>;
   isAccepting: boolean;
   sectorId?: string;
-  isSectorResponsible?: boolean;
-  isProcessResponsible?: boolean;
-  isAdmin?: boolean;
-  sectorResponsible?: any;
 }
 
 const ProcessRowActions = ({
@@ -33,11 +30,7 @@ const ProcessRowActions = ({
   hasSectorResponsible,
   onAcceptResponsibility,
   isAccepting,
-  sectorId,
-  isSectorResponsible = false,
-  isProcessResponsible = false,
-  isAdmin = false,
-  sectorResponsible
+  sectorId
 }: ProcessRowActionsProps) => {
   return (
     <TableCell className="text-right process-action">
@@ -55,11 +48,7 @@ const ProcessRowActions = ({
         hasSectorResponsible={hasSectorResponsible} 
         onAcceptResponsibility={onAcceptResponsibility} 
         isAccepting={isAccepting} 
-        sectorId={sectorId}
-        isSectorResponsible={isSectorResponsible}
-        isProcessResponsible={isProcessResponsible}
-        isAdmin={isAdmin}
-        sectorResponsible={sectorResponsible}
+        sectorId={sectorId} 
       />
     </TableCell>
   );

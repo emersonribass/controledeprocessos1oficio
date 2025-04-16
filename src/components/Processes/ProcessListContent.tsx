@@ -37,7 +37,8 @@ interface ProcessListContentProps {
   availableDepartments: Department[];
   filterProcesses: (
     filters: any, 
-    processesToFilter?: Process[]
+    processes: Process[], 
+    processesResponsibles?: Record<string, any>
   ) => Process[];
   isUserInAttendanceSector?: () => boolean; // Nova propriedade
 }

@@ -6,34 +6,26 @@ import { useAuth } from "@/hooks/auth";
 import { memo, useCallback } from "react";
 
 interface AcceptProcessResponsibilityButtonProps {
-  processId?: string;
-  protocolNumber?: string;
-  sectorId?: string;
-  hasResponsibleUser?: boolean;
-  onAccept: () => Promise<void>;
-  isAccepting?: boolean;
+  processId: string;
+  protocolNumber: string;
+  sectorId: string;
+  hasResponsibleUser: boolean;
+  onAccept: () => void;
 }
 
 const AcceptProcessResponsibilityButton = memo(({
   processId,
   protocolNumber,
   sectorId,
-  hasResponsibleUser = false,
+  hasResponsibleUser,
   onAccept,
-  isAccepting = false,
 }: AcceptProcessResponsibilityButtonProps) => {
-  const { acceptProcessResponsibility } = useProcessResponsibility();
+  const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const { user } = useAuth();
 
-  const handleAcceptProcess = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (processId && protocolNumber) {
-      const success = await acceptProcessResponsibility(processId, protocolNumber);
-      if (success) {
-        onAccept();
-      }
-    } else {
-      // Se não tiver processId e protocolNumber, apenas chama a função onAccept
+  const handleAcceptProcess = useCallback(async () => {
+    const success = await acceptProcessResponsibility(processId, protocolNumber);
+    if (success) {
       onAccept();
     }
   }, [processId, protocolNumber, acceptProcessResponsibility, onAccept]);
@@ -46,11 +38,10 @@ const AcceptProcessResponsibilityButton = memo(({
     <Button
       onClick={handleAcceptProcess}
       disabled={isAccepting || !user}
-      className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action"
+      className="bg-green-600 hover:bg-green-700"
       size="sm"
-      variant="outline"
     >
-      <CheckCircle className="mr-2 h-3 w-3" />
+      <CheckCircle className="mr-2 h-4 w-4" />
       {isAccepting ? "Processando..." : "Aceitar Processo"}
     </Button>
   );

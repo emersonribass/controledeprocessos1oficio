@@ -4,41 +4,14 @@ import { useProcessResponsibility } from "./useProcessResponsibility";
 import { useToast } from "./use-toast";
 import { useAuth } from "./auth";
 import { useProcesses } from "./useProcesses";
-import { supabase } from "@/integrations/supabase/client";
 
 export const useProcessRowResponsibility = (processId: string, sectorId?: string) => {
   const { getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  const { filterProcesses } = useProcesses();
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
   const [isLoadingResponsible, setIsLoadingResponsible] = useState(false);
-  const [isSectorResponsible, setIsSectorResponsible] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-
-  // Verifica se o usuário atual é responsável pelo processo no setor especificado
-  const checkUserResponsibilityForSector = useCallback(async () => {
-    if (!user || !sectorId || !processId) return false;
-    
-    try {
-      const { data, error } = await supabase
-        .from('setor_responsaveis')
-        .select('*')
-        .eq('processo_id', processId)
-        .eq('setor_id', sectorId)
-        .eq('usuario_id', user.id)
-        .maybeSingle();
-      
-      if (error) {
-        console.error("Erro ao verificar responsabilidade pelo setor:", error);
-        return false;
-      }
-      
-      setIsSectorResponsible(!!data);
-      return !!data;
-    } catch (error) {
-      console.error("Erro ao verificar responsabilidade:", error);
-      return false;
-    }
-  }, [user, sectorId, processId]);
 
   // Carrega o responsável pelo processo no setor atual
   const loadSectorResponsible = useCallback(async () => {
@@ -51,16 +24,13 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     try {
       const responsible = await getSectorResponsible(processId, sectorId);
       setSectorResponsible(responsible);
-      
-      // Verifica se o usuário atual é responsável
-      await checkUserResponsibilityForSector();
     } catch (error) {
       console.error("Erro ao carregar responsável:", error);
       setSectorResponsible(null);
     } finally {
       setIsLoadingResponsible(false);
     }
-  }, [processId, sectorId, getSectorResponsible, checkUserResponsibilityForSector]);
+  }, [processId, sectorId, getSectorResponsible]);
 
   // Carrega o responsável quando o componente é montado ou quando o departamento atual muda
   useEffect(() => {
@@ -102,7 +72,6 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     sectorResponsible,
     isLoadingResponsible,
     handleAcceptResponsibility,
-    isAccepting,
-    isSectorResponsible
+    isAccepting
   };
 };

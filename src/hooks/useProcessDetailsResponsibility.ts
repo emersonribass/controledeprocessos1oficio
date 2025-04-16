@@ -1,76 +1,76 @@
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useProcessResponsibility } from "./useProcessResponsibility";
-import { ProcessResponsible } from "./process-responsibility/types";
-import { useProcessBatchLoader } from "./useProcessBatchLoader";
 
-/**
- * Hook para gerenciar responsáveis de um processo específico com carregamento eficiente
- */
 export const useProcessDetailsResponsibility = (processId: string, sectorId: string) => {
   const [isLoading, setIsLoading] = useState(true);
-  const { 
-    acceptProcessResponsibility, 
-    isAccepting 
-  } = useProcessResponsibility();
+  const [processResponsible, setProcessResponsible] = useState<any>(null);
+  const [sectorResponsible, setSectorResponsible] = useState<any>(null);
+  const { getProcessResponsible, getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   
-  const {
-    getProcessResponsible,
-    getSectorResponsible,
-    queueProcessForLoading,
-    queueSectorForLoading
-  } = useProcessBatchLoader();
+  // Referências para controlar se os dados já foram carregados
+  const loadedRef = useRef(false);
+  const loadingInProgressRef = useRef(false);
   
-  // Carrega os responsáveis sob demanda
-  const processResponsible = getProcessResponsible(processId);
-  const sectorResponsible = getSectorResponsible(processId, sectorId);
-  
-  // Função para forçar uma atualização
-  const refreshResponsibles = useCallback(() => {
-    if (!processId || !sectorId) return;
-    
-    setIsLoading(true);
-    queueProcessForLoading(processId);
-    queueSectorForLoading(processId, sectorId);
-    
-    // Desativa o estado de loading após um breve intervalo
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-  }, [processId, sectorId, queueProcessForLoading, queueSectorForLoading]);
-
-  // Carrega inicialmente os responsáveis quando os IDs são fornecidos
-  useState(() => {
-    if (processId && sectorId) {
-      queueProcessForLoading(processId);
-      queueSectorForLoading(processId, sectorId);
-      
-      // Desativa o estado de loading após um breve intervalo
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 300);
+  // Função para carregar responsáveis de forma eficiente
+  const loadResponsibles = useCallback(async () => {
+    if (!processId || !sectorId || loadingInProgressRef.current) {
+      return;
     }
-  });
+    
+    // Evitar múltiplas chamadas simultâneas
+    loadingInProgressRef.current = true;
+    setIsLoading(true);
+    
+    try {
+      console.log(`Carregando responsáveis: processo=${processId}, setor=${sectorId}`);
+      
+      // Executar consultas em paralelo
+      const [processResp, sectorResp] = await Promise.all([
+        getProcessResponsible(processId),
+        getSectorResponsible(processId, sectorId)
+      ]);
+      
+      setProcessResponsible(processResp);
+      setSectorResponsible(sectorResp);
+      loadedRef.current = true;
+    } catch (error) {
+      console.error("Erro ao carregar responsáveis:", error);
+    } finally {
+      setIsLoading(false);
+      loadingInProgressRef.current = false;
+    }
+  }, [processId, sectorId, getProcessResponsible, getSectorResponsible]);
 
+  // Aceitar responsabilidade pelo processo
   const handleAcceptResponsibility = useCallback(async (protocolNumber: string): Promise<void> => {
     if (!processId || !protocolNumber) return;
     
-    try {
-      const success = await acceptProcessResponsibility(processId, protocolNumber);
-      if (success) {
-        refreshResponsibles();
-      }
-    } catch (error) {
-      console.error("Erro ao aceitar responsabilidade:", error);
+    const success = await acceptProcessResponsibility(processId, protocolNumber);
+    if (success) {
+      await loadResponsibles();
     }
-  }, [processId, acceptProcessResponsibility, refreshResponsibles]);
+  }, [processId, acceptProcessResponsibility, loadResponsibles]);
+
+  // Carregar responsáveis uma única vez ao inicializar
+  useEffect(() => {
+    // Resetar o estado quando os IDs mudam
+    if (processId && sectorId && !loadedRef.current) {
+      loadResponsibles();
+    }
+    
+    return () => {
+      // Limpar referências quando o componente é desmontado
+      loadedRef.current = false;
+    };
+  }, [loadResponsibles, processId, sectorId]);
 
   return {
-    isLoading: isLoading && (processResponsible === undefined || sectorResponsible === undefined),
+    isLoading,
     processResponsible,
     sectorResponsible,
     handleAcceptResponsibility,
     isAccepting,
-    refreshResponsibles
+    refreshResponsibles: loadResponsibles
   };
 };

@@ -8,6 +8,6 @@ import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
  */
 export const useProcessFilters = (processes: Process[]) => {
   // Agora não precisamos mais passar as funções de verificação aqui
-  // pois useProcessFiltering já implementa a lógica otimizada
+  // pois useProcessFiltering já usa o useUserProfile internamente
   return useProcessFiltering(processes);
 };

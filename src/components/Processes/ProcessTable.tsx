@@ -1,9 +1,11 @@
 
 import { Table } from "@/components/ui/table";
-import { Department, Process, ProcessType } from "@/types";
+import { Process, ProcessType, Department } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
-import { useProcessBatchLoader } from "@/hooks/useProcessBatchLoader";
-import ProcessTableBody from "./TableComponents/ProcessTableBody";
+import ProcessTableBody from "./ProcessTableBody";
+import { useProcessTableState } from "@/hooks/useProcessTableState";
+import { useEffect, useMemo } from "react";
+import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
 
 interface ProcessTableProps {
   processes: Process[];
@@ -19,17 +21,12 @@ interface ProcessTableProps {
   updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
   departments: Department[];
   startProcess?: (processId: string) => Promise<void>;
-  filterProcesses?: (
+  filterProcesses: (
     filters: any, 
-    processesToFilter?: Process[]
+    processes: Process[], 
+    processesResponsibles?: Record<string, any>
   ) => Process[];
-  filters?: {
-    department?: string;
-    status?: string;
-    processType?: string;
-    search?: string;
-    excludeCompleted?: boolean;
-  };
+  filters: any;
 }
 
 const ProcessTable = ({
@@ -43,14 +40,26 @@ const ProcessTable = ({
   moveProcessToPreviousDepartment,
   processTypes,
   updateProcessType,
-  updateProcessStatus,
   departments,
   startProcess,
   filterProcesses,
   filters
 }: ProcessTableProps) => {
-  // Usar o hook useProcessBatchLoader para gerenciar responsáveis
-  const batchLoader = useProcessBatchLoader();
+  const { processesResponsibles, fetchResponsibles } = useProcessTableState(processes);
+  const { isUserInAttendanceSector } = useProcessFiltering(processes);
+  
+  // Buscar responsáveis quando os processos mudarem
+  useEffect(() => {
+    if (processes.length > 0) {
+      fetchResponsibles();
+    }
+  }, [processes, fetchResponsibles]);
+  
+  // Memorizar processos filtrados para evitar recálculos desnecessários
+  const filteredProcesses = useMemo(() => 
+    filterProcesses(filters, processes, processesResponsibles),
+    [filters, processes, processesResponsibles, filterProcesses]
+  );
   
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -61,20 +70,17 @@ const ProcessTable = ({
           toggleSort={toggleSort} 
           departments={departments} 
         />
-        <ProcessTableBody 
-          processes={processes}
+        <ProcessTableBody
+          processes={filteredProcesses}
           departments={departments}
-          getDepartmentName={getDepartmentName}
-          getProcessTypeName={getProcessTypeName}
+          processTypes={processTypes}
           moveProcessToNextDepartment={moveProcessToNextDepartment}
           moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-          processTypes={processTypes}
+          getProcessTypeName={getProcessTypeName}
           updateProcessType={updateProcessType}
           startProcess={startProcess}
-          getProcessResponsible={batchLoader.getProcessResponsible}
-          getSectorResponsible={batchLoader.getSectorResponsible}
-          queueProcessForLoading={batchLoader.queueProcessForLoading}
-          queueSectorForLoading={batchLoader.queueSectorForLoading}
+          processesResponsibles={processesResponsibles}
+          isUserInAttendanceSector={isUserInAttendanceSector}
         />
       </Table>
     </div>
