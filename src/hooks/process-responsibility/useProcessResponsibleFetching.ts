@@ -21,23 +21,26 @@ export const useProcessResponsibleFetching = () => {
   const getProcessResponsible = useCallback(async (processId: string): Promise<ProcessResponsible | null> => {
     // Verifica se já temos o resultado em cache
     if (processResponsibleCache[processId] !== undefined) {
+      console.log("Usando cache para responsável do processo:", processId);
       return processResponsibleCache[processId];
     }
 
     // Verifica se já existe uma requisição em andamento para este processo
     if (pendingProcessRequests.current[processId]) {
+      console.log("Usando requisição em andamento para responsável do processo:", processId);
       return pendingProcessRequests.current[processId];
     }
     
     // Evita requisições duplicadas para o mesmo processo
     if (isFetchingRef.current[`process_${processId}`]) {
+      console.log("Requisição já em andamento para:", processId);
       return null;
     }
     
     isFetchingRef.current[`process_${processId}`] = true;
 
     try {
-      console.log("Buscando responsável para o processo:", processId);
+      console.log("Iniciando busca de responsável para o processo:", processId);
       
       // Cria uma nova promessa e a armazena para evitar requisições duplicadas
       pendingProcessRequests.current[processId] = (async () => {
@@ -55,10 +58,12 @@ export const useProcessResponsibleFetching = () => {
           }
 
           if (!process || !process.usuario_responsavel) {
-            console.log("Processo não tem responsável definido");
+            console.log("Processo não tem responsável definido:", processId);
             setProcessResponsibleCache(prev => ({ ...prev, [processId]: null }));
             return null;
           }
+
+          console.log("Responsável encontrado para o processo, buscando detalhes do usuário:", process.usuario_responsavel);
 
           const { data: user, error: userError } = await supabase
             .from('usuarios')
@@ -77,6 +82,8 @@ export const useProcessResponsibleFetching = () => {
             setProcessResponsibleCache(prev => ({ ...prev, [processId]: null }));
             return null;
           }
+
+          console.log("Detalhes do usuário responsável encontrados:", user.nome);
 
           // Atualiza o cache
           setProcessResponsibleCache(prev => ({ ...prev, [processId]: user }));
@@ -106,23 +113,26 @@ export const useProcessResponsibleFetching = () => {
     
     // Verifica se já temos o resultado em cache
     if (sectorResponsibleCache[cacheKey] !== undefined) {
+      console.log("Usando cache para responsável do setor:", cacheKey);
       return sectorResponsibleCache[cacheKey];
     }
     
     // Verifica se já existe uma requisição em andamento para este setor
     if (pendingSectorRequests.current[cacheKey]) {
+      console.log("Usando requisição em andamento para responsável do setor:", cacheKey);
       return pendingSectorRequests.current[cacheKey];
     }
     
     // Evita requisições duplicadas para o mesmo setor
     if (isFetchingRef.current[`sector_${cacheKey}`]) {
+      console.log("Requisição já em andamento para setor:", cacheKey);
       return null;
     }
     
     isFetchingRef.current[`sector_${cacheKey}`] = true;
     
     try {
-      console.log("Buscando responsável para o processo no setor:", processId, sectorId);
+      console.log("Iniciando busca de responsável para o processo no setor:", processId, sectorId);
       
       if (!processId || !sectorId) {
         console.log("ID do processo ou setor não fornecido");
@@ -148,10 +158,12 @@ export const useProcessResponsibleFetching = () => {
           }
 
           if (!data || !data.usuario_id) {
-            console.log("Nenhum responsável encontrado para este setor");
+            console.log("Nenhum responsável encontrado para o setor:", sectorId);
             setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: null }));
             return null;
           }
+
+          console.log("Responsável encontrado para o setor, buscando detalhes do usuário:", data.usuario_id);
 
           const { data: user, error: userError } = await supabase
             .from('usuarios')
@@ -170,6 +182,8 @@ export const useProcessResponsibleFetching = () => {
             setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: null }));
             return null;
           }
+
+          console.log("Detalhes do usuário responsável pelo setor encontrados:", user.nome);
 
           // Atualiza o cache
           setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: user }));
@@ -194,6 +208,7 @@ export const useProcessResponsibleFetching = () => {
    * Limpa o cache de responsáveis
    */
   const clearCache = useCallback(() => {
+    console.log("Limpando cache de responsáveis");
     setProcessResponsibleCache({});
     setSectorResponsibleCache({});
     pendingProcessRequests.current = {};

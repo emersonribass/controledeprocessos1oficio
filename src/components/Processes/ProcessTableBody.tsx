@@ -5,7 +5,7 @@ import ProcessTableRow from "./ProcessTableRow";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ProcessTableBodyProps {
   processes: Process[];
@@ -16,7 +16,6 @@ interface ProcessTableBodyProps {
   getProcessTypeName: (id: string) => string;
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   startProcess?: (processId: string) => Promise<void>;
-  processesResponsibles: Record<string, any>;
   isUserInAttendanceSector?: () => boolean;
 }
 
@@ -29,13 +28,44 @@ const ProcessTableBody = ({
   getProcessTypeName,
   updateProcessType,
   startProcess,
-  processesResponsibles,
   isUserInAttendanceSector = () => false
 }: ProcessTableBodyProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  const { acceptProcessResponsibility, isAccepting, getProcessResponsible, getSectorResponsible } = useProcessResponsibility();
   const [acceptingProcessId, setAcceptingProcessId] = useState<string | null>(null);
+  
+  // Estado para armazenar responsáveis de processos
+  const [processesResponsibles, setProcessesResponsibles] = useState<Record<string, any>>({});
+  
+  // Efeito para carregar responsáveis quando a lista de processos mudar
+  useEffect(() => {
+    const loadResponsibles = async () => {
+      // Inicializa o objeto para armazenar os responsáveis
+      const responsibleData: Record<string, any> = {};
+      
+      // Para cada processo, busca seu responsável e os responsáveis do setor atual
+      for (const process of processes) {
+        responsibleData[process.id] = {};
+        
+        // Busca o responsável do processo
+        const processResp = await getProcessResponsible(process.id);
+        responsibleData[process.id].processResponsible = processResp;
+        
+        // Busca o responsável do setor atual
+        if (process.currentDepartment) {
+          const sectorResp = await getSectorResponsible(process.id, process.currentDepartment);
+          responsibleData[process.id][process.currentDepartment] = sectorResp;
+        }
+      }
+      
+      setProcessesResponsibles(responsibleData);
+    };
+    
+    if (processes.length > 0) {
+      loadResponsibles();
+    }
+  }, [processes, getProcessResponsible, getSectorResponsible]);
   
   // Função para aceitar a responsabilidade pelo processo
   const handleAcceptResponsibility = async (processId: string, protocolNumber?: string) => {
@@ -50,6 +80,23 @@ const ProcessTableBody = ({
           title: "Sucesso",
           description: "Você aceitou a responsabilidade pelo processo."
         });
+        
+        // Atualiza os responsáveis após a aceitação
+        const processResp = await getProcessResponsible(processId);
+        const process = processes.find(p => p.id === processId);
+        
+        if (process) {
+          const sectorResp = await getSectorResponsible(processId, process.currentDepartment);
+          
+          setProcessesResponsibles(prev => ({
+            ...prev,
+            [processId]: {
+              ...prev[processId],
+              processResponsible: processResp,
+              [process.currentDepartment]: sectorResp
+            }
+          }));
+        }
       }
     } catch (error) {
       console.error("Erro ao aceitar responsabilidade:", error);
@@ -95,6 +142,8 @@ const ProcessTableBody = ({
           onAcceptResponsibility={() => handleAcceptResponsibility(process.id, process.protocolNumber)}
           isAccepting={isAccepting && acceptingProcessId === process.id}
           canInitiateProcesses={isUserInAttendanceSector()}
+          sectorResponsible={processesResponsibles[process.id]?.[process.currentDepartment]}
+          processResponsible={processesResponsibles[process.id]?.processResponsible}
         />
       ))}
     </TableBody>

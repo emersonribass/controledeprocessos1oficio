@@ -88,10 +88,13 @@ export const useProcessDepartmentsResponsibility = (
     }
   }, [processId, departments, getProcessResponsible, getSectorResponsible, isCurrentDepartment, hasPassedDepartment]);
 
-  // Carregar responsáveis ao inicializar o componente
+  // Carregar responsáveis ao inicializar o componente ou quando o ID do processo muda
   useEffect(() => {
-    if (processId && !loadedRef.current) {
-      loadResponsibles();
+    if (processId) {
+      // Redefine o estado quando o ID do processo muda
+      if (!loadedRef.current) {
+        loadResponsibles();
+      }
     }
     
     return () => {

@@ -2,7 +2,7 @@
 import { TableCell } from "@/components/ui/table";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import { Department } from "@/types";
-import { useProcessDepartmentsResponsibility } from "@/hooks/useProcessDepartmentsResponsibility";
+import { ProcessResponsible } from "@/hooks/process-responsibility/types";
 import { memo } from "react";
 
 interface ProcessDepartmentsSectionProps {
@@ -14,6 +14,8 @@ interface ProcessDepartmentsSectionProps {
   isCurrentDepartment: (departmentId: string) => boolean;
   isPreviousDepartment: (departmentId: string) => boolean;
   isDepartmentOverdue: (departmentId: string, isProcessStarted: boolean) => boolean;
+  processResponsible?: ProcessResponsible | null;
+  sectorResponsible?: ProcessResponsible | null;
 }
 
 const ProcessDepartmentsSection = memo(({
@@ -24,19 +26,10 @@ const ProcessDepartmentsSection = memo(({
   hasPassedDepartment,
   isCurrentDepartment,
   isPreviousDepartment,
-  isDepartmentOverdue
+  isDepartmentOverdue,
+  processResponsible = null,
+  sectorResponsible = null
 }: ProcessDepartmentsSectionProps) => {
-  // Usando o novo hook para buscar responsáveis
-  const { 
-    processResponsible, 
-    departmentResponsibles 
-  } = useProcessDepartmentsResponsibility(
-    processId,
-    sortedDepartments,
-    isCurrentDepartment,
-    hasPassedDepartment
-  );
-
   return (
     <>
       {sortedDepartments.map((dept) => {
@@ -44,9 +37,6 @@ const ProcessDepartmentsSection = memo(({
         const isPastDept = hasPassedDepartment(dept.id) && isPreviousDepartment(dept.id);
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
-        
-        // Obtém o responsável do setor com tratamento para null
-        const sectorResponsible = departmentResponsibles ? departmentResponsibles[dept.id] : null;
         
         return (
           <TableCell key={dept.id}>
@@ -59,8 +49,8 @@ const ProcessDepartmentsSection = memo(({
               isDepartmentOverdue={isActive && isOverdue}
               departmentTimeLimit={dept.timeLimit}
               isProcessStarted={isProcessStarted}
-              processResponsible={processResponsible}
-              sectorResponsible={sectorResponsible}
+              processResponsible={isActive ? processResponsible : null}
+              sectorResponsible={isActive ? sectorResponsible : null}
             />
           </TableCell>
         );

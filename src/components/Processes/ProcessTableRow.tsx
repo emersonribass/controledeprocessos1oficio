@@ -7,6 +7,7 @@ import ProcessDepartmentsSection from "./ProcessDepartmentsSection";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
 import ProcessStatusBadge from "./ProcessStatusBadge";
+import { ProcessResponsible } from "@/hooks/process-responsibility/types";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -21,7 +22,8 @@ interface ProcessTableRowProps {
   onAcceptResponsibility?: () => Promise<void>;
   isAccepting?: boolean;
   canInitiateProcesses?: boolean;
-  sectorResponsible?: any;
+  sectorResponsible?: ProcessResponsible | null;
+  processResponsible?: ProcessResponsible | null;
 }
 
 const ProcessTableRow = ({
@@ -37,7 +39,8 @@ const ProcessTableRow = ({
   onAcceptResponsibility,
   isAccepting = false,
   canInitiateProcesses = false,
-  sectorResponsible
+  sectorResponsible = null,
+  processResponsible = null
 }: ProcessTableRowProps) => {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -99,6 +102,8 @@ const ProcessTableRow = ({
         isCurrentDepartment={isCurrentDepartment}
         isPreviousDepartment={isPreviousDepartment}
         isDepartmentOverdue={isDepartmentOverdue}
+        processResponsible={processResponsible}
+        sectorResponsible={sectorResponsible}
       />
 
       <TableCell>
