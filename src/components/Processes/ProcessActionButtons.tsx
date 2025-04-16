@@ -40,7 +40,9 @@ const ProcessActionButtons = ({
   onAcceptResponsibility,
   isAccepting = false,
   sectorId,
-  isSectorResponsible = false
+  isSectorResponsible = false,
+  isProcessResponsible = false,
+  isAdmin = false
 }: ProcessActionButtonsProps) => {
   const canMoveProcess = status !== "not_started" && status !== "completed" && (isSectorResponsible || isProcessResponsible || isAdmin);
   const isCompleted = status === "completed";
@@ -121,9 +123,9 @@ const ProcessActionButtons = ({
             variant="ghost" 
             size="icon" 
             onClick={handleMoveToPrevious} 
-            disabled={isFirstDepartment} 
+            disabled={isFirstDepartment || !canMoveProcess} 
             title="Mover para setor anterior"
-            className={`process-action ${isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`process-action ${isFirstDepartment || !canMoveProcess ? "opacity-50 cursor-not-allowed" : ""}`}
             data-testid="move-previous"
           >
             <MoveLeft className="h-4 w-4" />
@@ -138,9 +140,9 @@ const ProcessActionButtons = ({
             variant="ghost" 
             size="icon" 
             onClick={handleMoveToNext} 
-            disabled={isCompleted} 
+            disabled={isCompleted || !canMoveProcess} 
             title="Mover para próximo setor"
-            className={`process-action ${isCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`process-action ${isCompleted || !canMoveProcess ? "opacity-50 cursor-not-allowed" : ""}`}
             data-testid="move-next"
           >
             <MoveRight className="h-4 w-4" />

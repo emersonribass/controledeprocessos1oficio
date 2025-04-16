@@ -8,6 +8,7 @@ import ProcessDepartmentsSection from "./ProcessDepartmentsSection";
 import ProcessRowActions from "./ProcessRowActions";
 import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
 import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
+import { useAuth } from "@/hooks/auth";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -39,9 +40,13 @@ const ProcessTableRow = ({
   canInitiateProcesses = false
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
+  const { user, isAdmin } = useAuth();
   
   // Usar o hook para obter informações sobre responsabilidade
   const { sectorResponsible, isSectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
+  
+  // Verificar se o usuário é responsável pelo processo
+  const isProcessResponsible = user && (process.userId === user.id || process.responsibleUserId === user.id);
   
   // Verificar se há um responsável para o setor atual
   // Importante: verificamos tanto o hasSectorResponsible (que pode vir de um contexto mais amplo)
@@ -130,6 +135,8 @@ const ProcessTableRow = ({
         isAccepting={isAccepting}
         sectorId={process.currentDepartment}
         isSectorResponsible={isSectorResponsible}
+        isProcessResponsible={isProcessResponsible}
+        isAdmin={isAdmin()}
       />
     </TableRow>
   );
