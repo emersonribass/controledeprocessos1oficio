@@ -5,11 +5,16 @@ import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useProcessResponsibleFetching } from "./process-responsibility/useProcessResponsibleFetching";
 
+/**
+ * Hook centralizado para gerenciar responsabilidades de processos
+ */
 export const useProcessResponsibility = () => {
   const [isAccepting, setIsAccepting] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
-  const { getProcessResponsible, getSectorResponsible } = useProcessResponsibleFetching();
+  
+  // Utiliza o hook especializado para busca de responsáveis
+  const { getProcessResponsible, getSectorResponsible, getBulkResponsibles } = useProcessResponsibleFetching();
   
   /**
    * Verifica se o usuário atual é responsável por um processo em um setor específico
@@ -188,10 +193,16 @@ export const useProcessResponsibility = () => {
   }, [user, toast]);
   
   return {
+    // Verificação de responsabilidade
     isUserResponsibleForSector,
+    
+    // Ações de responsabilidade
     acceptProcessResponsibility,
     isAccepting,
+    
+    // Busca de responsáveis (do hook de fetching)
     getProcessResponsible,
-    getSectorResponsible
+    getSectorResponsible,
+    getBulkResponsibles
   };
 };

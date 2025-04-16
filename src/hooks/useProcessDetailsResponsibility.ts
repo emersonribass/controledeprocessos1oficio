@@ -8,39 +8,62 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
   const { getProcessResponsible, getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   
-  // Referências para controlar se os dados já foram carregados
-  const loadedRef = useRef(false);
-  const loadingInProgressRef = useRef(false);
+  // Referências para controlar requisições já realizadas
+  const processRequestMade = useRef(false);
+  const sectorRequestMade = useRef(false);
+  
+  // Função para carregar responsável principal do processo
+  const loadProcessResponsible = useCallback(async () => {
+    if (!processId || processRequestMade.current) return;
+    
+    processRequestMade.current = true;
+    
+    try {
+      const resp = await getProcessResponsible(processId);
+      setProcessResponsible(resp);
+      return resp;
+    } catch (error) {
+      console.error("Erro ao carregar responsável principal:", error);
+      return null;
+    }
+  }, [processId, getProcessResponsible]);
+  
+  // Função para carregar responsável do setor
+  const loadSectorResponsible = useCallback(async () => {
+    if (!processId || !sectorId || sectorRequestMade.current) return;
+    
+    sectorRequestMade.current = true;
+    
+    try {
+      const resp = await getSectorResponsible(processId, sectorId);
+      setSectorResponsible(resp);
+      return resp;
+    } catch (error) {
+      console.error("Erro ao carregar responsável do setor:", error);
+      return null;
+    }
+  }, [processId, sectorId, getSectorResponsible]);
   
   // Função para carregar responsáveis de forma eficiente
   const loadResponsibles = useCallback(async () => {
-    if (!processId || !sectorId || loadingInProgressRef.current) {
+    if (!processId || !sectorId) {
       return;
     }
     
-    // Evitar múltiplas chamadas simultâneas
-    loadingInProgressRef.current = true;
     setIsLoading(true);
     
     try {
-      console.log(`Carregando responsáveis: processo=${processId}, setor=${sectorId}`);
-      
       // Executar consultas em paralelo
-      const [processResp, sectorResp] = await Promise.all([
-        getProcessResponsible(processId),
-        getSectorResponsible(processId, sectorId)
+      await Promise.all([
+        loadProcessResponsible(),
+        loadSectorResponsible()
       ]);
-      
-      setProcessResponsible(processResp);
-      setSectorResponsible(sectorResp);
-      loadedRef.current = true;
     } catch (error) {
       console.error("Erro ao carregar responsáveis:", error);
     } finally {
       setIsLoading(false);
-      loadingInProgressRef.current = false;
     }
-  }, [processId, sectorId, getProcessResponsible, getSectorResponsible]);
+  }, [processId, sectorId, loadProcessResponsible, loadSectorResponsible]);
 
   // Aceitar responsabilidade pelo processo
   const handleAcceptResponsibility = useCallback(async (protocolNumber: string): Promise<void> => {
@@ -48,20 +71,26 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
     
     const success = await acceptProcessResponsibility(processId, protocolNumber);
     if (success) {
+      // Redefinir estado para forçar nova busca
+      processRequestMade.current = false;
+      sectorRequestMade.current = false;
       await loadResponsibles();
     }
   }, [processId, acceptProcessResponsibility, loadResponsibles]);
 
-  // Carregar responsáveis uma única vez ao inicializar
+  // Resetar o estado quando os IDs mudam
   useEffect(() => {
-    // Resetar o estado quando os IDs mudam
-    if (processId && sectorId && !loadedRef.current) {
+    processRequestMade.current = false;
+    sectorRequestMade.current = false;
+    
+    if (processId && sectorId) {
       loadResponsibles();
     }
     
     return () => {
       // Limpar referências quando o componente é desmontado
-      loadedRef.current = false;
+      processRequestMade.current = false;
+      sectorRequestMade.current = false;
     };
   }, [loadResponsibles, processId, sectorId]);
 

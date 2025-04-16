@@ -1,26 +1,28 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useProcessResponsibility } from "./useProcessResponsibility";
 import { useToast } from "./use-toast";
 import { useAuth } from "./auth";
-import { useProcesses } from "./useProcesses";
 
 export const useProcessRowResponsibility = (processId: string, sectorId?: string) => {
   const { getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
-  const { filterProcesses } = useProcesses();
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
   const [isLoadingResponsible, setIsLoadingResponsible] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  
+  // Referência para controlar se a request já foi iniciada
+  const requestMadeRef = useRef(false);
 
   // Carrega o responsável pelo processo no setor atual
   const loadSectorResponsible = useCallback(async () => {
-    if (!sectorId || !processId) {
-      setSectorResponsible(null);
+    if (!sectorId || !processId || requestMadeRef.current) {
       return;
     }
     
+    requestMadeRef.current = true;
     setIsLoadingResponsible(true);
+    
     try {
       const responsible = await getSectorResponsible(processId, sectorId);
       setSectorResponsible(responsible);
@@ -34,16 +36,16 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
 
   // Carrega o responsável quando o componente é montado ou quando o departamento atual muda
   useEffect(() => {
-    const controller = new AbortController();
-    
     if (processId && sectorId) {
+      // Reset do estado quando os IDs mudam
+      requestMadeRef.current = false;
       loadSectorResponsible();
     }
     
     return () => {
-      controller.abort();
+      requestMadeRef.current = false;
     };
-  }, [loadSectorResponsible]);
+  }, [loadSectorResponsible, processId, sectorId]);
 
   // Função para aceitar a responsabilidade pelo processo
   const handleAcceptResponsibility = useCallback(async (protocolNumber?: string) => {
@@ -52,7 +54,10 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     try {
       const success = await acceptProcessResponsibility(processId, protocolNumber);
       if (success) {
+        // Redefinir estado para forçar nova busca
+        requestMadeRef.current = false;
         await loadSectorResponsible();
+        
         toast({
           title: "Sucesso",
           description: "Você aceitou a responsabilidade pelo processo."
