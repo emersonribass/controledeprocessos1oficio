@@ -1,6 +1,6 @@
 
 import { useToast } from "@/hooks/use-toast";
-import { supabaseService } from "@/services/supabase";
+import { processService } from "@/services/supabase/processService";
 
 export const useProcessUpdate = () => {
   const { toast } = useToast();
@@ -8,7 +8,7 @@ export const useProcessUpdate = () => {
   const updateProcessType = async (processId: string, newTypeId: string) => {
     try {
       // Atualizar o tipo de processo
-      const { error } = await supabaseService.updateProcessTypeById(processId, newTypeId);
+      const { error } = await processService.updateProcessTypeById(processId, newTypeId);
 
       if (error) {
         throw error;
@@ -29,7 +29,7 @@ export const useProcessUpdate = () => {
   const updateProcessStatus = async (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => {
     try {
       // Atualizar o status do processo
-      const { error } = await supabaseService.updateProcessStatus(processId, newStatus);
+      const { error } = await processService.updateProcessStatus(processId, newStatus);
 
       if (error) {
         throw error;

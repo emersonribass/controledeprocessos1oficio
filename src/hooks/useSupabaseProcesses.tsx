@@ -1,13 +1,11 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/schema";
 import { useProcessMoveNext } from "./process-movement/useProcessMoveNext";
 import { useProcessMovePrevious } from "./process-movement/useProcessMovePrevious";
 import { useProcessDelete } from "./process-movement/useProcessDelete";
 import { useStartProcess } from "./process-movement/useStartProcess";
 import { useProcessesFetch } from "./useProcessesFetch";
-import { supabaseService } from "@/services/supabase";
+import { processService } from "@/services/supabase/processService";
 
 export const useSupabaseProcesses = () => {
   const { processes, isLoading, fetchProcesses, setProcesses } = useProcessesFetch();
@@ -48,7 +46,7 @@ export const useSupabaseProcesses = () => {
 
   const updateProcessType = async (processId: string, newTypeId: string): Promise<void> => {
     try {
-      const { error } = await supabaseService.updateProcessTypeById(processId, newTypeId);
+      const { error } = await processService.updateProcessTypeById(processId, newTypeId);
 
       if (error) {
         throw error;
@@ -81,7 +79,7 @@ export const useSupabaseProcesses = () => {
           throw new Error(`Status inválido: ${newStatus}`);
       }
 
-      const { error } = await supabaseService.updateProcessStatus(processId, dbStatus);
+      const { error } = await processService.updateProcessStatus(processId, dbStatus);
 
       if (error) {
         throw error;

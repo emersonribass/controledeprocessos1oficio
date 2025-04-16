@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { notificationService } from "@/services/supabase/notificationService";
 
 export const useNotificationService = () => {
   /**
@@ -31,11 +32,10 @@ export const useNotificationService = () => {
         respondida: false
       }));
 
-      const { error: notifyError } = await supabase
-        .from('notificacoes')
-        .insert(notifications);
-
-      if (notifyError) throw notifyError;
+      // Criar as notificações usando o serviço dedicado
+      for (const notification of notifications) {
+        await notificationService.createNotificacao(notification);
+      }
 
       console.log(`Notificações enviadas para ${users.length} usuários do setor ${sectorId}`);
     } catch (error) {
