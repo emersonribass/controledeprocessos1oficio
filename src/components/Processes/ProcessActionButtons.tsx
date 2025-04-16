@@ -100,7 +100,7 @@ const ProcessActionButtons = ({
   
   // Se não há responsável no setor, o usuário está logado e o processo não está concluído, mostra o botão de aceitar processo
   // A verificação foi ajustada para considerar tanto hasSectorResponsible quanto sectorResponsible
-  if ((!hasSectorResponsible || !sectorResponsible) && user && onAcceptResponsibility && status !== "completed") {
+  if (user && !sectorResponsible && onAcceptResponsibility && status !== "completed") {
     return (
       <div className="flex justify-center gap-2 process-action">
         <Button 
