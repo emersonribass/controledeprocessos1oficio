@@ -45,7 +45,7 @@ const ProcessTable = ({
   filterProcesses,
   filters
 }: ProcessTableProps) => {
-  const { processesResponsibles, fetchResponsibles } = useProcessTableState(processes);
+  const { processesResponsibles, fetchResponsibles, hasResponsibleInSector, isUserResponsibleForSector, queueSectorForLoading } = useProcessTableState(processes);
   const { isUserInAttendanceSector } = useProcessFiltering(processes);
   
   // Buscar responsáveis quando os processos mudarem
@@ -81,6 +81,9 @@ const ProcessTable = ({
           startProcess={startProcess}
           processesResponsibles={processesResponsibles}
           isUserInAttendanceSector={isUserInAttendanceSector}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          queueSectorForLoading={queueSectorForLoading}
         />
       </Table>
     </div>

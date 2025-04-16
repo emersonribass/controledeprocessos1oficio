@@ -18,6 +18,9 @@ interface ProcessTableBodyProps {
   startProcess?: (processId: string) => Promise<void>;
   processesResponsibles: Record<string, any>;
   isUserInAttendanceSector?: () => boolean;
+  sortField: keyof Process;
+  sortDirection: "asc" | "desc";
+  queueSectorForLoading: (processId: string, sectorId: string) => void;
 }
 
 const ProcessTableBody = ({
@@ -30,7 +33,10 @@ const ProcessTableBody = ({
   updateProcessType,
   startProcess,
   processesResponsibles,
-  isUserInAttendanceSector = () => false
+  isUserInAttendanceSector = () => false,
+  sortField,
+  sortDirection,
+  queueSectorForLoading
 }: ProcessTableBodyProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -50,6 +56,8 @@ const ProcessTableBody = ({
           title: "Sucesso",
           description: "Você aceitou a responsabilidade pelo processo."
         });
+        // Atualizar cache de responsáveis
+        queueSectorForLoading(processId, processes.find(p => p.id === processId)?.currentDepartment || "");
       }
     } catch (error) {
       console.error("Erro ao aceitar responsabilidade:", error);
