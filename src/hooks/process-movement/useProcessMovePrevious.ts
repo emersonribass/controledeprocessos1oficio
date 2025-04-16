@@ -21,7 +21,7 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
     try {
       console.log(`Iniciando movimentação do processo ${processId} para o setor anterior`);
       
-      // Primeiro, obter os dados do processo
+      // Primeiro, obter os dados do processo específico
       const { data: process, error: processError } = await supabase
         .from('processos')
         .select('*')
@@ -181,6 +181,7 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
         // Continuamos mesmo com erro nas notificações
       }
 
+      // Chamar callback para atualizar a UI, mas sem recarregar todos os processos
       onProcessUpdated();
       console.log("Processo movido com sucesso para o setor anterior");
       return true;

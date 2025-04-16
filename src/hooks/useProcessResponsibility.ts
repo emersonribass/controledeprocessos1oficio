@@ -3,11 +3,13 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useProcessResponsibleFetching } from "./process-responsibility/useProcessResponsibleFetching";
 
 export const useProcessResponsibility = () => {
   const [isAccepting, setIsAccepting] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { getProcessResponsible, getSectorResponsible } = useProcessResponsibleFetching();
   
   /**
    * Verifica se o usuário atual é responsável por um processo em um setor específico
@@ -19,8 +21,7 @@ export const useProcessResponsibility = () => {
     if (!user) return false;
     
     try {
-      console.log(`Verificando responsabilidade para processo ${processId} no setor ${sectorId}`);
-      
+      // Otimizado para verificar apenas o processo e setor específicos
       const { data, error } = await supabase
         .from('setor_responsaveis')
         .select('*')
@@ -30,13 +31,13 @@ export const useProcessResponsibility = () => {
         .maybeSingle();
       
       if (error) {
-        console.error("Erro ao verificar responsabilidade:", error);
+        console.error(`Erro ao verificar responsabilidade para processo ${processId}, setor ${sectorId}:`, error);
         return false;
       }
       
       return !!data;
     } catch (error) {
-      console.error("Erro ao verificar responsabilidade:", error);
+      console.error(`Erro ao verificar responsabilidade para processo ${processId}, setor ${sectorId}:`, error);
       return false;
     }
   }, [user]);
@@ -52,7 +53,7 @@ export const useProcessResponsibility = () => {
     
     setIsAccepting(true);
     try {
-      // Primeiro, buscar o setor atual do processo
+      // Primeiro, buscar o setor atual do processo específico
       const { data: process, error: processError } = await supabase
         .from('processos')
         .select('setor_atual')
@@ -60,12 +61,12 @@ export const useProcessResponsibility = () => {
         .single();
       
       if (processError) {
-        console.error("Erro ao buscar processo:", processError);
+        console.error(`Erro ao buscar processo ${processId}:`, processError);
         throw processError;
       }
       
       if (!process) {
-        throw new Error("Processo não encontrado");
+        throw new Error(`Processo ${processId} não encontrado`);
       }
       
       const currentSectorId = process.setor_atual;
@@ -82,6 +83,8 @@ export const useProcessResponsibility = () => {
         console.error("Erro ao buscar perfil do usuário:", userError);
         throw userError;
       }
+      
+      console.log("Perfil do usuário carregado:", userProfile);
       
       const userSectors = userProfile?.setores_atribuidos || [];
       
@@ -183,91 +186,6 @@ export const useProcessResponsibility = () => {
       setIsAccepting(false);
     }
   }, [user, toast]);
-  
-  /**
-   * Busca o responsável principal de um processo
-   */
-  const getProcessResponsible = useCallback(async (processId: string) => {
-    if (!user) return null;
-    
-    try {
-      // Buscar o processo para obter o ID do responsável
-      const { data: process, error: processError } = await supabase
-        .from('processos')
-        .select('usuario_responsavel')
-        .eq('id', processId)
-        .maybeSingle();
-      
-      if (processError) {
-        console.error("Erro ao buscar processo:", processError);
-        return null;
-      }
-      
-      if (!process || !process.usuario_responsavel) {
-        return null;
-      }
-      
-      // Buscar dados do usuário responsável
-      const { data: responsibleUser, error: userError } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('id', process.usuario_responsavel)
-        .maybeSingle();
-      
-      if (userError) {
-        console.error("Erro ao buscar usuário responsável:", userError);
-        return null;
-      }
-      
-      return responsibleUser;
-    } catch (error) {
-      console.error("Erro ao buscar responsável do processo:", error);
-      return null;
-    }
-  }, [user]);
-
-  /**
-   * Busca o responsável de um processo em um setor específico
-   */
-  const getSectorResponsible = useCallback(async (processId: string, sectorId: string) => {
-    if (!user) return null;
-    
-    try {
-      // Buscar o responsável do setor
-      const { data, error } = await supabase
-        .from('setor_responsaveis')
-        .select('usuario_id')
-        .eq('processo_id', processId)
-        .eq('setor_id', sectorId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error("Erro ao buscar responsável do setor:", error);
-        return null;
-      }
-      
-      if (!data || !data.usuario_id) {
-        return null;
-      }
-      
-      // Buscar dados do usuário responsável
-      const { data: responsibleUser, error: userError } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('id', data.usuario_id)
-        .maybeSingle();
-      
-      if (userError) {
-        console.error("Erro ao buscar usuário responsável pelo setor:", userError);
-        return null;
-      }
-      
-      return responsibleUser;
-    } catch (error) {
-      console.error("Erro ao buscar responsável do setor:", error);
-      return null;
-    }
-  }, [user]);
   
   return {
     isUserResponsibleForSector,

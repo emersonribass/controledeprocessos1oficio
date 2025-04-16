@@ -21,7 +21,7 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
     try {
       console.log(`Iniciando movimentação do processo ${processId} para o próximo setor`);
       
-      // Primeiro, obter os dados do processo
+      // Primeiro, obter os dados do processo específico
       const { data: process, error: processError } = await supabase
         .from('processos')
         .select('*')
@@ -41,7 +41,6 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
       console.log(`Processo encontrado: ${process.numero_protocolo}, setor atual: ${process.setor_atual}`);
 
       // Obter a ordem do departamento atual
-      // Observação: Certifique-se de que process.setor_atual seja uma string
       const currentSectorId = process.setor_atual;
       
       const { data: currentDepartment, error: currentDeptError } = await supabase
@@ -156,8 +155,6 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
       console.log(`Processo atualizado com novo setor: ${nextDepartmentIdString}`);
 
       // IMPORTANTE: Sempre remover qualquer responsável de setor existente para o próximo setor
-      // Este é o ponto chave - queremos garantir que o usuário tenha que aceitar novamente
-      // Independentemente de ter sido responsável anteriormente
       const { error: deleteResponsibleError } = await supabase
         .from('setor_responsaveis')
         .delete()
@@ -184,6 +181,7 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
         // Continuamos mesmo com erro nas notificações
       }
 
+      // Chamar callback para atualizar a UI, mas sem recarregar todos os processos
       onProcessUpdated();
       console.log("Processo movido com sucesso para o próximo setor");
       return true;

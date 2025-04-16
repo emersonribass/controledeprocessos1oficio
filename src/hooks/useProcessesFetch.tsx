@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Process } from "@/types";
 import { useProcessFetcher } from "./process-fetch/useProcessFetcher";
 import { useProcessFormatter } from "./process-fetch/useProcessFormatter";
@@ -12,15 +12,8 @@ export const useProcessesFetch = () => {
   const { fetchProcessesData, isLoading, setIsLoading } = useProcessFetcher();
   const { formatProcesses } = useProcessFormatter();
 
-  useEffect(() => {
-    // Carregar processos automaticamente ao montar o componente
-    fetchProcesses().catch(error => {
-      console.error("Erro ao buscar processos:", error);
-      setIsLoading(false); // Garantir que o loading termina mesmo com erro
-    });
-  }, []);
-
-  const fetchProcesses = async () => {
+  // Usar useCallback para evitar recriações desnecessárias da função
+  const fetchProcesses = useCallback(async () => {
     try {
       const processesData = await fetchProcessesData();
       
@@ -33,12 +26,32 @@ export const useProcessesFetch = () => {
       // Definir um array vazio mesmo em caso de erro
       setProcesses([]);
     }
-  };
+  }, [fetchProcessesData, formatProcesses]);
+
+  // Carregar processos automaticamente ao montar o componente
+  useEffect(() => {
+    fetchProcesses().catch(error => {
+      console.error("Erro ao buscar processos:", error);
+      setIsLoading(false); // Garantir que o loading termina mesmo com erro
+    });
+  }, [fetchProcesses, setIsLoading]);
+
+  /**
+   * Função para atualizar um processo específico na lista sem recarregar tudo
+   */
+  const updateProcessInList = useCallback((updatedProcess: Process) => {
+    setProcesses(prevProcesses => 
+      prevProcesses.map(process => 
+        process.id === updatedProcess.id ? updatedProcess : process
+      )
+    );
+  }, []);
 
   return {
     processes,
     isLoading,
     fetchProcesses,
-    setProcesses
+    setProcesses,
+    updateProcessInList
   };
 };

@@ -4,7 +4,13 @@ import { useProcessMovePrevious } from "./process-movement/useProcessMovePreviou
 import { useStartProcess } from "./process-movement/useStartProcess";
 import { useProcessDelete } from "./process-movement/useProcessDelete";
 
+/**
+ * Hook para gerenciar operações de movimentação de processos
+ * 
+ * @param onProcessUpdated Função de callback para atualizar a UI após operações
+ */
 export const useProcessMovement = (onProcessUpdated: () => void) => {
+  // Instanciar os hooks de movimento para processos individuais
   const { moveProcessToNextDepartment, isMoving: isMovingNext } = useProcessMoveNext(onProcessUpdated);
   const { moveProcessToPreviousDepartment, isMoving: isMovingPrev } = useProcessMovePrevious(onProcessUpdated);
   const { startProcess, isStarting } = useStartProcess(onProcessUpdated);

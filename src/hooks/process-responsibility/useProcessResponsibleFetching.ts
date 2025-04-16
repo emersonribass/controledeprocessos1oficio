@@ -1,21 +1,22 @@
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
 
+/**
+ * Hook para buscar responsáveis de processos individualmente
+ */
 export const useProcessResponsibleFetching = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
   /**
-   * Busca o responsável principal de um processo
+   * Busca o responsável principal de um processo específico
    */
   const getProcessResponsible = useCallback(async (processId: string) => {
     if (!user) return null;
     
-    setIsLoading(true);
     try {
-      // Buscar o processo para obter o ID do responsável
+      // Buscar apenas o processo solicitado
       const { data: process, error: processError } = await supabase
         .from('processos')
         .select('usuario_responsavel')
@@ -23,7 +24,7 @@ export const useProcessResponsibleFetching = () => {
         .maybeSingle();
       
       if (processError) {
-        console.error("Erro ao buscar processo:", processError);
+        console.error(`Erro ao buscar processo ${processId}:`, processError);
         return null;
       }
       
@@ -39,16 +40,14 @@ export const useProcessResponsibleFetching = () => {
         .maybeSingle();
       
       if (userError) {
-        console.error("Erro ao buscar usuário responsável:", userError);
+        console.error(`Erro ao buscar usuário responsável pelo processo ${processId}:`, userError);
         return null;
       }
       
       return responsibleUser;
     } catch (error) {
-      console.error("Erro ao buscar responsável do processo:", error);
+      console.error(`Erro ao buscar responsável do processo ${processId}:`, error);
       return null;
-    } finally {
-      setIsLoading(false);
     }
   }, [user]);
 
@@ -58,9 +57,8 @@ export const useProcessResponsibleFetching = () => {
   const getSectorResponsible = useCallback(async (processId: string, sectorId: string) => {
     if (!user) return null;
     
-    setIsLoading(true);
     try {
-      // Buscar o responsável do setor
+      // Buscar o responsável do setor específico para um processo específico
       const { data, error } = await supabase
         .from('setor_responsaveis')
         .select('usuario_id')
@@ -69,7 +67,7 @@ export const useProcessResponsibleFetching = () => {
         .maybeSingle();
       
       if (error) {
-        console.error("Erro ao buscar responsável do setor:", error);
+        console.error(`Erro ao buscar responsável do setor ${sectorId} para o processo ${processId}:`, error);
         return null;
       }
       
@@ -85,22 +83,19 @@ export const useProcessResponsibleFetching = () => {
         .maybeSingle();
       
       if (userError) {
-        console.error("Erro ao buscar usuário responsável pelo setor:", userError);
+        console.error(`Erro ao buscar usuário responsável pelo setor ${sectorId}:`, userError);
         return null;
       }
       
       return responsibleUser;
     } catch (error) {
-      console.error("Erro ao buscar responsável do setor:", error);
+      console.error(`Erro ao buscar responsável do setor ${sectorId} para o processo ${processId}:`, error);
       return null;
-    } finally {
-      setIsLoading(false);
     }
   }, [user]);
 
   return {
     getProcessResponsible,
-    getSectorResponsible,
-    isLoading
+    getSectorResponsible
   };
 };
