@@ -8,6 +8,7 @@ import ProcessActionButtons from "./ProcessActionButtons";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useProcessDepartmentsResponsibility } from "@/hooks/useProcessDepartmentsResponsibility";
+import { useMemo } from "react";
 
 interface ProcessTableProps {
   processes: Process[];
@@ -67,12 +68,14 @@ const ProcessTable = ({
   };
 
   // Ordenar departamentos por ordem e filtrar o departamento "Concluído(a)"
-  const sortedDepartments = [...departments]
-    .filter(dept => dept.name !== "Concluído(a)")
-    .sort((a, b) => a.order - b.order);
+  const sortedDepartments = useMemo(() => {
+    return [...departments]
+      .filter(dept => dept.name !== "Concluído(a)")
+      .sort((a, b) => a.order - b.order);
+  }, [departments]);
     
   // Obter o departamento "Concluído(a)" para referência
-  const concludedDept = departments.find(dept => dept.name === "Concluído(a)");
+  const concludedDept = useMemo(() => departments.find(dept => dept.name === "Concluído(a)"), [departments]);
 
   // Função para definir a cor de fundo com base no status
   const getRowBackgroundColor = (status: string) => {
@@ -101,12 +104,15 @@ const ProcessTable = ({
             </TableRow>
           ) : (
             processes.map(process => {
-              // Para cada processo, vamos usar o hook de responsabilidade para obter os responsáveis
+              // Para cada processo, usar o hook de responsabilidade com memoização da função de verificação
+              const isCurrentDept = useMemo(() => (deptId: string) => process.currentDepartment === deptId, [process.currentDepartment]);
+              const hasPassedDept = useMemo(() => (deptId: string) => process.history.some(h => h.departmentId === deptId), [process.history]);
+              
               const { processResponsible, departmentResponsibles } = useProcessDepartmentsResponsibility(
                 process.id,
                 sortedDepartments,
-                (deptId) => process.currentDepartment === deptId,
-                (deptId) => process.history.some(h => h.departmentId === deptId)
+                isCurrentDept,
+                hasPassedDept
               );
               
               return (

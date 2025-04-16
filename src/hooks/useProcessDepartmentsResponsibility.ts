@@ -1,12 +1,12 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useProcessResponsibility } from "./useProcessResponsibility";
 import { ProcessResponsible } from "./process-responsibility/types";
 import { Department } from "@/types";
+import { useProcessResponsibilityBatchLoader } from "./process-responsibility/useProcessResponsibleBatchLoader";
 
 /**
  * Hook para gerenciar responsáveis por departamentos em um processo
- * Implementa carregamento eficiente com cache e requisições em paralelo
+ * Implementa carregamento eficiente com cache e requisições em lote
  */
 export const useProcessDepartmentsResponsibility = (
   processId: string,
@@ -17,13 +17,13 @@ export const useProcessDepartmentsResponsibility = (
   const [isLoading, setIsLoading] = useState(true);
   const [processResponsible, setProcessResponsible] = useState<ProcessResponsible | null>(null);
   const [departmentResponsibles, setDepartmentResponsibles] = useState<Record<string, ProcessResponsible | null>>({});
-  const { getProcessResponsible, getSectorResponsible } = useProcessResponsibility();
+  const { loadProcessResponsibleBatch, loadSectorResponsibleBatch } = useProcessResponsibilityBatchLoader();
   
   // Referências para controlar se os dados já foram carregados
   const loadedRef = useRef(false);
   const loadingInProgressRef = useRef(false);
   
-  // Função para carregar responsáveis de forma eficiente
+  // Função para carregar responsáveis em lote para melhor desempenho
   const loadResponsibles = useCallback(async () => {
     if (!processId || departments.length === 0 || loadingInProgressRef.current) {
       return;
@@ -48,32 +48,25 @@ export const useProcessDepartmentsResponsibility = (
         return;
       }
       
-      // Executar consultas em paralelo usando Promise.all para melhor desempenho
-      const promises = [
-        getProcessResponsible(processId),
-        ...relevantDepartments.map(dept => 
-          getSectorResponsible(processId, dept.id)
-            .then(resp => ({ deptId: dept.id, responsible: resp }))
-            .catch(() => ({ deptId: dept.id, responsible: null }))
-        )
-      ];
+      // Carregar o responsável do processo
+      const processResponsibles = await loadProcessResponsibleBatch([processId]);
+      const procResp = processResponsibles[processId];
+      setProcessResponsible(procResp);
       
-      const results = await Promise.all(promises);
+      // Preparar dados para carregamento em lote dos responsáveis de setores
+      const sectorItems = relevantDepartments.map(dept => ({
+        processId,
+        sectorId: dept.id
+      }));
       
-      // Processar os resultados
-      // O primeiro resultado é o responsável pelo processo
-      const processResp = results[0] as ProcessResponsible | null;
-      setProcessResponsible(processResp);
+      // Carregar responsáveis de setores em lote
+      const sectorResponsibles = await loadSectorResponsibleBatch(sectorItems);
       
-      // Os resultados restantes são responsáveis por departamento
-      const deptResults = results.slice(1) as Array<{ deptId: string, responsible: ProcessResponsible | null }>;
-      
-      // Converter array de respostas para um objeto indexado por ID do departamento
-      const deptResps = deptResults.reduce<Record<string, ProcessResponsible | null>>(
-        (acc, item) => {
-          if (item && 'deptId' in item) {
-            acc[item.deptId] = item.responsible;
-          }
+      // Converter o resultado para o formato esperado pelo estado
+      const deptResps = relevantDepartments.reduce<Record<string, ProcessResponsible | null>>(
+        (acc, dept) => {
+          const key = `${processId}-${dept.id}`;
+          acc[dept.id] = sectorResponsibles[key] || null;
           return acc;
         }, 
         {}
@@ -87,7 +80,7 @@ export const useProcessDepartmentsResponsibility = (
       setIsLoading(false);
       loadingInProgressRef.current = false;
     }
-  }, [processId, departments, getProcessResponsible, getSectorResponsible, isCurrentDepartment, hasPassedDepartment]);
+  }, [processId, departments, loadProcessResponsibleBatch, loadSectorResponsibleBatch, isCurrentDepartment, hasPassedDepartment]);
 
   // Carregar responsáveis ao inicializar o componente ou quando o ID do processo muda
   useEffect(() => {

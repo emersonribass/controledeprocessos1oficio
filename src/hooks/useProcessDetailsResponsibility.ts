@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useProcessResponsibility } from "./useProcessResponsibility";
 import { ProcessResponsible } from "./process-responsibility/types";
+import { useProcessResponsibilityBatchLoader } from "./process-responsibility/useProcessResponsibleBatchLoader";
 
 /**
  * Hook para gerenciar responsáveis de um processo específico com carregamento eficiente
@@ -11,17 +12,17 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
   const [processResponsible, setProcessResponsible] = useState<ProcessResponsible | null>(null);
   const [sectorResponsible, setSectorResponsible] = useState<ProcessResponsible | null>(null);
   const { 
-    getProcessResponsible, 
-    getSectorResponsible, 
     acceptProcessResponsibility, 
     isAccepting 
   } = useProcessResponsibility();
+  
+  const { loadProcessResponsibleBatch, loadSectorResponsibleBatch } = useProcessResponsibilityBatchLoader();
   
   // Referências para controlar o estado de carregamento
   const loadedRef = useRef(false);
   const loadingInProgressRef = useRef(false);
   
-  // Função para carregar responsáveis de forma eficiente
+  // Função para carregar responsáveis de forma eficiente usando carregamento em lote
   const loadResponsibles = useCallback(async () => {
     if (!processId || !sectorId || loadingInProgressRef.current) {
       return;
@@ -34,14 +35,19 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
     try {
       console.log(`Carregando responsáveis: processo=${processId}, setor=${sectorId}`);
       
-      // Carregar os responsáveis em paralelo para melhor desempenho
-      const [processResp, sectorResp] = await Promise.all([
-        getProcessResponsible(processId),
-        getSectorResponsible(processId, sectorId)
+      // Carregar o responsável do processo em lote
+      const processResponsibles = await loadProcessResponsibleBatch([processId]);
+      const procResp = processResponsibles[processId];
+      setProcessResponsible(procResp);
+      
+      // Carregar o responsável do setor em lote
+      const sectorResponsibles = await loadSectorResponsibleBatch([
+        { processId, sectorId }
       ]);
       
-      setProcessResponsible(processResp);
+      const sectorResp = sectorResponsibles[`${processId}-${sectorId}`];
       setSectorResponsible(sectorResp);
+      
       loadedRef.current = true;
     } catch (error) {
       console.error("Erro ao carregar responsáveis:", error);
@@ -49,7 +55,7 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
       setIsLoading(false);
       loadingInProgressRef.current = false;
     }
-  }, [processId, sectorId, getProcessResponsible, getSectorResponsible]);
+  }, [processId, sectorId, loadProcessResponsibleBatch, loadSectorResponsibleBatch]);
 
   // Aceitar responsabilidade pelo processo
   const handleAcceptResponsibility = useCallback(async (protocolNumber: string): Promise<void> => {

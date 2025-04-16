@@ -3,10 +3,11 @@ import { useProcessResponsibleAssignment } from "./process-responsibility/usePro
 import { useProcessResponsibilityAcceptance } from "./process-responsibility/useProcessResponsibilityAcceptance";
 import { useProcessResponsibilityVerification } from "./process-responsibility/useProcessResponsibilityVerification";
 import { useProcessResponsibleFetching } from "./process-responsibility/useProcessResponsibleFetching";
+import { useProcessResponsibleBatchLoader } from "./process-responsibility/useProcessResponsibleBatchLoader";
 
 /**
  * Hook unificado para gerenciar responsabilidade em processos
- * Agora utilizando hooks mais específicos e modulares
+ * Agora incluindo suporte para carregamento em lote
  */
 export const useProcessResponsibility = () => {
   // Hook para atribuir responsáveis
@@ -20,6 +21,9 @@ export const useProcessResponsibility = () => {
   
   // Hook para buscar responsáveis (agora refatorado)
   const { getProcessResponsible, getSectorResponsible, clearCache } = useProcessResponsibleFetching();
+  
+  // Hook para carregamento em lote
+  const { loadProcessResponsibleBatch, loadSectorResponsibleBatch } = useProcessResponsibleBatchLoader();
 
   return {
     // Estados
@@ -36,9 +40,13 @@ export const useProcessResponsibility = () => {
     isUserResponsibleForProcess,
     isUserResponsibleForSector,
     
-    // Busca
+    // Busca individual
     getProcessResponsible,
     getSectorResponsible,
+    
+    // Busca em lote (novo)
+    loadProcessResponsibleBatch,
+    loadSectorResponsibleBatch,
     
     // Limpeza de cache
     clearCache
