@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { ProcessType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { processTypeService } from "@/services/supabase/processTypeService";
+import { supabaseService } from "@/services/supabase";
 
 export const useProcessTypes = () => {
   const [processTypes, setProcessTypes] = useState<ProcessType[]>([]);
@@ -17,7 +17,7 @@ export const useProcessTypes = () => {
     try {
       setIsLoading(true);
       
-      const { data, error } = await processTypeService.fetchProcessTypes();
+      const { data, error } = await supabaseService.fetchProcessTypes();
         
       if (error) {
         throw error;
@@ -52,7 +52,7 @@ export const useProcessTypes = () => {
   // Adicionar função para criar novo tipo de processo
   const createProcessType = async (name: string) => {
     try {
-      const { data, error } = await processTypeService.createProcessType(name);
+      const { data, error } = await supabaseService.createProcessType(name);
         
       if (error) {
         throw error;
@@ -81,7 +81,7 @@ export const useProcessTypes = () => {
   // Adicionar função para atualizar tipo de processo
   const updateProcessType = async (id: string, name: string) => {
     try {
-      const { error } = await processTypeService.updateProcessType(id, { name });
+      const { error } = await supabaseService.updateProcessType(id, { name });
         
       if (error) {
         throw error;
@@ -110,7 +110,7 @@ export const useProcessTypes = () => {
   // Adicionar função para desativar/ativar tipo de processo
   const toggleProcessTypeActive = async (id: string, active: boolean) => {
     try {
-      const { error } = await processTypeService.toggleProcessTypeActive(id, active);
+      const { error } = await supabaseService.toggleProcessTypeActive(id, active);
         
       if (error) {
         throw error;

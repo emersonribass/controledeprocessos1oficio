@@ -2,8 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { UsuarioSupabase, FormUsuario } from "@/types/usuario";
-import { userService } from "@/services/supabase/userService";
-import { supabaseBaseService } from "@/services/supabase/client";
+import { supabaseService } from "@/services/supabase";
 
 export function useUsuarios() {
   const [usuarios, setUsuarios] = useState<UsuarioSupabase[]>([]);
@@ -15,10 +14,10 @@ export function useUsuarios() {
     setIsLoading(true);
     try {
       console.log("Iniciando busca de usuários na tabela 'usuarios' do projeto controledeprocessos1oficio");
-      const supabaseUrl = supabaseBaseService.getUrl();
+      const supabaseUrl = supabaseService.getUrl();
       console.log("URL do Supabase:", supabaseUrl);
       
-      const { data, error, count } = await userService.fetchUsuarios();
+      const { data, error, count } = await supabaseService.fetchUsuarios();
 
       if (error) {
         throw error;
@@ -30,7 +29,7 @@ export function useUsuarios() {
         console.log("Nenhum usuário encontrado na tabela 'usuarios'. Verificando auth.users...");
         
         try {
-          const { data: authUsers, error: authError } = await userService.checkAuthUsers();
+          const { data: authUsers, error: authError } = await supabaseService.checkAuthUsers();
           
           if (authError) {
             console.error("Erro ao buscar usuários autenticados:", authError);
@@ -60,7 +59,7 @@ export function useUsuarios() {
 
   const handleToggleAtivo = async (usuario: UsuarioSupabase) => {
     try {
-      const { error } = await userService.toggleUsuarioAtivo(usuario.id, usuario.ativo);
+      const { error } = await supabaseService.toggleUsuarioAtivo(usuario.id, usuario.ativo);
 
       if (error) {
         throw error;
@@ -84,7 +83,7 @@ export function useUsuarios() {
 
   const handleDeleteUsuario = async (id: string) => {
     try {
-      const { error } = await userService.deleteUsuario(id);
+      const { error } = await supabaseService.deleteUsuario(id);
 
       if (error) {
         throw error;
@@ -123,7 +122,7 @@ export function useUsuarios() {
           updateData.senha = data.senha;
         }
 
-        const { error } = await userService.updateUsuario(usuarioId, updateData);
+        const { error } = await supabaseService.updateUsuario(usuarioId, updateData);
 
         if (error) throw error;
 
@@ -132,7 +131,7 @@ export function useUsuarios() {
           description: "Usuário atualizado com sucesso!",
         });
       } else {
-        const { error } = await userService.createUsuario({
+        const { error } = await supabaseService.createUsuario({
           nome: data.nome,
           email: data.email,
           senha: data.senha,

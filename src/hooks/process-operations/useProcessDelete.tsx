@@ -1,8 +1,6 @@
 
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { processService } from "@/services/supabase/processService";
-import { processHistoryService } from "@/services/supabase/processHistoryService";
-import { notificationService } from "@/services/supabase/notificationService";
 
 export const useProcessDelete = (onProcessDeleted: () => Promise<void>) => {
   const { toast } = useToast();
@@ -10,28 +8,30 @@ export const useProcessDelete = (onProcessDeleted: () => Promise<void>) => {
   const deleteProcess = async (processId: string): Promise<boolean> => {
     try {
       // Primeiro, excluímos o histórico do processo
-      const { error: historyError } = await processHistoryService.getProcessoHistorico(processId)
-        .then(({ data }) => {
-          if (data && data.length > 0) {
-            return processHistoryService.updateProcessoHistorico(data[0].id, {});
-          }
-          return { error: null };
-        });
+      const { error: historyError } = await supabase
+        .from('processos_historico')
+        .delete()
+        .eq('processo_id', processId);
         
       if (historyError) {
         throw historyError;
       }
       
       // Em seguida, excluímos as notificações relacionadas ao processo
-      const { data: notificacoes } = await notificationService.getNotificacoes(processId);
-      if (notificacoes && notificacoes.length > 0) {
-        for (const notificacao of notificacoes) {
-          await notificationService.updateNotificacao(notificacao.id, {});
-        }
+      const { error: notificationsError } = await supabase
+        .from('notificacoes')
+        .delete()
+        .eq('processo_id', processId);
+        
+      if (notificationsError) {
+        throw notificationsError;
       }
       
       // Por fim, excluímos o processo
-      const { error: processError } = await processService.deleteProcesso(processId);
+      const { error: processError } = await supabase
+        .from('processos')
+        .delete()
+        .eq('id', processId);
         
       if (processError) {
         throw processError;
@@ -57,35 +57,34 @@ export const useProcessDelete = (onProcessDeleted: () => Promise<void>) => {
   
   const deleteManyProcesses = async (processIds: string[]): Promise<boolean> => {
     try {
-      // Excluir em lote - processar cada processo individualmente
-      for (const processId of processIds) {
-        // Primeiro, excluímos o histórico do processo
-        const { error: historyError } = await processHistoryService.getProcessoHistorico(processId)
-          .then(({ data }) => {
-            if (data && data.length > 0) {
-              return processHistoryService.updateProcessoHistorico(data[0].id, {});
-            }
-            return { error: null };
-          });
-          
-        if (historyError) {
-          throw historyError;
-        }
+      // Primeiro, excluímos o histórico dos processos
+      const { error: historyError } = await supabase
+        .from('processos_historico')
+        .delete()
+        .in('processo_id', processIds);
         
-        // Em seguida, excluímos as notificações relacionadas ao processo
-        const { data: notificacoes } = await notificationService.getNotificacoes(processId);
-        if (notificacoes && notificacoes.length > 0) {
-          for (const notificacao of notificacoes) {
-            await notificationService.updateNotificacao(notificacao.id, {});
-          }
-        }
+      if (historyError) {
+        throw historyError;
+      }
+      
+      // Em seguida, excluímos as notificações relacionadas aos processos
+      const { error: notificationsError } = await supabase
+        .from('notificacoes')
+        .delete()
+        .in('processo_id', processIds);
         
-        // Por fim, excluímos o processo
-        const { error: processError } = await processService.deleteProcesso(processId);
-          
-        if (processError) {
-          throw processError;
-        }
+      if (notificationsError) {
+        throw notificationsError;
+      }
+      
+      // Por fim, excluímos os processos
+      const { error: processError } = await supabase
+        .from('processos')
+        .delete()
+        .in('id', processIds);
+        
+      if (processError) {
+        throw processError;
       }
       
       toast({

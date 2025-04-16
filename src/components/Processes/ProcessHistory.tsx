@@ -1,5 +1,7 @@
 
 import { ProcessHistory as ProcessHistoryType } from "@/types";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Clock, User } from "lucide-react";
 import {
   Card,
@@ -9,7 +11,6 @@ import {
 } from "@/components/ui/card";
 import AcceptProcessButton from "./AcceptProcessButton";
 import { useAuth } from "@/hooks/auth";
-import { formatBrasiliaTime } from "@/lib/timezone";
 
 type ProcessHistoryProps = {
   history: ProcessHistoryType[];
@@ -69,11 +70,11 @@ const ProcessHistory = ({
                   </p>
                 )}
                 <p className="text-sm text-muted-foreground">
-                  Entrada: {formatBrasiliaTime(new Date(entry.entryDate), "dd/MM/yyyy")}
+                  Entrada: {format(new Date(entry.entryDate), "dd/MM/yyyy", { locale: ptBR })}
                 </p>
                 {entry.exitDate && (
                   <p className="text-sm text-muted-foreground">
-                    Saída: {formatBrasiliaTime(new Date(entry.exitDate), "dd/MM/yyyy")}
+                    Saída: {format(new Date(entry.exitDate), "dd/MM/yyyy", { locale: ptBR })}
                   </p>
                 )}
               </div>

@@ -10,14 +10,19 @@ export const isAdminByEmail = (email: string): boolean => {
 };
 
 // Função para verificar se um usuário é administrador
-// Verifica tanto a lista fixa quanto o perfil do usuário na tabela 'usuarios'
-export const isAdmin = async (userId: string): Promise<boolean> => {
+// Verifica tanto a lista fixa quanto o perfil do usuário na tabela
+export const isAdmin = async (email: string): Promise<boolean> => {
+  // Primeiro, verifica se o email está na lista fixa
+  if (isAdminByEmail(email)) {
+    return true;
+  }
+  
+  // Se não estiver na lista fixa, verifica o perfil na tabela de usuários
   try {
-    // Verificar o perfil na tabela de usuários
     const { data, error } = await supabase
       .from('usuarios')
       .select('perfil')
-      .eq('id', userId)
+      .eq('email', email)
       .single();
 
     if (error) {

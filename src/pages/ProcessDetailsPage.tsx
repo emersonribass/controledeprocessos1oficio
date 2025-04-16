@@ -1,9 +1,8 @@
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useProcesses } from "@/hooks/useProcesses";
 import { useProcessMovement } from "@/hooks/useProcessMovement";
-import { useToast } from "@/components/ui/use-toast";
 import ProcessResponsibleInfo from "@/components/Processes/ProcessResponsibleInfo";
 import ProcessDetailsHeader from "@/components/Processes/ProcessDetailsHeader";
 import ProcessMainDetails from "@/components/Processes/ProcessMainDetails";
@@ -13,12 +12,9 @@ import ProcessDeadlineCard from "@/components/Processes/ProcessDeadlineCard";
 
 const ProcessDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const { processes, isLoading: isLoadingProcesses, getProcess, getDepartmentName, getProcessTypeName, refreshProcesses } = useProcesses();
   const [process, setProcess] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [accessDenied, setAccessDenied] = useState(false);
   
   // Criando adaptadores para converter Promise<boolean> para Promise<void>
   const adaptMoveToNext = async (processId: string): Promise<void> => {
@@ -46,47 +42,15 @@ const ProcessDetailsPage = () => {
     if (!id) return;
     
     setIsLoading(true);
-    setAccessDenied(false);
-    
     try {
-      console.log(`Carregando detalhes do processo: ${id}`);
       const processData = await getProcess(id);
-      
-      if (!processData) {
-        console.error("Acesso negado ou processo não encontrado");
-        setAccessDenied(true);
-        toast({
-          title: "Acesso negado",
-          description: "Você não tem permissão para ver este processo ou ele não existe.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
       setProcess(processData);
     } catch (error) {
       console.error("Erro ao carregar processo:", error);
-      setAccessDenied(true);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os detalhes do processo.",
-        variant: "destructive"
-      });
     } finally {
       setIsLoading(false);
     }
-  }, [id, getProcess, toast]);
-  
-  // Efeito para redirecionar se acesso negado
-  useEffect(() => {
-    if (accessDenied) {
-      const timer = setTimeout(() => {
-        navigate('/processes');
-      }, 2000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [accessDenied, navigate]);
+  }, [id, getProcess]);
   
   // Efeito para carregar o processo quando o id mudar
   useEffect(() => {
@@ -99,25 +63,13 @@ const ProcessDetailsPage = () => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       refreshProcesses();
-    }, 120000); // A cada 2 minutos para reduzir chamadas
+    }, 120000); // Aumentado para 2 minutos para reduzir chamadas
     
     return () => clearInterval(intervalId);
   }, [refreshProcesses]);
   
   if (isLoading || !process) {
     return <ProcessDetailsSkeleton />;
-  }
-  
-  if (accessDenied) {
-    return (
-      <div className="container max-w-6xl mx-auto p-6">
-        <div className="bg-red-50 p-4 rounded-lg border border-red-200 text-red-800">
-          <h2 className="text-lg font-semibold">Acesso negado</h2>
-          <p>Você não tem permissão para visualizar este processo.</p>
-          <p>Redirecionando para a lista de processos...</p>
-        </div>
-      </div>
-    );
   }
   
   const isFirstDepartment = !process.history.some((item: any) => 

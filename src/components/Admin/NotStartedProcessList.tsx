@@ -1,10 +1,12 @@
+
 import { useState } from "react";
 import { Process } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Play, Trash2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import { formatDistanceToBrasiliaTime } from "@/lib/timezone";
 
 interface NotStartedProcessListProps {
   processes: Process[];
@@ -64,7 +66,10 @@ const NotStartedProcessList = ({
             <div>
               <h4 className="font-medium">{process.protocolNumber}</h4>
               <p className="text-sm text-muted-foreground">
-                Cadastrado {formatDistanceToBrasiliaTime(process.startDate)}
+                Cadastrado {formatDistanceToNow(new Date(process.startDate), {
+                  addSuffix: true,
+                  locale: ptBR
+                })}
               </p>
             </div>
           </div>

@@ -9,8 +9,9 @@ interface ProcessFilters {
   excludeCompleted?: boolean;
 }
 
-//Hook para gerenciar filtros de processos na lista de processos
-
+/**
+ * Hook para gerenciar filtros de processos na lista de processos
+ */
 export const useProcessListFilters = (initialFilters: ProcessFilters = {}) => {
   const [filters, setFilters] = useState<ProcessFilters>(initialFilters);
   

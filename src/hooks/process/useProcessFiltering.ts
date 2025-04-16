@@ -24,14 +24,13 @@ export const useProcessFiltering = (
   
   const isUserResponsibleForSector = checkers.isUserResponsibleForSector || 
     ((process: Process, userId: string) => {
-      if (!userProfile || !userProfile.setores_atribuidos) return false;
+      if (!userProfile || !userProfile.setores_atribuidos || !userProfile.setores_atribuidos.length) return false;
       return userProfile.setores_atribuidos.includes(process.currentDepartment);
     });
     
-  // Verificar se o usuário pertence ao setor de atendimento (setor 1)
+  // Verificar se o usuário pertence ao setor de atendimento (assumindo que o setor 1 é o de atendimento)
   const isUserInAttendanceSector = () => {
-    if (!userProfile || !userProfile.setores_atribuidos) return false;
-    return userProfile.setores_atribuidos.includes("1");
+    return userProfile?.setores_atribuidos?.includes("1") || false;
   };
 
   const filterProcesses = useMemo(() => {
@@ -47,61 +46,29 @@ export const useProcessFiltering = (
     ): Process[] => {
       const baseList = processesToFilter || processes;
 
-      // Aplicar regras de visibilidade conforme perfil do usuário
+      // Primeiro filtrar por permissões do usuário
       const visibleProcesses = baseList.filter((process) => {
         if (!user) return false; // Não autenticado não vê nada
         
-        // Administradores veem todos os processos
-        if (isAdmin()) {
-          console.log(`Usuário ${user.id} é admin - processo ${process.protocolNumber} visível`);
-          return true;
-        }
+        // Verificar se o usuário é administrador
+        const isUserAdmin = isAdmin();
+        if (isUserAdmin) return true;
         
         // Usuários do setor de atendimento podem ver processos não iniciados
         if (process.status === 'not_started' && isUserInAttendanceSector()) {
-          console.log(`Processo ${process.protocolNumber} não iniciado e usuário ${user.id} é do setor de atendimento - visível`);
           return true;
         }
         
-        // Usuários com perfil "usuario" só podem ver processos que são responsáveis ou estão no setor atual
-        if (userProfile?.perfil === 'usuario') {
-          // Usuário é responsável direto pelo processo
-          if (isUserResponsibleForProcess(process, user.id)) {
-            console.log(`Usuário ${user.id} é responsável pelo processo ${process.protocolNumber} - visível`);
-            return true;
-          }
-          
-          // Usuário pertence ao setor atual do processo
-          if (isUserResponsibleForSector(process, user.id)) {
-            console.log(`Usuário ${user.id} pertence ao setor ${process.currentDepartment} do processo ${process.protocolNumber} - visível`);
-            return true;
-          }
-          
-          console.log(`Processo ${process.protocolNumber} não visível para usuário ${user.id} com perfil 'usuario'`);
-          return false;
-        }
+        // Verificar se o usuário é responsável direto pelo processo
+        const isResponsibleForProcess = isUserResponsibleForProcess(process, user.id);
         
-        // Para outros perfis não especificados, manter a lógica original
-        if (isUserResponsibleForProcess(process, user.id)) {
-          return true;
-        }
+        // Verificar se o usuário pertence ao setor atual do processo
+        const isResponsibleForCurrentSector = isUserResponsibleForSector(process, user.id);
         
-        if (isUserResponsibleForSector(process, user.id)) {
-          return true;
-        }
-        
-        console.log(`Processo ${process.protocolNumber} não visível para usuário ${user.id}`);
-        // Se não satisfaz nenhuma condição acima, não deve ver o processo
-        return false;
+        return isResponsibleForProcess || isResponsibleForCurrentSector;
       });
 
-      console.log(`Processos visíveis após filtro de permissões: ${visibleProcesses.length} de ${baseList.length}`);
-      
-      if (userProfile) {
-        console.log(`Perfil do usuário: ${userProfile.perfil}, Setores: ${JSON.stringify(userProfile.setores_atribuidos)}`);
-      }
-
-      // Aplicar os filtros selecionados pelo usuário na interface
+      // Depois aplicar os filtros selecionados pelo usuário
       return visibleProcesses.filter((process) => {
         if (filters.excludeCompleted && process.status === 'completed') {
           return false;
@@ -136,9 +103,11 @@ export const useProcessFiltering = (
         return true;
       });
     };
-  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector, isUserInAttendanceSector, userProfile]);
+  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserResponsibleForSector, userProfile, isUserInAttendanceSector]);
 
   const isProcessOverdue = (process: Process) => {
+    if (process.status === 'overdue') return true;
+
     const now = new Date();
     const expectedEndDate = new Date(process.expectedEndDate);
     return now > expectedEndDate;
@@ -147,6 +116,7 @@ export const useProcessFiltering = (
   return {
     filterProcesses,
     isProcessOverdue,
+    // Exportar as funções de verificação para reuso
     isUserResponsibleForProcess,
     isUserResponsibleForSector,
     isUserInAttendanceSector
