@@ -89,6 +89,9 @@ const ProcessTableRow = ({
     return "";
   };
 
+  // Verificar se o usuário é administrador (com verificação de segurança)
+  const isUserAdmin = isAdmin ? isAdmin() : false;
+
   return (
     <TableRow 
       className={cn(
@@ -135,8 +138,8 @@ const ProcessTableRow = ({
         isAccepting={isAccepting}
         sectorId={process.currentDepartment}
         isSectorResponsible={isSectorResponsible}
-        isProcessResponsible={!!isProcessResponsible}
-        isAdmin={isAdmin ? isAdmin() : false}
+        isProcessResponsible={isProcessResponsible}
+        isAdmin={isUserAdmin}
       />
     </TableRow>
   );
