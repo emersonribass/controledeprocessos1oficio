@@ -2,9 +2,11 @@
 import { TableCell } from "@/components/ui/table";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import { Department } from "@/types";
-import { ProcessResponsible } from "@/hooks/process-responsibility/types";
+import { useProcessDepartmentsResponsibility } from "@/hooks/useProcessDepartmentsResponsibility";
+import { memo } from "react";
 
 interface ProcessDepartmentsSectionProps {
+  processId: string;
   sortedDepartments: Department[];
   isProcessStarted: boolean;
   getMostRecentEntryDate: (departmentId: string) => string | null;
@@ -12,29 +14,28 @@ interface ProcessDepartmentsSectionProps {
   isCurrentDepartment: (departmentId: string) => boolean;
   isPreviousDepartment: (departmentId: string) => boolean;
   isDepartmentOverdue: (departmentId: string, isProcessStarted: boolean) => boolean;
-  processResponsible?: ProcessResponsible | null;
-  departmentResponsibles?: Record<string, ProcessResponsible | null>;
 }
 
-const ProcessDepartmentsSection = ({
+const ProcessDepartmentsSection = memo(({
+  processId,
   sortedDepartments,
   isProcessStarted,
   getMostRecentEntryDate,
   hasPassedDepartment,
   isCurrentDepartment,
   isPreviousDepartment,
-  isDepartmentOverdue,
-  processResponsible = null,
-  departmentResponsibles = {}
+  isDepartmentOverdue
 }: ProcessDepartmentsSectionProps) => {
-  // Função para garantir que não passamos undefined para os componentes filhos
-  const getSafeResponsible = (deptId: string): ProcessResponsible | null => {
-    // Verificar explicitamente se há um responsável para este departamento
-    if (departmentResponsibles && departmentResponsibles[deptId]) {
-      return departmentResponsibles[deptId];
-    }
-    return null;
-  };
+  // Usando o novo hook para buscar responsáveis
+  const { 
+    processResponsible, 
+    departmentResponsibles 
+  } = useProcessDepartmentsResponsibility(
+    processId,
+    sortedDepartments,
+    isCurrentDepartment,
+    hasPassedDepartment
+  );
 
   return (
     <>
@@ -45,9 +46,7 @@ const ProcessDepartmentsSection = ({
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
         // Obtém o responsável do setor com tratamento para null
-        const sectorResponsible = getSafeResponsible(dept.id);
-        
-        console.log(`Departamento ${dept.id} - Responsável: ${sectorResponsible?.nome || 'null'}`);
+        const sectorResponsible = departmentResponsibles ? departmentResponsibles[dept.id] : null;
         
         return (
           <TableCell key={dept.id}>
@@ -68,6 +67,7 @@ const ProcessDepartmentsSection = ({
       })}
     </>
   );
-};
+});
 
+ProcessDepartmentsSection.displayName = 'ProcessDepartmentsSection';
 export default ProcessDepartmentsSection;
