@@ -9,6 +9,7 @@ import ProcessRowActions from "./ProcessRowActions";
 import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
 import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
 import { useAuth } from "@/hooks/auth";
+import { useState, useEffect } from "react";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -40,7 +41,8 @@ const ProcessTableRow = ({
   canInitiateProcesses = false
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const [isUserAdmin, setIsUserAdmin] = useState<boolean>(false);
   
   // Usar o hook para obter informações sobre responsabilidade
   const { sectorResponsible, isSectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
@@ -65,6 +67,25 @@ const ProcessTableRow = ({
     isDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
+  // Verificar status de administrador quando o componente montar ou quando o usuário mudar
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user?.email) {
+        try {
+          const adminStatus = await isAdmin(user.email);
+          setIsUserAdmin(adminStatus);
+        } catch (error) {
+          console.error("Erro ao verificar status de administrador:", error);
+          setIsUserAdmin(false);
+        }
+      } else {
+        setIsUserAdmin(false);
+      }
+    };
+    
+    checkAdminStatus();
+  }, [user, isAdmin]);
+
   // Função para definir a cor de fundo com base no status
   const getRowBackgroundColor = (status: string) => {
     if (status === "completed") return "bg-green-200";
@@ -88,11 +109,6 @@ const ProcessTableRow = ({
     if (isSectorResponsible) return "border-l-4 border-primary";
     return "";
   };
-
-  // Verificar se o usuário é administrador - usando o email atual
-  // Precisamos passar o email do usuário como argumento para isAdmin
-  const userEmail = user?.email || "";
-  const isUserAdmin = user ? user.isAdmin || false : false;
 
   return (
     <TableRow 
