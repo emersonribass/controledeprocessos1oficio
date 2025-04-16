@@ -34,12 +34,12 @@ const ProcessDepartmentsSection = memo(({
     <>
       {sortedDepartments.map((dept) => {
         const entryDate = getMostRecentEntryDate(dept.id);
-        const isPastDept = hasPassedDepartment(dept.id) && isPreviousDepartment(dept.id);
+        const isPastDept = hasPassedDepartment(dept.id);
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
         return (
-          <TableCell key={dept.id}>
+          <TableCell key={dept.id} className="p-2">
             <ProcessDepartmentCell
               departmentId={dept.id}
               isCurrentDepartment={isActive}

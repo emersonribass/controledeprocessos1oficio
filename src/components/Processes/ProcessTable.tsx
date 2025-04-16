@@ -49,12 +49,8 @@ const ProcessTable = ({
   filterProcesses,
   filters
 }: ProcessTableProps) => {
-  const {
-    getProcessResponsible,
-    getSectorResponsible,
-    queueProcessForLoading,
-    queueSectorForLoading
-  } = useProcessBatchLoader();
+  // Usar o hook useProcessBatchLoader para gerenciar responsáveis
+  const batchLoader = useProcessBatchLoader();
   
   return (
     <div className="rounded-md border overflow-x-auto">
@@ -68,8 +64,6 @@ const ProcessTable = ({
         <ProcessTableBody 
           processes={processes}
           departments={departments}
-          sortField={sortField}
-          sortDirection={sortDirection}
           getDepartmentName={getDepartmentName}
           getProcessTypeName={getProcessTypeName}
           moveProcessToNextDepartment={moveProcessToNextDepartment}
@@ -77,10 +71,10 @@ const ProcessTable = ({
           processTypes={processTypes}
           updateProcessType={updateProcessType}
           startProcess={startProcess}
-          getProcessResponsible={getProcessResponsible}
-          getSectorResponsible={getSectorResponsible}
-          queueProcessForLoading={queueProcessForLoading}
-          queueSectorForLoading={queueSectorForLoading}
+          getProcessResponsible={batchLoader.getProcessResponsible}
+          getSectorResponsible={batchLoader.getSectorResponsible}
+          queueProcessForLoading={batchLoader.queueProcessForLoading}
+          queueSectorForLoading={batchLoader.queueSectorForLoading}
         />
       </Table>
     </div>

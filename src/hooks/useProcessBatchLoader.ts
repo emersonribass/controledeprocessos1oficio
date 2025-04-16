@@ -91,7 +91,13 @@ export const useProcessBatchLoader = () => {
         for (const processId of processIds) {
           try {
             const isResponsible = await isUserResponsibleForProcess(processId, "current");
-            results[processId] = isResponsible ? { id: "current", name: "Você" } : null;
+            // Corrigido para incluir as propriedades necessárias do tipo ProcessResponsible
+            results[processId] = isResponsible ? { 
+              id: "current", 
+              name: "Você", 
+              nome: "Você", 
+              email: "current@user.com" 
+            } : null;
           } catch (error) {
             console.error(`Erro ao verificar responsável para processo ${processId}:`, error);
             results[processId] = null;
@@ -125,7 +131,13 @@ export const useProcessBatchLoader = () => {
           try {
             const isResponsible = await isUserResponsibleForSector(processId, sectorId, "current");
             const key = `${processId}:${sectorId}`;
-            results[key] = isResponsible ? { id: "current", name: "Você" } : null;
+            // Corrigido para incluir as propriedades necessárias do tipo ProcessResponsible
+            results[key] = isResponsible ? { 
+              id: "current", 
+              name: "Você", 
+              nome: "Você", 
+              email: "current@user.com" 
+            } : null;
           } catch (error) {
             console.error(`Erro ao verificar responsável para setor ${sectorId} no processo ${processId}:`, error);
             results[`${processId}:${sectorId}`] = null;

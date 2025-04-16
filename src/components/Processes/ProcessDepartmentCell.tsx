@@ -39,6 +39,13 @@ const ProcessDepartmentCell = ({
     }
   };
 
+  // Calcular dias restantes para exibir no departamento atual
+  const getDaysRemaining = () => {
+    if (!departmentTimeLimit || !isCurrentDepartment || !isProcessStarted) return null;
+    
+    return `${departmentTimeLimit} dia(s) restante(s)`;
+  };
+
   // Cores específicas para cada estado do processo
   const getBadgeClasses = () => {
     if (isCurrentDepartment) {
@@ -90,7 +97,7 @@ const ProcessDepartmentCell = ({
                   : "Departamento atual do processo"}
                 {isProcessStarted && departmentTimeLimit && (
                   <div className="text-xs text-muted-foreground mt-1">
-                    Prazo: {departmentTimeLimit} dia(s)
+                    {getDaysRemaining()}
                   </div>
                 )}
                 {sectorResponsible && (
@@ -108,6 +115,11 @@ const ProcessDepartmentCell = ({
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+      {isCurrentDepartment && isProcessStarted && (
+        <div className="text-xs text-blue-600 mt-1">
+          {!isDepartmentOverdue && getDaysRemaining()}
+        </div>
+      )}
     </div>
   );
 };

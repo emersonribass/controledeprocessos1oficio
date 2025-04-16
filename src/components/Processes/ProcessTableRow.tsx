@@ -9,6 +9,8 @@ import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
 import ProcessStatusBadge from "./ProcessStatusBadge";
 import { ProcessResponsible } from "@/hooks/process-responsibility/types";
 import ProcessTypePicker from "./ProcessTypePicker";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -59,6 +61,28 @@ const ProcessTableRow = ({
 
   const isProcessStarted = process.status !== 'not_started';
   
+  // Formatar data para exibição
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "dd/MM/yyyy", { locale: ptBR });
+    } catch (error) {
+      return dateString;
+    }
+  };
+  
+  // Determinar dias restantes
+  const getRemainingDays = (departmentId: string) => {
+    if (!isProcessStarted || !isCurrentDepartment(departmentId)) return null;
+    
+    const dept = departments.find(d => d.id === departmentId);
+    if (!dept || !dept.timeLimit) return null;
+    
+    const entryDate = getMostRecentEntryDate(departmentId);
+    if (!entryDate) return null;
+    
+    return `${dept.timeLimit} dia(s) restante(s)`;
+  };
+  
   // Determinar cores da linha com base no status do processo
   const getRowColor = () => {
     switch (process.status) {
@@ -69,16 +93,22 @@ const ProcessTableRow = ({
       case 'not_started':
         return 'bg-gray-50 hover:bg-gray-100';
       default:
-        return 'hover:bg-blue-50';
+        return 'bg-blue-50 hover:bg-blue-100';
     }
   };
 
+  // Função de clique para a linha inteira
+  const handleRowClick = () => {
+    window.location.href = `/processes/${process.id}`;
+  };
+
   return (
-    <TableRow className={`cursor-pointer ${getRowColor()}`}>
+    <TableRow 
+      className={`cursor-pointer ${getRowColor()}`} 
+      onClick={handleRowClick}
+    >
       <TableCell>
-        <Link to={`/processes/${process.id}`} className="block w-full h-full">
-          {process.protocolNumber}
-        </Link>
+        <div className="font-medium">{process.protocolNumber}</div>
       </TableCell>
       <TableCell>
         {isEditing ? (
@@ -104,9 +134,10 @@ const ProcessTableRow = ({
         )}
       </TableCell>
       <TableCell>
-        <Link to={`/processes/${process.id}`} className="block w-full h-full">
+        <div className="flex flex-col">
+          <span>{formatDate(process.startDate)}</span>
           <ProcessStatusBadge status={process.status} />
-        </Link>
+        </div>
       </TableCell>
 
       <ProcessDepartmentsSection
