@@ -1,5 +1,5 @@
 
-import { createContext, useContext, ReactNode, useState } from "react";
+import { createContext, useContext, ReactNode } from "react";
 import { Process } from "@/types";
 import { useDepartmentsData } from "@/hooks/useDepartmentsData";
 import { useProcessTypes } from "@/hooks/useProcessTypes";
@@ -35,7 +35,7 @@ type ProcessesContextType = {
   getProcess: (processId: string) => Promise<Process | null>;
   isUserResponsibleForProcess: (process: Process, userId: string) => boolean;
   isUserResponsibleForSector: (process: Process, userId: string) => boolean;
-  isUserInAttendanceSector: () => boolean; // Adicionando nova função
+  isUserInAttendanceSector: () => boolean;
 };
 
 // Criação do contexto
@@ -48,10 +48,8 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const { departments, getDepartmentName } = useDepartmentsData();
   const { processTypes, getProcessTypeName } = useProcessTypes();
   const { processes, isLoading, fetchProcesses } = useProcessesFetch();
-  const { user } = useAuth();
   
-  // Agora usamos o useProcessFiltering diretamente, sem precisar implementar
-  // as funções de verificação por responsabilidade manualmente
+  // Usamos o useProcessFiltering diretamente, com a nova implementação otimizada
   const { 
     filterProcesses, 
     isProcessOverdue,
