@@ -14,9 +14,45 @@ export const usePreviousDepartment = (departments: Department[]) => {
       if (!process) return false;
 
       const currentDeptId = process.currentDepartment;
-      const currentDept = departments.find((d) => d.id === currentDeptId);
       
-      if (!currentDept || currentDept.order <= 1) {
+      // Buscar em uma única consulta o departamento atual pelo ID
+      const { data: currentDept, error: currentDeptError } = await supabase
+        .from('setores')
+        .select('*')
+        .eq('id', parseInt(currentDeptId, 10))
+        .single();
+      
+      if (currentDeptError || !currentDept) {
+        console.error("Erro ao buscar setor atual:", currentDeptError);
+        toast({
+          title: "Erro",
+          description: "Não foi possível encontrar o setor atual.",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      // Se já estiver no primeiro departamento, não pode voltar
+      if (currentDept.order_num <= 1) {
+        toast({
+          title: "Aviso",
+          description: "Este processo já está no primeiro departamento.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      // Encontrar o departamento anterior com base no order_num (diretamente no banco)
+      const { data: prevDept, error: prevDeptError } = await supabase
+        .from('setores')
+        .select('*')
+        .lt('order_num', currentDept.order_num)
+        .order('order_num', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (prevDeptError) {
+        console.error("Erro ao buscar setor anterior:", prevDeptError);
         toast({
           title: "Aviso",
           description: "Não há setor anterior disponível",
@@ -24,11 +60,6 @@ export const usePreviousDepartment = (departments: Department[]) => {
         });
         return false;
       }
-      
-      // Encontrar o departamento anterior na ordem
-      const prevDept = departments.find((d) => d.order === currentDept.order - 1);
-      
-      if (!prevDept) return false;
 
       // Atualizar saída no histórico atual
       const now = new Date().toISOString();
@@ -63,63 +94,51 @@ export const usePreviousDepartment = (departments: Department[]) => {
         .from('processos_historico')
         .insert({
           processo_id: process.id,
-          setor_id: prevDept.id,
+          setor_id: prevDept.id.toString(),
           data_entrada: now,
           data_saida: null,
-          usuario_id: process.userId || "1" // Usuário atual (placeholder)
+          usuario_id: process.userId || "1" // Usuário atual
         });
 
       if (newHistoryError) {
         throw newHistoryError;
       }
 
-      // Verificar se o processo está vindo do departamento "Concluído(a)"
-      const isFromConcludedDept = currentDept.name === "Concluído(a)";
-      const isProcessCompleted = process.status === "completed";
-
       // IMPORTANTE: Sempre deletar o responsável do setor destino se existir
-      // Isso garante que o usuário precise aceitar novamente a responsabilidade
-      // Mesmo que ele já tenha sido responsável anteriormente
       const { error: deleteResponsibleError } = await supabase
         .from('setor_responsaveis')
         .delete()
         .eq('processo_id', process.id)
-        .eq('setor_id', prevDept.id);
+        .eq('setor_id', prevDept.id.toString());
 
       if (deleteResponsibleError) {
         console.error("Erro ao limpar responsável do setor:", deleteResponsibleError);
         // Não bloquear o processo se essa operação falhar
       }
 
-      // Atualizar o processo, mantendo o usuário responsável
-      const updateData: {
-        setor_atual: string;
-        status?: string;
-        updated_at: string;
-      } = { 
-        setor_atual: prevDept.id,
-        updated_at: now
-        // Não alteramos mais usuario_responsavel
-      };
+      // Se o processo estiver "Concluído" e estiver voltando, mudar para "Em andamento"
+      const newStatus = process.status === "completed" || 
+                         currentDept.name === "Concluído(a)" ? 
+                         "Em andamento" : process.status;
 
-      // Se o processo vier do departamento "Concluído(a)" ou se seu status for "completed", alterar para "Em andamento"
-      if (isFromConcludedDept || isProcessCompleted) {
-        updateData.status = "Em andamento";
-      }
-
+      // Atualizar o processo
       const { error: updateProcessError } = await supabase
         .from('processos')
-        .update(updateData)
+        .update({
+          setor_atual: prevDept.id.toString(),
+          status: newStatus,
+          updated_at: now
+        })
         .eq('id', process.id);
 
       if (updateProcessError) {
         throw updateProcessError;
       }
       
-      // Enviar notificações para usuários do departamento anterior
+      // Enviar notificações para usuários do departamento anterior - apenas uma vez
       await notifyDepartmentUsers(
         process.id, 
-        prevDept.id, 
+        prevDept.id.toString(), 
         `Processo ${process.protocolNumber} foi devolvido para o setor ${prevDept.name} e necessita de atenção.`
       );
 

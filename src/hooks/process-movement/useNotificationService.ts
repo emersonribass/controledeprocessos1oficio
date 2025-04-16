@@ -1,47 +1,70 @@
 
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export const useNotificationService = () => {
+  const { toast } = useToast();
+  
   /**
-   * Envia notificações para todos os usuários do setor
+   * Envia notificações para todos os usuários de um setor específico
    */
-  const sendNotificationsToSectorUsers = async (processId: string, sectorId: string, protocolNumber: string) => {
+  const sendNotificationsToSectorUsers = async (
+    processId: string, 
+    sectorId: string, 
+    protocolNumber: string
+  ) => {
     try {
-      // Buscar todos os usuários que têm acesso ao setor
+      // Buscar apenas uma vez os usuários do setor
       const { data: users, error: usersError } = await supabase
         .from('usuarios')
-        .select('*')
-        .contains('setores_atribuidos', [sectorId]);
-
-      if (usersError) throw usersError;
-
-      if (!users || users.length === 0) {
-        console.log("Nenhum usuário encontrado para o setor:", sectorId);
-        return;
+        .select('id')
+        .filter('setores_atribuidos', 'cs', `{${sectorId}}`)
+        .eq('ativo', true);
+      
+      if (usersError) {
+        throw usersError;
       }
-
-      // Enviar notificação para cada usuário
+      
+      if (!users || users.length === 0) {
+        console.log(`Nenhum usuário encontrado para o setor ${sectorId}`);
+        return true;
+      }
+      
+      // Preparar todas as notificações em um array
       const notifications = users.map(user => ({
-        usuario_id: user.id,
         processo_id: processId,
-        mensagem: `O processo ${protocolNumber} foi movido para seu setor. Clique para aceitar a responsabilidade.`,
-        tipo: 'processo_movido',
-        data_criacao: new Date().toISOString(),
+        usuario_id: user.id,
+        mensagem: `O processo ${protocolNumber} foi movido para seu setor e requer atenção.`,
+        tipo: 'movimento',
         lida: false,
-        respondida: false
+        respondida: false,
+        data_criacao: new Date().toISOString()
       }));
-
-      const { error: notifyError } = await supabase
+      
+      // Inserir todas as notificações em uma única chamada
+      const { error: notificationsError } = await supabase
         .from('notificacoes')
         .insert(notifications);
-
-      if (notifyError) throw notifyError;
-
+      
+      if (notificationsError) {
+        throw notificationsError;
+      }
+      
       console.log(`Notificações enviadas para ${users.length} usuários do setor ${sectorId}`);
+      return true;
     } catch (error) {
-      console.error("Erro ao enviar notificações:", error);
+      console.error('Erro ao enviar notificações para usuários do setor:', error);
+      toast({
+        title: "Aviso",
+        description: "Não foi possível enviar notificações para os usuários do setor.",
+        variant: "destructive"
+      });
+      return false;
     }
   };
 
-  return { sendNotificationsToSectorUsers };
+  return {
+    sendNotificationsToSectorUsers
+  };
 };

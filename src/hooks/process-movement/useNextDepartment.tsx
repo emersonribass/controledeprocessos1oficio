@@ -14,14 +14,35 @@ export const useNextDepartment = (departments: Department[]) => {
       if (!process) return false;
 
       const currentDeptId = process.currentDepartment;
-      const currentDept = departments.find((d) => d.id === currentDeptId);
       
-      if (!currentDept) return false;
+      // Buscar em uma única consulta o departamento atual pelo ID
+      const { data: currentDept, error: currentDeptError } = await supabase
+        .from('setores')
+        .select('*')
+        .eq('id', parseInt(currentDeptId, 10))
+        .single();
       
-      // Encontrar o próximo departamento na ordem
-      const nextDept = departments.find((d) => d.order === currentDept.order + 1);
+      if (currentDeptError || !currentDept) {
+        console.error("Erro ao buscar setor atual:", currentDeptError);
+        toast({
+          title: "Erro",
+          description: "Não foi possível encontrar o setor atual.",
+          variant: "destructive"
+        });
+        return false;
+      }
       
-      if (!nextDept) {
+      // Encontrar o próximo departamento com base no order_num (diretamente no banco)
+      const { data: nextDept, error: nextDeptError } = await supabase
+        .from('setores')
+        .select('*')
+        .gt('order_num', currentDept.order_num)
+        .order('order_num', { ascending: true })
+        .limit(1)
+        .single();
+      
+      if (nextDeptError) {
+        console.error("Erro ao buscar próximo setor:", nextDeptError);
         toast({
           title: "Aviso",
           description: "Não há próximo setor disponível",
@@ -63,7 +84,7 @@ export const useNextDepartment = (departments: Department[]) => {
         .from('processos_historico')
         .insert({
           processo_id: process.id,
-          setor_id: nextDept.id,
+          setor_id: nextDept.id.toString(),
           data_entrada: now,
           data_saida: null,
           usuario_id: process.userId || "1" // Usar o ID do usuário que está movendo o processo
@@ -75,12 +96,11 @@ export const useNextDepartment = (departments: Department[]) => {
 
       // IMPORTANTE: Sempre deletar o responsável do setor destino se existir
       // Isso garante que o usuário precise aceitar novamente a responsabilidade
-      // Mesmo que ele já tenha sido responsável anteriormente
       const { error: deleteResponsibleError } = await supabase
         .from('setor_responsaveis')
         .delete()
         .eq('processo_id', process.id)
-        .eq('setor_id', nextDept.id);
+        .eq('setor_id', nextDept.id.toString());
 
       if (deleteResponsibleError) {
         console.error("Erro ao limpar responsável do setor:", deleteResponsibleError);
@@ -88,17 +108,16 @@ export const useNextDepartment = (departments: Department[]) => {
       }
 
       // Verificar se é o departamento final para marcar como concluído
-      const isCompleted = nextDept.order === departments.length;
-      const newStatus = isCompleted ? "Concluído" : "Em andamento";
+      const isLastDepartment = !departments.some(d => d.order > nextDept.order_num && d.name !== "Concluído(a)");
+      const newStatus = isLastDepartment ? "Concluído" : "Em andamento";
 
       // Atualizar o processo, mantendo o usuário responsável
       const { error: updateProcessError } = await supabase
         .from('processos')
         .update({ 
-          setor_atual: nextDept.id,
+          setor_atual: nextDept.id.toString(),
           status: newStatus,
           updated_at: now
-          // Não alteramos mais usuario_responsavel
         })
         .eq('id', process.id);
 
@@ -106,10 +125,10 @@ export const useNextDepartment = (departments: Department[]) => {
         throw updateProcessError;
       }
       
-      // Enviar notificações para usuários do próximo departamento
+      // Enviar notificações para usuários do próximo departamento - apenas uma vez
       await notifyDepartmentUsers(
         process.id, 
-        nextDept.id, 
+        nextDept.id.toString(), 
         `Processo ${process.protocolNumber} foi movido para o setor ${nextDept.name} e necessita de atenção.`
       );
 

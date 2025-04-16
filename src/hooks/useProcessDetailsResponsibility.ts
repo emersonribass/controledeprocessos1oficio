@@ -1,18 +1,19 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useProcessResponsibility } from "./useProcessResponsibility";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useProcessDetailsResponsibility = (processId: string, sectorId: string) => {
   const [isLoading, setIsLoading] = useState(true);
   const [processResponsible, setProcessResponsible] = useState<any>(null);
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
-  const { getProcessResponsible, getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   
   // Referências para controlar se os dados já foram carregados
   const loadedRef = useRef(false);
   const loadingInProgressRef = useRef(false);
   
-  // Função para carregar responsáveis de forma eficiente
+  // Função otimizada para buscar responsáveis
   const loadResponsibles = useCallback(async () => {
     if (!processId || !sectorId || loadingInProgressRef.current) {
       return;
@@ -23,24 +24,69 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
     setIsLoading(true);
     
     try {
-      console.log(`Carregando responsáveis: processo=${processId}, setor=${sectorId}`);
+      // Buscamos todos os responsáveis de uma vez
+      const { data: responsibleData, error: responsibleError } = await supabase
+        .from('processos')
+        .select(`
+          id,
+          usuario_responsavel,
+          setor_responsaveis(
+            id,
+            usuario_id,
+            setor_id
+          ),
+          usuarios!processos_usuario_responsavel_fkey(
+            id,
+            nome,
+            email
+          )
+        `)
+        .eq('id', processId)
+        .single();
       
-      // Executar consultas em paralelo
-      const [processResp, sectorResp] = await Promise.all([
-        getProcessResponsible(processId),
-        getSectorResponsible(processId, sectorId)
-      ]);
+      if (responsibleError) {
+        throw responsibleError;
+      }
       
-      setProcessResponsible(processResp);
-      setSectorResponsible(sectorResp);
+      // Processo responsável
+      setProcessResponsible(
+        responsibleData?.usuario_responsavel ? 
+        responsibleData.usuarios : null
+      );
+      
+      // Responsável pelo setor
+      const sectorResp = responsibleData?.setor_responsaveis?.find(
+        (sr: any) => sr.setor_id === sectorId
+      );
+      
+      if (sectorResp?.usuario_id) {
+        // Buscar detalhes do usuário responsável pelo setor
+        const { data: userData, error: userError } = await supabase
+          .from('usuarios')
+          .select('id, nome, email')
+          .eq('id', sectorResp.usuario_id)
+          .single();
+        
+        if (userError) {
+          console.error("Erro ao buscar detalhes do usuário:", userError);
+          setSectorResponsible(null);
+        } else {
+          setSectorResponsible(userData);
+        }
+      } else {
+        setSectorResponsible(null);
+      }
+      
       loadedRef.current = true;
     } catch (error) {
       console.error("Erro ao carregar responsáveis:", error);
+      setProcessResponsible(null);
+      setSectorResponsible(null);
     } finally {
       setIsLoading(false);
       loadingInProgressRef.current = false;
     }
-  }, [processId, sectorId, getProcessResponsible, getSectorResponsible]);
+  }, [processId, sectorId]);
 
   // Aceitar responsabilidade pelo processo
   const handleAcceptResponsibility = useCallback(async (protocolNumber: string): Promise<void> => {
@@ -52,10 +98,11 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
     }
   }, [processId, acceptProcessResponsibility, loadResponsibles]);
 
-  // Carregar responsáveis uma única vez ao inicializar
+  // Carregar responsáveis quando os IDs mudarem
   useEffect(() => {
     // Resetar o estado quando os IDs mudam
-    if (processId && sectorId && !loadedRef.current) {
+    if (processId && sectorId) {
+      loadedRef.current = false;
       loadResponsibles();
     }
     

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/auth";
 import { useNotificationService } from "./useNotificationService";
+import { Process } from "@/types";
 
 export const useProcessMoveNext = (onProcessUpdated: () => void) => {
   const [isMoving, setIsMoving] = useState(false);
@@ -15,7 +16,7 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
    * Move o processo para o próximo departamento
    */
   const moveProcessToNextDepartment = async (processId: string) => {
-    if (!user) return;
+    if (!user) return false;
     
     setIsMoving(true);
     try {
@@ -27,73 +28,92 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
         .single();
 
       if (processError) throw processError;
-
       if (!process) throw new Error("Processo não encontrado");
 
-      // Obter a ordem do departamento atual
-      const { data: currentDepartment, error: currentDeptError } = await supabase
+      // Obter os dados do departamento atual
+      const { data: currentDept, error: currentDeptError } = await supabase
         .from('setores')
         .select('*')
         .eq('id', parseInt(process.setor_atual, 10))
         .single();
 
-      if (currentDeptError) throw currentDeptError;
+      if (currentDeptError || !currentDept) {
+        throw new Error("Departamento atual não encontrado");
+      }
 
-      if (!currentDepartment) throw new Error("Departamento atual não encontrado");
-
-      const currentOrder = currentDepartment.order_num;
-
-      // Buscar o próximo departamento
-      const { data: nextDepartment, error: nextDeptError } = await supabase
+      // Buscar diretamente o próximo departamento pelo order_num
+      const { data: nextDept, error: nextDeptError } = await supabase
         .from('setores')
         .select('*')
-        .gt('order_num', currentOrder)
+        .gt('order_num', currentDept.order_num)
         .order('order_num', { ascending: true })
         .limit(1)
         .single();
 
-      if (nextDeptError) throw nextDeptError;
+      if (nextDeptError) {
+        uiToast({
+          title: "Aviso",
+          description: "Não há próximo setor disponível.",
+          variant: "destructive"
+        });
+        setIsMoving(false);
+        return false;
+      }
 
-      // Atualizar o histórico
-      const { error: historyError } = await supabase
+      // Atualizar o histórico em uma transação
+      const now = new Date().toISOString();
+      
+      // 1. Fechar o histórico atual
+      const { data: currentHistory, error: historyQueryError } = await supabase
         .from('processos_historico')
-        .update({
-          data_saida: new Date().toISOString(),
-          usuario_id: user.id
-        })
+        .select('id')
         .eq('processo_id', processId)
         .eq('setor_id', process.setor_atual)
-        .is('data_saida', null);
+        .is('data_saida', null)
+        .single();
+      
+      if (historyQueryError && historyQueryError.code !== 'PGRST116') {
+        throw historyQueryError;
+      }
+      
+      if (currentHistory) {
+        const { error: historyError } = await supabase
+          .from('processos_historico')
+          .update({
+            data_saida: now,
+            usuario_id: user.id
+          })
+          .eq('id', currentHistory.id);
 
-      if (historyError) throw historyError;
+        if (historyError) throw historyError;
+      }
 
-      // Inserir nova entrada no histórico
+      // 2. Criar novo histórico
       const { error: newHistoryError } = await supabase
         .from('processos_historico')
         .insert({
           processo_id: processId,
-          setor_id: nextDepartment.id.toString(),
-          data_entrada: new Date().toISOString(),
+          setor_id: nextDept.id.toString(),
+          data_entrada: now,
           data_saida: null,
           usuario_id: user.id
         });
 
       if (newHistoryError) throw newHistoryError;
 
-      // Verificar se o próximo departamento é o "Concluído(a)"
-      const isConcludedDept = nextDepartment.name === "Concluído(a)";
+      // 3. Verificar se é o último departamento
+      const isConcludedDept = nextDept.name === "Concluído(a)";
       
-      // Atualizar o departamento atual do processo e o status se for o departamento "Concluído(a)"
+      // 4. Atualizar o processo
       const updateData: {
         setor_atual: string;
         updated_at: string;
         status?: string;
       } = {
-        setor_atual: nextDepartment.id.toString(),
-        updated_at: new Date().toISOString()
+        setor_atual: nextDept.id.toString(),
+        updated_at: now
       };
       
-      // Se for o departamento "Concluído(a)", atualiza o status
       if (isConcludedDept) {
         updateData.status = "Concluído";
       }
@@ -105,28 +125,31 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
 
       if (updateError) throw updateError;
 
-      // IMPORTANTE: Sempre remover qualquer responsável de setor existente para o próximo setor
-      // Este é o ponto chave - queremos garantir que o usuário tenha que aceitar novamente
-      // Independentemente de ter sido responsável anteriormente
+      // 5. Remover responsável do setor destino (se existir)
       const { error: deleteResponsibleError } = await supabase
         .from('setor_responsaveis')
         .delete()
         .eq('processo_id', processId)
-        .eq('setor_id', nextDepartment.id.toString());
+        .eq('setor_id', nextDept.id.toString());
 
       if (deleteResponsibleError) {
         console.error("Erro ao remover responsável do setor:", deleteResponsibleError);
-        // Continuamos mesmo se houver erro aqui, não é crítico
+        // Continuamos mesmo com erro
       }
 
-      // Enviar notificações para usuários do setor
+      // 6. Enviar notificações apenas para o setor de destino
       await sendNotificationsToSectorUsers(
         processId, 
-        nextDepartment.id.toString(), 
+        nextDept.id.toString(), 
         process.numero_protocolo
       );
 
       onProcessUpdated();
+      uiToast({
+        title: "Sucesso",
+        description: `Processo movido para ${nextDept.name}`,
+      });
+      
       return true;
     } catch (error) {
       console.error("Erro ao mover processo:", error);
