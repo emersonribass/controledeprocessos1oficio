@@ -46,7 +46,7 @@ export const useProcessResponsibleFetching = () => {
             .from('processos')
             .select('usuario_responsavel')
             .eq('id', processId)
-            .single();
+            .maybeSingle();
 
           if (processError) {
             console.error("Erro ao buscar processo:", processError);
@@ -64,10 +64,16 @@ export const useProcessResponsibleFetching = () => {
             .from('usuarios')
             .select('*')
             .eq('id', process.usuario_responsavel)
-            .single();
+            .maybeSingle();
 
           if (userError) {
             console.error("Erro ao buscar usuário responsável:", userError);
+            setProcessResponsibleCache(prev => ({ ...prev, [processId]: null }));
+            return null;
+          }
+
+          if (!user) {
+            console.log("Usuário responsável não encontrado");
             setProcessResponsibleCache(prev => ({ ...prev, [processId]: null }));
             return null;
           }
@@ -132,7 +138,8 @@ export const useProcessResponsibleFetching = () => {
             .from('setor_responsaveis')
             .select('usuario_id')
             .eq('processo_id', processId)
-            .eq('setor_id', sectorId);
+            .eq('setor_id', sectorId)
+            .maybeSingle();
 
           if (error) {
             console.error("Erro ao buscar responsável no setor:", error);
@@ -140,7 +147,7 @@ export const useProcessResponsibleFetching = () => {
             return null;
           }
 
-          if (!data || data.length === 0) {
+          if (!data || !data.usuario_id) {
             console.log("Nenhum responsável encontrado para este setor");
             setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: null }));
             return null;
@@ -149,11 +156,17 @@ export const useProcessResponsibleFetching = () => {
           const { data: user, error: userError } = await supabase
             .from('usuarios')
             .select('*')
-            .eq('id', data[0].usuario_id)
-            .single();
+            .eq('id', data.usuario_id)
+            .maybeSingle();
 
           if (userError) {
             console.error("Erro ao buscar dados do usuário responsável:", userError);
+            setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: null }));
+            return null;
+          }
+
+          if (!user) {
+            console.log("Usuário responsável pelo setor não encontrado");
             setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: null }));
             return null;
           }

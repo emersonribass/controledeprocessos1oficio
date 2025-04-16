@@ -39,6 +39,10 @@ const ProcessDepartmentCell = ({
     remainingDays = Math.ceil((deadlineTime - currentTime) / (24 * 60 * 60 * 1000));
   }
 
+  // Verificar se temos informações dos responsáveis
+  const hasProcessResponsible = processResponsible && processResponsible.nome;
+  const hasSectorResponsible = sectorResponsible && sectorResponsible.nome;
+
   return (
     <div className="text-center">
       {showDate && entryDate && (
@@ -56,14 +60,11 @@ const ProcessDepartmentCell = ({
             <div className={cn("text-xs flex items-center justify-center gap-1", 
               isDepartmentOverdue ? "text-red-600" : "text-blue-600"
             )}>
+              <Clock className="h-3 w-3" />
               {isDepartmentOverdue ? (
-                <>
-                  <Clock className="h-3 w-3" /> Prazo expirado
-                </>
+                "Prazo expirado"
               ) : (
-                <>
-                  {remainingDays > 0 ? `${remainingDays} dia(s) restante(s)` : "Vence hoje"}
-                </>
+                remainingDays > 0 ? `${remainingDays} dia(s) restante(s)` : "Vence hoje"
               )}
             </div>
           )}
@@ -71,16 +72,16 @@ const ProcessDepartmentCell = ({
           {/* Responsável pelo Processo */}
           <div className="text-xs mt-1 flex items-center justify-center gap-1">
             <User className="h-3 w-3 text-gray-600" />
-            <span className="text-gray-700">
-              {processResponsible?.nome || "Sem responsável"}
+            <span className="text-gray-700 truncate max-w-[120px]" title={hasProcessResponsible ? processResponsible?.nome : "Sem responsável"}>
+              {hasProcessResponsible ? processResponsible?.nome : "Sem responsável"}
             </span>
           </div>
           
           {/* Responsável no Setor */}
           <div className="text-xs mt-1 flex items-center justify-center gap-1">
             <User className="h-3 w-3 text-gray-600" />
-            <span className="text-gray-700">
-              {sectorResponsible?.nome || "Sem responsável"}
+            <span className="text-gray-700 truncate max-w-[120px]" title={hasSectorResponsible ? sectorResponsible?.nome : "Sem responsável"}>
+              {hasSectorResponsible ? sectorResponsible?.nome : "Sem responsável"}
             </span>
           </div>
         </div>

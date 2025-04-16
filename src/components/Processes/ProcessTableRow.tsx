@@ -61,7 +61,7 @@ const ProcessTableRow = ({
 
   // Função para buscar responsáveis, otimizada para evitar chamadas desnecessárias
   const fetchResponsibles = useCallback(async () => {
-    if (isLoadingResponsibles) return;
+    if (isLoadingResponsibles || !process.id) return;
     
     setIsLoadingResponsibles(true);
     console.log(`Buscando responsáveis para o processo: ${process.id}`);
@@ -70,6 +70,7 @@ const ProcessTableRow = ({
       // Buscar o responsável pelo processo
       const responsible = await getProcessResponsible(process.id);
       setProcessResponsible(responsible);
+      console.log("Responsável pelo processo:", responsible?.nome || "Nenhum");
       
       // Buscar responsáveis por departamento
       const deptResp: Record<string, ProcessResponsible | null> = {};
@@ -81,8 +82,14 @@ const ProcessTableRow = ({
       
       // Usar Promise.all para buscar em paralelo e melhorar a performance
       const promises = departmentsToFetch.map(async (dept) => {
-        const sectorResp = await getSectorResponsible(process.id, dept.id);
-        return { deptId: dept.id, responsible: sectorResp };
+        try {
+          const sectorResp = await getSectorResponsible(process.id, dept.id);
+          console.log(`Responsável do setor ${dept.id}:`, sectorResp?.nome || "Nenhum");
+          return { deptId: dept.id, responsible: sectorResp };
+        } catch (error) {
+          console.error(`Erro ao buscar responsável do setor ${dept.id}:`, error);
+          return { deptId: dept.id, responsible: null };
+        }
       });
       
       const results = await Promise.all(promises);
@@ -92,6 +99,7 @@ const ProcessTableRow = ({
         deptResp[result.deptId] = result.responsible;
       });
       
+      console.log("Departamentos e responsáveis:", deptResp);
       setDepartmentResponsibles(deptResp);
     } catch (error) {
       console.error("Erro ao buscar responsáveis:", error);

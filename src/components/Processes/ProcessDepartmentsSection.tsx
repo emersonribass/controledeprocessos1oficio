@@ -29,7 +29,11 @@ const ProcessDepartmentsSection = ({
 }: ProcessDepartmentsSectionProps) => {
   // Função para garantir que não passamos undefined para os componentes filhos
   const getSafeResponsible = (deptId: string): ProcessResponsible | null => {
-    return departmentResponsibles[deptId] || null;
+    // Verificar explicitamente se há um responsável para este departamento
+    if (departmentResponsibles && departmentResponsibles[deptId]) {
+      return departmentResponsibles[deptId];
+    }
+    return null;
   };
 
   return (
@@ -39,7 +43,11 @@ const ProcessDepartmentsSection = ({
         const isPastDept = hasPassedDepartment(dept.id) && isPreviousDepartment(dept.id);
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
+        
+        // Obtém o responsável do setor com tratamento para null
         const sectorResponsible = getSafeResponsible(dept.id);
+        
+        console.log(`Departamento ${dept.id} - Responsável: ${sectorResponsible?.nome || 'null'}`);
         
         return (
           <TableCell key={dept.id}>
