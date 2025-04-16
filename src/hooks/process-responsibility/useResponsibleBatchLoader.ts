@@ -18,6 +18,7 @@ export const useResponsibleBatchLoader = () => {
   const lastLoadTimeRef = useRef<number>(0);
   const pendingProcessesRef = useRef<Set<string>>(new Set());
   const processStatusCacheRef = useRef<Map<string, string>>(new Map());
+  const initializedRef = useRef<boolean>(false);
   
   // Tempo mínimo entre carregamentos (milliseconds)
   const THROTTLE_TIME = 2000;
@@ -83,6 +84,7 @@ export const useResponsibleBatchLoader = () => {
       if (processesToLoad.length === 0) {
         console.log("Nenhum processo precisa ser carregado após filtragem de status");
         pendingProcessesRef.current.clear();
+        setIsLoading(false);
         return;
       }
       
@@ -96,21 +98,24 @@ export const useResponsibleBatchLoader = () => {
       
       if (error) {
         console.error("Erro ao buscar responsáveis em lote:", error);
+        setIsLoading(false);
         return;
       }
       
       // Processar os resultados
       const results: Record<string, Record<string, any>> = {};
       
-      data.forEach(item => {
-        if (!results[item.processo_id]) {
-          results[item.processo_id] = {};
-        }
-        
-        results[item.processo_id][item.setor_id] = { 
-          usuario_id: item.usuario_id 
-        };
-      });
+      if (data) {
+        data.forEach(item => {
+          if (!results[item.processo_id]) {
+            results[item.processo_id] = {};
+          }
+          
+          results[item.processo_id][item.setor_id] = { 
+            usuario_id: item.usuario_id 
+          };
+        });
+      }
       
       // Atualizar estado com os novos dados
       setResponsiblesData(prev => ({
@@ -139,6 +144,11 @@ export const useResponsibleBatchLoader = () => {
       return false;
     }
     
+    // Verificar se já temos dados para este processo
+    if (responsiblesData[processId]) {
+      return true;
+    }
+    
     // Se o processo já está na fila, não fazer nada
     if (pendingProcessesRef.current.has(processId)) {
       return true;
@@ -150,21 +160,40 @@ export const useResponsibleBatchLoader = () => {
     // Agendar carregamento
     scheduleLoad();
     return true;
-  }, [canLoadProcess, scheduleLoad]);
+  }, [canLoadProcess, scheduleLoad, responsiblesData]);
   
   /**
    * Adiciona múltiplos processos à fila de carregamento
    */
   const queueMultipleProcesses = useCallback((processes: Process[]) => {
+    // Verifica se já fizemos uma inicialização
+    if (initializedRef.current) {
+      return 0;
+    }
+    
     let added = 0;
     
-    processes.forEach(process => {
+    // Filtramos para não processar novamente os que já estão carregados
+    const processesToQueue = processes.filter(
+      process => process.status !== 'not_started' && !responsiblesData[process.id]
+    );
+    
+    if (processesToQueue.length === 0) {
+      return 0;
+    }
+    
+    processesToQueue.forEach(process => {
       const wasAdded = queueProcessForLoading(process.id, process.status);
       if (wasAdded) added++;
     });
     
+    // Marcar que já fizemos a inicialização
+    if (added > 0) {
+      initializedRef.current = true;
+    }
+    
     return added;
-  }, [queueProcessForLoading]);
+  }, [queueProcessForLoading, responsiblesData]);
   
   /**
    * Limpa a fila e cancela carregamentos pendentes
@@ -208,6 +237,8 @@ export const useResponsibleBatchLoader = () => {
       if (loadingTimerRef.current) {
         clearTimeout(loadingTimerRef.current);
       }
+      // Resetar flag de inicialização quando o componente é desmontado
+      initializedRef.current = false;
     };
   }, []);
   

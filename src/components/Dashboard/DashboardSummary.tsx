@@ -5,7 +5,6 @@ import { ClipboardCheck, AlertTriangle, BarChart, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/auth";
-import { Process } from "@/types";
 
 const DashboardSummary = () => {
   const { processes, filterProcesses } = useProcesses();

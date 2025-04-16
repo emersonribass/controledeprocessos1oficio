@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -19,15 +19,21 @@ const RecentProcessList = () => {
     getProcessTypeName,
     filterProcesses
   } = useProcesses();
-  const [limit, setLimit] = useState(5);
+  const [limit] = useState(5);
 
   // Aplicar filtros por departamento e status conforme a permissão do usuário
-  const filteredProcesses = filterProcesses({});
+  // Usar useMemo para evitar filtragens repetidas
+  const filteredProcesses = useMemo(() => {
+    return filterProcesses({});
+  }, [filterProcesses, processes]);
   
   // Obter os processos mais recentes, ordenados por data de início (mais recente primeiro)
-  const recentProcesses = [...filteredProcesses]
-    .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
-    .slice(0, limit);
+  // Usar useMemo para evitar ordenações repetidas
+  const recentProcesses = useMemo(() => {
+    return [...filteredProcesses]
+      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+      .slice(0, limit);
+  }, [filteredProcesses, limit]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
