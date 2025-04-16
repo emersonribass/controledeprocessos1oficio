@@ -8,18 +8,16 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
   const { getProcessResponsible, getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   
-  // Referências para controlar requisições já realizadas
   const processRequestMade = useRef(false);
   const sectorRequestMade = useRef(false);
   
-  // Função para carregar responsável principal do processo
-  const loadProcessResponsible = useCallback(async () => {
-    if (!processId || processRequestMade.current) return;
+  const loadProcessResponsible = useCallback(async (processStatus?: string) => {
+    if (!processId || processRequestMade.current || processStatus === 'not_started') return null;
     
     processRequestMade.current = true;
     
     try {
-      const resp = await getProcessResponsible(processId);
+      const resp = await getProcessResponsible(processId, processStatus);
       setProcessResponsible(resp);
       return resp;
     } catch (error) {
@@ -28,14 +26,13 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
     }
   }, [processId, getProcessResponsible]);
   
-  // Função para carregar responsável do setor
-  const loadSectorResponsible = useCallback(async () => {
-    if (!processId || !sectorId || sectorRequestMade.current) return;
+  const loadSectorResponsible = useCallback(async (processStatus?: string) => {
+    if (!processId || !sectorId || sectorRequestMade.current || processStatus === 'not_started') return null;
     
     sectorRequestMade.current = true;
     
     try {
-      const resp = await getSectorResponsible(processId, sectorId);
+      const resp = await getSectorResponsible(processId, sectorId, processStatus);
       setSectorResponsible(resp);
       return resp;
     } catch (error) {
@@ -44,19 +41,17 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
     }
   }, [processId, sectorId, getSectorResponsible]);
   
-  // Função para carregar responsáveis de forma eficiente
-  const loadResponsibles = useCallback(async () => {
-    if (!processId || !sectorId) {
+  const loadResponsibles = useCallback(async (processStatus?: string) => {
+    if (!processId || !sectorId || processStatus === 'not_started') {
       return;
     }
     
     setIsLoading(true);
     
     try {
-      // Executar consultas em paralelo
       await Promise.all([
-        loadProcessResponsible(),
-        loadSectorResponsible()
+        loadProcessResponsible(processStatus),
+        loadSectorResponsible(processStatus)
       ]);
     } catch (error) {
       console.error("Erro ao carregar responsáveis:", error);
@@ -65,30 +60,30 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
     }
   }, [processId, sectorId, loadProcessResponsible, loadSectorResponsible]);
 
-  // Aceitar responsabilidade pelo processo
-  const handleAcceptResponsibility = useCallback(async (protocolNumber: string): Promise<void> => {
-    if (!processId || !protocolNumber) return;
+  // Mantenha o método existente, adicionando o parâmetro de status do processo
+  const handleAcceptResponsibility = useCallback(async (protocolNumber: string, processStatus?: string): Promise<void> => {
+    if (!processId || !protocolNumber || processStatus === 'not_started') return;
     
     const success = await acceptProcessResponsibility(processId, protocolNumber);
     if (success) {
-      // Redefinir estado para forçar nova busca
       processRequestMade.current = false;
       sectorRequestMade.current = false;
-      await loadResponsibles();
+      await loadResponsibles(processStatus);
     }
   }, [processId, acceptProcessResponsibility, loadResponsibles]);
 
-  // Resetar o estado quando os IDs mudam
   useEffect(() => {
     processRequestMade.current = false;
     sectorRequestMade.current = false;
     
+    // Adicione um parâmetro de status do processo para os métodos
     if (processId && sectorId) {
+      // Você precisará passar o status do processo aqui
+      // Isso dependerá de como você obtém o status do processo no componente pai
       loadResponsibles();
     }
     
     return () => {
-      // Limpar referências quando o componente é desmontado
       processRequestMade.current = false;
       sectorRequestMade.current = false;
     };
@@ -103,3 +98,4 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
     refreshResponsibles: loadResponsibles
   };
 };
+

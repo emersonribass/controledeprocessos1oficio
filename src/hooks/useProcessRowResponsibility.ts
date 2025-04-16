@@ -4,19 +4,18 @@ import { useProcessResponsibility } from "./useProcessResponsibility";
 import { useToast } from "./use-toast";
 import { useAuth } from "./auth";
 
-export const useProcessRowResponsibility = (processId: string, sectorId?: string) => {
+export const useProcessRowResponsibility = (processId: string, sectorId?: string, processStatus?: string) => {
   const { getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
   const [isLoadingResponsible, setIsLoadingResponsible] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   
-  // Referência para controlar se a request já foi iniciada
   const requestMadeRef = useRef(false);
 
-  // Carrega o responsável pelo processo no setor atual
   const loadSectorResponsible = useCallback(async () => {
-    if (!sectorId || !processId || requestMadeRef.current) {
+    // Se o processo não foi iniciado, pare a execução
+    if (!sectorId || !processId || requestMadeRef.current || processStatus === 'not_started') {
       return;
     }
     
@@ -24,7 +23,7 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     setIsLoadingResponsible(true);
     
     try {
-      const responsible = await getSectorResponsible(processId, sectorId);
+      const responsible = await getSectorResponsible(processId, sectorId, processStatus);
       setSectorResponsible(responsible);
     } catch (error) {
       console.error("Erro ao carregar responsável:", error);
@@ -32,12 +31,10 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     } finally {
       setIsLoadingResponsible(false);
     }
-  }, [processId, sectorId, getSectorResponsible]);
+  }, [processId, sectorId, processStatus, getSectorResponsible]);
 
-  // Carrega o responsável quando o componente é montado ou quando o departamento atual muda
   useEffect(() => {
-    if (processId && sectorId) {
-      // Reset do estado quando os IDs mudam
+    if (processId && sectorId && processStatus !== 'not_started') {
       requestMadeRef.current = false;
       loadSectorResponsible();
     }
@@ -45,16 +42,14 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     return () => {
       requestMadeRef.current = false;
     };
-  }, [loadSectorResponsible, processId, sectorId]);
+  }, [loadSectorResponsible, processId, sectorId, processStatus]);
 
-  // Função para aceitar a responsabilidade pelo processo
   const handleAcceptResponsibility = useCallback(async (protocolNumber?: string) => {
     if (!user || !protocolNumber || !sectorId) return;
     
     try {
       const success = await acceptProcessResponsibility(processId, protocolNumber);
       if (success) {
-        // Redefinir estado para forçar nova busca
         requestMadeRef.current = false;
         await loadSectorResponsible();
         
@@ -80,3 +75,4 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     isAccepting
   };
 };
+
