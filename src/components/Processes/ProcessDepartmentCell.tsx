@@ -70,7 +70,7 @@ const ProcessDepartmentCell = ({
           
           {/* Responsável pelo Processo */}
           <div className="text-xs mt-1">
-            <span className="font-medium">Processo:</span> 
+            <span className="font-medium">:</span> 
             <span className="text-gray-700 ml-1">
               {processResponsible ? processResponsible.nome : "Sem responsável"}
             </span>
@@ -78,7 +78,7 @@ const ProcessDepartmentCell = ({
           
           {/* Responsável no Setor */}
           <div className="text-xs mt-1">
-            <span className="font-medium">Setor:</span>
+            <span className="font-medium">/</span>
             <span className="text-gray-700 ml-1">
               {sectorResponsible ? sectorResponsible.nome : "Sem responsável"}
             </span>
