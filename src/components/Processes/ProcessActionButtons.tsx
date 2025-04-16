@@ -42,7 +42,7 @@ const ProcessActionButtons = ({
   const canMoveProcess = status !== "not_started" && status !== "completed" && isSectorResponsible;
   
   return (
-    <div className="flex gap-1 justify-end">
+    <div className="flex gap-2 justify-center">
       {status === "not_started" && startProcess && (
         <Tooltip>
           <TooltipTrigger asChild>
