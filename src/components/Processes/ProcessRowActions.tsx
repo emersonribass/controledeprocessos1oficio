@@ -16,6 +16,7 @@ interface ProcessRowActionsProps {
   onAcceptResponsibility: () => Promise<void>;
   isAccepting: boolean;
   sectorId?: string;
+  isSectorResponsible?: boolean;
 }
 
 const ProcessRowActions = ({
@@ -30,7 +31,8 @@ const ProcessRowActions = ({
   hasSectorResponsible,
   onAcceptResponsibility,
   isAccepting,
-  sectorId
+  sectorId,
+  isSectorResponsible = false
 }: ProcessRowActionsProps) => {
   return (
     <TableCell className="text-right process-action">
@@ -48,7 +50,8 @@ const ProcessRowActions = ({
         hasSectorResponsible={hasSectorResponsible} 
         onAcceptResponsibility={onAcceptResponsibility} 
         isAccepting={isAccepting} 
-        sectorId={sectorId} 
+        sectorId={sectorId}
+        isSectorResponsible={isSectorResponsible}
       />
     </TableCell>
   );

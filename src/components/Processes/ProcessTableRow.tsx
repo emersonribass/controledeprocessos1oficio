@@ -41,7 +41,7 @@ const ProcessTableRow = ({
   const navigate = useNavigate();
   
   // Usar o hook para obter informações sobre responsabilidade
-  const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
+  const { sectorResponsible, isSectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
   
   // Verificar se há um responsável para o setor atual
   // Importante: verificamos tanto o hasSectorResponsible (que pode vir de um contexto mais amplo)
@@ -78,11 +78,18 @@ const ProcessTableRow = ({
     navigate(`/processes/${process.id}`);
   };
 
+  // Adicionar highlight para linhas onde o usuário é responsável
+  const getRowHighlight = () => {
+    if (isSectorResponsible) return "border-l-4 border-primary";
+    return "";
+  };
+
   return (
     <TableRow 
       className={cn(
         "cursor-pointer hover:bg-gray-100",
-        getRowBackgroundColor(process.status)
+        getRowBackgroundColor(process.status),
+        getRowHighlight()
       )}
       onClick={handleRowClick}
     >
@@ -122,6 +129,7 @@ const ProcessTableRow = ({
         onAcceptResponsibility={onAcceptResponsibility}
         isAccepting={isAccepting}
         sectorId={process.currentDepartment}
+        isSectorResponsible={isSectorResponsible}
       />
     </TableRow>
   );
