@@ -135,8 +135,8 @@ const ProcessTableRow = ({
         isAccepting={isAccepting}
         sectorId={process.currentDepartment}
         isSectorResponsible={isSectorResponsible}
-        isProcessResponsible={isProcessResponsible}
-        isAdmin={isAdmin()}
+        isProcessResponsible={!!isProcessResponsible}
+        isAdmin={isAdmin ? isAdmin() : false}
       />
     </TableRow>
   );
