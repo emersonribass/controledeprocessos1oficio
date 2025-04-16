@@ -53,10 +53,11 @@ const ProcessActionButtons = ({
                 e.stopPropagation();
                 startProcess(processId);
               }}
-              className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200 font-semibold"
               data-testid="start-process"
             >
-              <Play className="h-4 w-4" />
+              <Play className="h-4 w-4 mr-2" />
+              Iniciar
             </Button>
           </TooltipTrigger>
           <TooltipContent>Iniciar processo</TooltipContent>
