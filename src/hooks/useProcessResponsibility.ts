@@ -6,7 +6,7 @@ import { useProcessResponsibleFetching } from "./process-responsibility/useProce
 
 /**
  * Hook unificado para gerenciar responsabilidade em processos
- * Mantido para compatibilidade, mas com implementação revisada para evitar duplicação
+ * Agora utilizando hooks mais específicos e modulares
  */
 export const useProcessResponsibility = () => {
   // Hook para atribuir responsáveis
@@ -15,12 +15,11 @@ export const useProcessResponsibility = () => {
   // Hook para aceitar responsabilidade
   const { isAccepting, acceptProcessResponsibility } = useProcessResponsibilityAcceptance();
   
-  // Hook para verificar responsabilidade - agora estamos apenas reexportando 
-  // estas funções do hook useProcessFiltering via useProcesses
+  // Hook para verificar responsabilidade
   const { isUserResponsibleForProcess, isUserResponsibleForSector } = useProcessResponsibilityVerification();
   
-  // Hook para buscar responsáveis
-  const { getProcessResponsible, getSectorResponsible } = useProcessResponsibleFetching();
+  // Hook para buscar responsáveis (agora refatorado)
+  const { getProcessResponsible, getSectorResponsible, clearCache } = useProcessResponsibleFetching();
 
   return {
     // Estados
@@ -39,6 +38,9 @@ export const useProcessResponsibility = () => {
     
     // Busca
     getProcessResponsible,
-    getSectorResponsible
+    getSectorResponsible,
+    
+    // Limpeza de cache
+    clearCache
   };
 };
