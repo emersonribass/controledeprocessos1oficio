@@ -18,8 +18,6 @@ export const useProcessBatchLoader = () => {
   const batchLoadingRef = useRef(false);
   const pendingProcessIds = useRef<string[]>([]);
   const pendingSectorRequests = useRef<Array<{ processId: string; sectorId: string }>>([]);
-  const processIdsToLoad = useRef<string[]>([]);
-  const sectorIdsToLoad = useRef<Array<{ processId: string; sectorId: string }>>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   /**

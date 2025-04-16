@@ -1,7 +1,7 @@
 
 import { TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Department, Process, ProcessType } from "@/types";
-import ProcessTableRow from "./ProcessTableRow";
+import ProcessTableRow from "../ProcessTableRow";
 import { useEffect, useMemo } from "react";
 
 interface ProcessTableBodyProps {
@@ -49,14 +49,6 @@ const ProcessTableBody = ({
   // Obter o departamento "Concluído(a)" para referência
   const concludedDept = useMemo(() => departments.find(dept => dept.name === "Concluído(a)"), [departments]);
 
-  // Função para obter a data de entrada mais recente para um departamento
-  const getMostRecentEntryDate = (process: Process, departmentId: string): string | null => {
-    const departmentEntries = process.history
-      .filter(h => h.departmentId === departmentId)
-      .sort((a, b) => new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime());
-    return departmentEntries.length > 0 ? departmentEntries[0].entryDate : null;
-  };
-
   // Pré-carrega todos os processos e setores relevantes quando a tabela é montada
   useEffect(() => {
     if (!processes.length) return;
@@ -96,18 +88,16 @@ const ProcessTableBody = ({
         <ProcessTableRow
           key={process.id}
           process={process}
-          sortedDepartments={sortedDepartments}
-          getMostRecentEntryDate={getMostRecentEntryDate}
-          getProcessTypeName={getProcessTypeName}
-          getProcessResponsible={getProcessResponsible}
-          getSectorResponsible={getSectorResponsible}
           departments={departments}
-          concludedDept={concludedDept}
+          getProcessTypeName={getProcessTypeName}
           processTypes={processTypes}
           updateProcessType={updateProcessType}
           moveProcessToNextDepartment={moveProcessToNextDepartment}
           moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
           startProcess={startProcess}
+          hasSectorResponsible={!!getSectorResponsible(process.id, process.currentDepartment)}
+          sectorResponsible={getSectorResponsible(process.id, process.currentDepartment)}
+          processResponsible={getProcessResponsible(process.id)}
         />
       ))}
     </TableBody>
