@@ -19,7 +19,7 @@ export const useProcessResponsibility = () => {
   // Hook para verificar responsabilidade
   const { isUserResponsibleForProcess, isUserResponsibleForSector } = useProcessResponsibilityVerification();
   
-  // Hook para buscar responsáveis (agora refatorado)
+  // Hook para buscar responsáveis
   const { getProcessResponsible, getSectorResponsible, clearCache } = useProcessResponsibleFetching();
   
   // Hook para carregamento em lote
@@ -44,7 +44,7 @@ export const useProcessResponsibility = () => {
     getProcessResponsible,
     getSectorResponsible,
     
-    // Busca em lote (novo)
+    // Busca em lote
     loadProcessResponsibleBatch,
     loadSectorResponsibleBatch,
     

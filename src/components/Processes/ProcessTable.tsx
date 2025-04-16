@@ -7,8 +7,8 @@ import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useProcessDepartmentsResponsibility } from "@/hooks/useProcessDepartmentsResponsibility";
-import { useMemo } from "react";
+import { useProcessBatchLoader } from "@/hooks/useProcessBatchLoader";
+import { useMemo, useEffect } from "react";
 
 interface ProcessTableProps {
   processes: Process[];
@@ -55,6 +55,34 @@ const ProcessTable = ({
   filters
 }: ProcessTableProps) => {
   const navigate = useNavigate();
+  const {
+    getProcessResponsible,
+    getSectorResponsible,
+    queueProcessForLoading,
+    queueSectorForLoading
+  } = useProcessBatchLoader();
+
+  // Pré-carrega todos os processos e setores relevantes quando a tabela é montada
+  useEffect(() => {
+    if (!processes.length) return;
+    
+    // Prepara lotes para todas as combinações necessárias
+    processes.forEach(process => {
+      // Carrega o responsável pelo processo
+      queueProcessForLoading(process.id);
+      
+      // Carrega os responsáveis pelos setores relevantes
+      departments.forEach(dept => {
+        const isPastDept = process.history.some(h => h.departmentId === dept.id);
+        const isActive = process.currentDepartment === dept.id;
+        
+        if (isActive || isPastDept) {
+          queueSectorForLoading(process.id, dept.id);
+        }
+      });
+    });
+  }, [processes, departments, queueProcessForLoading, queueSectorForLoading]);
+
   const handleRowClick = (processId: string) => {
     navigate(`/processes/${processId}`);
   };
@@ -104,16 +132,7 @@ const ProcessTable = ({
             </TableRow>
           ) : (
             processes.map(process => {
-              // Para cada processo, usar o hook de responsabilidade com memoização da função de verificação
-              const isCurrentDept = useMemo(() => (deptId: string) => process.currentDepartment === deptId, [process.currentDepartment]);
-              const hasPassedDept = useMemo(() => (deptId: string) => process.history.some(h => h.departmentId === deptId), [process.history]);
-              
-              const { processResponsible, departmentResponsibles } = useProcessDepartmentsResponsibility(
-                process.id,
-                sortedDepartments,
-                isCurrentDept,
-                hasPassedDept
-              );
+              const processResponsible = getProcessResponsible(process.id);
               
               return (
                 <TableRow 
@@ -157,7 +176,7 @@ const ProcessTable = ({
                     }
                     
                     // Obtém o responsável do setor
-                    const sectorResponsible = departmentResponsibles ? departmentResponsibles[dept.id] : null;
+                    const sectorResponsible = getSectorResponsible(process.id, dept.id);
                     
                     return (
                       <TableCell key={dept.id}>
@@ -170,8 +189,8 @@ const ProcessTable = ({
                           isDepartmentOverdue={isActive && isOverdue}
                           departmentTimeLimit={dept.timeLimit}
                           isProcessStarted={process.status !== "not_started"}
-                          processResponsible={processResponsible}
-                          sectorResponsible={sectorResponsible}
+                          processResponsible={processResponsible || null}
+                          sectorResponsible={sectorResponsible || null}
                         />
                       </TableCell>
                     );

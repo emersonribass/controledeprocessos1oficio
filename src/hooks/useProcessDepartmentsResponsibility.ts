@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+
+import { useCallback } from "react";
 import { ProcessResponsible } from "./process-responsibility/types";
 import { Department } from "@/types";
-import { useProcessResponsibleBatchLoader } from "./process-responsibility/useProcessResponsibleBatchLoader";
+import { useProcessBatchLoader } from "./useProcessBatchLoader";
 
 /**
  * Hook para gerenciar responsáveis por departamentos em um processo
- * Implementa carregamento eficiente com cache e requisições em lote
+ * Implementa carregamento eficiente com cache centralizado
  */
 export const useProcessDepartmentsResponsibility = (
   processId: string,
@@ -13,79 +14,51 @@ export const useProcessDepartmentsResponsibility = (
   isCurrentDepartment: (deptId: string) => boolean,
   hasPassedDepartment: (deptId: string) => boolean
 ) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [processResponsible, setProcessResponsible] = useState<ProcessResponsible | null>(null);
-  const [departmentResponsibles, setDepartmentResponsibles] = useState<Record<string, ProcessResponsible | null>>({});
-  const { loadProcessResponsibleBatch, loadSectorResponsibleBatch } = useProcessResponsibleBatchLoader();
+  const {
+    getProcessResponsible,
+    getSectorResponsible,
+    queueProcessForLoading,
+    queueSectorForLoading
+  } = useProcessBatchLoader();
   
-  const loadedRef = useRef(false);
-  const loadingInProgressRef = useRef(false);
+  // Carregar o responsável do processo
+  const processResponsible = getProcessResponsible(processId);
   
-  const loadResponsibles = useCallback(async () => {
-    if (!processId || departments.length === 0 || loadingInProgressRef.current) {
-      return;
-    }
-    
-    loadingInProgressRef.current = true;
-    setIsLoading(true);
-    
-    try {
-      console.log(`Carregando responsáveis para o processo: ${processId}`);
+  // Para cada departamento relevante, verifica se precisamos carregar o responsável
+  const departmentResponsibles: Record<string, ProcessResponsible | null> = {};
+  
+  // Apenas percorre os departamentos para popular o objeto de responsáveis
+  departments.forEach(dept => {
+    if (isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)) {
+      // Coloca na fila para carregamento se necessário
+      queueSectorForLoading(processId, dept.id);
       
-      const relevantDepartments = departments.filter(dept => 
-        isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)
-      );
+      // Obtém o valor atual (pode ser undefined se ainda não carregado)
+      const responsible = getSectorResponsible(processId, dept.id);
       
-      if (relevantDepartments.length === 0) {
-        setIsLoading(false);
-        loadingInProgressRef.current = false;
-        return;
+      // Só adiciona ao objeto se já tiver o valor (não undefined)
+      if (responsible !== undefined) {
+        departmentResponsibles[dept.id] = responsible;
       }
-      
-      const processResponsibles = await loadProcessResponsibleBatch([processId]);
-      const procResp = processResponsibles[processId];
-      setProcessResponsible(procResp);
-      
-      const sectorItems = relevantDepartments.map(dept => ({
-        processId,
-        sectorId: dept.id
-      }));
-      
-      const sectorResponsibles = await loadSectorResponsibleBatch(sectorItems);
-      
-      const deptResps = relevantDepartments.reduce<Record<string, ProcessResponsible | null>>(
-        (acc, dept) => {
-          const key = `${processId}-${dept.id}`;
-          acc[dept.id] = sectorResponsibles[key] || null;
-          return acc;
-        }, 
-        {}
-      );
-      
-      setDepartmentResponsibles(deptResps);
-      loadedRef.current = true;
-    } catch (error) {
-      console.error("Erro ao carregar responsáveis de departamentos:", error);
-    } finally {
-      setIsLoading(false);
-      loadingInProgressRef.current = false;
     }
-  }, [processId, departments, loadProcessResponsibleBatch, loadSectorResponsibleBatch, isCurrentDepartment, hasPassedDepartment]);
-
-  useEffect(() => {
-    if (processId && !loadedRef.current) {
-      loadResponsibles();
-    }
+  });
+  
+  // Função para forçar uma atualização
+  const refreshResponsibles = useCallback(() => {
+    if (!processId) return;
     
-    return () => {
-      loadedRef.current = false;
-    };
-  }, [loadResponsibles, processId]);
-
+    queueProcessForLoading(processId);
+    
+    departments.forEach(dept => {
+      if (isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)) {
+        queueSectorForLoading(processId, dept.id);
+      }
+    });
+  }, [processId, departments, isCurrentDepartment, hasPassedDepartment, queueProcessForLoading, queueSectorForLoading]);
+  
   return {
-    isLoading,
     processResponsible,
     departmentResponsibles,
-    refreshResponsibles: loadResponsibles
+    refreshResponsibles
   };
 };

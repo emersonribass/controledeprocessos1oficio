@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import ProcessList from "@/components/Processes/ProcessList";
 import { useLocation } from "react-router-dom";
+import { ProcessBatchLoaderProvider } from "@/contexts/ProcessBatchLoaderContext";
 
 const ProcessesPage = () => {
   const location = useLocation();
@@ -23,7 +24,9 @@ const ProcessesPage = () => {
   }, [location.search]);
 
   return (
-    <ProcessList initialFilters={initialFilters} />
+    <ProcessBatchLoaderProvider>
+      <ProcessList initialFilters={initialFilters} />
+    </ProcessBatchLoaderProvider>
   );
 };
 
