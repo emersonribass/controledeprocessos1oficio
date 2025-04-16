@@ -127,9 +127,9 @@ const ProcessActionButtons = ({
             variant="ghost" 
             size="icon" 
             onClick={handleMoveToPrevious} 
-            disabled={isFirstDepartment || !canMoveProcess} 
+            disabled={isFirstDepartment} 
             title="Mover para setor anterior"
-            className={`process-action ${isFirstDepartment || !canMoveProcess ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`process-action ${isFirstDepartment? "opacity-50 cursor-not-allowed" : ""}`}
             data-testid="move-previous"
           >
             <MoveLeft className="h-4 w-4" />
@@ -144,9 +144,9 @@ const ProcessActionButtons = ({
             variant="ghost" 
             size="icon" 
             onClick={handleMoveToNext} 
-            disabled={isCompleted || !canMoveProcess} 
+            disabled={isCompleted} 
             title="Mover para próximo setor"
-            className={`process-action ${isCompleted || !canMoveProcess ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`process-action ${isCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
             data-testid="move-next"
           >
             <MoveRight className="h-4 w-4" />
