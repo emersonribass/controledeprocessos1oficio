@@ -1,9 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { ToastService } from "@/services/toast/toastService";
-import { Tables } from "@/integrations/supabase/schema";
-
-type Usuario = Tables["usuarios"];
+import { UsuarioSupabase } from "@/types/usuario";
 
 /**
  * Serviço para gerenciar operações relacionadas a usuários
@@ -14,7 +12,7 @@ export class UserService {
    * @param userId ID do usuário
    * @returns Dados do usuário ou null se não encontrado
    */
-  static async getUserById(userId: string): Promise<Usuario | null> {
+  static async getUserById(userId: string): Promise<UsuarioSupabase | null> {
     try {
       const { data, error } = await supabase
         .from("usuarios")
@@ -26,7 +24,7 @@ export class UserService {
         throw error;
       }
 
-      return data;
+      return data as UsuarioSupabase;
     } catch (error) {
       console.error("Erro ao buscar usuário por ID:", error);
       ToastService.error("Erro ao buscar dados do usuário");
@@ -57,7 +55,7 @@ export class UserService {
   static async isUserAdmin(userId: string): Promise<boolean> {
     try {
       const user = await this.getUserById(userId);
-      return user ? user.admin : false;
+      return user ? user.perfil === 'administrador' : false;
     } catch (error) {
       console.error("Erro ao verificar status de administrador:", error);
       return false;
