@@ -69,18 +69,18 @@ const ProcessDepartmentCell = ({
           )}
           
           {/* Responsável pelo Processo */}
-          <div className="text-xs mt-1">
-            <span className="font-medium"></span> 
-            <span className="text-gray-700 ml-1">
-              {processResponsible ? processResponsible.nome : "Sem responsável"}
+          <div className="text-xs mt-1 flex items-center justify-center gap-1">
+            <User className="h-3 w-3 text-gray-600" />
+            <span className="text-gray-700">
+              {processResponsible?.nome || "Sem responsável"}
             </span>
           </div>
           
           {/* Responsável no Setor */}
-          <div className="text-xs mt-1">
-            <span className="font-medium">/</span>
-            <span className="text-gray-700 ml-1">
-              {sectorResponsible ? sectorResponsible.nome : "Sem responsável"}
+          <div className="text-xs mt-1 flex items-center justify-center gap-1">
+            <User className="h-3 w-3 text-gray-600" />
+            <span className="text-gray-700">
+              {sectorResponsible?.nome || "Sem responsável"}
             </span>
           </div>
         </div>

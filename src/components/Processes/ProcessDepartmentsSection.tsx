@@ -27,6 +27,11 @@ const ProcessDepartmentsSection = ({
   processResponsible = null,
   departmentResponsibles = {}
 }: ProcessDepartmentsSectionProps) => {
+  // Função para garantir que não passamos undefined para os componentes filhos
+  const getSafeResponsible = (deptId: string): ProcessResponsible | null => {
+    return departmentResponsibles[deptId] || null;
+  };
+
   return (
     <>
       {sortedDepartments.map((dept) => {
@@ -34,7 +39,7 @@ const ProcessDepartmentsSection = ({
         const isPastDept = hasPassedDepartment(dept.id) && isPreviousDepartment(dept.id);
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
-        const sectorResponsible = departmentResponsibles[dept.id] || null;
+        const sectorResponsible = getSafeResponsible(dept.id);
         
         return (
           <TableCell key={dept.id}>

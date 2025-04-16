@@ -1,7 +1,8 @@
+
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ProcessDepartmentsSection from "./ProcessDepartmentsSection";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
@@ -58,31 +59,51 @@ const ProcessTableRow = ({
     isDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
+  // Função para buscar responsáveis, otimizada para evitar chamadas desnecessárias
+  const fetchResponsibles = useCallback(async () => {
+    if (isLoadingResponsibles) return;
+    
+    setIsLoadingResponsibles(true);
+    console.log(`Buscando responsáveis para o processo: ${process.id}`);
+    
+    try {
+      // Buscar o responsável pelo processo
+      const responsible = await getProcessResponsible(process.id);
+      setProcessResponsible(responsible);
+      
+      // Buscar responsáveis por departamento
+      const deptResp: Record<string, ProcessResponsible | null> = {};
+      
+      // Buscar apenas para os departamentos relevantes
+      const departmentsToFetch = sortedDepartments.filter(dept => 
+        isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)
+      );
+      
+      // Usar Promise.all para buscar em paralelo e melhorar a performance
+      const promises = departmentsToFetch.map(async (dept) => {
+        const sectorResp = await getSectorResponsible(process.id, dept.id);
+        return { deptId: dept.id, responsible: sectorResp };
+      });
+      
+      const results = await Promise.all(promises);
+      
+      // Preencher o objeto com os resultados
+      results.forEach(result => {
+        deptResp[result.deptId] = result.responsible;
+      });
+      
+      setDepartmentResponsibles(deptResp);
+    } catch (error) {
+      console.error("Erro ao buscar responsáveis:", error);
+    } finally {
+      setIsLoadingResponsibles(false);
+    }
+  }, [process.id, getProcessResponsible, getSectorResponsible, sortedDepartments, isCurrentDepartment, hasPassedDepartment, isLoadingResponsibles]);
+
   // Buscar responsáveis quando o componente é montado
   useEffect(() => {
-    const fetchResponsibles = async () => {
-      setIsLoadingResponsibles(true);
-      try {
-        // Buscar o responsável pelo processo
-        const responsible = await getProcessResponsible(process.id);
-        setProcessResponsible(responsible);
-        
-        // Buscar responsáveis por departamento
-        const deptResp: Record<string, ProcessResponsible | null> = {};
-        for (const dept of sortedDepartments) {
-          const sectorResp = await getSectorResponsible(process.id, dept.id);
-          deptResp[dept.id] = sectorResp;
-        }
-        setDepartmentResponsibles(deptResp);
-      } catch (error) {
-        console.error("Erro ao buscar responsáveis:", error);
-      } finally {
-        setIsLoadingResponsibles(false);
-      }
-    };
-    
     fetchResponsibles();
-  }, [process.id, getProcessResponsible, getSectorResponsible, sortedDepartments]);
+  }, [fetchResponsibles]);
 
   const isProcessStarted = process.status !== 'not_started';
 
