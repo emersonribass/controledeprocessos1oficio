@@ -24,21 +24,32 @@ export const useProcessResponsibleBatchLoader = () => {
     
     console.log(`Carregando lote de ${processIds.length} responsáveis de processos`);
     
-    // Eliminar IDs duplicados
+    // Eliminar IDs duplicados usando Set
     const uniqueIds = [...new Set(processIds)];
     
-    // Carregar em paralelo usando Promise.all para melhor desempenho
+    // Usar Promise.allSettled para garantir que erros individuais não interrompam todo o lote
     const promises = uniqueIds.map(async (id) => {
-      const responsible = await getProcessResponsible(id);
-      return { id, responsible };
+      try {
+        const responsible = await getProcessResponsible(id);
+        return { id, responsible, status: 'fulfilled' };
+      } catch (error) {
+        console.error(`Erro ao carregar responsável para processo ${id}:`, error);
+        return { id, responsible: null, status: 'rejected', reason: error };
+      }
     });
     
-    const results = await Promise.all(promises);
+    const results = await Promise.allSettled(promises);
     
     // Converter array de resultados para um objeto indexado por ID do processo
     return results.reduce<Record<string, ProcessResponsible | null>>(
-      (acc, { id, responsible }) => {
-        acc[id] = responsible;
+      (acc, result) => {
+        if (result.status === 'fulfilled') {
+          const data = result.value;
+          acc[data.id] = data.responsible;
+        } else {
+          // Em caso de falha, registra o erro mas continua processando
+          console.error("Falha no carregamento de responsável:", result.reason);
+        }
         return acc;
       }, 
       {}
@@ -57,23 +68,37 @@ export const useProcessResponsibleBatchLoader = () => {
     
     console.log(`Carregando lote de ${items.length} responsáveis de setores`);
     
-    // Eliminar duplicatas baseadas na combinação processId-sectorId
-    const uniqueItems = Array.from(
-      new Map(items.map(item => [`${item.processId}-${item.sectorId}`, item])).values()
+    // Eliminar duplicatas usando Map com chave composta
+    const uniqueItemsMap = new Map(
+      items.map(item => [`${item.processId}-${item.sectorId}`, item])
     );
+    const uniqueItems = Array.from(uniqueItemsMap.values());
     
-    // Carregar em paralelo usando Promise.all para melhor desempenho
+    // Usar Promise.allSettled para garantir que erros individuais não interrompam todo o lote
     const promises = uniqueItems.map(async ({ processId, sectorId }) => {
-      const responsible = await getSectorResponsible(processId, sectorId);
-      return { key: `${processId}-${sectorId}`, responsible };
+      try {
+        const key = `${processId}-${sectorId}`;
+        const responsible = await getSectorResponsible(processId, sectorId);
+        return { key, responsible, status: 'fulfilled' };
+      } catch (error) {
+        const key = `${processId}-${sectorId}`;
+        console.error(`Erro ao carregar responsável para setor ${processId}-${sectorId}:`, error);
+        return { key, responsible: null, status: 'rejected', reason: error };
+      }
     });
     
-    const results = await Promise.all(promises);
+    const results = await Promise.allSettled(promises);
     
     // Converter array de resultados para um objeto indexado pela chave composta
     return results.reduce<Record<string, ProcessResponsible | null>>(
-      (acc, { key, responsible }) => {
-        acc[key] = responsible;
+      (acc, result) => {
+        if (result.status === 'fulfilled') {
+          const data = result.value;
+          acc[data.key] = data.responsible;
+        } else {
+          // Em caso de falha, registra o erro mas continua processando
+          console.error("Falha no carregamento de responsável de setor:", result.reason);
+        }
         return acc;
       }, 
       {}

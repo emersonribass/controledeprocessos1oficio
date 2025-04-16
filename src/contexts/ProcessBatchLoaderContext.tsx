@@ -3,7 +3,7 @@ import React, { createContext, useContext, ReactNode } from "react";
 import { useProcessBatchLoader } from "@/hooks/useProcessBatchLoader";
 import { ProcessResponsible } from "@/hooks/process-responsibility/types";
 
-// Definindo o tipo do contexto
+// Definindo o tipo do contexto com as novas funções
 interface ProcessBatchLoaderContextType {
   isLoading: boolean;
   processResponsibles: Record<string, ProcessResponsible | null>;
@@ -13,6 +13,10 @@ interface ProcessBatchLoaderContextType {
   queueProcessForLoading: (processId: string) => void;
   queueSectorForLoading: (processId: string, sectorId: string) => void;
   processBatch: () => Promise<void>;
+  clearCache: () => void;
+  pendingProcessCount: number;
+  pendingSectorCount: number;
+  batchSizes: { processes: number; sectors: number };
 }
 
 // Criando o contexto
