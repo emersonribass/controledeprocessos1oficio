@@ -56,8 +56,8 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     if (!initialLoadComplete || isLoading) return [];
     
     // IMPORTANTE: Primeiro aplicar filtros, depois ordenar os resultados
-    return sortProcesses(filterProcesses(filters, processes, responsiblesData));
-  }, [filters, processes, sortProcesses, filterProcesses, initialLoadComplete, isLoading, responsiblesData]);
+    return sortProcesses(filterProcesses(filters, processes));
+  }, [filters, processes, sortProcesses, filterProcesses, initialLoadComplete, isLoading]);
 
   // Determinar os departamentos disponíveis para o usuário atual
   const availableDepartments = useMemo(() => {
@@ -77,7 +77,9 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   // Efeito para enfileirar processos para carregamento de responsáveis
   useEffect(() => {
     if (processes.length > 0 && !isLoading) {
-      const addedCount = queueMultipleProcesses(processes);
+      // Filtrar processos que não estão iniciados antes de enfileirar
+      const processesToQueue = processes.filter(p => p.status !== 'not_started');
+      const addedCount = queueMultipleProcesses(processesToQueue);
       if (addedCount > 0) {
         console.log(`Enfileirados ${addedCount} processos para carregamento de responsáveis`);
       }

@@ -1,49 +1,61 @@
 
-import { ArrowUpDown } from "lucide-react";
-import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Process } from "@/types";
-import { Department } from "@/types";
-interface ProcessTableHeaderProps {
-  sortField: keyof Process;
-  sortDirection: "asc" | "desc";
+import { TableHeader, TableRow, TableHead } from "@/components/ui/table";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Process, Department } from "@/types";
+
+export interface ProcessTableHeaderProps {
+  sortField?: keyof Process;
+  sortDirection?: "asc" | "desc";
   toggleSort: (field: keyof Process) => void;
   departments: Department[];
+  getDepartmentName: (id: string) => string;
 }
+
 const ProcessTableHeader = ({
   sortField,
   sortDirection,
   toggleSort,
-  departments
+  departments,
+  getDepartmentName
 }: ProcessTableHeaderProps) => {
-  // Ordenar departamentos por ordem e filtrar o departamento "Concluído"
-  const sortedDepartments = [...departments].filter(dept => dept.name !== "Concluído(a)").sort((a, b) => a.order - b.order);
-  
-  // Handler de clique para ordenação
-  const handleSortClick = (field: keyof Process, event: React.MouseEvent) => {
-    event.stopPropagation(); // Impede a propagação do evento para células
-    toggleSort(field);
+  const renderSortIcon = (fieldName: keyof Process) => {
+    if (sortField !== fieldName) return null;
+
+    return sortDirection === "asc" ? (
+      <ChevronUp className="ml-1 h-4 w-4" />
+    ) : (
+      <ChevronDown className="ml-1 h-4 w-4" />
+    );
   };
-  
-  return <TableHeader>
+
+  return (
+    <TableHeader>
       <TableRow>
-        <TableHead 
-          className="cursor-pointer whitespace-nowrap" 
-          onClick={(e) => handleSortClick("protocolNumber", e)}
+        <TableHead
+          className={cn(
+            "cursor-pointer",
+            sortField === "protocolNumber" && "text-primary"
+          )}
+          onClick={() => toggleSort("protocolNumber")}
         >
           <div className="flex items-center">
-            Protocolo
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            Nº Protocolo
+            {renderSortIcon("protocolNumber")}
           </div>
         </TableHead>
-        <TableHead className="whitespace-nowrap">Tipo</TableHead>
+        <TableHead>Tipo</TableHead>
         
-        {/* Colunas dinâmicas para cada departamento */}
-        {sortedDepartments.map(dept => <TableHead key={dept.id} className="text-center whitespace-nowrap">
-            {dept.name}
-          </TableHead>)}
+        {departments.slice(0, 5).map((dept) => (
+          <TableHead key={dept.id} className="whitespace-nowrap">
+            {getDepartmentName(dept.id)}
+          </TableHead>
+        ))}
         
-        <TableHead className="text-center whitespace-nowrap px-0">Ações</TableHead>
+        <TableHead>Ações</TableHead>
       </TableRow>
-    </TableHeader>;
+    </TableHeader>
+  );
 };
+
 export default ProcessTableHeader;

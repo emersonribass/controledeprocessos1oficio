@@ -23,6 +23,16 @@ export const useProcessFiltering = (
       return process.userId === userId || process.responsibleUserId === userId;
     });
   
+  // Implementação padrão para verificar se é responsável pelo setor
+  const isUserResponsibleForSector = checkers.isUserResponsibleForSector || 
+    ((process: Process, userId: string) => {
+      // Verificação básica se o usuário pertence ao setor atual do processo
+      if (!process.currentDepartment || !userProfile?.setores_atribuidos) {
+        return false;
+      }
+      return userProfile.setores_atribuidos.includes(process.currentDepartment);
+    });
+  
   // Verificar se o usuário pertence ao setor de atendimento (assumindo que o setor 1 é o de atendimento)
   const isUserInAttendanceSector = () => {
     return userProfile?.setores_atribuidos?.includes("1") || false;
@@ -134,6 +144,7 @@ export const useProcessFiltering = (
     isProcessOverdue,
     // Exportar as funções de verificação para reuso
     isUserResponsibleForProcess,
+    isUserResponsibleForSector,
     isUserInAttendanceSector
   };
 };
