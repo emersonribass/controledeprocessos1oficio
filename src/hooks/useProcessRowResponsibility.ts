@@ -1,29 +1,28 @@
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useProcessResponsibility } from "./useProcessResponsibility";
 import { useToast } from "./use-toast";
 import { useAuth } from "./auth";
+import { useProcesses } from "./useProcesses";
 
-export const useProcessRowResponsibility = (processId: string, sectorId?: string, processStatus?: string) => {
+export const useProcessRowResponsibility = (processId: string, sectorId?: string) => {
   const { getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  const { filterProcesses } = useProcesses();
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
   const [isLoadingResponsible, setIsLoadingResponsible] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  
-  const requestMadeRef = useRef(false);
 
+  // Carrega o responsável pelo processo no setor atual
   const loadSectorResponsible = useCallback(async () => {
-    // Se o processo não foi iniciado, pare a execução
-    if (!sectorId || !processId || requestMadeRef.current || processStatus === 'not_started') {
+    if (!sectorId || !processId) {
+      setSectorResponsible(null);
       return;
     }
     
-    requestMadeRef.current = true;
     setIsLoadingResponsible(true);
-    
     try {
-      const responsible = await getSectorResponsible(processId, sectorId, processStatus);
+      const responsible = await getSectorResponsible(processId, sectorId);
       setSectorResponsible(responsible);
     } catch (error) {
       console.error("Erro ao carregar responsável:", error);
@@ -31,28 +30,29 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     } finally {
       setIsLoadingResponsible(false);
     }
-  }, [processId, sectorId, processStatus, getSectorResponsible]);
+  }, [processId, sectorId, getSectorResponsible]);
 
+  // Carrega o responsável quando o componente é montado ou quando o departamento atual muda
   useEffect(() => {
-    if (processId && sectorId && processStatus !== 'not_started') {
-      requestMadeRef.current = false;
+    const controller = new AbortController();
+    
+    if (processId && sectorId) {
       loadSectorResponsible();
     }
     
     return () => {
-      requestMadeRef.current = false;
+      controller.abort();
     };
-  }, [loadSectorResponsible, processId, sectorId, processStatus]);
+  }, [loadSectorResponsible]);
 
+  // Função para aceitar a responsabilidade pelo processo
   const handleAcceptResponsibility = useCallback(async (protocolNumber?: string) => {
     if (!user || !protocolNumber || !sectorId) return;
     
     try {
       const success = await acceptProcessResponsibility(processId, protocolNumber);
       if (success) {
-        requestMadeRef.current = false;
         await loadSectorResponsible();
-        
         toast({
           title: "Sucesso",
           description: "Você aceitou a responsabilidade pelo processo."
@@ -75,4 +75,3 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     isAccepting
   };
 };
-

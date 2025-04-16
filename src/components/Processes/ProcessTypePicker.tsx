@@ -19,12 +19,12 @@ const ProcessTypePicker = ({
   getProcessTypeName,
   updateProcessType,
 }: ProcessTypePickerProps) => {
-  const [selectedType, setSelectedType] = useState(currentTypeId || "none");
+  const [selectedType, setSelectedType] = useState(currentTypeId);
   const { toast } = useToast();
   
   // Atualizar selectedType quando currentTypeId mudar
   useEffect(() => {
-    setSelectedType(currentTypeId || "none");
+    setSelectedType(currentTypeId);
   }, [currentTypeId]);
 
   const handleChange = async (value: string) => {
@@ -39,7 +39,7 @@ const ProcessTypePicker = ({
       });
     } catch (error) {
       console.error("Erro ao atualizar tipo de processo:", error);
-      setSelectedType(currentTypeId || "none"); // Reverter para o valor original em caso de erro
+      setSelectedType(currentTypeId); // Reverter para o valor original em caso de erro
       toast({
         title: "Erro",
         description: "Não foi possível atualizar o tipo de processo",
@@ -59,7 +59,7 @@ const ProcessTypePicker = ({
         </SelectTrigger>
         <SelectContent>
           {activeProcessTypes.map((type) => (
-            <SelectItem key={type.id} value={type.id || "unknown"}>
+            <SelectItem key={type.id} value={type.id}>
               {type.name}
             </SelectItem>
           ))}

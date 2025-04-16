@@ -3,29 +3,24 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProcesses } from "@/hooks/useProcesses";
 import { Loader2 } from "lucide-react";
-import { useMemo } from "react";
 
 const DepartmentStatusChart = () => {
   const { processes, departments, isLoading } = useProcesses();
 
-  // Usar useMemo para evitar recálculos desnecessários
-  const departmentCounts = useMemo(() => {
-    return departments.map((department) => {
-      const count = processes.filter(
-        (process) => process.currentDepartment === department.id
-      ).length;
+  // Count processes by department
+  const departmentCounts = departments.map((department) => {
+    const count = processes.filter(
+      (process) => process.currentDepartment === department.id
+    ).length;
 
-      return {
-        name: department.name,
-        count,
-      };
-    });
-  }, [departments, processes]);
+    return {
+      name: department.name,
+      count,
+    };
+  });
 
-  // Filtrar fora do render para evitar recálculos
-  const filteredData = useMemo(() => {
-    return departmentCounts.filter((item) => item.count > 0);
-  }, [departmentCounts]);
+  // Filter out departments with no processes
+  const filteredData = departmentCounts.filter((item) => item.count > 0);
 
   // Colors for the bars
   const colors = [

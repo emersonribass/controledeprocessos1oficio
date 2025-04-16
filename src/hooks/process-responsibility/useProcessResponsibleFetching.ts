@@ -1,227 +1,196 @@
 
-import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/auth";
-import { useResponsibleCache } from "./useResponsibleCache";
+import { ProcessResponsible } from "./types";
+import { useState, useRef, useCallback } from "react";
 
-/**
- * Hook para buscar informações de responsáveis por processos
- * Implementa otimizações de cache e controle de requisições
- */
 export const useProcessResponsibleFetching = () => {
-  const { user } = useAuth();
-  const { 
-    getFromCache, 
-    addToCache, 
-    isRequestPending, 
-    setRequestPending 
-  } = useResponsibleCache();
+  // Cache para armazenar os responsáveis já buscados
+  const [processResponsibleCache, setProcessResponsibleCache] = useState<Record<string, ProcessResponsible | null>>({});
+  const [sectorResponsibleCache, setSectorResponsibleCache] = useState<Record<string, ProcessResponsible | null>>({});
+  
+  // Controle de requisições em andamento para evitar chamadas duplicadas
+  const pendingProcessRequests = useRef<Record<string, Promise<ProcessResponsible | null>>>({});
+  const pendingSectorRequests = useRef<Record<string, Promise<ProcessResponsible | null>>>({});
+  
+  // Flag para evitar multiplas requisições
+  const isFetchingRef = useRef<Record<string, boolean>>({});
 
   /**
-   * Obtém o responsável principal de um processo
+   * Obtém o usuário responsável pelo processo com controle de cache melhorado
    */
-  const getProcessResponsible = useCallback(async (processId: string, processStatus?: string) => {
-    // Se o processo não foi iniciado ou não há usuário autenticado, não busque responsável
-    if (!user || processStatus === 'not_started') return null;
-    
-    // Chave para identificar responsável principal no cache
-    const cacheKey = "main";
-    
-    // Tenta obter do cache primeiro
-    const cachedData = getFromCache(processId, cacheKey);
-    if (cachedData) {
-      console.log(`Usando cache para responsável principal do processo ${processId}`);
-      return cachedData;
+  const getProcessResponsible = useCallback(async (processId: string): Promise<ProcessResponsible | null> => {
+    // Verifica se já temos o resultado em cache
+    if (processResponsibleCache[processId] !== undefined) {
+      return processResponsibleCache[processId];
+    }
+
+    // Verifica se já existe uma requisição em andamento para este processo
+    if (pendingProcessRequests.current[processId]) {
+      return pendingProcessRequests.current[processId];
     }
     
-    // Verifica se já há uma requisição pendente para evitar duplicação
-    if (isRequestPending(processId, cacheKey)) {
-      console.log(`Requisição já em andamento para responsável do processo ${processId}`);
+    // Evita requisições duplicadas para o mesmo processo
+    if (isFetchingRef.current[`process_${processId}`]) {
       return null;
     }
     
-    // Marca requisição como pendente
-    setRequestPending(processId, cacheKey, true);
+    isFetchingRef.current[`process_${processId}`] = true;
+
+    try {
+      console.log("Buscando responsável para o processo:", processId);
+      
+      // Cria uma nova promessa e a armazena para evitar requisições duplicadas
+      pendingProcessRequests.current[processId] = (async () => {
+        try {
+          const { data: process, error: processError } = await supabase
+            .from('processos')
+            .select('usuario_responsavel')
+            .eq('id', processId)
+            .single();
+
+          if (processError) {
+            console.error("Erro ao buscar processo:", processError);
+            setProcessResponsibleCache(prev => ({ ...prev, [processId]: null }));
+            return null;
+          }
+
+          if (!process || !process.usuario_responsavel) {
+            console.log("Processo não tem responsável definido");
+            setProcessResponsibleCache(prev => ({ ...prev, [processId]: null }));
+            return null;
+          }
+
+          const { data: user, error: userError } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('id', process.usuario_responsavel)
+            .single();
+
+          if (userError) {
+            console.error("Erro ao buscar usuário responsável:", userError);
+            setProcessResponsibleCache(prev => ({ ...prev, [processId]: null }));
+            return null;
+          }
+
+          // Atualiza o cache
+          setProcessResponsibleCache(prev => ({ ...prev, [processId]: user }));
+          return user;
+        } finally {
+          // Remove a requisição da lista de pendentes quando terminar
+          delete pendingProcessRequests.current[processId];
+          delete isFetchingRef.current[`process_${processId}`];
+        }
+      })();
+
+      return await pendingProcessRequests.current[processId];
+    } catch (error) {
+      console.error("Erro ao obter responsável pelo processo:", error);
+      setProcessResponsibleCache(prev => ({ ...prev, [processId]: null }));
+      delete isFetchingRef.current[`process_${processId}`];
+      return null;
+    }
+  }, [processResponsibleCache]);
+
+  /**
+   * Obtém o usuário responsável pelo processo em um setor específico com controle de cache melhorado
+   */
+  const getSectorResponsible = useCallback(async (processId: string, sectorId: string): Promise<ProcessResponsible | null> => {
+    // Cria uma chave única para o cache
+    const cacheKey = `${processId}-${sectorId}`;
+    
+    // Verifica se já temos o resultado em cache
+    if (sectorResponsibleCache[cacheKey] !== undefined) {
+      return sectorResponsibleCache[cacheKey];
+    }
+    
+    // Verifica se já existe uma requisição em andamento para este setor
+    if (pendingSectorRequests.current[cacheKey]) {
+      return pendingSectorRequests.current[cacheKey];
+    }
+    
+    // Evita requisições duplicadas para o mesmo setor
+    if (isFetchingRef.current[`sector_${cacheKey}`]) {
+      return null;
+    }
+    
+    isFetchingRef.current[`sector_${cacheKey}`] = true;
     
     try {
-      // Busca o processo para obter o ID do usuário responsável
-      const processData = await fetchProcessData(processId);
+      console.log("Buscando responsável para o processo no setor:", processId, sectorId);
       
-      if (!processData || !processData.usuario_responsavel) {
-        addToCache(processId, cacheKey, null);
+      if (!processId || !sectorId) {
+        console.log("ID do processo ou setor não fornecido");
+        setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: null }));
+        delete isFetchingRef.current[`sector_${cacheKey}`];
         return null;
       }
       
-      // Busca os dados do usuário responsável
-      const responsibleUser = await fetchUserData(processData.usuario_responsavel);
-      
-      // Adiciona ao cache e retorna
-      addToCache(processId, cacheKey, responsibleUser);
-      return responsibleUser;
+      // Cria uma nova promessa e a armazena para evitar requisições duplicadas
+      pendingSectorRequests.current[cacheKey] = (async () => {
+        try {
+          const { data, error } = await supabase
+            .from('setor_responsaveis')
+            .select('usuario_id')
+            .eq('processo_id', processId)
+            .eq('setor_id', sectorId);
+
+          if (error) {
+            console.error("Erro ao buscar responsável no setor:", error);
+            setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: null }));
+            return null;
+          }
+
+          if (!data || data.length === 0) {
+            console.log("Nenhum responsável encontrado para este setor");
+            setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: null }));
+            return null;
+          }
+
+          const { data: user, error: userError } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('id', data[0].usuario_id)
+            .single();
+
+          if (userError) {
+            console.error("Erro ao buscar dados do usuário responsável:", userError);
+            setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: null }));
+            return null;
+          }
+
+          // Atualiza o cache
+          setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: user }));
+          return user;
+        } finally {
+          // Remove a requisição da lista de pendentes quando terminar
+          delete pendingSectorRequests.current[cacheKey];
+          delete isFetchingRef.current[`sector_${cacheKey}`];
+        }
+      })();
+
+      return await pendingSectorRequests.current[cacheKey];
     } catch (error) {
-      console.error(`Erro ao buscar responsável do processo ${processId}:`, error);
-      return null;
-    } finally {
-      // Marca requisição como finalizada
-      setRequestPending(processId, cacheKey, false);
-    }
-  }, [user, getFromCache, addToCache, isRequestPending, setRequestPending]);
-
-  /**
-   * Busca dados básicos do processo no banco de dados
-   */
-  const fetchProcessData = async (processId: string) => {
-    const { data: process, error: processError } = await supabase
-      .from('processos')
-      .select('usuario_responsavel')
-      .eq('id', processId)
-      .maybeSingle();
-    
-    if (processError) {
-      console.error(`Erro ao buscar processo ${processId}:`, processError);
+      console.error("Erro ao obter responsável pelo setor:", error);
+      setSectorResponsibleCache(prev => ({ ...prev, [cacheKey]: null }));
+      delete isFetchingRef.current[`sector_${cacheKey}`];
       return null;
     }
-    
-    return process;
-  };
+  }, [sectorResponsibleCache]);
 
   /**
-   * Busca dados do usuário responsável
+   * Limpa o cache de responsáveis
    */
-  const fetchUserData = async (userId: string) => {
-    const { data: responsibleUser, error: userError } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
-    
-    if (userError) {
-      console.error(`Erro ao buscar usuário ${userId}:`, userError);
-      return null;
-    }
-    
-    return responsibleUser;
-  };
-
-  /**
-   * Obtém o responsável de um processo em um setor específico
-   */
-  const getSectorResponsible = useCallback(async (processId: string, sectorId: string, processStatus?: string) => {
-    // Se o processo não foi iniciado ou não há usuário autenticado, não busque responsável
-    if (!user || processStatus === 'not_started') return null;
-    
-    // Tenta obter do cache primeiro
-    const cachedData = getFromCache(processId, sectorId);
-    if (cachedData) {
-      console.log(`Usando cache para responsável do processo ${processId} no setor ${sectorId}`);
-      return cachedData;
-    }
-    
-    // Verifica se já há uma requisição pendente para evitar duplicação
-    if (isRequestPending(processId, sectorId)) {
-      console.log(`Requisição já em andamento para processo ${processId}, setor ${sectorId}`);
-      return null;
-    }
-    
-    // Marca requisição como pendente
-    setRequestPending(processId, sectorId, true);
-    
-    try {
-      // Busca o responsável do setor para este processo
-      const sectorResponsibleData = await fetchSectorResponsible(processId, sectorId);
-      
-      if (!sectorResponsibleData || !sectorResponsibleData.usuario_id) {
-        addToCache(processId, sectorId, null);
-        return null;
-      }
-      
-      // Busca os dados do usuário responsável pelo setor
-      const responsibleUser = await fetchUserData(sectorResponsibleData.usuario_id);
-      
-      // Adiciona ao cache e retorna
-      addToCache(processId, sectorId, responsibleUser);
-      return responsibleUser;
-    } catch (error) {
-      console.error(`Erro ao buscar responsável do setor ${sectorId} para o processo ${processId}:`, error);
-      return null;
-    } finally {
-      // Marca requisição como finalizada
-      setRequestPending(processId, sectorId, false);
-    }
-  }, [user, getFromCache, addToCache, isRequestPending, setRequestPending]);
-
-  /**
-   * Busca o responsável de um setor específico para um processo
-   */
-  const fetchSectorResponsible = async (processId: string, sectorId: string) => {
-    const { data, error } = await supabase
-      .from('setor_responsaveis')
-      .select('usuario_id')
-      .eq('processo_id', processId)
-      .eq('setor_id', sectorId)
-      .maybeSingle();
-    
-    if (error) {
-      console.error(`Erro ao buscar responsável do setor ${sectorId} para o processo ${processId}:`, error);
-      return null;
-    }
-    
-    return data;
-  };
-
-  /**
-   * Busca responsáveis para múltiplos processos em uma única requisição
-   */
-  const getBulkResponsibles = useCallback(async (processIds: string[]) => {
-    if (!user || processIds.length === 0) return {};
-    
-    try {
-      // Busca todos os responsáveis de setor para os processos especificados
-      const { data, error } = await supabase
-        .from('setor_responsaveis')
-        .select('processo_id, setor_id, usuario_id')
-        .in('processo_id', processIds);
-      
-      if (error) {
-        console.error("Erro ao buscar responsáveis em massa:", error);
-        return {};
-      }
-      
-      // Organiza os resultados por processo e setor
-      const results = processResponseData(data);
-      
-      return results;
-    } catch (error) {
-      console.error("Erro ao buscar responsáveis em massa:", error);
-      return {};
-    }
-  }, [user, addToCache]);
-
-  /**
-   * Processa e organiza os dados da resposta em um formato utilizável
-   */
-  const processResponseData = (data: any[]) => {
-    const results: Record<string, Record<string, { usuario_id: string }>> = {};
-    
-    data.forEach(item => {
-      if (!results[item.processo_id]) {
-        results[item.processo_id] = {};
-      }
-      
-      results[item.processo_id][item.setor_id] = { 
-        usuario_id: item.usuario_id 
-      };
-      
-      // Adiciona os dados ao cache para uso futuro
-      addToCache(item.processo_id, item.setor_id, { id: item.usuario_id });
-    });
-    
-    return results;
-  };
+  const clearCache = useCallback(() => {
+    setProcessResponsibleCache({});
+    setSectorResponsibleCache({});
+    pendingProcessRequests.current = {};
+    pendingSectorRequests.current = {};
+    isFetchingRef.current = {};
+  }, []);
 
   return {
     getProcessResponsible,
     getSectorResponsible,
-    getBulkResponsibles
+    clearCache
   };
 };

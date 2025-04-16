@@ -1,73 +1,47 @@
 
-import { useAuth } from "@/hooks/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useNotificationService = () => {
-  const { user } = useAuth();
-
   /**
-   * Envia notificações para todos os usuários atribuídos a um setor específico
-   * @param processId ID do processo
-   * @param sectorId ID do setor para notificar usuários
-   * @param protocolNumber Número do protocolo do processo (para incluir na mensagem)
-   * @returns Número de notificações enviadas
+   * Envia notificações para todos os usuários do setor
    */
-  const sendNotificationsToSectorUsers = async (
-    processId: string,
-    sectorId: string,
-    protocolNumber: string
-  ): Promise<number> => {
-    if (!user) return 0;
-
+  const sendNotificationsToSectorUsers = async (processId: string, sectorId: string, protocolNumber: string) => {
     try {
-      // Buscar usuários atribuídos ao setor
-      const { data: users, error } = await supabase
-        .from("usuarios")
-        .select("id, nome")
-        .contains("setores_atribuidos", [sectorId])
-        .eq("ativo", true);
+      // Buscar todos os usuários que têm acesso ao setor
+      const { data: users, error: usersError } = await supabase
+        .from('usuarios')
+        .select('*')
+        .contains('setores_atribuidos', [sectorId]);
 
-      if (error) {
-        console.error("Erro ao buscar usuários do setor:", error);
-        throw error;
-      }
+      if (usersError) throw usersError;
 
       if (!users || users.length === 0) {
-        console.log(`Nenhum usuário encontrado para o setor ${sectorId}`);
-        return 0;
+        console.log("Nenhum usuário encontrado para o setor:", sectorId);
+        return;
       }
 
-      console.log(`Encontrados ${users.length} usuários para o setor ${sectorId}`);
-
-      // Preparar as notificações para cada usuário
-      const notifications = users.map((u) => ({
-        usuario_id: u.id,
+      // Enviar notificação para cada usuário
+      const notifications = users.map(user => ({
+        usuario_id: user.id,
         processo_id: processId,
-        mensagem: `O processo ${protocolNumber} foi movido para o seu setor.`,
-        tipo: "processo_movido",
-        lida: false,
-        respondida: false,
+        mensagem: `O processo ${protocolNumber} foi movido para seu setor. Clique para aceitar a responsabilidade.`,
+        tipo: 'processo_movido',
         data_criacao: new Date().toISOString(),
+        lida: false,
+        respondida: false
       }));
 
-      // Inserir as notificações
-      const { error: insertError } = await supabase
-        .from("notificacoes")
+      const { error: notifyError } = await supabase
+        .from('notificacoes')
         .insert(notifications);
 
-      if (insertError) {
-        console.error("Erro ao inserir notificações:", insertError);
-        throw insertError;
-      }
+      if (notifyError) throw notifyError;
 
-      return notifications.length;
+      console.log(`Notificações enviadas para ${users.length} usuários do setor ${sectorId}`);
     } catch (error) {
       console.error("Erro ao enviar notificações:", error);
-      return 0;
     }
   };
 
-  return {
-    sendNotificationsToSectorUsers,
-  };
+  return { sendNotificationsToSectorUsers };
 };

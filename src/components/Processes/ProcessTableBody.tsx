@@ -1,11 +1,14 @@
 
-import { TableBody } from "@/components/ui/table";
+import { TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import ProcessTableRow from "./ProcessTableRow";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
+import { useAuth } from "@/hooks/auth";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface ProcessTableBodyProps {
-  filteredProcesses: Process[];
+  processes: Process[];
   departments: Department[];
   processTypes: ProcessType[];
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
@@ -13,12 +16,15 @@ interface ProcessTableBodyProps {
   getProcessTypeName: (id: string) => string;
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   startProcess?: (processId: string) => Promise<void>;
-  isUserInAttendanceSector: () => boolean;
-  responsiblesData?: Record<string, Record<string, any>>;
+  processesResponsibles: Record<string, any>;
+  isUserInAttendanceSector?: () => boolean;
+  sortField: keyof Process;
+  sortDirection: "asc" | "desc";
+  queueSectorForLoading: (processId: string, sectorId: string) => void;
 }
 
 const ProcessTableBody = ({
-  filteredProcesses,
+  processes,
   departments,
   processTypes,
   moveProcessToNextDepartment,
@@ -26,53 +32,79 @@ const ProcessTableBody = ({
   getProcessTypeName,
   updateProcessType,
   startProcess,
-  isUserInAttendanceSector,
-  responsiblesData = {}
+  processesResponsibles,
+  isUserInAttendanceSector = () => false,
+  sortField,
+  sortDirection,
+  queueSectorForLoading
 }: ProcessTableBodyProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  const [acceptingProcessId, setAcceptingProcessId] = useState<string | null>(null);
   
-  // Se não houver processos, retornar null para que a tabela possa mostrar uma mensagem personalizada
-  if (filteredProcesses.length === 0) {
-    return null;
+  // Função para aceitar a responsabilidade pelo processo
+  const handleAcceptResponsibility = async (processId: string, protocolNumber?: string) => {
+    if (!user || !protocolNumber) return;
+    
+    setAcceptingProcessId(processId);
+    try {
+      const success = await acceptProcessResponsibility(processId, protocolNumber);
+      
+      if (success) {
+        toast({
+          title: "Sucesso",
+          description: "Você aceitou a responsabilidade pelo processo."
+        });
+        // Atualizar cache de responsáveis
+        queueSectorForLoading(processId, processes.find(p => p.id === processId)?.currentDepartment || "");
+      }
+    } catch (error) {
+      console.error("Erro ao aceitar responsabilidade:", error);
+    } finally {
+      setAcceptingProcessId(null);
+    }
+  };
+
+  // Função para verificar se existe um responsável para o processo no setor atual
+  const hasSectorResponsible = (processId: string, currentDepartment: string) => {
+    return !!(
+      processesResponsibles[processId] && 
+      processesResponsibles[processId][currentDepartment]
+    );
+  };
+
+  if (processes.length === 0) {
+    return (
+      <TableBody>
+        <TableRow>
+          <TableCell colSpan={departments.length + 3} className="h-24 text-center">
+            Nenhum processo encontrado
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    );
   }
 
   return (
     <TableBody>
-      {filteredProcesses.map((process) => {
-        // Determinar se o usuário está no setor de atendimento para iniciar processos
-        const canInitiateProcesses = isUserInAttendanceSector();
-        
-        // Verificar se há um responsável designado para o setor atual
-        const hasSectorResponsible = !!(
-          process.currentDepartment && 
-          responsiblesData[process.id]?.[process.currentDepartment]
-        );
-        
-        // Criar função de aceitação de responsabilidade para este processo específico
-        const handleAcceptResponsibility = async () => {
-          if (!process.protocolNumber) return;
-          await acceptProcessResponsibility(process.id, process.protocolNumber);
-        };
-        
-        return (
-          <ProcessTableRow
-            key={process.id}
-            process={process}
-            departments={departments}
-            processTypes={processTypes}
-            moveProcessToNextDepartment={moveProcessToNextDepartment}
-            moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-            getProcessTypeName={getProcessTypeName}
-            updateProcessType={updateProcessType}
-            startProcess={startProcess}
-            onAcceptResponsibility={handleAcceptResponsibility}
-            isAccepting={isAccepting}
-            hasSectorResponsible={hasSectorResponsible}
-            canInitiateProcesses={canInitiateProcesses}
-            responsiblesData={responsiblesData}
-          />
-        );
-      })}
+      {processes.map(process => (
+        <ProcessTableRow
+          key={process.id}
+          process={process}
+          departments={departments}
+          processTypes={processTypes}
+          moveProcessToNextDepartment={moveProcessToNextDepartment}
+          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+          getProcessTypeName={getProcessTypeName}
+          updateProcessType={updateProcessType}
+          startProcess={startProcess}
+          hasSectorResponsible={hasSectorResponsible(process.id, process.currentDepartment)}
+          onAcceptResponsibility={() => handleAcceptResponsibility(process.id, process.protocolNumber)}
+          isAccepting={isAccepting && acceptingProcessId === process.id}
+          canInitiateProcesses={isUserInAttendanceSector()}
+        />
+      ))}
     </TableBody>
   );
 };

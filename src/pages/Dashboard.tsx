@@ -4,12 +4,6 @@ import DashboardSummary from "@/components/Dashboard/DashboardSummary";
 import DepartmentStatusChart from "@/components/Dashboard/DepartmentStatusChart";
 import RecentProcessList from "@/components/Dashboard/RecentProcessList";
 import { ProcessesProvider } from "@/hooks/useProcesses";
-import { memo } from "react";
-
-// Usando memo para evitar renderizações desnecessárias
-const MemoizedDashboardSummary = memo(DashboardSummary);
-const MemoizedDepartmentStatusChart = memo(DepartmentStatusChart);
-const MemoizedRecentProcessList = memo(RecentProcessList);
 
 const Dashboard = () => {
   return (
@@ -22,11 +16,11 @@ const Dashboard = () => {
           </p>
         </div>
 
-        <MemoizedDashboardSummary />
+        <DashboardSummary />
 
         <div className="grid gap-6 grid-cols-1 md:grid-cols-4">
-          <MemoizedDepartmentStatusChart />
-          <MemoizedRecentProcessList />
+          <DepartmentStatusChart />
+          <RecentProcessList />
         </div>
       </div>
     </ProcessesProvider>

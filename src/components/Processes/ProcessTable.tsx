@@ -1,29 +1,36 @@
 
 import { Table } from "@/components/ui/table";
+import { Process, ProcessType, Department } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
 import ProcessTableBody from "./ProcessTableBody";
-import { Process, Department, ProcessType } from "@/types";
+import { useProcessTableState } from "@/hooks/useProcessTableState";
+import { useEffect, useMemo } from "react";
+import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
 
 interface ProcessTableProps {
   processes: Process[];
-  filteredProcesses: Process[];
-  sortField?: keyof Process;
-  sortDirection?: "asc" | "desc";
+  sortField: keyof Process;
+  sortDirection: "asc" | "desc";
   toggleSort: (field: keyof Process) => void;
   getDepartmentName: (id: string) => string;
   getProcessTypeName: (id: string) => string;
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
   moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
-  departments: Department[];
   processTypes: ProcessType[];
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
+  updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
+  departments: Department[];
   startProcess?: (processId: string) => Promise<void>;
-  isUserInAttendanceSector: () => boolean;
-  responsiblesData?: Record<string, Record<string, any>>;
+  filterProcesses: (
+    filters: any, 
+    processes: Process[], 
+    processesResponsibles?: Record<string, any>
+  ) => Process[];
+  filters: any;
 }
 
 const ProcessTable = ({
-  filteredProcesses,
+  processes,
   sortField,
   sortDirection,
   toggleSort,
@@ -31,50 +38,54 @@ const ProcessTable = ({
   getProcessTypeName,
   moveProcessToNextDepartment,
   moveProcessToPreviousDepartment,
-  departments,
   processTypes,
   updateProcessType,
+  departments,
   startProcess,
-  isUserInAttendanceSector,
-  responsiblesData
+  filterProcesses,
+  filters
 }: ProcessTableProps) => {
-  const isEmpty = filteredProcesses.length === 0;
-
+  const { processesResponsibles, fetchResponsibles, hasResponsibleInSector, isUserResponsibleForSector, queueSectorForLoading } = useProcessTableState(processes);
+  const { isUserInAttendanceSector } = useProcessFiltering(processes);
+  
+  // Buscar responsáveis quando os processos mudarem
+  useEffect(() => {
+    if (processes.length > 0) {
+      fetchResponsibles();
+    }
+  }, [processes, fetchResponsibles]);
+  
+  // Memorizar processos filtrados para evitar recálculos desnecessários
+  const filteredProcesses = useMemo(() => 
+    filterProcesses(filters, processes, processesResponsibles),
+    [filters, processes, processesResponsibles, filterProcesses]
+  );
+  
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto">
       <Table>
-        <ProcessTableHeader
+        <ProcessTableHeader 
+          sortField={sortField} 
+          sortDirection={sortDirection} 
+          toggleSort={toggleSort} 
+          departments={departments} 
+        />
+        <ProcessTableBody
+          processes={filteredProcesses}
+          departments={departments}
+          processTypes={processTypes}
+          moveProcessToNextDepartment={moveProcessToNextDepartment}
+          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+          getProcessTypeName={getProcessTypeName}
+          updateProcessType={updateProcessType}
+          startProcess={startProcess}
+          processesResponsibles={processesResponsibles}
+          isUserInAttendanceSector={isUserInAttendanceSector}
           sortField={sortField}
           sortDirection={sortDirection}
-          toggleSort={toggleSort}
-          departments={departments}
-          getDepartmentName={getDepartmentName}
+          queueSectorForLoading={queueSectorForLoading}
         />
-        {!isEmpty ? (
-          <ProcessTableBody
-            filteredProcesses={filteredProcesses}
-            departments={departments}
-            processTypes={processTypes}
-            moveProcessToNextDepartment={moveProcessToNextDepartment}
-            moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-            getProcessTypeName={getProcessTypeName}
-            updateProcessType={updateProcessType}
-            startProcess={startProcess}
-            isUserInAttendanceSector={isUserInAttendanceSector}
-            responsiblesData={responsiblesData}
-          />
-        ) : null}
       </Table>
-      {isEmpty && (
-        <div className="flex flex-col items-center justify-center p-8 text-center">
-          <div className="text-muted-foreground text-sm">
-            Nenhum processo encontrado
-          </div>
-          <div className="text-xs text-muted-foreground mt-2">
-            Tente ajustar os filtros ou criar um novo processo
-          </div>
-        </div>
-      )}
     </div>
   );
 };
