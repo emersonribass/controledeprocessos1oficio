@@ -3,49 +3,31 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
+import { useResponsibleBatchLoader } from "./process-responsibility/useResponsibleBatchLoader";
 import { useProcessResponsibleFetching } from "./process-responsibility/useProcessResponsibleFetching";
+import { ProcessResponsible } from "./process-responsibility/types";
 
 /**
  * Hook centralizado para gerenciar responsabilidades de processos
+ * Usa o sistema de carregamento em lote para otimização
  */
 export const useProcessResponsibility = () => {
   const [isAccepting, setIsAccepting] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Utiliza o hook especializado para busca de responsáveis
-  const { getProcessResponsible, getSectorResponsible, getBulkResponsibles } = useProcessResponsibleFetching();
+  // Utiliza o hook de carregamento em lote
+  const { 
+    hasResponsibleForSector,
+    isUserResponsibleForSector,
+    queueProcessForLoading
+  } = useResponsibleBatchLoader();
   
-  /**
-   * Verifica se o usuário atual é responsável por um processo em um setor específico
-   */
-  const isUserResponsibleForSector = useCallback(async (
-    processId: string, 
-    sectorId: string
-  ): Promise<boolean> => {
-    if (!user) return false;
-    
-    try {
-      // Otimizado para verificar apenas o processo e setor específicos
-      const { data, error } = await supabase
-        .from('setor_responsaveis')
-        .select('*')
-        .eq('processo_id', processId)
-        .eq('setor_id', sectorId)
-        .eq('usuario_id', user.id)
-        .maybeSingle();
-      
-      if (error) {
-        console.error(`Erro ao verificar responsabilidade para processo ${processId}, setor ${sectorId}:`, error);
-        return false;
-      }
-      
-      return !!data;
-    } catch (error) {
-      console.error(`Erro ao verificar responsabilidade para processo ${processId}, setor ${sectorId}:`, error);
-      return false;
-    }
-  }, [user]);
+  // Utiliza o hook especializado para busca de responsáveis específicos
+  const { 
+    getProcessResponsible, 
+    getSectorResponsible
+  } = useProcessResponsibleFetching();
   
   /**
    * Aceita a responsabilidade por um processo em seu setor atual
@@ -61,7 +43,7 @@ export const useProcessResponsibility = () => {
       // Primeiro, buscar o setor atual do processo específico
       const { data: process, error: processError } = await supabase
         .from('processos')
-        .select('setor_atual')
+        .select('setor_atual, status')
         .eq('id', processId)
         .single();
       
@@ -72,6 +54,16 @@ export const useProcessResponsibility = () => {
       
       if (!process) {
         throw new Error(`Processo ${processId} não encontrado`);
+      }
+      
+      // Não permitir aceitar processos não iniciados
+      if (process.status === 'not_started') {
+        toast({
+          title: "Erro",
+          description: "Não é possível aceitar processos não iniciados.",
+          variant: "destructive"
+        });
+        return false;
       }
       
       const currentSectorId = process.setor_atual;
@@ -89,8 +81,6 @@ export const useProcessResponsibility = () => {
         throw userError;
       }
       
-      console.log("Perfil do usuário carregado:", userProfile);
-      
       const userSectors = userProfile?.setores_atribuidos || [];
       
       if (!userSectors.includes(currentSectorId)) {
@@ -101,8 +91,6 @@ export const useProcessResponsibility = () => {
         });
         return false;
       }
-      
-      console.log("Usuário pertence ao setor, verificando se já existe um responsável");
       
       // Verificar se já existe um responsável para o processo neste setor
       const { data: existingResponsible, error: respError } = await supabase
@@ -119,7 +107,6 @@ export const useProcessResponsibility = () => {
       
       // Se já existe um responsável e é o usuário atual, apenas retornar sucesso
       if (existingResponsible && existingResponsible.usuario_id === user.id) {
-        console.log("Usuário já é responsável por este processo neste setor");
         toast({
           title: "Informação",
           description: "Você já é responsável por este processo."
@@ -129,7 +116,6 @@ export const useProcessResponsibility = () => {
       
       // Se existe outro responsável, não podemos aceitar
       if (existingResponsible) {
-        console.log("Já existe outro responsável para este processo neste setor");
         toast({
           title: "Erro",
           description: "Este processo já possui um responsável neste setor.",
@@ -137,8 +123,6 @@ export const useProcessResponsibility = () => {
         });
         return false;
       }
-      
-      console.log("Nenhum responsável encontrado, atribuindo responsabilidade ao usuário atual");
       
       // Inserir nova responsabilidade
       const { error: insertError } = await supabase
@@ -155,8 +139,6 @@ export const useProcessResponsibility = () => {
         throw insertError;
       }
       
-      console.log("Responsabilidade atribuída com sucesso");
-      
       // Atualizar o usuário responsável no registro principal do processo
       const { error: updateError } = await supabase
         .from('processos')
@@ -168,10 +150,10 @@ export const useProcessResponsibility = () => {
       
       if (updateError) {
         console.error("Erro ao atualizar responsável principal do processo:", updateError);
-        // Não é crítico, podemos continuar
-      } else {
-        console.log("Responsável principal do processo atualizado");
       }
+      
+      // Adicionar à fila de carregamento para atualizar o cache
+      queueProcessForLoading(processId, process.status);
       
       toast({
         title: "Sucesso",
@@ -190,19 +172,27 @@ export const useProcessResponsibility = () => {
     } finally {
       setIsAccepting(false);
     }
-  }, [user, toast]);
+  }, [user, toast, queueProcessForLoading]);
   
   return {
-    // Verificação de responsabilidade
+    // Estado
+    isAccepting,
+    
+    // Verificação de responsabilidade (do batch loader)
+    hasResponsibleForSector,
     isUserResponsibleForSector,
     
     // Ações de responsabilidade
     acceptProcessResponsibility,
-    isAccepting,
     
-    // Busca de responsáveis (do hook de fetching)
+    // Busca de responsáveis específicos (quando necessário)
     getProcessResponsible,
     getSectorResponsible,
-    getBulkResponsibles
+    
+    // Para compatibilidade com código existente
+    getBulkResponsibles: useCallback(async () => {
+      console.warn('getBulkResponsibles está obsoleto, use o hook useResponsibleBatchLoader');
+      return {};
+    }, [])
   };
 };
