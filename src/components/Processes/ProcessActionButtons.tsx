@@ -21,6 +21,8 @@ interface ProcessActionButtonsProps {
   isAccepting?: boolean;
   sectorId?: string;
   isSectorResponsible?: boolean;
+  isProcessResponsible?: boolean;
+  isAdmin?: boolean;
 }
 
 const ProcessActionButtons = ({
@@ -40,7 +42,7 @@ const ProcessActionButtons = ({
   sectorId,
   isSectorResponsible = false
 }: ProcessActionButtonsProps) => {
-  const canMoveProcess = status !== "not_started" && status !== "completed" && isSectorResponsible;
+  const canMoveProcess = status !== "not_started" && status !== "completed" && (isSectorResponsible || isProcessResponsible || isAdmin);
   const isCompleted = status === "completed";
   
   // Handlers para garantir que os eventos não propaguem para o clique da linha
