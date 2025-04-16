@@ -23,7 +23,7 @@ interface ProcessActionButtonsProps {
   isSectorResponsible?: boolean;
   isProcessResponsible?: boolean;
   isAdmin?: boolean;
-  sectorResponsible?: any; // Adicionei esta prop para verificação
+  sectorResponsible?: any;
 }
 
 const ProcessActionButtons = ({
@@ -46,7 +46,7 @@ const ProcessActionButtons = ({
   isAdmin = false,
   sectorResponsible
 }: ProcessActionButtonsProps) => {
-  const { user } = useAuth(); // Adicionei o hook de autenticação
+  const { user } = useAuth();
   const canMoveProcess = status !== "not_started" && status !== "completed" && (isSectorResponsible || isProcessResponsible || isAdmin);
   const isCompleted = status === "completed";
   
@@ -99,6 +99,7 @@ const ProcessActionButtons = ({
   }
   
   // Se não há responsável no setor, o usuário está logado e o processo não está concluído, mostra o botão de aceitar processo
+  // A verificação foi ajustada para considerar tanto hasSectorResponsible quanto sectorResponsible
   if ((!hasSectorResponsible || !sectorResponsible) && user && onAcceptResponsibility && status !== "completed") {
     return (
       <div className="flex justify-center gap-2 process-action">
@@ -126,9 +127,9 @@ const ProcessActionButtons = ({
             variant="ghost" 
             size="icon" 
             onClick={handleMoveToPrevious} 
-            disabled={isFirstDepartment} 
+            disabled={isFirstDepartment || !canMoveProcess} 
             title="Mover para setor anterior"
-            className={`process-action ${isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`process-action ${isFirstDepartment || !canMoveProcess ? "opacity-50 cursor-not-allowed" : ""}`}
             data-testid="move-previous"
           >
             <MoveLeft className="h-4 w-4" />
@@ -143,9 +144,9 @@ const ProcessActionButtons = ({
             variant="ghost" 
             size="icon" 
             onClick={handleMoveToNext} 
-            disabled={isCompleted} 
+            disabled={isCompleted || !canMoveProcess} 
             title="Mover para próximo setor"
-            className={`process-action ${isCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`process-action ${isCompleted || !canMoveProcess ? "opacity-50 cursor-not-allowed" : ""}`}
             data-testid="move-next"
           >
             <MoveRight className="h-4 w-4" />
@@ -158,4 +159,3 @@ const ProcessActionButtons = ({
 };
 
 export default ProcessActionButtons;
-

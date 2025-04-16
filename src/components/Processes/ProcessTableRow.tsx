@@ -51,9 +51,8 @@ const ProcessTableRow = ({
   const isProcessResponsible = user && (process.userId === user.id || process.responsibleUserId === user.id);
   
   // Verificar se há um responsável para o setor atual
-  // Importante: verificamos tanto o hasSectorResponsible (que pode vir de um contexto mais amplo)
-  // quanto o sectorResponsible (que é buscado diretamente por este componente)
-  const hasResponsible = hasSectorResponsible || !!sectorResponsible;
+  // Importante: NÃO usamos o hasSectorResponsible aqui, mas sim verificamos diretamente o sectorResponsible
+  const hasResponsible = !!sectorResponsible;
   
   const {
     sortedDepartments,
@@ -158,6 +157,7 @@ const ProcessTableRow = ({
         isSectorResponsible={isSectorResponsible}
         isProcessResponsible={isProcessResponsible}
         isAdmin={isUserAdmin}
+        sectorResponsible={sectorResponsible}
       />
     </TableRow>
   );

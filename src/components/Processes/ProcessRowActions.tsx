@@ -18,6 +18,7 @@ interface ProcessRowActionsProps {
   isSectorResponsible?: boolean;
   isProcessResponsible?: boolean;
   isAdmin?: boolean;
+  sectorResponsible?: any;
 }
 
 const ProcessRowActions = ({
@@ -35,7 +36,8 @@ const ProcessRowActions = ({
   sectorId,
   isSectorResponsible = false,
   isProcessResponsible = false,
-  isAdmin = false
+  isAdmin = false,
+  sectorResponsible
 }: ProcessRowActionsProps) => {
   return (
     <TableCell className="text-right process-action">
@@ -57,6 +59,7 @@ const ProcessRowActions = ({
         isSectorResponsible={isSectorResponsible}
         isProcessResponsible={isProcessResponsible}
         isAdmin={isAdmin}
+        sectorResponsible={sectorResponsible}
       />
     </TableCell>
   );
