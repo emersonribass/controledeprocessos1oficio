@@ -1,57 +1,61 @@
 
-import { Department } from "@/types";
+import { Department, Process } from "@/types";
+import { 
+  getSortedActiveDepartments, 
+  getConcludedDepartment,
+  isFirstDepartment as isFirstDept,
+  isLastDepartment as isLastDept
+} from "@/utils/departmentUtils";
+import { 
+  getMostRecentEntryDate as getEntryDate,
+  hasPassedDepartment as hasPassed,
+  isCurrentDepartment as isCurrent,
+  isPreviousDepartment as isPrevious
+} from "@/utils/processHistoryUtils";
+import { isDepartmentOverdue as isDeptOverdue } from "@/utils/deadlineUtils";
 
+/**
+ * Hook para extrair e calcular informações de departamentos de um processo
+ */
 export const useProcessDepartmentInfo = (
-  process: any, 
+  process: Process, 
   departments: Department[]
 ) => {
   // Ordenar departamentos por ordem e filtrar o departamento "Concluído(a)"
-  const sortedDepartments = [...departments]
-    .filter(dept => dept.name !== "Concluído(a)")
-    .sort((a, b) => a.order - b.order);
+  const sortedDepartments = getSortedActiveDepartments(departments);
 
   // Obter o departamento "Concluído(a)" para referência
-  const concludedDept = departments.find(dept => dept.name === "Concluído(a)");
+  const concludedDept = getConcludedDepartment(departments);
   
-  const isFirstDepartment = process.currentDepartment === sortedDepartments[0]?.id;
-  const isLastDepartment = process.currentDepartment === concludedDept?.id;
+  // Verificar se o processo está no primeiro ou último departamento
+  const isFirstDepartment = isFirstDept(process.currentDepartment, departments);
+  const isLastDepartment = isLastDept(process.currentDepartment, departments);
 
+  // Função wrapper para obter a data de entrada mais recente
   const getMostRecentEntryDate = (departmentId: string): string | null => {
-    const departmentEntries = process.history
-      .filter((h: any) => h.departmentId === departmentId)
-      .sort((a: any, b: any) => new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime());
-    
-    return departmentEntries.length > 0 ? departmentEntries[0].entryDate : null;
+    return getEntryDate(process, departmentId);
   };
 
+  // Função wrapper para verificar se o processo passou por um departamento
   const hasPassedDepartment = (departmentId: string): boolean => {
-    return process.history.some((h: any) => h.departmentId === departmentId);
+    return hasPassed(process, departmentId);
   };
 
+  // Função wrapper para verificar se é o departamento atual
   const isCurrentDepartment = (departmentId: string): boolean => {
-    return process.currentDepartment === departmentId;
+    return isCurrent(process, departmentId);
   };
 
+  // Função wrapper para verificar se é um departamento anterior
   const isPreviousDepartment = (departmentId: string): boolean => {
-    const deptOrder = departments.find(d => d.id === departmentId)?.order || 0;
-    const currentDeptOrder = departments.find(d => d.id === process.currentDepartment)?.order || 0;
-    return deptOrder < currentDeptOrder;
+    return isPrevious(process, departmentId, departments);
   };
 
+  // Função wrapper para verificar se um departamento está com prazo expirado
   const isDepartmentOverdue = (departmentId: string, isProcessStarted: boolean): boolean => {
-    if (departmentId !== process.currentDepartment || !isProcessStarted) return false;
-    
-    const dept = departments.find(d => d.id === departmentId);
-    if (!dept || dept.timeLimit <= 0) return false;
-    
+    if (!isProcessStarted) return false;
     const entryDate = getMostRecentEntryDate(departmentId);
-    if (!entryDate) return false;
-    
-    const entryDateTime = new Date(entryDate).getTime();
-    const deadlineTime = entryDateTime + (dept.timeLimit * 24 * 60 * 60 * 1000);
-    const currentTime = new Date().getTime();
-    
-    return currentTime > deadlineTime;
+    return isDeptOverdue(process, departmentId, entryDate, departments);
   };
 
   return {

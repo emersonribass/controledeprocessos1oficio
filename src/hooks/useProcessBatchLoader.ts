@@ -1,217 +1,177 @@
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { ProcessResponsible } from "./process-responsibility/types";
-import { useProcessResponsibleBatchLoader } from "./process-responsibility/useProcessResponsibleBatchLoader";
+import { useProcessResponsibility } from "./process-responsibility/useProcessResponsibility";
 
 /**
- * Hook centralizado para gerenciar o carregamento em lote de responsáveis
- * Implementa otimizações para evitar requisições duplicadas e melhorar performance
+ * Hook para carregar responsáveis de processos em lote para melhor desempenho
  */
 export const useProcessBatchLoader = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [processResponsibles, setProcessResponsibles] = useState<Record<string, ProcessResponsible | null>>({});
   const [sectorResponsibles, setSectorResponsibles] = useState<Record<string, ProcessResponsible | null>>({});
+  const [pendingProcessCount, setPendingProcessCount] = useState(0);
+  const [pendingSectorCount, setPendingSectorCount] = useState(0);
+  const [batchSizes, setBatchSizes] = useState({ processes: 0, sectors: 0 });
   
-  const { loadProcessResponsibleBatch, loadSectorResponsibleBatch } = useProcessResponsibleBatchLoader();
+  const { loadProcessResponsibleBatch, loadSectorResponsibleBatch, clearCache } = useProcessResponsibility();
   
-  // Controle para carregamento em lote com otimização
+  // Usamos conjuntos para evitar duplicatas
+  const pendingProcessIds = useRef(new Set<string>());
+  const pendingSectorRequests = useRef(new Set<string>());
   const batchLoadingRef = useRef(false);
-  const pendingProcessIds = useRef<Set<string>>(new Set());
-  const pendingSectorRequests = useRef<Map<string, { processId: string; sectorId: string }>>(new Map());
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const batchSizeRef = useRef<{ processes: number; sectors: number }>({ processes: 0, sectors: 0 });
   
   /**
-   * Função para adicionar um processo ao lote de carregamento com verificação de duplicidade otimizada
+   * Adiciona um processo à fila para carregamento em lote
    */
-  const queueProcessForLoading = useCallback((processId: string): void => {
-    if (!processId || processResponsibles[processId] !== undefined) {
-      return;
-    }
+  const queueProcessForLoading = useCallback((processId: string) => {
+    if (!processId || processResponsibles[processId] !== undefined) return;
     
-    // Usando Set para evitar duplicações automaticamente
     pendingProcessIds.current.add(processId);
-    scheduleBatchLoad();
+    setPendingProcessCount(pendingProcessIds.current.size);
+    scheduleProcessBatch();
   }, [processResponsibles]);
   
   /**
-   * Função para adicionar um setor ao lote de carregamento com verificação de duplicidade otimizada
+   * Adiciona um setor à fila para carregamento em lote
    */
-  const queueSectorForLoading = useCallback((processId: string, sectorId: string): void => {
+  const queueSectorForLoading = useCallback((processId: string, sectorId: string) => {
     if (!processId || !sectorId) return;
     
-    const cacheKey = `${processId}-${sectorId}`;
-    if (sectorResponsibles[cacheKey] !== undefined) {
-      return;
-    }
+    const key = `${processId}:${sectorId}`;
+    if (sectorResponsibles[key] !== undefined) return;
     
-    // Usando Map com chave composta para evitar duplicações
-    pendingSectorRequests.current.set(cacheKey, { processId, sectorId });
-    scheduleBatchLoad();
+    pendingSectorRequests.current.add(key);
+    setPendingSectorCount(pendingSectorRequests.current.size);
+    scheduleProcessBatch();
   }, [sectorResponsibles]);
   
   /**
-   * Agenda o processamento do lote com debounce para acumular requisições
-   * e reduzir chamadas desnecessárias
+   * Agenda o processamento em lote com debounce
    */
-  const scheduleBatchLoad = useCallback((): void => {
-    // Atualiza contadores para logging
-    batchSizeRef.current = {
-      processes: pendingProcessIds.current.size,
-      sectors: pendingSectorRequests.current.size
-    };
-    
+  const scheduleProcessBatch = useCallback(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     
-    if (pendingProcessIds.current.size === 0 && pendingSectorRequests.current.size === 0) {
-      return;
-    }
-    
-    // Implementação de debounce: aguarda um curto período para acumular solicitações
     timeoutRef.current = setTimeout(() => {
       processBatch();
-    }, 50);
+    }, 50); // Agrupa solicitações em um curto intervalo para otimizar
   }, []);
   
   /**
-   * Processa o lote acumulado de requisições com melhorias de performance
+   * Processa o lote de solicitações pendentes
    */
-  const processBatch = useCallback(async (): Promise<void> => {
-    if (batchLoadingRef.current) return;
+  const processBatch = useCallback(async () => {
+    if (batchLoadingRef.current || 
+        (pendingProcessIds.current.size === 0 && pendingSectorRequests.current.size === 0)) {
+      return;
+    }
     
-    // Nada para processar
-    if (pendingProcessIds.current.size === 0 && pendingSectorRequests.current.size === 0) return;
-    
-    // Marca início do processamento
     batchLoadingRef.current = true;
     setIsLoading(true);
     
-    // Captura os itens pendentes
-    const processBatch = Array.from(pendingProcessIds.current);
-    const sectorBatch = Array.from(pendingSectorRequests.current.values());
-    
-    // Limpa as listas de pendências imediatamente para evitar duplicação
-    pendingProcessIds.current.clear();
-    pendingSectorRequests.current.clear();
-    
     try {
-      // Processamento em paralelo para melhor performance
-      const promises: Promise<any>[] = [];
-      
       // Processar responsáveis de processos
-      if (processBatch.length > 0) {
-        console.log(`Processando lote de ${processBatch.length} responsáveis de processos`);
-        promises.push(
-          loadProcessResponsibleBatch(processBatch).then(result => {
-            setProcessResponsibles(prev => ({ ...prev, ...result }));
-            return result;
-          })
-        );
+      if (pendingProcessIds.current.size > 0) {
+        const processIds = Array.from(pendingProcessIds.current);
+        setBatchSizes(prev => ({ ...prev, processes: processIds.length }));
+        
+        const results = await loadProcessResponsibleBatch(processIds);
+        
+        setProcessResponsibles(prev => ({
+          ...prev,
+          ...results
+        }));
+        
+        // Limpar os IDs processados
+        pendingProcessIds.current.clear();
+        setPendingProcessCount(0);
       }
       
       // Processar responsáveis de setores
-      if (sectorBatch.length > 0) {
-        console.log(`Processando lote de ${sectorBatch.length} responsáveis de setores`);
-        promises.push(
-          loadSectorResponsibleBatch(sectorBatch).then(result => {
-            setSectorResponsibles(prev => ({ ...prev, ...result }));
-            return result;
-          })
-        );
+      if (pendingSectorRequests.current.size > 0) {
+        const sectorRequests = Array.from(pendingSectorRequests.current)
+          .map(key => {
+            const [processId, sectorId] = key.split(':');
+            return { processId, sectorId };
+          });
+        
+        setBatchSizes(prev => ({ ...prev, sectors: sectorRequests.length }));
+        
+        const results = await loadSectorResponsibleBatch(sectorRequests);
+        
+        setSectorResponsibles(prev => ({
+          ...prev,
+          ...results
+        }));
+        
+        // Limpar as solicitações processadas
+        pendingSectorRequests.current.clear();
+        setPendingSectorCount(0);
       }
-      
-      // Aguarda conclusão de todos os processamentos
-      await Promise.all(promises);
     } catch (error) {
-      console.error("Erro ao processar lote:", error);
+      console.error("Erro ao carregar responsáveis em lote:", error);
     } finally {
-      // Libera o processador de lotes
       batchLoadingRef.current = false;
-      
-      // Verifica se surgiram novas solicitações durante o processamento
-      if (pendingProcessIds.current.size > 0 || pendingSectorRequests.current.size > 0) {
-        // Agenda novo processamento para os itens que surgiram durante a execução
-        scheduleBatchLoad();
-      } else {
-        // Finaliza o carregamento se não há mais itens pendentes
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     }
   }, [loadProcessResponsibleBatch, loadSectorResponsibleBatch]);
   
   /**
-   * Limpa os recursos ao desmontar o componente
+   * Obtém o responsável por um processo específico
    */
+  const getProcessResponsible = useCallback((processId: string): ProcessResponsible | null | undefined => {
+    if (!processId) return null;
+    
+    const responsible = processResponsibles[processId];
+    
+    // Se não temos informação e não está na fila, adicionar à fila
+    if (responsible === undefined && !pendingProcessIds.current.has(processId)) {
+      queueProcessForLoading(processId);
+    }
+    
+    return responsible;
+  }, [processResponsibles, queueProcessForLoading]);
+  
+  /**
+   * Obtém o responsável por um setor específico em um processo
+   */
+  const getSectorResponsible = useCallback((processId: string, sectorId: string): ProcessResponsible | null | undefined => {
+    if (!processId || !sectorId) return null;
+    
+    const key = `${processId}:${sectorId}`;
+    const responsible = sectorResponsibles[key];
+    
+    // Se não temos informação e não está na fila, adicionar à fila
+    if (responsible === undefined && !pendingSectorRequests.current.has(key)) {
+      queueSectorForLoading(processId, sectorId);
+    }
+    
+    return responsible;
+  }, [sectorResponsibles, queueSectorForLoading]);
+  
+  /**
+   * Limpa o cache e todas as solicitações pendentes
+   */
+  const handleClearCache = useCallback(() => {
+    setProcessResponsibles({});
+    setSectorResponsibles({});
+    pendingProcessIds.current.clear();
+    pendingSectorRequests.current.clear();
+    setPendingProcessCount(0);
+    setPendingSectorCount(0);
+    clearCache();
+  }, [clearCache]);
+  
+  // Processa o lote automaticamente quando o componente é montado
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, []);
-  
-  /**
-   * Obtém um responsável por processo do cache com tratamento de undefined
-   * Coloca na fila caso não exista
-   */
-  const getProcessResponsible = useCallback((processId: string): ProcessResponsible | null | undefined => {
-    if (!processId) return undefined;
-    
-    const result = processResponsibles[processId];
-    
-    if (result === undefined) {
-      queueProcessForLoading(processId);
-    }
-    
-    return result;
-  }, [processResponsibles, queueProcessForLoading]);
-  
-  /**
-   * Obtém um responsável por setor do cache com tratamento de undefined
-   * Coloca na fila caso não exista
-   */
-  const getSectorResponsible = useCallback((processId: string, sectorId: string): ProcessResponsible | null | undefined => {
-    if (!processId || !sectorId) return undefined;
-    
-    const cacheKey = `${processId}-${sectorId}`;
-    const result = sectorResponsibles[cacheKey];
-    
-    if (result === undefined) {
-      queueSectorForLoading(processId, sectorId);
-    }
-    
-    return result;
-  }, [sectorResponsibles, queueSectorForLoading]);
-  
-  /**
-   * Função para forçar o processamento do lote atual
-   */
-  const forceBatchProcessing = useCallback((): void => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    
-    processBatch();
-  }, [processBatch]);
-  
-  /**
-   * Função para limpar o cache e forçar recarregamento
-   */
-  const clearCache = useCallback((): void => {
-    setProcessResponsibles({});
-    setSectorResponsibles({});
-    pendingProcessIds.current.clear();
-    pendingSectorRequests.current.clear();
-    
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    
-    console.log("Cache de responsáveis limpo");
   }, []);
   
   return {
@@ -222,11 +182,10 @@ export const useProcessBatchLoader = () => {
     getSectorResponsible,
     queueProcessForLoading,
     queueSectorForLoading,
-    processBatch: forceBatchProcessing,
-    clearCache,
-    // Dados para telemetria/debugging
-    pendingProcessCount: pendingProcessIds.current.size,
-    pendingSectorCount: pendingSectorRequests.current.size,
-    batchSizes: batchSizeRef.current
+    processBatch,
+    clearCache: handleClearCache,
+    pendingProcessCount,
+    pendingSectorCount,
+    batchSizes
   };
 };
