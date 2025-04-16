@@ -51,16 +51,19 @@ const ProcessFilters = ({
   return (
     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
       <Select
-        value={filters.department || ""}
+        value={filters.department || "all_departments"}
         onValueChange={(value) =>
-          setFilters((prev) => ({ ...prev, department: value || undefined }))
+          setFilters((prev) => ({ 
+            ...prev, 
+            department: value === "all_departments" ? undefined : value
+          }))
         }
       >
         <SelectTrigger className="w-full md:w-[200px]">
           <SelectValue placeholder="Setor" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todos os setores</SelectItem>
+          <SelectItem value="all_departments">Todos os setores</SelectItem>
           {departments.map((department) => (
             <SelectItem key={department.id} value={department.id}>
               {department.name}
@@ -70,16 +73,19 @@ const ProcessFilters = ({
       </Select>
 
       <Select
-        value={filters.status || ""}
+        value={filters.status || "all_status"}
         onValueChange={(value) =>
-          setFilters((prev) => ({ ...prev, status: value || undefined }))
+          setFilters((prev) => ({ 
+            ...prev, 
+            status: value === "all_status" ? undefined : value
+          }))
         }
       >
         <SelectTrigger className="w-full md:w-[200px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todos os status</SelectItem>
+          <SelectItem value="all_status">Todos os status</SelectItem>
           <SelectItem value="pending">Em andamento</SelectItem>
           <SelectItem value="completed">Concluído</SelectItem>
           <SelectItem value="overdue">Atrasado</SelectItem>
@@ -88,16 +94,19 @@ const ProcessFilters = ({
       </Select>
 
       <Select
-        value={filters.processType || ""}
+        value={filters.processType || "all_types"}
         onValueChange={(value) =>
-          setFilters((prev) => ({ ...prev, processType: value || undefined }))
+          setFilters((prev) => ({ 
+            ...prev, 
+            processType: value === "all_types" ? undefined : value 
+          }))
         }
       >
         <SelectTrigger className="w-full md:w-[200px]">
           <SelectValue placeholder="Tipo de Processo" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todos os tipos</SelectItem>
+          <SelectItem value="all_types">Todos os tipos</SelectItem>
           {processTypes.map((type) => (
             <SelectItem key={type.id} value={type.id}>
               {type.name}
