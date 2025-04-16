@@ -57,13 +57,18 @@ export const useProcessDepartmentsResponsibility = (
         )
       ];
       
-      const [processResp, ...deptResponses] = await Promise.all(promises);
+      const results = await Promise.all(promises);
       
-      // Processar os resultados
+      // Processar os resultados - corrigindo o problema de tipo aqui
+      // O primeiro resultado é o responsável pelo processo
+      const processResp = results[0] as ProcessResponsible | null;
       setProcessResponsible(processResp);
       
+      // Os resultados restantes são responsáveis por departamento
+      const deptResults = results.slice(1) as Array<{ deptId: string, responsible: ProcessResponsible | null }>;
+      
       // Converter array de respostas para um objeto indexado por ID do departamento
-      const deptResps = deptResponses.reduce<Record<string, ProcessResponsible | null>>(
+      const deptResps = deptResults.reduce<Record<string, ProcessResponsible | null>>(
         (acc, item) => {
           if (item && 'deptId' in item) {
             acc[item.deptId] = item.responsible;
