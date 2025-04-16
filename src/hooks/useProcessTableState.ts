@@ -21,6 +21,8 @@ export const useProcessTableState = (processes: Process[]) => {
     
     setIsLoading(true);
     try {
+      console.log(`Buscando responsáveis para ${processIds.length} processos`);
+      
       // Buscar todos os responsáveis de setor em uma única consulta
       const { data, error } = await supabase
         .from('setor_responsaveis')
@@ -41,10 +43,12 @@ export const useProcessTableState = (processes: Process[]) => {
             responsiblesMap[resp.processo_id] = {};
           }
           responsiblesMap[resp.processo_id][resp.setor_id] = resp;
+          console.log(`Responsável encontrado para processo ${resp.processo_id}, setor ${resp.setor_id}: ${resp.usuario_id}`);
         });
       }
       
       setProcessesResponsibles(responsiblesMap);
+      console.log(`Responsáveis carregados para ${Object.keys(responsiblesMap).length} processos`);
     } catch (error) {
       console.error("Erro ao processar responsáveis:", error);
     } finally {
@@ -54,10 +58,17 @@ export const useProcessTableState = (processes: Process[]) => {
   
   // Verificar se um processo tem responsável em um setor específico
   const hasResponsibleInSector = useCallback((processId: string, sectorId: string): boolean => {
-    return !!(
+    const hasResponsible = !!(
       processesResponsibles[processId] && 
       processesResponsibles[processId][sectorId]
     );
+    
+    console.log(`Buscando responsável para o processo no setor: ${processId} ${sectorId}`);
+    if (!hasResponsible) {
+      console.log("Nenhum responsável encontrado para este setor");
+    }
+    
+    return hasResponsible;
   }, [processesResponsibles]);
   
   // Verificar se o usuário atual é responsável por um processo em um setor específico
@@ -66,7 +77,10 @@ export const useProcessTableState = (processes: Process[]) => {
       return false;
     }
     
-    return processesResponsibles[processId][sectorId].usuario_id === userId;
+    const isResponsible = processesResponsibles[processId][sectorId].usuario_id === userId;
+    console.log(`Verificando se usuário ${userId} é responsável por ${processId} no setor ${sectorId}: ${isResponsible}`);
+    
+    return isResponsible;
   }, [processesResponsibles]);
   
   // Buscar responsáveis quando a lista de processos mudar
@@ -78,6 +92,7 @@ export const useProcessTableState = (processes: Process[]) => {
   
   // Adicionar setor à fila para carregamento (para carregamento sob demanda)
   const queueSectorForLoading = useCallback((processId: string, sectorId: string) => {
+    console.log(`Adicionando setor ${sectorId} à fila para carregamento para processo ${processId}`);
     // Implementação simples: apenas recarrega todos os responsáveis
     fetchResponsibles();
   }, [fetchResponsibles]);
