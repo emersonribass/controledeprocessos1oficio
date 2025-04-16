@@ -65,6 +65,10 @@ const ProcessActionButtons = ({
 
       {status !== "not_started" && status !== "completed" && !hasSectorResponsible && onAcceptResponsibility && (
         <AcceptProcessResponsibilityButton
+          processId={processId}
+          protocolNumber={protocolNumber}
+          sectorId={sectorId}
+          hasResponsibleUser={hasSectorResponsible}
           onAccept={onAcceptResponsibility}
           isAccepting={isAccepting}
         />

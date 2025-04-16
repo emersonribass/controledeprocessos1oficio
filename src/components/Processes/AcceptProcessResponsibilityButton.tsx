@@ -6,26 +6,33 @@ import { useAuth } from "@/hooks/auth";
 import { memo, useCallback } from "react";
 
 interface AcceptProcessResponsibilityButtonProps {
-  processId: string;
-  protocolNumber: string;
-  sectorId: string;
-  hasResponsibleUser: boolean;
+  processId?: string;
+  protocolNumber?: string;
+  sectorId?: string;
+  hasResponsibleUser?: boolean;
   onAccept: () => void;
+  isAccepting?: boolean; // Adicionando essa propriedade como opcional
 }
 
 const AcceptProcessResponsibilityButton = memo(({
   processId,
   protocolNumber,
   sectorId,
-  hasResponsibleUser,
+  hasResponsibleUser = false,
   onAccept,
+  isAccepting = false, // Definindo um valor padrão
 }: AcceptProcessResponsibilityButtonProps) => {
-  const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  const { acceptProcessResponsibility } = useProcessResponsibility();
   const { user } = useAuth();
 
   const handleAcceptProcess = useCallback(async () => {
-    const success = await acceptProcessResponsibility(processId, protocolNumber);
-    if (success) {
+    if (processId && protocolNumber) {
+      const success = await acceptProcessResponsibility(processId, protocolNumber);
+      if (success) {
+        onAccept();
+      }
+    } else {
+      // Se não tiver processId e protocolNumber, apenas chama a função onAccept
       onAccept();
     }
   }, [processId, protocolNumber, acceptProcessResponsibility, onAccept]);
