@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import AcceptProcessResponsibilityButton from "./AcceptProcessResponsibilityButton";
+import { useAuth } from "@/hooks/auth";
 import { useCallback } from "react";
 
 interface ProcessActionButtonsProps {
@@ -23,6 +23,7 @@ interface ProcessActionButtonsProps {
   isSectorResponsible?: boolean;
   isProcessResponsible?: boolean;
   isAdmin?: boolean;
+  sectorResponsible?: any; // Adicionei esta prop para verificação
 }
 
 const ProcessActionButtons = ({
@@ -42,8 +43,10 @@ const ProcessActionButtons = ({
   sectorId,
   isSectorResponsible = false,
   isProcessResponsible = false,
-  isAdmin = false
+  isAdmin = false,
+  sectorResponsible
 }: ProcessActionButtonsProps) => {
+  const { user } = useAuth(); // Adicionei o hook de autenticação
   const canMoveProcess = status !== "not_started" && status !== "completed" && (isSectorResponsible || isProcessResponsible || isAdmin);
   const isCompleted = status === "completed";
   
@@ -95,8 +98,8 @@ const ProcessActionButtons = ({
     );
   }
   
-  // Se não há responsável no setor e o processo não está concluído, mostra o botão de aceitar processo
-  if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed") {
+  // Se não há responsável no setor, o usuário está logado e o processo não está concluído, mostra o botão de aceitar processo
+  if ((!hasSectorResponsible || !sectorResponsible) && user && onAcceptResponsibility && status !== "completed") {
     return (
       <div className="flex justify-center gap-2 process-action">
         <Button 
@@ -155,3 +158,4 @@ const ProcessActionButtons = ({
 };
 
 export default ProcessActionButtons;
+
