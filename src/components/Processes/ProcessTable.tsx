@@ -1,3 +1,4 @@
+
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Department, Process, ProcessType } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
@@ -14,13 +15,24 @@ interface ProcessTableProps {
   toggleSort: (field: keyof Process) => void;
   getDepartmentName: (id: string) => string;
   getProcessTypeName: (id: string) => string;
-  moveProcessToNextDepartment: (processId: string) => void;
-  moveProcessToPreviousDepartment: (processId: string) => void;
+  moveProcessToNextDepartment: (processId: string) => Promise<void>;
+  moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   processTypes: ProcessType[];
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
   departments: Department[];
   startProcess?: (processId: string) => Promise<void>;
+  filterProcesses?: (
+    filters: any, 
+    processesToFilter?: Process[]
+  ) => Process[];
+  filters?: {
+    department?: string;
+    status?: string;
+    processType?: string;
+    search?: string;
+    excludeCompleted?: boolean;
+  };
 }
 
 const ProcessTable = ({
@@ -36,7 +48,9 @@ const ProcessTable = ({
   updateProcessType,
   updateProcessStatus,
   departments,
-  startProcess
+  startProcess,
+  filterProcesses,
+  filters
 }: ProcessTableProps) => {
   const navigate = useNavigate();
   const handleRowClick = (processId: string) => {
