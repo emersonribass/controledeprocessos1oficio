@@ -3,7 +3,6 @@ import { Process } from "@/types";
 import { useAuth } from "@/hooks/auth";
 import { useMemo } from "react";
 import { useUserProfile } from "@/hooks/auth/useUserProfile";
-import { supabase } from "@/integrations/supabase/client";
 
 interface ResponsibilityCheckers {
   isUserResponsibleForProcess?: (process: Process, userId: string) => boolean;
@@ -24,69 +23,9 @@ export const useProcessFiltering = (
       return process.userId === userId || process.responsibleUserId === userId;
     });
   
-  // Nova implementação mais restritiva: usa a tabela setor_responsaveis
-  const isUserResponsibleForSector = checkers.isUserResponsibleForSector || 
-    ((process: Process, userId: string) => {
-      // Não precisamos mais da verificação de pertencer ao setor
-      // Agora verificamos apenas se o usuário é responsável específico para este processo neste setor
-      // Esta verificação será feita diretamente no filterProcesses usando o cache
-      return false;
-    });
-    
   // Verificar se o usuário pertence ao setor de atendimento (assumindo que o setor 1 é o de atendimento)
   const isUserInAttendanceSector = () => {
     return userProfile?.setores_atribuidos?.includes("1") || false;
-  };
-
-  // Cache de responsabilidades por processo e setor - implementado dentro do hook
-  const processResponsibilitiesCache = useMemo(() => {
-    const cache: Record<string, Record<string, boolean>> = {};
-    
-    // Pré-inicializa o cache com valores vazios para cada processo
-    processes.forEach(process => {
-      if (!cache[process.id]) {
-        cache[process.id] = {};
-      }
-    });
-    
-    return cache;
-  }, [processes]);
-  
-  // Função para verificar e armazenar em cache se um usuário é responsável por um processo em um setor
-  const checkAndCacheResponsibility = async (processId: string, sectorId: string, userId: string): Promise<boolean> => {
-    // Verificar se já temos no cache
-    if (processResponsibilitiesCache[processId] && 
-        processResponsibilitiesCache[processId][sectorId] !== undefined) {
-      return processResponsibilitiesCache[processId][sectorId];
-    }
-    
-    try {
-      // Consultar a tabela setor_responsaveis
-      const { data, error } = await supabase
-        .from('setor_responsaveis')
-        .select('*')
-        .eq('processo_id', processId)
-        .eq('setor_id', sectorId)
-        .eq('usuario_id', userId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error("Erro ao verificar responsabilidade:", error);
-        return false;
-      }
-      
-      // Armazenar resultado no cache
-      const isResponsible = !!data;
-      if (!processResponsibilitiesCache[processId]) {
-        processResponsibilitiesCache[processId] = {};
-      }
-      processResponsibilitiesCache[processId][sectorId] = isResponsible;
-      
-      return isResponsible;
-    } catch (error) {
-      console.error("Erro ao verificar responsabilidade para setor:", error);
-      return false;
-    }
   };
 
   const filterProcesses = useMemo(() => {
@@ -99,7 +38,7 @@ export const useProcessFiltering = (
         excludeCompleted?: boolean;
       },
       processesToFilter?: Process[],
-      processesResponsibles?: Record<string, any>
+      processesResponsibles?: Record<string, Record<string, any>>
     ): Process[] => {
       const baseList = processesToFilter || processes;
 
@@ -123,8 +62,9 @@ export const useProcessFiltering = (
         }
         
         // Verificar se o usuário é responsável específico para este processo neste setor
-        // Usando o cache de responsabilidades (processesResponsibles)
+        // Usando o novo método com o cache de responsabilidades (processesResponsibles)
         if (processesResponsibles && 
+            process.currentDepartment && 
             processesResponsibles[process.id] && 
             processesResponsibles[process.id][process.currentDepartment]) {
           
@@ -133,7 +73,14 @@ export const useProcessFiltering = (
           return sectorResponsible && sectorResponsible.usuario_id === user.id;
         }
         
-        // Se não temos informação de responsáveis, o processo não deve ser visível
+        // Se não temos informação de responsáveis, verificar se o usuário está no setor atual
+        // Esta é uma verificação menos restritiva que só será usada se não tivermos dados completos
+        if (process.currentDepartment && 
+            userProfile?.setores_atribuidos?.includes(process.currentDepartment)) {
+          return true;
+        }
+        
+        // Se nenhuma das condições for atendida, o processo não deve ser visível
         return false;
       });
 
@@ -172,7 +119,7 @@ export const useProcessFiltering = (
         return true;
       });
     };
-  }, [processes, user, isAdmin, isUserResponsibleForProcess, processResponsibilitiesCache, isUserInAttendanceSector]);
+  }, [processes, user, isAdmin, isUserResponsibleForProcess, userProfile, isUserInAttendanceSector]);
 
   const isProcessOverdue = (process: Process) => {
     if (process.status === 'overdue') return true;
@@ -187,8 +134,6 @@ export const useProcessFiltering = (
     isProcessOverdue,
     // Exportar as funções de verificação para reuso
     isUserResponsibleForProcess,
-    isUserResponsibleForSector,
-    isUserInAttendanceSector,
-    checkAndCacheResponsibility
+    isUserInAttendanceSector
   };
 };

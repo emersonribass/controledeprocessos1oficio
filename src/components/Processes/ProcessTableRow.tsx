@@ -21,7 +21,8 @@ interface ProcessTableRowProps {
   onAcceptResponsibility: () => Promise<void>;
   isAccepting: boolean;
   hasSectorResponsible?: boolean; 
-  canInitiateProcesses?: boolean; 
+  canInitiateProcesses?: boolean;
+  responsiblesData?: Record<string, Record<string, any>>;
 }
 
 const ProcessTableRow = ({
@@ -36,17 +37,19 @@ const ProcessTableRow = ({
   onAcceptResponsibility,
   isAccepting,
   hasSectorResponsible = false,
-  canInitiateProcesses = false
+  canInitiateProcesses = false,
+  responsiblesData
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
   
-  // Usar o hook para obter informações sobre responsabilidade
-  const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
+  // Verificar se o processo tem status 'not_started'
+  const isNotStarted = process.status === 'not_started';
   
-  // Verificar se há um responsável para o setor atual
-  // Importante: verificamos tanto o hasSectorResponsible (que pode vir de um contexto mais amplo)
-  // quanto o sectorResponsible (que é buscado diretamente por este componente)
-  const hasResponsible = hasSectorResponsible || !!sectorResponsible;
+  // Verificar se há responsável usando os dados passados via prop
+  const hasResponsible = hasSectorResponsible || (
+    process.currentDepartment && 
+    responsiblesData?.[process.id]?.[process.currentDepartment] !== undefined
+  );
   
   const {
     sortedDepartments,
@@ -101,7 +104,7 @@ const ProcessTableRow = ({
       
       <ProcessDepartmentsSection 
         sortedDepartments={sortedDepartments}
-        isProcessStarted={process.status !== "not_started"}
+        isProcessStarted={!isNotStarted}
         getMostRecentEntryDate={(departmentId) => getMostRecentEntryDate(departmentId)}
         hasPassedDepartment={(departmentId) => hasPassedDepartment(departmentId)}
         isCurrentDepartment={(departmentId) => isCurrentDepartment(departmentId)}
@@ -117,7 +120,7 @@ const ProcessTableRow = ({
         isFirstDepartment={isFirstDepartment}
         isLastDepartment={isLastDepartment}
         status={process.status}
-        startProcess={canInitiateProcesses || process.status !== "not_started" ? startProcess : undefined}
+        startProcess={canInitiateProcesses || !isNotStarted ? startProcess : undefined}
         hasSectorResponsible={hasResponsible}
         onAcceptResponsibility={onAcceptResponsibility}
         isAccepting={isAccepting}

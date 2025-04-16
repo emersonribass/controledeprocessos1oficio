@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/auth";
 import { Process } from "@/types";
 import ProcessListHeader from "./ProcessListHeader";
 import ProcessListContent from "./ProcessListContent";
+import { useResponsibleBatchLoader } from "@/hooks/process-responsibility/useResponsibleBatchLoader";
 
 interface ProcessListProps {
   initialFilters?: {
@@ -41,6 +42,13 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   
   // Estado local para controlar se a página acabou de carregar
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  
+  // Usar o novo hook para gerenciar carregamento de responsáveis
+  const { 
+    queueMultipleProcesses,
+    responsiblesData,
+    isLoading: isLoadingResponsibles
+  } = useResponsibleBatchLoader();
 
   // Usando useMemo para evitar recálculos desnecessários dos processos filtrados
   const filteredProcesses = useMemo(() => {
@@ -48,8 +56,8 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     if (!initialLoadComplete || isLoading) return [];
     
     // IMPORTANTE: Primeiro aplicar filtros, depois ordenar os resultados
-    return sortProcesses(filterProcesses(filters, processes));
-  }, [filters, processes, sortProcesses, filterProcesses, initialLoadComplete, isLoading]);
+    return sortProcesses(filterProcesses(filters, processes, responsiblesData));
+  }, [filters, processes, sortProcesses, filterProcesses, initialLoadComplete, isLoading, responsiblesData]);
 
   // Determinar os departamentos disponíveis para o usuário atual
   const availableDepartments = useMemo(() => {
@@ -65,6 +73,16 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
       setInitialLoadComplete(true);
     }
   }, [isLoading, processes, initialLoadComplete]);
+  
+  // Efeito para enfileirar processos para carregamento de responsáveis
+  useEffect(() => {
+    if (processes.length > 0 && !isLoading) {
+      const addedCount = queueMultipleProcesses(processes);
+      if (addedCount > 0) {
+        console.log(`Enfileirados ${addedCount} processos para carregamento de responsáveis`);
+      }
+    }
+  }, [processes, isLoading, queueMultipleProcesses]);
 
   return (
     <div className="space-y-6">
@@ -75,7 +93,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
 
       <ProcessListContent
         processes={processes}
-        isLoading={isLoading || !initialLoadComplete} 
+        isLoading={isLoading || isLoadingResponsibles || !initialLoadComplete} 
         filteredProcesses={filteredProcesses}
         filters={filters}
         setFilters={setFilters}
@@ -94,6 +112,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
         availableDepartments={availableDepartments}
         filterProcesses={filterProcesses}
         isUserInAttendanceSector={isUserInAttendanceSector}
+        responsiblesData={responsiblesData}
       />
     </div>
   );

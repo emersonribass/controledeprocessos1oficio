@@ -1,8 +1,10 @@
 
-import { Loader2 } from "lucide-react";
+import { Process, Department, ProcessType } from "@/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
-import { Process, Department } from "@/types";
+import { Loader2 } from "lucide-react";
 
 interface ProcessListContentProps {
   processes: Process[];
@@ -15,32 +17,31 @@ interface ProcessListContentProps {
     search?: string;
     excludeCompleted?: boolean;
   };
-  setFilters: React.Dispatch<React.SetStateAction<{
-    department?: string;
-    status?: string;
-    processType?: string;
-    search?: string;
-    excludeCompleted?: boolean;
-  }>>;
-  sortField: keyof Process;
-  sortDirection: "asc" | "desc";
+  setFilters: React.Dispatch<
+    React.SetStateAction<{
+      department?: string;
+      status?: string;
+      processType?: string;
+      search?: string;
+      excludeCompleted?: boolean;
+    }>
+  >;
+  sortField?: keyof Process;
+  sortDirection?: "asc" | "desc";
   toggleSort: (field: keyof Process) => void;
   getDepartmentName: (id: string) => string;
   getProcessTypeName: (id: string) => string;
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
   moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
-  processTypes: any[];
+  processTypes: ProcessType[];
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
-  updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
+  updateProcessStatus: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
   departments: Department[];
   startProcess?: (processId: string) => Promise<void>;
   availableDepartments: Department[];
-  filterProcesses: (
-    filters: any, 
-    processes: Process[], 
-    processesResponsibles?: Record<string, any>
-  ) => Process[];
-  isUserInAttendanceSector?: () => boolean; // Nova propriedade
+  filterProcesses: (filters: any, processesToFilter?: Process[]) => Process[];
+  isUserInAttendanceSector: () => boolean;
+  responsiblesData?: Record<string, Record<string, any>>;
 }
 
 const ProcessListContent = ({
@@ -58,76 +59,133 @@ const ProcessListContent = ({
   moveProcessToPreviousDepartment,
   processTypes,
   updateProcessType,
-  updateProcessStatus,
   departments,
   startProcess,
   availableDepartments,
-  filterProcesses,
-  isUserInAttendanceSector
+  isUserInAttendanceSector,
+  responsiblesData = {}
 }: ProcessListContentProps) => {
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (processes.length === 0) {
-    return (
-      <div className="space-y-6">
-        <ProcessFilters 
-          filters={filters} 
-          setFilters={setFilters} 
-          availableDepartments={availableDepartments}
-        />
-        <div className="flex justify-center items-center h-64 border rounded-md p-6 mt-4 bg-gray-50">
-          <p className="text-muted-foreground text-lg">Nenhum processo encontrado</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (filteredProcesses.length === 0) {
-    return (
-      <div className="space-y-6">
-        <ProcessFilters 
-          filters={filters} 
-          setFilters={setFilters} 
-          availableDepartments={availableDepartments}
-        />
-        <div className="flex justify-center items-center h-64 border rounded-md p-6 mt-4 bg-gray-50">
-          <p className="text-muted-foreground text-lg">Nenhum processo corresponde aos filtros selecionados</p>
-        </div>
-      </div>
-    );
-  }
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters(prev => ({
+      ...prev,
+      search: e.target.value
+    }));
+  };
 
   return (
-    <div className="space-y-6">
-      <ProcessFilters 
-        filters={filters} 
-        setFilters={setFilters}
-        availableDepartments={availableDepartments}
-      />
+    <div className="space-y-4">
+      <div className="flex flex-col gap-4 md:flex-row md:justify-between">
+        <Input
+          placeholder="Pesquisar pelo número de protocolo..."
+          className="md:w-96"
+          value={filters.search || ""}
+          onChange={handleSearchChange}
+        />
+        <ProcessFilters
+          filters={filters}
+          setFilters={setFilters}
+          departments={availableDepartments}
+          getDepartmentName={getDepartmentName}
+          processTypes={processTypes}
+          getProcessTypeName={getProcessTypeName}
+        />
+      </div>
 
-      <ProcessTable
-        processes={filteredProcesses}
-        sortField={sortField}
-        sortDirection={sortDirection}
-        toggleSort={toggleSort}
-        getDepartmentName={getDepartmentName}
-        getProcessTypeName={getProcessTypeName}
-        moveProcessToNextDepartment={moveProcessToNextDepartment}
-        moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-        processTypes={processTypes}
-        updateProcessType={updateProcessType}
-        updateProcessStatus={updateProcessStatus}
-        departments={departments}
-        startProcess={startProcess}
-        filterProcesses={filterProcesses}
-        filters={filters}
-      />
+      <Tabs defaultValue="todos" className="w-full">
+        <TabsList className="w-full mb-4 max-w-lg">
+          <TabsTrigger value="todos" className="flex-1">
+            Todos
+          </TabsTrigger>
+          <TabsTrigger value="pendentes" className="flex-1">
+            Pendentes
+          </TabsTrigger>
+          <TabsTrigger value="concluidos" className="flex-1">
+            Concluídos
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="todos" className="space-y-4 p-0">
+          {isLoading ? (
+            <div className="flex justify-center items-center pt-10">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <ProcessTable
+              processes={processes}
+              filteredProcesses={filteredProcesses}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              toggleSort={toggleSort}
+              getDepartmentName={getDepartmentName}
+              getProcessTypeName={getProcessTypeName}
+              moveProcessToNextDepartment={moveProcessToNextDepartment}
+              moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+              departments={departments}
+              processTypes={processTypes}
+              updateProcessType={updateProcessType}
+              startProcess={startProcess}
+              isUserInAttendanceSector={isUserInAttendanceSector}
+              responsiblesData={responsiblesData}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="pendentes" className="space-y-4 p-0">
+          {isLoading ? (
+            <div className="flex justify-center items-center pt-10">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <ProcessTable
+              processes={processes}
+              filteredProcesses={filteredProcesses.filter(
+                (p) => p.status === "pending" || p.status === "overdue"
+              )}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              toggleSort={toggleSort}
+              getDepartmentName={getDepartmentName}
+              getProcessTypeName={getProcessTypeName}
+              moveProcessToNextDepartment={moveProcessToNextDepartment}
+              moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+              departments={departments}
+              processTypes={processTypes}
+              updateProcessType={updateProcessType}
+              startProcess={startProcess}
+              isUserInAttendanceSector={isUserInAttendanceSector}
+              responsiblesData={responsiblesData}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="concluidos" className="space-y-4 p-0">
+          {isLoading ? (
+            <div className="flex justify-center items-center pt-10">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <ProcessTable
+              processes={processes}
+              filteredProcesses={filteredProcesses.filter(
+                (p) => p.status === "completed"
+              )}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              toggleSort={toggleSort}
+              getDepartmentName={getDepartmentName}
+              getProcessTypeName={getProcessTypeName}
+              moveProcessToNextDepartment={moveProcessToNextDepartment}
+              moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+              departments={departments}
+              processTypes={processTypes}
+              updateProcessType={updateProcessType}
+              startProcess={startProcess}
+              isUserInAttendanceSector={isUserInAttendanceSector}
+              responsiblesData={responsiblesData}
+            />
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
