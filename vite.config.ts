@@ -9,7 +9,15 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    strictPort: true,  // Adicionando strictPort para evitar problemas de porta
+    strictPort: true,  // Evitar problemas de porta
+    hmr: {
+      protocol: 'ws',
+      host: '0.0.0.0',
+      port: 8080,
+      clientPort: 443,
+      timeout: 120000,  // Aumentar o timeout para 2 minutos
+      overlay: true,    // Mostrar erros na tela
+    },
   },
   plugins: [
     react(),
