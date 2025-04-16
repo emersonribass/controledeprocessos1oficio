@@ -8,6 +8,7 @@ import ProcessActionButtons from "./ProcessActionButtons";
 import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
 import ProcessStatusBadge from "./ProcessStatusBadge";
 import { ProcessResponsible } from "@/hooks/process-responsibility/types";
+import ProcessTypePicker from "./ProcessTypePicker";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -57,9 +58,23 @@ const ProcessTableRow = ({
   } = useProcessDepartmentInfo(process, departments);
 
   const isProcessStarted = process.status !== 'not_started';
+  
+  // Determinar cores da linha com base no status do processo
+  const getRowColor = () => {
+    switch (process.status) {
+      case 'completed':
+        return 'bg-green-50 hover:bg-green-100';
+      case 'overdue':
+        return 'bg-red-50 hover:bg-red-100';
+      case 'not_started':
+        return 'bg-gray-50 hover:bg-gray-100';
+      default:
+        return 'hover:bg-blue-50';
+    }
+  };
 
   return (
-    <TableRow className="cursor-pointer hover:bg-gray-50">
+    <TableRow className={`cursor-pointer ${getRowColor()}`}>
       <TableCell>
         <Link to={`/processes/${process.id}`} className="block w-full h-full">
           {process.protocolNumber}
@@ -67,24 +82,25 @@ const ProcessTableRow = ({
       </TableCell>
       <TableCell>
         {isEditing ? (
-          <select
-            value={process.processType}
-            onChange={(e) => {
-              updateProcessType(process.id, e.target.value);
-              setIsEditing(false);
-            }}
-            className="w-full p-2 border rounded"
-          >
-            {processTypes.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.name}
-              </option>
-            ))}
-          </select>
+          <ProcessTypePicker
+            processId={process.id}
+            currentTypeId={process.processType}
+            processTypes={processTypes}
+            getProcessTypeName={getProcessTypeName}
+            updateProcessType={updateProcessType}
+          />
         ) : (
-          <Link to={`/processes/${process.id}`} className="block w-full h-full">
-            {getProcessTypeName(process.processType)}
-          </Link>
+          <div 
+            className="w-full flex items-center justify-between"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsEditing(true);
+            }}
+          >
+            <span>{getProcessTypeName(process.processType)}</span>
+            <span className="text-gray-400 hover:text-gray-600 cursor-pointer">✏️</span>
+          </div>
         )}
       </TableCell>
       <TableCell>

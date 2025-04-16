@@ -42,7 +42,7 @@ export const isCurrentDepartment = (process: Process, departmentId: string): boo
  * @param departments Lista completa de departamentos
  * @returns true se for um departamento anterior, false caso contrário
  */
-export const isPreviousDepartment = (process: Process, departmentId: string, departments: Department[]): boolean => {
+export const isPreviousDepartment = (process: Process, departmentId: string, departments: any[]): boolean => {
   const deptOrder = departments.find(d => d.id === departmentId)?.order || 0;
   const currentDeptOrder = departments.find(d => d.id === process.currentDepartment)?.order || 0;
   return deptOrder < currentDeptOrder;

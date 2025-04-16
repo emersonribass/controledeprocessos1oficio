@@ -14,7 +14,14 @@ export const useProcessBatchLoader = () => {
   const [pendingSectorCount, setPendingSectorCount] = useState(0);
   const [batchSizes, setBatchSizes] = useState({ processes: 0, sectors: 0 });
   
-  const { loadProcessResponsibleBatch, loadSectorResponsibleBatch, clearCache } = useProcessResponsibility();
+  const { 
+    isAssigning, 
+    isAccepting, 
+    assignResponsible, 
+    acceptProcessResponsibility,
+    isUserResponsibleForProcess,
+    isUserResponsibleForSector
+  } = useProcessResponsibility();
   
   // Usamos conjuntos para evitar duplicatas
   const pendingProcessIds = useRef(new Set<string>());
@@ -78,7 +85,18 @@ export const useProcessBatchLoader = () => {
         const processIds = Array.from(pendingProcessIds.current);
         setBatchSizes(prev => ({ ...prev, processes: processIds.length }));
         
-        const results = await loadProcessResponsibleBatch(processIds);
+        // Implementação direta para buscar responsáveis por processos
+        const results: Record<string, ProcessResponsible | null> = {};
+        
+        for (const processId of processIds) {
+          try {
+            const isResponsible = await isUserResponsibleForProcess(processId, "current");
+            results[processId] = isResponsible ? { id: "current", name: "Você" } : null;
+          } catch (error) {
+            console.error(`Erro ao verificar responsável para processo ${processId}:`, error);
+            results[processId] = null;
+          }
+        }
         
         setProcessResponsibles(prev => ({
           ...prev,
@@ -100,7 +118,19 @@ export const useProcessBatchLoader = () => {
         
         setBatchSizes(prev => ({ ...prev, sectors: sectorRequests.length }));
         
-        const results = await loadSectorResponsibleBatch(sectorRequests);
+        // Implementação direta para buscar responsáveis por setores
+        const results: Record<string, ProcessResponsible | null> = {};
+        
+        for (const { processId, sectorId } of sectorRequests) {
+          try {
+            const isResponsible = await isUserResponsibleForSector(processId, sectorId, "current");
+            const key = `${processId}:${sectorId}`;
+            results[key] = isResponsible ? { id: "current", name: "Você" } : null;
+          } catch (error) {
+            console.error(`Erro ao verificar responsável para setor ${sectorId} no processo ${processId}:`, error);
+            results[`${processId}:${sectorId}`] = null;
+          }
+        }
         
         setSectorResponsibles(prev => ({
           ...prev,
@@ -117,7 +147,7 @@ export const useProcessBatchLoader = () => {
       batchLoadingRef.current = false;
       setIsLoading(false);
     }
-  }, [loadProcessResponsibleBatch, loadSectorResponsibleBatch]);
+  }, [isUserResponsibleForProcess, isUserResponsibleForSector]);
   
   /**
    * Obtém o responsável por um processo específico
@@ -162,8 +192,7 @@ export const useProcessBatchLoader = () => {
     pendingSectorRequests.current.clear();
     setPendingProcessCount(0);
     setPendingSectorCount(0);
-    clearCache();
-  }, [clearCache]);
+  }, []);
   
   // Processa o lote automaticamente quando o componente é montado
   useEffect(() => {
