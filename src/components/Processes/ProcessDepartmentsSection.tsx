@@ -1,7 +1,7 @@
-
 import { TableCell } from "@/components/ui/table";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import { Department } from "@/types";
+
 interface ProcessDepartmentsSectionProps {
   sortedDepartments: Department[];
   isProcessStarted: boolean;
@@ -16,7 +16,13 @@ interface ProcessDepartmentsSectionProps {
 }
 
 const ProcessDepartmentsSection = ({
-  // ... props existentes ...
+  sortedDepartments,
+  isProcessStarted,
+  getMostRecentEntryDate,
+  hasPassedDepartment,
+  isCurrentDepartment,
+  isPreviousDepartment,
+  isDepartmentOverdue,
   processId,
   processResponsible,
   sectorResponsibles
@@ -54,3 +60,5 @@ const ProcessDepartmentsSection = ({
     </>
   );
 };
+
+export default ProcessDepartmentsSection;
