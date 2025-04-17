@@ -22,6 +22,7 @@ const ProcessSettingsGeneral = () => {
   const [notStartedProcesses, setNotStartedProcesses] = useState<Process[]>([]);
   const [processToDelete, setProcessToDelete] = useState<string | null>(null);
   const [isBatchDeleteOpen, setIsBatchDeleteOpen] = useState(false);
+  const [isFiltering, setIsFiltering] = useState(true);
   
   // Usar o hook personalizado para gerenciar a seleção múltipla
   const { 
@@ -34,9 +35,21 @@ const ProcessSettingsGeneral = () => {
   
   useEffect(() => {
     // Usar filterProcesses para aplicar as regras de permissão e então filtrar os não iniciados
-    const filteredProcesses = filterProcesses({});
-    const notStarted = filteredProcesses.filter(p => p.status === 'not_started');
-    setNotStartedProcesses(notStarted);
+    const loadFilteredProcesses = async () => {
+      setIsFiltering(true);
+      try {
+        const filteredProcesses = await filterProcesses({});
+        const notStarted = filteredProcesses.filter(p => p.status === 'not_started');
+        setNotStartedProcesses(notStarted);
+      } catch (error) {
+        console.error("Erro ao filtrar processos:", error);
+        setNotStartedProcesses([]);
+      } finally {
+        setIsFiltering(false);
+      }
+    };
+    
+    loadFilteredProcesses();
   }, [processes, filterProcesses]);
   
   const handleStartProcess = async (processId: string) => {
@@ -56,13 +69,13 @@ const ProcessSettingsGeneral = () => {
   
   const handleBatchDelete = async () => {
     if (selectedProcesses.length > 0) {
-      await deleteManyProcesses(selectedProcesses);
+      await deleteManyProcesses(selectedProcesses.map(process => process.id));
       clearSelection();
       setIsBatchDeleteOpen(false);
     }
   };
   
-  if (isLoading) {
+  if (isLoading || isFiltering) {
     return (
       <div className="flex justify-center items-center h-64">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -96,8 +109,8 @@ const ProcessSettingsGeneral = () => {
           processes={notStartedProcesses}
           onStartProcess={handleStartProcess}
           onDeleteProcess={setProcessToDelete}
-          selectedProcesses={selectedProcesses}
-          onToggleSelect={toggleProcessSelection}
+          selectedProcesses={selectedProcesses.map(p => p.id)}
+          onToggleSelect={process => toggleProcessSelection(notStartedProcesses.find(p => p.id === process)!)}
           selectAllChecked={selectAllChecked}
           onToggleSelectAll={toggleSelectAll}
         />

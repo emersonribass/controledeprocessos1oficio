@@ -1,15 +1,16 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProcesses } from "@/hooks/useProcesses";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Process } from "@/types";
 
 const RecentProcessList = () => {
   const navigate = useNavigate();
@@ -20,9 +21,27 @@ const RecentProcessList = () => {
     filterProcesses
   } = useProcesses();
   const [limit, setLimit] = useState(5);
+  const [filteredProcesses, setFilteredProcesses] = useState<Process[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Aplicar filtros por departamento e status conforme a permissão do usuário
-  const filteredProcesses = filterProcesses({});
+  // Carregar processos filtrados de forma assíncrona
+  useEffect(() => {
+    const loadFilteredProcesses = async () => {
+      setIsLoading(true);
+      try {
+        // Aplicar filtros por departamento e status conforme a permissão do usuário
+        const filtered = await filterProcesses({});
+        setFilteredProcesses(filtered);
+      } catch (error) {
+        console.error("Erro ao filtrar processos:", error);
+        setFilteredProcesses([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadFilteredProcesses();
+  }, [processes, filterProcesses]);
   
   // Obter os processos mais recentes, ordenados por data de início (mais recente primeiro)
   const recentProcesses = [...filteredProcesses]
@@ -51,6 +70,22 @@ const RecentProcessList = () => {
     if (status === "pending") return "bg-blue-200";
     return "";
   };
+
+  if (isLoading) {
+    return (
+      <Card className="col-span-2">
+        <CardHeader>
+          <CardTitle>Processos Recentes</CardTitle>
+          <CardDescription>
+            Carregando processos recentes...
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="col-span-2">

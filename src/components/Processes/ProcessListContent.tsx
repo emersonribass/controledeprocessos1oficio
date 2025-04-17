@@ -39,8 +39,8 @@ interface ProcessListContentProps {
     filters: any, 
     processes: Process[], 
     processesResponsibles?: Record<string, any>
-  ) => Process[];
-  isUserInAttendanceSector?: () => boolean; // Nova propriedade
+  ) => Promise<Process[]>;
+  isUserInAttendanceSector?: () => boolean;
 }
 
 const ProcessListContent = ({
