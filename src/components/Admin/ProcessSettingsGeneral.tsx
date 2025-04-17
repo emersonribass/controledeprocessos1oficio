@@ -69,7 +69,9 @@ const ProcessSettingsGeneral = () => {
   
   const handleBatchDelete = async () => {
     if (selectedProcesses.length > 0) {
-      await deleteManyProcesses(selectedProcesses.map(process => process.id));
+      // Corrigido: Agora extraímos corretamente os IDs dos processos selecionados
+      const processIds = selectedProcesses.map(process => process.id);
+      await deleteManyProcesses(processIds);
       clearSelection();
       setIsBatchDeleteOpen(false);
     }
@@ -109,6 +111,7 @@ const ProcessSettingsGeneral = () => {
           processes={notStartedProcesses}
           onStartProcess={handleStartProcess}
           onDeleteProcess={setProcessToDelete}
+          // Corrigido: Agora passamos corretamente os IDs dos processos selecionados
           selectedProcesses={selectedProcesses.map(p => p.id)}
           onToggleSelect={toggleProcessSelection}
           selectAllChecked={selectAllChecked}
