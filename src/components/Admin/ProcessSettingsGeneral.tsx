@@ -26,7 +26,7 @@ const ProcessSettingsGeneral = () => {
   
   // Usar o hook personalizado para gerenciar a seleção múltipla
   const { 
-    selectedItems: selectedProcesses, 
+    selectedItems: selectedProcessIds, 
     selectAllChecked, 
     toggleItemSelection: toggleProcessSelection, 
     toggleSelectAll,
@@ -68,10 +68,9 @@ const ProcessSettingsGeneral = () => {
   };
   
   const handleBatchDelete = async () => {
-    if (selectedProcesses.length > 0) {
-      // Corrigido: Agora extraímos corretamente os IDs dos processos selecionados
-      const processIds = selectedProcesses.map(process => process.id);
-      await deleteManyProcesses(processIds);
+    if (selectedProcessIds.length > 0) {
+      // Agora selectedProcessIds já contém os IDs diretamente, não precisamos extrair .id
+      await deleteManyProcesses(selectedProcessIds);
       clearSelection();
       setIsBatchDeleteOpen(false);
     }
@@ -94,7 +93,7 @@ const ProcessSettingsGeneral = () => {
             Lista de processos cadastrados que ainda não foram iniciados
           </CardDescription>
         </div>
-        {notStartedProcesses.length > 0 && selectedProcesses.length > 0 && (
+        {notStartedProcesses.length > 0 && selectedProcessIds.length > 0 && (
           <Button 
             variant="destructive" 
             size="sm" 
@@ -102,7 +101,7 @@ const ProcessSettingsGeneral = () => {
             className="gap-1"
           >
             <Trash2 className="h-4 w-4" />
-            Excluir Selecionados ({selectedProcesses.length})
+            Excluir Selecionados ({selectedProcessIds.length})
           </Button>
         )}
       </CardHeader>
@@ -111,8 +110,8 @@ const ProcessSettingsGeneral = () => {
           processes={notStartedProcesses}
           onStartProcess={handleStartProcess}
           onDeleteProcess={setProcessToDelete}
-          // Corrigido: Agora passamos corretamente os IDs dos processos selecionados
-          selectedProcesses={selectedProcesses.map(p => p.id)}
+          // Não é mais necessário mapear, pois selectedProcessIds já são os IDs
+          selectedProcesses={selectedProcessIds}
           onToggleSelect={toggleProcessSelection}
           selectAllChecked={selectAllChecked}
           onToggleSelectAll={toggleSelectAll}
@@ -133,9 +132,9 @@ const ProcessSettingsGeneral = () => {
           open={isBatchDeleteOpen}
           onOpenChange={setIsBatchDeleteOpen}
           onConfirm={handleBatchDelete}
-          title={`Excluir ${selectedProcesses.length} processos?`}
+          title={`Excluir ${selectedProcessIds.length} processos?`}
           description="Esta ação não pode ser desfeita. Os processos selecionados serão permanentemente excluídos do sistema."
-          confirmButtonText={`Excluir ${selectedProcesses.length} Processos`}
+          confirmButtonText={`Excluir ${selectedProcessIds.length} Processos`}
         />
       </CardContent>
     </Card>
