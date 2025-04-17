@@ -19,7 +19,13 @@ export const useProcessResponsibility = () => {
   
   // Hook para verificar responsabilidade - agora estamos apenas reexportando 
   // estas funções do hook useProcessFiltering via useProcesses
-  const { isUserResponsibleForProcess, isUserResponsibleForSector, isUserInAttendanceSector, isUserInCurrentSector } = useProcesses();
+  const { 
+    isUserResponsibleForProcess, 
+    isUserResponsibleForSector, 
+    isUserInAttendanceSector, 
+    isUserInCurrentSector,
+    hasSectorResponsible
+  } = useProcesses();
   
   // Hook para buscar responsáveis
   const { getProcessResponsible, getSectorResponsible } = useProcessResponsibleFetching();
@@ -40,6 +46,7 @@ export const useProcessResponsibility = () => {
     isUserResponsibleForSector,
     isUserInAttendanceSector,
     isUserInCurrentSector,
+    hasSectorResponsible,
     
     // Busca
     getProcessResponsible,

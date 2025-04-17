@@ -6,6 +6,7 @@ import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 interface ProcessTableBodyProps {
   processes: Process[];
@@ -21,6 +22,7 @@ interface ProcessTableBodyProps {
   sortField: keyof Process;
   sortDirection: "asc" | "desc";
   queueSectorForLoading: (processId: string, sectorId: string) => void;
+  isLoading: boolean;
 }
 
 const ProcessTableBody = ({
@@ -36,7 +38,8 @@ const ProcessTableBody = ({
   isUserInAttendanceSector = () => false,
   sortField,
   sortDirection,
-  queueSectorForLoading
+  queueSectorForLoading,
+  isLoading
 }: ProcessTableBodyProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -73,6 +76,21 @@ const ProcessTableBody = ({
       processesResponsibles[processId][currentDepartment]
     );
   };
+
+  if (isLoading) {
+    return (
+      <TableBody>
+        <TableRow>
+          <TableCell colSpan={departments.length + 3} className="h-24 text-center">
+            <div className="flex justify-center items-center">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              Carregando processos...
+            </div>
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    );
+  }
 
   if (processes.length === 0) {
     return (

@@ -17,7 +17,7 @@ type ProcessesContextType = {
     processType?: string;
     search?: string;
     excludeCompleted?: boolean;
-  }, processesToFilter?: Process[]) => Process[];
+  }, processesToFilter?: Process[], processesResponsibles?: Record<string, any>) => Promise<Process[]>;
   getDepartmentName: (id: string) => string;
   getProcessTypeName: (id: string) => string;
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
@@ -36,7 +36,8 @@ type ProcessesContextType = {
   isUserResponsibleForProcess: (process: Process, userId: string) => boolean;
   isUserResponsibleForSector: (process: Process, userId: string) => boolean;
   isUserInAttendanceSector: () => boolean;
-  isUserInCurrentSector: (process: Process) => boolean; // Nova função adicionada
+  isUserInCurrentSector: (process: Process) => boolean;
+  hasSectorResponsible: (processId: string, sectorId: string) => Promise<boolean>;
 };
 
 // Criação do contexto
@@ -51,15 +52,14 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const { processes, isLoading, fetchProcesses } = useProcessesFetch();
   const { user } = useAuth();
   
-  // Agora usamos o useProcessFiltering diretamente, sem precisar implementar
-  // as funções de verificação por responsabilidade manualmente
   const { 
     filterProcesses, 
     isProcessOverdue,
     isUserResponsibleForProcess,
     isUserResponsibleForSector,
     isUserInAttendanceSector,
-    isUserInCurrentSector // Nova função importada
+    isUserInCurrentSector,
+    hasSectorResponsible
   } = useProcessFiltering(processes);
   
   // Hook de operações de processos
@@ -121,7 +121,8 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
         isUserResponsibleForProcess,
         isUserResponsibleForSector,
         isUserInAttendanceSector,
-        isUserInCurrentSector // Nova função adicionada ao contexto
+        isUserInCurrentSector,
+        hasSectorResponsible
       }}
     >
       {children}

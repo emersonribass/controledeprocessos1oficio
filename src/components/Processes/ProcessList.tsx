@@ -1,10 +1,10 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useProcesses } from "@/hooks/useProcesses";
 import { useProcessListFilters } from "@/hooks/useProcessListFilters";
 import { useProcessListSorting } from "@/hooks/useProcessListSorting";
 import { useAuth } from "@/hooks/auth";
-import { Process } from "@/types"; // Adicionar importação explícita do tipo Process
+import { Process } from "@/types";
 import ProcessListHeader from "./ProcessListHeader";
 import ProcessListContent from "./ProcessListContent";
 
@@ -25,7 +25,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     getProcessTypeName,
     moveProcessToNextDepartment,
     moveProcessToPreviousDepartment,
-    isLoading,
+    isLoading: isLoadingProcesses,
     processTypes,
     updateProcessType,
     updateProcessStatus,
@@ -38,10 +38,27 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const { user, isAdmin } = useAuth();
   const { filters, setFilters } = useProcessListFilters(initialFilters);
   const { sortField, sortDirection, toggleSort, sortProcesses } = useProcessListSorting();
+  const [isLoadingFiltered, setIsLoadingFiltered] = useState(true);
+  const [filteredProcesses, setFilteredProcesses] = useState<Process[]>([]);
 
-  // IMPORTANTE: Primeiro aplicar filtros, depois ordenar os resultados
-  // Isso garante que processos recém-iniciados apareçam no topo da lista
-  const filteredProcesses = sortProcesses(filterProcesses(filters, processes));
+  // Efeito para aplicar filtros de forma assíncrona
+  useEffect(() => {
+    const loadFilteredProcesses = async () => {
+      setIsLoadingFiltered(true);
+      try {
+        // Filtrar processos com o método assíncrono
+        const filtered = await filterProcesses(filters, processes);
+        setFilteredProcesses(filtered);
+      } catch (error) {
+        console.error("Erro ao filtrar processos:", error);
+        setFilteredProcesses([]);
+      } finally {
+        setIsLoadingFiltered(false);
+      }
+    };
+
+    loadFilteredProcesses();
+  }, [processes, filters, filterProcesses]);
 
   // Determinar os departamentos disponíveis para o usuário atual
   const availableDepartments = isAdmin(user?.email || "") || !user?.departments?.length 
@@ -57,13 +74,13 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
 
       <ProcessListContent
         processes={processes}
-        isLoading={isLoading}
+        isLoading={isLoadingProcesses || isLoadingFiltered}
         filteredProcesses={filteredProcesses}
         filters={filters}
         setFilters={setFilters}
         sortField={sortField}
         sortDirection={sortDirection}
-        toggleSort={toggleSort as (field: keyof Process) => void} // Tipagem explícita para garantir compatibilidade
+        toggleSort={toggleSort as (field: keyof Process) => void}
         getDepartmentName={getDepartmentName}
         getProcessTypeName={getProcessTypeName}
         moveProcessToNextDepartment={moveProcessToNextDepartment}

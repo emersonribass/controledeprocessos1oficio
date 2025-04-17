@@ -96,9 +96,31 @@ export const useProcessFiltering = (
       return false;
     }
   };
+  
+  // Função para verificar se existe um responsável para o processo no setor
+  const hasSectorResponsible = async (processId: string, sectorId: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('setor_responsaveis')
+        .select('*')
+        .eq('processo_id', processId)
+        .eq('setor_id', sectorId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Erro ao verificar existência de responsável no setor:", error);
+        return false;
+      }
+      
+      return !!data;
+    } catch (error) {
+      console.error("Erro ao verificar responsáveis de setor:", error);
+      return false;
+    }
+  };
 
   const filterProcesses = useMemo(() => {
-    return (
+    return async (
       filters: {
         department?: string;
         status?: string;
@@ -108,47 +130,74 @@ export const useProcessFiltering = (
       },
       processesToFilter?: Process[],
       processesResponsibles?: Record<string, any>
-    ): Process[] => {
+    ): Promise<Process[]> => {
       const baseList = processesToFilter || processes;
 
       // Primeiro filtrar por permissões do usuário - lógica mais restritiva aqui
-      const visibleProcesses = baseList.filter((process) => {
-        if (!user) return false; // Não autenticado não vê nada
+      const visibleProcessesPromises = baseList.map(async (process) => {
+        if (!user) return null; // Não autenticado não vê nada
         
         // Verificar se o usuário é administrador - admins veem tudo
         const isUserAdmin = isAdmin();
-        if (isUserAdmin) return true;
+        if (isUserAdmin) return process;
         
         // Usuários do setor de atendimento podem ver processos não iniciados
         if (process.status === 'not_started' && isUserInAttendanceSector()) {
-          return true;
+          return process;
         }
         
         // Verificar se o usuário é responsável direto pelo processo
         const isResponsibleForProcess = isUserResponsibleForProcess(process, user.id);
         if (isResponsibleForProcess) {
-          return true;
+          return process;
         }
         
-        // NOVA REGRA: Verificar se o usuário pertence ao setor atual do processo
+        // NOVA REGRA 1: Verificar se o usuário pertence ao setor atual do processo E o processo ainda não tem responsável
         if (isUserInCurrentSector(process)) {
-          return true;
+          // Verificar se já existe um responsável para o processo no setor atual
+          const hasResponsible = await hasSectorResponsible(process.id, process.currentDepartment);
+          
+          // Se NÃO existe responsável, o usuário pode ver o processo
+          if (!hasResponsible) {
+            return process;
+          }
         }
         
-        // Verificar se o usuário é responsável específico para este processo neste setor
-        // Usando o cache de responsabilidades (processesResponsibles)
+        // NOVA REGRA 2: Verificar se o usuário é responsável específico para este processo neste setor
+        // Usando o cache de responsabilidades (processesResponsibles) ou fazendo consulta direta
         if (processesResponsibles && 
             processesResponsibles[process.id] && 
             processesResponsibles[process.id][process.currentDepartment]) {
           
           const sectorResponsible = processesResponsibles[process.id][process.currentDepartment];
           // Verificar se o responsável é o usuário atual
-          return sectorResponsible && sectorResponsible.usuario_id === user.id;
+          if (sectorResponsible && sectorResponsible.usuario_id === user.id) {
+            return process;
+          }
+        } else {
+          // Se não temos o cache de responsáveis, fazer a verificação direta
+          const isResponsible = await checkAndCacheResponsibility(
+            process.id,
+            process.currentDepartment,
+            user.id
+          );
+          
+          if (isResponsible) {
+            return process;
+          }
         }
         
         // Se não atende a nenhuma das condições acima, o processo não deve ser visível
-        return false;
+        return null;
       });
+      
+      // Resolver todas as promessas
+      const visibleProcessesResults = await Promise.all(visibleProcessesPromises);
+      
+      // Filtrar os resultados nulos (processos não visíveis)
+      const visibleProcesses = visibleProcessesResults.filter(
+        (process): process is Process => process !== null
+      );
 
       // Depois aplicar os filtros selecionados pelo usuário
       return visibleProcesses.filter((process) => {
@@ -185,7 +234,7 @@ export const useProcessFiltering = (
         return true;
       });
     };
-  }, [processes, user, isAdmin, isUserResponsibleForProcess, processResponsibilitiesCache, isUserInAttendanceSector, isUserInCurrentSector]);
+  }, [processes, user, isAdmin, isUserResponsibleForProcess, processResponsibilitiesCache, isUserInAttendanceSector, isUserInCurrentSector, hasSectorResponsible, checkAndCacheResponsibility]);
 
   const isProcessOverdue = (process: Process) => {
     if (process.status === 'overdue') return true;
@@ -203,6 +252,7 @@ export const useProcessFiltering = (
     isUserResponsibleForSector,
     isUserInAttendanceSector,
     isUserInCurrentSector,
-    checkAndCacheResponsibility
+    checkAndCacheResponsibility,
+    hasSectorResponsible
   };
 };
