@@ -111,7 +111,7 @@ const ProcessActionButtons = memo(({
           title="Iniciar processo" 
           className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action"
         >
-          <Play className="h-2 w-2 max-auto" />
+          <Play className="h-auto w-2 max-auto" />
           Iniciar
         </Button>
       </div>
@@ -130,7 +130,7 @@ const ProcessActionButtons = memo(({
           title="Aceitar processo" 
           className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action"
         >
-          <CheckCircle className="h-2 w-2 max-auto" />
+          <CheckCircle className="h-auto w-2 max-auto" />
           {isAccepting ? "Processando..." : "Aceitar Processo"}
         </Button>
       </div>
