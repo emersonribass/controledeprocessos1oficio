@@ -110,9 +110,7 @@ const ProcessSettingsGeneral = () => {
           onStartProcess={handleStartProcess}
           onDeleteProcess={setProcessToDelete}
           selectedProcesses={selectedProcesses.map(p => p.id)}
-          onToggleSelect={(processId: string) => toggleProcessSelection(
-            notStartedProcesses.find(p => p.id === processId)!
-          )}
+          onToggleSelect={toggleProcessSelection}
           selectAllChecked={selectAllChecked}
           onToggleSelectAll={toggleSelectAll}
         />

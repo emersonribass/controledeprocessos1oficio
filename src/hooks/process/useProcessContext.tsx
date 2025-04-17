@@ -1,12 +1,11 @@
 
 import { createContext, useContext, ReactNode, useState } from "react";
 import { Process } from "@/types";
-import { useDepartmentsData } from "@/hooks/useDepartmentsData";
-import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { useProcessesFetch } from "@/hooks/useProcessesFetch";
-import { useProcessOperations } from "@/hooks/process/useProcessOperations";
-import { useProcessFiltering } from "@/hooks/process/useProcessFiltering";
-import { useAuth } from "@/hooks/auth";
+import { useProcessHookAdapters } from "./context/useProcessHookAdapters";
+import { useProcessBaseOperations } from "./context/useProcessBaseOperations";
+import { useProcessResponsibilityIntegration } from "./context/useProcessResponsibilityIntegration";
+import { useProcessDependencies } from "./context/useProcessDependencies";
 
 // Definição do tipo para o contexto
 type ProcessesContextType = {
@@ -23,8 +22,8 @@ type ProcessesContextType = {
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
   moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   isProcessOverdue: (process: Process) => boolean;
-  departments: ReturnType<typeof useDepartmentsData>["departments"];
-  processTypes: ReturnType<typeof useProcessTypes>["processTypes"];
+  departments: any[];
+  processTypes: any[];
   isLoading: boolean;
   refreshProcesses: () => Promise<void>;
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
@@ -47,10 +46,10 @@ const ProcessesContext = createContext<ProcessesContextType | undefined>(undefin
  * Provider para o contexto de processos
  */
 export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
-  const { departments, getDepartmentName } = useDepartmentsData();
-  const { processTypes, getProcessTypeName } = useProcessTypes();
   const { processes, isLoading, fetchProcesses } = useProcessesFetch();
-  const { user } = useAuth();
+  
+  // Hooks para diferentes partes do contexto
+  const { departments, processTypes, getDepartmentName, getProcessTypeName } = useProcessDependencies();
   
   const { 
     filterProcesses, 
@@ -60,44 +59,19 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
     isUserInAttendanceSector,
     isUserInCurrentSector,
     hasSectorResponsible
-  } = useProcessFiltering(processes);
+  } = useProcessResponsibilityIntegration(processes);
   
-  // Hook de operações de processos
   const { 
-    moveProcessToNextDepartment: moveNext,
-    moveProcessToPreviousDepartment: movePrevious,
-    startProcess: startProcessBase,
+    moveProcessToNextDepartment, 
+    moveProcessToPreviousDepartment,
+    startProcess,
+    updateProcessType,
+    updateProcessStatus,
     deleteProcess,
     deleteManyProcesses,
-    updateProcessType: updateType,
-    updateProcessStatus: updateStatus,
     getProcess
-  } = useProcessOperations(() => fetchProcesses());
-
-  // Adaptadores para converter Promise<boolean> para Promise<void>
-  const moveProcessToNextDepartment = async (processId: string): Promise<void> => {
-    await moveNext(processId);
-  };
-
-  const moveProcessToPreviousDepartment = async (processId: string): Promise<void> => {
-    await movePrevious(processId);
-  };
-
-  const startProcess = async (processId: string): Promise<void> => {
-    await startProcessBase(processId);
-  };
-
-  const updateProcessType = async (processId: string, newTypeId: string): Promise<void> => {
-    await updateType(processId, newTypeId);
-  };
-
-  const updateProcessStatus = async (
-    processId: string, 
-    newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado'
-  ): Promise<void> => {
-    await updateStatus(processId, newStatus);
-  };
-
+  } = useProcessBaseOperations(fetchProcesses);
+  
   return (
     <ProcessesContext.Provider
       value={{
