@@ -6,6 +6,7 @@ import { CheckCircle, User } from "lucide-react";
 import { useAuth } from "@/hooks/auth";
 import { useProcessDetailsResponsibility } from "@/hooks/useProcessDetailsResponsibility";
 import { memo } from "react";
+import { useUserProfile } from "@/hooks/auth/useUserProfile";
 
 interface ProcessResponsibleInfoProps {
   processId: string;
@@ -19,6 +20,7 @@ const ProcessResponsibleInfo = memo(({
   sectorId
 }: ProcessResponsibleInfoProps) => {
   const { user } = useAuth();
+  const { userProfile } = useUserProfile();
   
   // Usando o hook refatorado para gerenciar o estado dos responsáveis
   const {
@@ -28,6 +30,9 @@ const ProcessResponsibleInfo = memo(({
     handleAcceptResponsibility,
     isAccepting
   } = useProcessDetailsResponsibility(processId, sectorId);
+
+  // Verifica se o usuário tem o setor atribuído
+  const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
 
   if (isLoading) {
     return <Card>
@@ -71,7 +76,7 @@ const ProcessResponsibleInfo = memo(({
                 Sem responsável no setor atual
               </Badge>
               
-              {user && !sectorResponsible && <div className="mt-2">
+              {user && !sectorResponsible && isUserInSector && <div className="mt-2">
                   <Button 
                     variant="outline" 
                     size="sm" 

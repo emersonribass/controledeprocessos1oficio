@@ -6,7 +6,7 @@ import ProcessStatusBadge from "./ProcessStatusBadge";
 interface ProcessRowActionsProps {
   processId: string;
   protocolNumber?: string;
-  processType?: string; // Adicionado o tipo do processo
+  processType?: string;
   moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
   isFirstDepartment: boolean;

@@ -1,3 +1,4 @@
+
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -119,6 +120,7 @@ const ProcessTableRow = ({
       <ProcessRowActions 
         processId={process.id}
         protocolNumber={process.protocolNumber}
+        processType={process.processType}
         moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
         moveProcessToNextDepartment={moveProcessToNextDepartment}
         isFirstDepartment={isFirstDepartment}

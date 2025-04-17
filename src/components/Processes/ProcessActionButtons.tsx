@@ -4,6 +4,8 @@ import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
 import { memo } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useUserProfile } from "@/hooks/auth/useUserProfile";
+
 interface ProcessActionButtonsProps {
   processId: string;
   processType?: string; // Adicionado para verificar se existe um tipo selecionado
@@ -21,6 +23,7 @@ interface ProcessActionButtonsProps {
   isAccepting?: boolean;
   sectorId?: string;
 }
+
 const ProcessActionButtons = memo(({
   processId,
   processType,
@@ -38,17 +41,15 @@ const ProcessActionButtons = memo(({
   isAccepting = false,
   sectorId
 }: ProcessActionButtonsProps) => {
-  const {
-    user
-  } = useAuth();
-  const {
-    isUserResponsibleForSector
-  } = useProcessResponsibility();
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile();
+  const { isUserResponsibleForSector } = useProcessResponsibility();
   const isNotStarted = status === "not_started";
   const isCompleted = status === "completed";
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
+  // Verifica se o usuário tem o setor atribuído
+  const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
 
   // Função para verificar se o tipo de processo está definido antes de mover
   const validateProcessType = (): boolean => {
@@ -62,6 +63,7 @@ const ProcessActionButtons = memo(({
     }
     return true;
   };
+
   const handleMoveToNext = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -72,11 +74,13 @@ const ProcessActionButtons = memo(({
     }
     moveProcessToNextDepartment(processId);
   };
+
   const handleMoveToPrevious = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     moveProcessToPreviousDepartment(processId);
   };
+
   const handleStartProcess = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -89,6 +93,7 @@ const ProcessActionButtons = memo(({
       startProcess(processId);
     }
   };
+
   const handleAcceptResponsibility = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -107,8 +112,8 @@ const ProcessActionButtons = memo(({
       </div>;
   }
 
-  // Se não há responsável no setor e o processo não está concluído, mostra o botão de aceitar processo
-  if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed") {
+  // Se não há responsável no setor e o processo não está concluído e o usuário está no setor atual do processo
+  if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed" && isUserInSector) {
     return <div className="flex justify-center gap-1 process-action">
         <Button variant="outline" size="sm" onClick={handleAcceptResponsibility} disabled={isAccepting} title="Aceitar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action mx-0 px-[6px]">
           <CheckCircle className="h-3 w-3" />
