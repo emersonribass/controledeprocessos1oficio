@@ -37,6 +37,14 @@ export const useProcessFiltering = (
   const isUserInAttendanceSector = () => {
     return userProfile?.setores_atribuidos?.includes("1") || false;
   };
+  
+  // Verificar se o usuário pertence ao setor atual do processo
+  const isUserInCurrentSector = (process: Process) => {
+    if (!userProfile?.setores_atribuidos || !process.currentDepartment) {
+      return false;
+    }
+    return userProfile.setores_atribuidos.includes(process.currentDepartment);
+  };
 
   // Cache de responsabilidades por processo e setor - implementado dentro do hook
   const processResponsibilitiesCache = useMemo(() => {
@@ -122,6 +130,11 @@ export const useProcessFiltering = (
           return true;
         }
         
+        // NOVA REGRA: Verificar se o usuário pertence ao setor atual do processo
+        if (isUserInCurrentSector(process)) {
+          return true;
+        }
+        
         // Verificar se o usuário é responsável específico para este processo neste setor
         // Usando o cache de responsabilidades (processesResponsibles)
         if (processesResponsibles && 
@@ -133,7 +146,7 @@ export const useProcessFiltering = (
           return sectorResponsible && sectorResponsible.usuario_id === user.id;
         }
         
-        // Se não temos informação de responsáveis, o processo não deve ser visível
+        // Se não atende a nenhuma das condições acima, o processo não deve ser visível
         return false;
       });
 
@@ -172,7 +185,7 @@ export const useProcessFiltering = (
         return true;
       });
     };
-  }, [processes, user, isAdmin, isUserResponsibleForProcess, processResponsibilitiesCache, isUserInAttendanceSector]);
+  }, [processes, user, isAdmin, isUserResponsibleForProcess, processResponsibilitiesCache, isUserInAttendanceSector, isUserInCurrentSector]);
 
   const isProcessOverdue = (process: Process) => {
     if (process.status === 'overdue') return true;
@@ -189,6 +202,7 @@ export const useProcessFiltering = (
     isUserResponsibleForProcess,
     isUserResponsibleForSector,
     isUserInAttendanceSector,
+    isUserInCurrentSector,
     checkAndCacheResponsibility
   };
 };

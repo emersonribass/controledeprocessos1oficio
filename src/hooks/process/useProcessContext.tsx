@@ -35,7 +35,8 @@ type ProcessesContextType = {
   getProcess: (processId: string) => Promise<Process | null>;
   isUserResponsibleForProcess: (process: Process, userId: string) => boolean;
   isUserResponsibleForSector: (process: Process, userId: string) => boolean;
-  isUserInAttendanceSector: () => boolean; // Adicionando nova função
+  isUserInAttendanceSector: () => boolean;
+  isUserInCurrentSector: (process: Process) => boolean; // Nova função adicionada
 };
 
 // Criação do contexto
@@ -57,7 +58,8 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
     isProcessOverdue,
     isUserResponsibleForProcess,
     isUserResponsibleForSector,
-    isUserInAttendanceSector 
+    isUserInAttendanceSector,
+    isUserInCurrentSector // Nova função importada
   } = useProcessFiltering(processes);
   
   // Hook de operações de processos
@@ -118,7 +120,8 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
         getProcess,
         isUserResponsibleForProcess,
         isUserResponsibleForSector,
-        isUserInAttendanceSector
+        isUserInAttendanceSector,
+        isUserInCurrentSector // Nova função adicionada ao contexto
       }}
     >
       {children}
