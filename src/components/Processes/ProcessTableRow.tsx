@@ -1,4 +1,13 @@
 
+import { TableRow, TableCell } from "@/components/ui/table";
+import { Process, Department, ProcessType } from "@/types";
+import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
+import ProcessTypePicker from "./ProcessTypePicker";
+import ProcessDepartmentsSection from "./ProcessDepartmentsSection";
+import ProcessRowActions from "./ProcessRowActions";
+import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
+import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
 const ProcessTableRow = ({
   process,
   departments,
