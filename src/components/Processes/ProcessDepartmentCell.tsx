@@ -63,7 +63,7 @@ const ProcessDepartmentCell = ({
         </div>
       )}
 
-      {isCurrentDepartment && isProcessStarted && (
+      {isCurrentDepartment && isProcessStarted && departmentTimeLimit > 0 && (
         <div className={cn(
           "text-xs font-medium mt-1",
           isDepartmentOverdue ? "text-red-600" : "text-blue-600"
@@ -73,12 +73,7 @@ const ProcessDepartmentCell = ({
               <Clock className="h-3 w-3" /> Prazo expirado
             </span>
           ) : (
-            <span>Em andamento</span>
-          )}
-          {!isDepartmentOverdue && departmentTimeLimit > 0 && (
-            <div className="text-xs mt-1">
-              {remainingDays > 0 ? `${remainingDays} dia(s) restante(s)` : "Vence hoje"}
-            </div>
+            remainingDays > 0 ? `${remainingDays} dia(s) restante(s)` : "Vence hoje"
           )}
         </div>
       )}
