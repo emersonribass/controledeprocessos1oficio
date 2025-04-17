@@ -65,6 +65,7 @@ const ProcessTableRow = ({
     if (status === "completed") return "bg-green-200";
     if (status === "overdue") return "bg-red-200";
     if (status === "pending") return "bg-blue-200";
+    if (status === "not_started") return "bg-green-200";
     return "";
   };
 
