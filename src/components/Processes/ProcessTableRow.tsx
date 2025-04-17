@@ -113,6 +113,7 @@ const ProcessTableRow = ({
       <ProcessRowActions 
         processId={process.id}
         protocolNumber={process.protocolNumber}
+        processType={process.processType} // Passando o tipo do processo
         moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
         moveProcessToNextDepartment={moveProcessToNextDepartment}
         isFirstDepartment={isFirstDepartment}

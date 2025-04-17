@@ -4,9 +4,11 @@ import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
 import { memo } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProcessActionButtonsProps {
   processId: string;
+  processType?: string; // Adicionado para verificar se existe um tipo selecionado
   protocolNumber?: string;
   moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
@@ -24,6 +26,7 @@ interface ProcessActionButtonsProps {
 
 const ProcessActionButtons = memo(({
   processId,
+  processType,
   protocolNumber,
   moveProcessToPreviousDepartment,
   moveProcessToNextDepartment,
@@ -33,7 +36,7 @@ const ProcessActionButtons = memo(({
   isEditing,
   status,
   startProcess,
-  hasSectorResponsible = false, // Alterado para false por padrão para garantir que o botão apareça quando não tiver responsável
+  hasSectorResponsible = false,
   onAcceptResponsibility,
   isAccepting = false,
   sectorId
@@ -42,10 +45,30 @@ const ProcessActionButtons = memo(({
   const { isUserResponsibleForSector } = useProcessResponsibility();
   const isNotStarted = status === "not_started";
   const isCompleted = status === "completed";
+  const { toast } = useToast();
+  
+  // Função para verificar se o tipo de processo está definido antes de mover
+  const validateProcessType = (): boolean => {
+    if (!processType) {
+      toast({
+        title: "Aviso",
+        description: "É necessário selecionar um tipo de processo antes de movê-lo para o próximo setor.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    return true;
+  };
   
   const handleMoveToNext = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Validar se o tipo está preenchido antes de mover
+    if (!validateProcessType()) {
+      return;
+    }
+    
     moveProcessToNextDepartment(processId);
   };
   
@@ -58,6 +81,12 @@ const ProcessActionButtons = memo(({
   const handleStartProcess = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Validar se o tipo está preenchido antes de iniciar
+    if (!validateProcessType()) {
+      return;
+    }
+    
     if (startProcess) {
       startProcess(processId);
     }
@@ -90,7 +119,6 @@ const ProcessActionButtons = memo(({
   }
   
   // Se não há responsável no setor e o processo não está concluído, mostra o botão de aceitar processo
-  // Removida a verificação de !isCompleted para que o botão apareça em processos "Em andamento"
   if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed") {
     return (
       <div className="flex justify-center gap-2 process-action">

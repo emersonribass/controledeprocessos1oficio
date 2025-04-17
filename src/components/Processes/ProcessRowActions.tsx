@@ -6,6 +6,7 @@ import ProcessStatusBadge from "./ProcessStatusBadge";
 interface ProcessRowActionsProps {
   processId: string;
   protocolNumber?: string;
+  processType?: string; // Adicionado o tipo do processo
   moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
   isFirstDepartment: boolean;
@@ -21,6 +22,7 @@ interface ProcessRowActionsProps {
 const ProcessRowActions = ({
   processId,
   protocolNumber,
+  processType,
   moveProcessToPreviousDepartment,
   moveProcessToNextDepartment,
   isFirstDepartment,
@@ -36,7 +38,8 @@ const ProcessRowActions = ({
     <TableCell className="text-right process-action">
       <ProcessActionButtons 
         processId={processId} 
-        protocolNumber={protocolNumber} 
+        protocolNumber={protocolNumber}
+        processType={processType}
         moveProcessToPreviousDepartment={moveProcessToPreviousDepartment} 
         moveProcessToNextDepartment={moveProcessToNextDepartment} 
         isFirstDepartment={isFirstDepartment} 
