@@ -34,7 +34,7 @@ interface ProcessDepartmentCellProps {
         {responsible && (
           <div className="text-xs text-gray-600 mt-1">
             <span className="font-medium">
-              {isFirstDepartment ? "Resp. Inicial:" : "Resp. Atual:"}
+              {isFirstDepartment ? "Resp. Processo:" : "Resp. Setor:"}
             </span>
             <br />
             <span className="text-primary">{responsible.nome}</span>
