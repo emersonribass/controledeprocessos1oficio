@@ -65,9 +65,10 @@ const ProcessTableRow = ({
 
   // Função para definir a cor de fundo com base no status
   const getRowBackgroundColor = (status: string) => {
-    if (status === "completed") return "bg-green-200";
+    if (status === "completed") return "bg-green-400";
     if (status === "overdue") return "bg-red-200";
     if (status === "pending") return "bg-blue-200";
+    if (status === "not_started") return "bg-green-200";
     return "";
   };
 
@@ -84,7 +85,7 @@ const ProcessTableRow = ({
   return (
     <TableRow 
       className={cn(
-        "cursor-pointer hover:bg-gray-100",
+        "cursor-pointer hover:bg-gray-200",
         getRowBackgroundColor(process.status)
       )}
       onClick={handleRowClick}
