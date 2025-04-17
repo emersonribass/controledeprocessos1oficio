@@ -103,7 +103,7 @@ const ProcessActionButtons = memo(({
   // Se o processo não está iniciado E o usuário tem permissão para iniciar (startProcess está disponível)
   if (isNotStarted && startProcess) {
     return (
-      <div className="flex justify-center gap-2 process-action">
+      <div className="flex justify-center gap-1 process-action">
         <Button 
           variant="outline" 
           size="sm" 
@@ -111,7 +111,7 @@ const ProcessActionButtons = memo(({
           title="Iniciar processo" 
           className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action"
         >
-          <Play className="h-2 w-2" />
+          <Play className="h-2 w-2 max-auto" />
           Iniciar
         </Button>
       </div>
@@ -121,7 +121,7 @@ const ProcessActionButtons = memo(({
   // Se não há responsável no setor e o processo não está concluído, mostra o botão de aceitar processo
   if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed") {
     return (
-      <div className="flex justify-center gap-2 process-action">
+      <div className="flex justify-center gap-1 process-action">
         <Button 
           variant="outline" 
           size="sm" 
@@ -130,7 +130,7 @@ const ProcessActionButtons = memo(({
           title="Aceitar processo" 
           className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action"
         >
-          <CheckCircle className="h-3 w-3" />
+          <CheckCircle className="h-2 w-2 max-auto" />
           {isAccepting ? "Processando..." : "Aceitar Processo"}
         </Button>
       </div>
