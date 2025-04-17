@@ -1,8 +1,4 @@
 
-import { TableCell } from "@/components/ui/table";
-import ProcessDepartmentCell from "./ProcessDepartmentCell";
-import { Department } from "@/types";
-
 interface ProcessDepartmentsSectionProps {
   sortedDepartments: Department[];
   isProcessStarted: boolean;
@@ -11,24 +7,29 @@ interface ProcessDepartmentsSectionProps {
   isCurrentDepartment: (departmentId: string) => boolean;
   isPreviousDepartment: (departmentId: string) => boolean;
   isDepartmentOverdue: (departmentId: string, isProcessStarted: boolean) => boolean;
+  processId: string;
+  processResponsible?: any;
+  sectorResponsibles?: Record<string, any>;
 }
 
 const ProcessDepartmentsSection = ({
-  sortedDepartments,
-  isProcessStarted,
-  getMostRecentEntryDate,
-  hasPassedDepartment,
-  isCurrentDepartment,
-  isPreviousDepartment,
-  isDepartmentOverdue
+  // ... props existentes ...
+  processId,
+  processResponsible,
+  sectorResponsibles
 }: ProcessDepartmentsSectionProps) => {
   return (
     <>
-      {sortedDepartments.map((dept) => {
+      {sortedDepartments.map((dept, index) => {
         const entryDate = getMostRecentEntryDate(dept.id);
         const isPastDept = hasPassedDepartment(dept.id) && isPreviousDepartment(dept.id);
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
+        
+        // Determinar o responsável apropriado
+        const responsible = index === 0 
+          ? processResponsible 
+          : sectorResponsibles?.[dept.id];
         
         return (
           <TableCell key={dept.id}>
@@ -41,6 +42,8 @@ const ProcessDepartmentsSection = ({
               isDepartmentOverdue={isActive && isOverdue}
               departmentTimeLimit={dept.timeLimit}
               isProcessStarted={isProcessStarted}
+              responsible={responsible}
+              isFirstDepartment={index === 0}
             />
           </TableCell>
         );
@@ -48,5 +51,3 @@ const ProcessDepartmentsSection = ({
     </>
   );
 };
-
-export default ProcessDepartmentsSection;
