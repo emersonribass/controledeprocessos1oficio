@@ -8,6 +8,7 @@ import ProcessDepartmentsSection from "./ProcessDepartmentsSection";
 import ProcessRowActions from "./ProcessRowActions";
 import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
 import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
+
 const ProcessTableRow = ({
   process,
   departments,
