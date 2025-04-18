@@ -1,4 +1,3 @@
-
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -43,11 +42,9 @@ const ProcessTableRow = ({
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
   
-  // Usar o hook para obter informações sobre responsabilidade
   const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
   const { getProcessResponsible } = useProcessResponsibility();
   
-  // Verificar se há um responsável para o setor atual
   const hasResponsible = hasSectorResponsible || !!sectorResponsible;
   
   const {
@@ -62,10 +59,8 @@ const ProcessTableRow = ({
     isDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
-  // Extrair os responsáveis específicos deste processo
   const processSpecificResponsibles = processResponsibles;
 
-  // Função para definir a cor de fundo com base no status
   const getRowBackgroundColor = (status: string) => {
     if (status === "completed") return "bg-green-400";
     if (status === "overdue") return "bg-red-200";
@@ -75,7 +70,6 @@ const ProcessTableRow = ({
   };
 
   const handleRowClick = (e: React.MouseEvent) => {
-    // Não navegar se o clique foi em um elemento de ação (botões, selects, etc)
     if ((e.target as HTMLElement).closest('.process-action')) {
       e.stopPropagation();
       return;
@@ -92,10 +86,10 @@ const ProcessTableRow = ({
       )}
       onClick={handleRowClick}
     >
-      <TableCell className="font-medium w-[150px]">
+      <TableCell className="font-medium w-[180px] px-2">
         {process.protocolNumber}
       </TableCell>
-      <TableCell className="process-action w-[200px]" onClick={e => e.stopPropagation()}>
+      <TableCell className="process-action w-[180px] px-2" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
           currentTypeId={process.processType} 
@@ -118,7 +112,7 @@ const ProcessTableRow = ({
         sectorResponsibles={processSpecificResponsibles}
       />
     
-      <TableCell className="text-right process-action w-[100px]">
+      <TableCell className="text-right process-action w-[120px] px-2">
         <ProcessRowActions 
           processId={process.id}
           protocolNumber={process.protocolNumber}
@@ -140,4 +134,3 @@ const ProcessTableRow = ({
 };
 
 export default ProcessTableRow;
-

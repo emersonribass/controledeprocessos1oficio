@@ -31,7 +31,7 @@ const ProcessTableHeader = ({
   return <TableHeader>
       <TableRow>
         <TableHead 
-          className="cursor-pointer whitespace-nowrap w-[150px]" 
+          className="cursor-pointer w-[180px] px-2" 
           onClick={(e) => handleSortClick("protocolNumber", e)}
         >
           <div className="flex items-center">
@@ -39,16 +39,17 @@ const ProcessTableHeader = ({
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </div>
         </TableHead>
-        <TableHead className="whitespace-nowrap w-[200px]">Tipo</TableHead>
+        <TableHead className="w-[180px] px-2">Tipo</TableHead>
         
-        {sortedDepartments.map(dept => <TableHead key={dept.id} className="text-center whitespace-nowrap">
+        {sortedDepartments.map(dept => (
+          <TableHead key={dept.id} className="text-center px-2">
             {dept.name}
-          </TableHead>)}
+          </TableHead>
+        ))}
         
-        <TableHead className="text-right whitespace-nowrap w-[100px]">Ações</TableHead>
+        <TableHead className="text-right w-[120px] px-2">Ações</TableHead>
       </TableRow>
     </TableHeader>;
 };
 
 export default ProcessTableHeader;
-
