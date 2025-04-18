@@ -40,7 +40,7 @@ const ProcessTableHeader = ({
           </div>
         </TableHead>
         
-        <TableHead className="w-[150px] text-center whitespace-nowrap">Tipo</TableHead>
+        <TableHead className="w-[120px] text-center whitespace-nowrap">Tipo</TableHead>
         
         {sortedDepartments.map(dept => (
           <TableHead 
