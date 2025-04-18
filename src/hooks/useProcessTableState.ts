@@ -60,9 +60,7 @@ export const useProcessTableState = (processes: Process[]) => {
         const sectors = processToSectorsMap[processId];
         if (!sectors || sectors.size === 0) return null;
 
-        // Adicionando console.log para debug
-        console.log(`Buscando responsáveis para o processo ${processId} nos setores:`, Array.from(sectors));
-
+        // Buscar todos os responsáveis por setor de uma vez
         const { data: sectorResponsibles, error: sectorError } = await supabase
           .from('setor_responsaveis')
           .select(`
@@ -83,8 +81,6 @@ export const useProcessTableState = (processes: Process[]) => {
           throw sectorError;
         }
         
-        // Log dos responsáveis encontrados
-        console.log(`Responsáveis encontrados para processo ${processId}:`, sectorResponsibles);
         return sectorResponsibles;
       });
 
@@ -100,18 +96,27 @@ export const useProcessTableState = (processes: Process[]) => {
         if (!responsiblesMap[process.id]) {
           responsiblesMap[process.id] = {};
         }
-        // Certifique-se de que o formato seja consistente com o esperado pelo componente
-        responsiblesMap[process.id].initial = process.usuarios;
+        // Armazenar o responsável inicial do processo
+        if (process.usuarios) {
+          responsiblesMap[process.id].initial = process.usuarios;
+        }
       });
 
       // Mapear responsáveis por setor
       sectorResponsiblesResults.flat().forEach(resp => {
         if (!resp) return;
-        if (!responsiblesMap[resp.processo_id]) {
-          responsiblesMap[resp.processo_id] = {};
-        }
+        
+        const processId = resp.processo_id;
         const sectorId = String(resp.setor_id);
-        responsiblesMap[resp.processo_id][sectorId] = resp.usuarios;
+        
+        if (!responsiblesMap[processId]) {
+          responsiblesMap[processId] = {};
+        }
+        
+        // Garante que temos os dados formatados corretamente
+        if (resp.usuarios) {
+          responsiblesMap[processId][sectorId] = resp.usuarios;
+        }
       });
 
       console.log("Responsáveis carregados:", responsiblesMap);
@@ -129,8 +134,10 @@ export const useProcessTableState = (processes: Process[]) => {
   }, [fetchResponsibles]);
 
   const queueSectorForLoading = useCallback((processId: string, sectorId: string) => {
-    // Recarregar os responsáveis
-    fetchResponsibles();
+    // Recarregar os responsáveis quando necessário
+    setTimeout(() => {
+      fetchResponsibles();
+    }, 500); // Pequeno delay para garantir que os dados estejam atualizados no banco
   }, [fetchResponsibles]);
 
   return {

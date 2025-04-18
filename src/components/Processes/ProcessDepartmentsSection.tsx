@@ -36,16 +36,18 @@ const ProcessDepartmentsSection = ({
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
-        // Determinar o responsável baseado no índice e estado do departamento
-        const departmentResponsible = index === 0 
-          ? processResponsible 
-          : sectorResponsibles?.[dept.id];
-          
-        // Debug de informações de responsáveis
-        if (departmentResponsible) {
-          console.log(`Responsável encontrado para departamento ${dept.id}:`, departmentResponsible);
-        }
+        // Determinar o responsável para este departamento
+        let departmentResponsible = null;
         
+        // Se for o primeiro departamento, usar o responsável inicial do processo
+        if (index === 0 && processResponsible) {
+          departmentResponsible = processResponsible;
+        } 
+        // Senão, tentar encontrar o responsável específico do setor
+        else if (sectorResponsibles && sectorResponsibles[dept.id]) {
+          departmentResponsible = sectorResponsibles[dept.id];
+        }
+          
         return (
           <TableCell key={dept.id}>
             <ProcessDepartmentCell

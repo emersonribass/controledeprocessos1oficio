@@ -62,10 +62,8 @@ const ProcessTableRow = ({
     isDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
-  // Se temos processResponsibles, verificar se há dados disponíveis
-  if (processResponsibles && process.id in processResponsibles) {
-    console.log(`Responsáveis para processo ${process.id}:`, processResponsibles[process.id]);
-  }
+  // Extrair os responsáveis específicos deste processo
+  const processSpecificResponsibles = processResponsibles?.[process.id];
 
   // Função para definir a cor de fundo com base no status
   const getRowBackgroundColor = (status: string) => {
@@ -116,8 +114,8 @@ const ProcessTableRow = ({
         isPreviousDepartment={(departmentId) => isPreviousDepartment(departmentId)}
         isDepartmentOverdue={(departmentId, isProcessStarted) => isDepartmentOverdue(departmentId, isProcessStarted)}
         processId={process.id}
-        processResponsible={processResponsibles?.[process.id]?.initial}
-        sectorResponsibles={processResponsibles?.[process.id]}
+        processResponsible={processSpecificResponsibles?.initial}
+        sectorResponsibles={processSpecificResponsibles}
       />
       
       <ProcessRowActions 
