@@ -30,7 +30,7 @@ const ProcessDepartmentsSection = ({
 }: ProcessDepartmentsSectionProps) => {
   return (
     <>
-      {sortedDepartments.map((dept, index) => {
+      {sortedDepartments.map((dept) => {
         const entryDate = getMostRecentEntryDate(dept.id);
         const isPastDept = hasPassedDepartment(dept.id);
         const isActive = isCurrentDepartment(dept.id);
