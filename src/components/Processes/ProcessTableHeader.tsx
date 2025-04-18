@@ -31,12 +31,11 @@ const ProcessTableHeader = ({
     <TableHeader>
       <TableRow>
         <TableHead 
-          className="w-[120px] whitespace-nowrap" 
+          className="w-[70px] whitespace-nowrap" 
           onClick={(e) => handleSortClick("protocolNumber", e)}
         >
           <div className="flex items-center">
             Protocolo
-            <ArrowUpDown className="ml-2 h-4 w-4" />
           </div>
         </TableHead>
         
