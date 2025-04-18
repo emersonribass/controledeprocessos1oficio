@@ -100,9 +100,9 @@ const ProcessTableRow = ({
         />
       </TableCell>
       
-      {/* Departamentos - Largura mínima de 150px para cada */}
+      {/* Departamentos - Largura mínima de 120px para cada */}
       {sortedDepartments.map((dept) => (
-        <TableCell key={dept.id} className="min-w-[150px] text-center">
+        <TableCell key={dept.id} className="min-w-[120px] text-center">
           <ProcessDepartmentCell 
             departmentId={dept.id}
             isCurrentDepartment={isCurrentDepartment(dept.id)}
