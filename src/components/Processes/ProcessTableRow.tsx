@@ -105,11 +105,7 @@ const ProcessTableRow = ({
           />
         </TableCell>
 
-          <TableCell className="text-right process-action w-[100px]">
-            <ProcessActionButtons {...props} />
-          </TableCell>
-      
-      <ProcessDepartmentsSection 
+     <ProcessDepartmentsSection 
         sortedDepartments={sortedDepartments}
         isProcessStarted={process.status !== "not_started"}
         getMostRecentEntryDate={(departmentId) => getMostRecentEntryDate(departmentId)}
@@ -121,6 +117,10 @@ const ProcessTableRow = ({
         processResponsible={processSpecificResponsibles?.initial}
         sectorResponsibles={processSpecificResponsibles}
       />
+
+      <TableCell className="text-right process-action w-[100px]">
+            <ProcessActionButtons {...props} />
+      </TableCell>
       
       <ProcessRowActions 
         processId={process.id}
