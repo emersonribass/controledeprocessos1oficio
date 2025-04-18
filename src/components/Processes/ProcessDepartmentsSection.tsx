@@ -36,11 +36,15 @@ const ProcessDepartmentsSection = ({
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
-        // Determinar o responsável apenas se o setor já recebeu o processo
-        const hasPassedOrActive = hasPassedDepartment(dept.id) || isActive;
-        const responsible = index === 0 
+        // Determinar o responsável baseado no índice e estado do departamento
+        const departmentResponsible = index === 0 
           ? processResponsible 
-          : hasPassedOrActive ? sectorResponsibles?.[dept.id] : undefined;
+          : sectorResponsibles?.[dept.id];
+          
+        // Debug de informações de responsáveis
+        if (departmentResponsible) {
+          console.log(`Responsável encontrado para departamento ${dept.id}:`, departmentResponsible);
+        }
         
         return (
           <TableCell key={dept.id}>
@@ -53,7 +57,7 @@ const ProcessDepartmentsSection = ({
               isDepartmentOverdue={isActive && isOverdue}
               departmentTimeLimit={dept.timeLimit}
               isProcessStarted={isProcessStarted}
-              responsible={responsible}
+              responsible={departmentResponsible}
               isFirstDepartment={index === 0}
             />
           </TableCell>

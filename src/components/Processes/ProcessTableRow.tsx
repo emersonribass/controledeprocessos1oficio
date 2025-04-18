@@ -48,8 +48,6 @@ const ProcessTableRow = ({
   const { getProcessResponsible } = useProcessResponsibility();
   
   // Verificar se há um responsável para o setor atual
-  // Importante: verificamos tanto o hasSectorResponsible (que pode vir de um contexto mais amplo)
-  // quanto o sectorResponsible (que é buscado diretamente por este componente)
   const hasResponsible = hasSectorResponsible || !!sectorResponsible;
   
   const {
@@ -63,6 +61,11 @@ const ProcessTableRow = ({
     isPreviousDepartment,
     isDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
+
+  // Se temos processResponsibles, verificar se há dados disponíveis
+  if (processResponsibles && process.id in processResponsibles) {
+    console.log(`Responsáveis para processo ${process.id}:`, processResponsibles[process.id]);
+  }
 
   // Função para definir a cor de fundo com base no status
   const getRowBackgroundColor = (status: string) => {

@@ -60,12 +60,16 @@ export const useProcessTableState = (processes: Process[]) => {
         const sectors = processToSectorsMap[processId];
         if (!sectors || sectors.size === 0) return null;
 
+        // Adicionando console.log para debug
+        console.log(`Buscando responsáveis para o processo ${processId} nos setores:`, Array.from(sectors));
+
         const { data: sectorResponsibles, error: sectorError } = await supabase
           .from('setor_responsaveis')
           .select(`
             processo_id,
             setor_id,
-            usuarios(
+            usuario_id,
+            usuarios:usuario_id(
               id,
               nome,
               email
@@ -74,7 +78,13 @@ export const useProcessTableState = (processes: Process[]) => {
           .eq('processo_id', processId)
           .in('setor_id', Array.from(sectors));
 
-        if (sectorError) throw sectorError;
+        if (sectorError) {
+          console.error("Erro ao buscar responsáveis de setor:", sectorError);
+          throw sectorError;
+        }
+        
+        // Log dos responsáveis encontrados
+        console.log(`Responsáveis encontrados para processo ${processId}:`, sectorResponsibles);
         return sectorResponsibles;
       });
 
@@ -90,6 +100,7 @@ export const useProcessTableState = (processes: Process[]) => {
         if (!responsiblesMap[process.id]) {
           responsiblesMap[process.id] = {};
         }
+        // Certifique-se de que o formato seja consistente com o esperado pelo componente
         responsiblesMap[process.id].initial = process.usuarios;
       });
 
