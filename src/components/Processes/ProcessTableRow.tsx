@@ -63,7 +63,7 @@ const ProcessTableRow = ({
   } = useProcessDepartmentInfo(process, departments);
 
   // Extrair os responsáveis específicos deste processo
-  const processSpecificResponsibles = processResponsibles?.[process.id];
+  const processSpecificResponsibles = processResponsibles;
 
   // Função para definir a cor de fundo com base no status
   const getRowBackgroundColor = (status: string) => {

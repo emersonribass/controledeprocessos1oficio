@@ -119,6 +119,7 @@ export const useProcessTableState = (processes: Process[]) => {
         }
       });
 
+      // Log de todos os responsáveis carregados
       console.log("Responsáveis carregados:", responsiblesMap);
       
       setProcessesResponsibles(responsiblesMap);
@@ -135,6 +136,7 @@ export const useProcessTableState = (processes: Process[]) => {
 
   const queueSectorForLoading = useCallback((processId: string, sectorId: string) => {
     // Recarregar os responsáveis quando necessário
+    console.log(`Recarregando responsáveis para processo ${processId}, setor ${sectorId}`);
     setTimeout(() => {
       fetchResponsibles();
     }, 500); // Pequeno delay para garantir que os dados estejam atualizados no banco

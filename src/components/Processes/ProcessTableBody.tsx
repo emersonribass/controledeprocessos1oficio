@@ -104,25 +104,34 @@ const ProcessTableBody = ({
     );
   }
 
+  // Adicionar console.log para debug de processesResponsibles
+  console.log("ProcessTableBody - processesResponsibles:", processesResponsibles);
+
   return (
     <TableBody>
-      {processes.map(process => (
-        <ProcessTableRow
-          key={process.id}
-          process={process}
-          departments={departments}
-          processTypes={processTypes}
-          moveProcessToNextDepartment={moveProcessToNextDepartment}
-          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-          getProcessTypeName={getProcessTypeName}
-          updateProcessType={updateProcessType}
-          startProcess={startProcess}
-          hasSectorResponsible={hasSectorResponsible(process.id, process.currentDepartment)}
-          onAcceptResponsibility={() => handleAcceptResponsibility(process.id, process.protocolNumber)}
-          isAccepting={isAccepting && acceptingProcessId === process.id}
-          canInitiateProcesses={isUserInAttendanceSector()}
-        />
-      ))}
+      {processes.map(process => {
+        // Adicionar console.log para debug das props passadas para cada linha
+        console.log(`Processo ${process.id} - responsáveis:`, processesResponsibles[process.id]);
+        
+        return (
+          <ProcessTableRow
+            key={process.id}
+            process={process}
+            departments={departments}
+            processTypes={processTypes}
+            moveProcessToNextDepartment={moveProcessToNextDepartment}
+            moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+            getProcessTypeName={getProcessTypeName}
+            updateProcessType={updateProcessType}
+            startProcess={startProcess}
+            hasSectorResponsible={hasSectorResponsible(process.id, process.currentDepartment)}
+            onAcceptResponsibility={() => handleAcceptResponsibility(process.id, process.protocolNumber)}
+            isAccepting={isAccepting && acceptingProcessId === process.id}
+            canInitiateProcesses={isUserInAttendanceSector()}
+            processResponsibles={processesResponsibles[process.id]}
+          />
+        );
+      })}
     </TableBody>
   );
 };
