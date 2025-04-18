@@ -1,3 +1,4 @@
+
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -50,8 +51,8 @@ const ProcessDepartmentCell = ({
         </div>
       )}
 
-      {/* Exibição do responsável */}
-      {isProcessStarted && (
+      {/* Exibição do responsável apenas se existir */}
+      {isProcessStarted && responsible && (
         <div className="text-xs text-gray-600 mt-1">
           <div className="flex items-center justify-center gap-1">
             <User className="h-3 w-3" />
@@ -60,7 +61,7 @@ const ProcessDepartmentCell = ({
             </span>
           </div>
           <span className="text-primary text-[11px]">
-            {responsible?.nome || "Aguardando"}
+            {responsible.nome}
           </span>
         </div>
       )}
