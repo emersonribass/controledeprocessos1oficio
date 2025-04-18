@@ -31,7 +31,7 @@ const ProcessTableHeader = ({
     <TableHeader>
       <TableRow>
         <TableHead 
-          className="cursor-pointer whitespace-nowrap" 
+          className="cursor-pointer whitespace-nowrap w-[150px]" 
           onClick={(e) => handleSortClick("protocolNumber", e)}
         >
           <div className="flex items-center">
@@ -39,7 +39,7 @@ const ProcessTableHeader = ({
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </div>
         </TableHead>
-        <TableHead className="whitespace-nowrap">Tipo</TableHead>
+        <TableHead className="text-center whitespace-nowrap">Tipo</TableHead>
         
         {sortedDepartments.map(dept => (
           <TableHead key={dept.id} className="text-center whitespace-nowrap">
@@ -47,7 +47,7 @@ const ProcessTableHeader = ({
           </TableHead>
         ))}
         
-        <TableHead className="text-center whitespace-nowrap px-0">Ações</TableHead>
+        <TableHead className="text-right whitespace-nowrap w-[120px]">Ações</TableHead>
       </TableRow>
     </TableHeader>
   );

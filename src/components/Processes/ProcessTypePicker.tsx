@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProcessType } from "@/types";
@@ -48,14 +47,13 @@ const ProcessTypePicker = ({
     }
   };
 
-  // Filtrar apenas tipos de processo ativos
   const activeProcessTypes = processTypes.filter(type => type.active !== false);
 
   return (
-    <div className="w-[150px]">
+    <div className="w-[180px] mx-auto">
       <Select value={selectedType} onValueChange={handleChange}>
-        <SelectTrigger className="h-8 px-2 py-1">
-          <SelectValue placeholder="Selecione o tipo" className="truncate" />
+        <SelectTrigger className="h-8">
+          <SelectValue placeholder="Selecione o tipo" />
         </SelectTrigger>
         <SelectContent>
           {activeProcessTypes.map((type) => (

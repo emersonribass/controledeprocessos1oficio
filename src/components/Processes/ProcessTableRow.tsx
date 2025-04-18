@@ -1,3 +1,4 @@
+
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -83,11 +84,11 @@ const ProcessTableRow = ({
       )}
       onClick={handleRowClick}
     >
-      <TableCell className="font-medium">
+      <TableCell className="font-medium w-[150px] whitespace-nowrap">
         {process.protocolNumber}
       </TableCell>
       
-       <TableCell className="process-action" onClick={e => e.stopPropagation()}>
+      <TableCell className="process-action text-center" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
           currentTypeId={process.processType} 
@@ -95,8 +96,8 @@ const ProcessTableRow = ({
           getProcessTypeName={getProcessTypeName} 
           updateProcessType={updateProcessType} 
         />
-      </TableCell> 
-
+      </TableCell>
+      
       <ProcessDepartmentsSection 
         sortedDepartments={sortedDepartments}
         isProcessStarted={process.status !== "not_started"}
@@ -110,7 +111,7 @@ const ProcessTableRow = ({
         sectorResponsibles={processResponsibles}
       />
     
-      <TableCell className="text-right process-action">
+      <TableCell className="text-right process-action w-[120px]">
         <ProcessRowActions 
           processId={process.id}
           protocolNumber={process.protocolNumber}
