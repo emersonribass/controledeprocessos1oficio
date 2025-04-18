@@ -70,9 +70,12 @@ export const useProcessTableState = (processes: Process[]) => {
         if (!responsiblesMap[resp.processo_id]) {
           responsiblesMap[resp.processo_id] = {};
         }
+        // Garantir que setor_id seja string para bater com dept.id (caso venha como número)
+        const sectorId = String(resp.setor_id);
         responsiblesMap[resp.processo_id][resp.setor_id] = resp.usuarios;
       });
-
+      console.log("Responsáveis carregados:", responsiblesMap);
+      
       setProcessesResponsibles(responsiblesMap);
     } catch (error) {
       console.error("Erro ao buscar responsáveis:", error);
