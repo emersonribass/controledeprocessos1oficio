@@ -119,7 +119,7 @@ const ProcessTableRow = ({
       ))}
     
       {/* Ações - Largura fixa de 150px */}
-      <TableCell className="w-[120px] text-center process-action">
+      <TableCell className="w-[120px] text-right process-action">
         <ProcessRowActions 
           processId={process.id}
           protocolNumber={process.protocolNumber}
