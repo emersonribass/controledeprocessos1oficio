@@ -31,7 +31,7 @@ const ProcessTableHeader = ({
     <TableHeader>
       <TableRow>
         <TableHead 
-          className="w-[180px] whitespace-nowrap" 
+          className="w-[100px] whitespace-nowrap" 
           onClick={(e) => handleSortClick("protocolNumber", e)}
         >
           <div className="flex items-center">
@@ -40,7 +40,7 @@ const ProcessTableHeader = ({
           </div>
         </TableHead>
         
-        <TableHead className="w-[180px] text-center whitespace-nowrap">Tipo</TableHead>
+        <TableHead className="w-[150px] text-center whitespace-nowrap">Tipo</TableHead>
         
         {sortedDepartments.map(dept => (
           <TableHead 
