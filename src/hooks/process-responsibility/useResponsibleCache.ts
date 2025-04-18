@@ -1,52 +1,51 @@
 
 import { useCallback, useRef } from 'react';
-
-interface ResponsibleData {
-  id: string;
-  nome: string;
-  email: string;
-}
+import { ProcessResponsible } from './types';
 
 interface CacheData {
+  data: ProcessResponsible;
   timestamp: number;
-  data: ResponsibleData;
 }
 
-export const useResponsibleCache = (ttl: number = 5 * 60 * 1000) => {
-  const cacheRef = useRef<Record<string, CacheData>>({});
+interface CacheMap {
+  [key: string]: CacheData;
+}
 
-  const getCacheKey = (processId: string, sectorId: string) => `${processId}:${sectorId}`;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
-  const getFromCache = useCallback((processId: string, sectorId: string): ResponsibleData | null => {
+export const useResponsibleCache = () => {
+  const cacheRef = useRef<CacheMap>({});
+
+  const getCacheKey = (processId: string, sectorId: string) => 
+    `${processId}:${sectorId}`;
+
+  const getFromCache = useCallback((processId: string, sectorId: string): ProcessResponsible | null => {
     const key = getCacheKey(processId, sectorId);
     const cached = cacheRef.current[key];
     
-    if (cached && Date.now() - cached.timestamp < ttl) {
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
       return cached.data;
     }
+    
     return null;
-  }, [ttl]);
+  }, []);
 
-  const setInCache = useCallback((processId: string, sectorId: string, data: ResponsibleData) => {
+  const setInCache = useCallback((processId: string, sectorId: string, data: ProcessResponsible) => {
     const key = getCacheKey(processId, sectorId);
     cacheRef.current[key] = {
-      timestamp: Date.now(),
-      data
+      data,
+      timestamp: Date.now()
     };
   }, []);
 
   const cleanExpiredCache = useCallback(() => {
     const now = Date.now();
-    const newCache: Record<string, CacheData> = {};
-    
-    Object.entries(cacheRef.current).forEach(([key, value]) => {
-      if (now - value.timestamp <= ttl) {
-        newCache[key] = value;
+    Object.keys(cacheRef.current).forEach(key => {
+      if (now - cacheRef.current[key].timestamp > CACHE_TTL) {
+        delete cacheRef.current[key];
       }
     });
-    
-    cacheRef.current = newCache;
-  }, [ttl]);
+  }, []);
 
   return {
     getFromCache,
