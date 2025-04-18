@@ -4,252 +4,233 @@ import { supabase } from "@/integrations/supabase/client";
 import { Process } from "@/types";
 import { useAuth } from "@/hooks/auth";
 
-/**
- * Hook especializado para carregar responsáveis em lote com controle de chamadas
- * Evita consultas duplicadas e implementa throttling
- */
+interface ResponsibleData {
+  id: string;
+  nome: string;
+  email: string;
+}
+
+interface CacheData {
+  timestamp: number;
+  data: ResponsibleData;
+}
+
+interface BatchQueue {
+  processId: string;
+  sectorId: string;
+  resolve: (data: ResponsibleData | null) => void;
+  reject: (error: any) => void;
+}
+
+interface ProcessSectorMap {
+  [processId: string]: Set<string>;
+}
+
 export const useResponsibleBatchLoader = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [responsiblesData, setResponsiblesData] = useState<Record<string, Record<string, any>>>({});
+  const cacheRef = useRef<Record<string, CacheData>>({});
+  const batchQueueRef = useRef<BatchQueue[]>([]);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const processSectorMapRef = useRef<ProcessSectorMap>({});
   
-  // Controle de carregamento
-  const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const lastLoadTimeRef = useRef<number>(0);
-  const pendingProcessesRef = useRef<Set<string>>(new Set());
-  const processStatusCacheRef = useRef<Map<string, string>>(new Map());
-  const initializedRef = useRef<boolean>(false);
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+  const BATCH_DELAY = 100; // 100ms para agrupar requisições
+  const MAX_BATCH_SIZE = 50; // Limite máximo de requisições por lote
   
-  // Tempo mínimo entre carregamentos (milliseconds)
-  const THROTTLE_TIME = 2000;
-  
-  /**
-   * Verifica se um processo específico está pronto para ser carregado
-   */
-  const canLoadProcess = useCallback((processId: string, status?: string): boolean => {
-    // Não carregar se não há usuário autenticado
-    if (!user) return false;
-    
-    // Armazenar status do processo no cache
-    if (status) {
-      processStatusCacheRef.current.set(processId, status);
-    }
-    
-    // Não carregar processos não iniciados
-    const cachedStatus = processStatusCacheRef.current.get(processId);
-    if (cachedStatus === 'not_started') return false;
-    
-    return true;
-  }, [user]);
-  
-  /**
-   * Agenda carregamento de responsáveis em lote com throttling
-   */
-  const scheduleLoad = useCallback(() => {
-    if (loadingTimerRef.current) {
-      clearTimeout(loadingTimerRef.current);
-    }
-    
+  // Função otimizada para criar chave de cache
+  const getCacheKey = (processId: string, sectorId: string) => `${processId}:${sectorId}`;
+
+  // Limpar cache expirado e otimizar memória
+  const cleanExpiredCache = useCallback(() => {
     const now = Date.now();
-    const timeSinceLastLoad = now - lastLoadTimeRef.current;
+    const newCache: Record<string, CacheData> = {};
     
-    // Definir o delay com base no tempo desde o último carregamento
-    const delay = timeSinceLastLoad < THROTTLE_TIME 
-      ? THROTTLE_TIME - timeSinceLastLoad
-      : 0;
-      
-    loadingTimerRef.current = setTimeout(executeLoad, delay);
+    Object.entries(cacheRef.current).forEach(([key, value]) => {
+      if (now - value.timestamp <= CACHE_TTL) {
+        newCache[key] = value;
+      }
+    });
+    
+    cacheRef.current = newCache;
   }, []);
-  
-  /**
-   * Executa o carregamento efetivo dos responsáveis
-   */
-  const executeLoad = useCallback(async () => {
-    if (pendingProcessesRef.current.size === 0 || !user || isLoading) {
-      return;
-    }
-    
+
+  // Otimização do processamento em lote
+  const processBatchQueue = useCallback(async () => {
+    if (batchQueueRef.current.length === 0) return;
+
     setIsLoading(true);
-    lastLoadTimeRef.current = Date.now();
-    
+    const currentBatch = [...batchQueueRef.current];
+    batchQueueRef.current = [];
+
     try {
-      // Filtrar apenas processos que realmente precisam ser carregados
-      const processesToLoad = Array.from(pendingProcessesRef.current).filter(
-        processId => {
-          const status = processStatusCacheRef.current.get(processId);
-          return status !== 'not_started';
+      // Agrupamento otimizado por processo
+      const processGroups = currentBatch.reduce((acc, item) => {
+        if (!acc[item.processId]) {
+          acc[item.processId] = new Set<string>();
         }
-      );
-      
-      if (processesToLoad.length === 0) {
-        console.log("Nenhum processo precisa ser carregado após filtragem de status");
-        pendingProcessesRef.current.clear();
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log(`Executando carregamento em lote para ${processesToLoad.length} processos`);
-      
-      // Buscar responsáveis no banco de dados
-      const { data, error } = await supabase
-        .from('setor_responsaveis')
-        .select('processo_id, setor_id, usuario_id')
-        .in('processo_id', processesToLoad);
-      
-      if (error) {
-        console.error("Erro ao buscar responsáveis em lote:", error);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Processar os resultados
-      const results: Record<string, Record<string, any>> = {};
-      
-      if (data) {
-        data.forEach(item => {
-          if (!results[item.processo_id]) {
-            results[item.processo_id] = {};
-          }
-          
-          results[item.processo_id][item.setor_id] = { 
-            usuario_id: item.usuario_id 
-          };
-        });
-      }
-      
-      // Atualizar estado com os novos dados
-      setResponsiblesData(prev => ({
-        ...prev,
-        ...results
-      }));
-      
-      console.log(`Responsáveis carregados para ${Object.keys(results).length} processos`);
-      
-      // Limpar processos pendentes que foram carregados
-      processesToLoad.forEach(id => {
-        pendingProcessesRef.current.delete(id);
+        acc[item.processId].add(item.sectorId);
+        return acc;
+      }, {} as ProcessSectorMap);
+
+      // Dividir em sub-lotes se necessário para evitar queries muito grandes
+      const batchPromises = Object.entries(processGroups).map(async ([processId, sectors]) => {
+        const sectorArray = Array.from(sectors);
+        const { data, error } = await supabase
+          .from('setor_responsaveis')
+          .select(`
+            processo_id,
+            setor_id,
+            usuario_id,
+            usuarios:usuario_id (
+              id,
+              nome,
+              email
+            )
+          `)
+          .eq('processo_id', processId)
+          .in('setor_id', sectorArray);
+
+        if (error) throw error;
+        return { processId, data };
       });
-    } catch (err) {
-      console.error("Erro durante carregamento de responsáveis:", err);
+
+      const results = await Promise.all(batchPromises);
+
+      // Atualização eficiente do cache e resolução de promessas
+      results.forEach(({ processId, data }) => {
+        if (!data) return;
+
+        data.forEach((item) => {
+          if (!item.usuarios) {
+            console.warn(`Dados do usuário ausentes para setor ${item.setor_id} no processo ${processId}`);
+            return;
+          }
+
+          const cacheKey = getCacheKey(processId, item.setor_id);
+          const responsibleData = item.usuarios as ResponsibleData;
+          
+          // Atualizar cache
+          cacheRef.current[cacheKey] = {
+            timestamp: Date.now(),
+            data: responsibleData
+          };
+
+          // Resolver promessas pendentes
+          currentBatch
+            .filter(q => q.processId === processId && q.sectorId === item.setor_id)
+            .forEach(q => q.resolve(responsibleData));
+        });
+      });
+
+      // Resolver promessas para itens não encontrados
+      currentBatch.forEach(item => {
+        const cacheKey = getCacheKey(item.processId, item.sectorId);
+        if (!cacheRef.current[cacheKey]) {
+          item.resolve(null);
+        }
+      });
+
+    } catch (error) {
+      console.error('Erro ao buscar responsáveis em lote:', error);
+      currentBatch.forEach(item => item.reject(error));
     } finally {
       setIsLoading(false);
     }
-  }, [user, isLoading]);
-  
-  /**
-   * Adiciona um processo à fila para carregamento de responsáveis
-   */
-  const queueProcessForLoading = useCallback((processId: string, status?: string) => {
-    if (!canLoadProcess(processId, status)) {
-      return false;
-    }
-    
-    // Verificar se já temos dados para este processo
-    if (responsiblesData[processId]) {
-      return true;
-    }
-    
-    // Se o processo já está na fila, não fazer nada
-    if (pendingProcessesRef.current.has(processId)) {
-      return true;
-    }
-    
-    // Adicionar à fila de pendentes
-    pendingProcessesRef.current.add(processId);
-    
-    // Agendar carregamento
-    scheduleLoad();
-    return true;
-  }, [canLoadProcess, scheduleLoad, responsiblesData]);
-  
-  /**
-   * Adiciona múltiplos processos à fila de carregamento
-   */
-  const queueMultipleProcesses = useCallback((processes: Process[]) => {
-    // Verifica se já fizemos uma inicialização
-    if (initializedRef.current) {
-      return 0;
-    }
-    
-    let added = 0;
-    
-    // Filtramos para não processar novamente os que já estão carregados
-    const processesToQueue = processes.filter(
-      process => process.status !== 'not_started' && !responsiblesData[process.id]
-    );
-    
-    if (processesToQueue.length === 0) {
-      return 0;
-    }
-    
-    processesToQueue.forEach(process => {
-      const wasAdded = queueProcessForLoading(process.id, process.status);
-      if (wasAdded) added++;
-    });
-    
-    // Marcar que já fizemos a inicialização
-    if (added > 0) {
-      initializedRef.current = true;
-    }
-    
-    return added;
-  }, [queueProcessForLoading, responsiblesData]);
-  
-  /**
-   * Limpa a fila e cancela carregamentos pendentes
-   */
-  const cancelPendingLoads = useCallback(() => {
-    if (loadingTimerRef.current) {
-      clearTimeout(loadingTimerRef.current);
-      loadingTimerRef.current = null;
-    }
-    
-    pendingProcessesRef.current.clear();
   }, []);
-  
-  /**
-   * Retorna os dados de responsável para um processo/setor específico
-   */
-  const getResponsibleData = useCallback((processId: string, sectorId: string) => {
-    return responsiblesData[processId]?.[sectorId] || null;
-  }, [responsiblesData]);
-  
-  /**
-   * Verifica se um processo tem um responsável designado para um setor específico
-   */
-  const hasResponsibleForSector = useCallback((processId: string, sectorId: string): boolean => {
-    return !!getResponsibleData(processId, sectorId);
-  }, [getResponsibleData]);
-  
-  /**
-   * Verifica se o usuário atual é o responsável por um processo em um setor específico
-   */
-  const isUserResponsibleForSector = useCallback((processId: string, sectorId: string): boolean => {
-    if (!user) return false;
-    
-    const responsible = getResponsibleData(processId, sectorId);
-    return responsible?.usuario_id === user.id;
-  }, [getResponsibleData, user]);
-  
-  // Limpar ao desmontar
-  useEffect(() => {
-    return () => {
-      if (loadingTimerRef.current) {
-        clearTimeout(loadingTimerRef.current);
+
+  // Carregar responsável com otimização de cache
+  const loadResponsible = useCallback((processId: string, sectorId: string): Promise<ResponsibleData | null> => {
+    const cacheKey = getCacheKey(processId, sectorId);
+    const cached = cacheRef.current[cacheKey];
+
+    // Verificar cache válido
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return Promise.resolve(cached.data);
+    }
+
+    // Adicionar à fila de batch otimizada
+    return new Promise((resolve, reject) => {
+      batchQueueRef.current.push({ processId, sectorId, resolve, reject });
+
+      // Atualizar mapa de processo-setor para otimização
+      if (!processSectorMapRef.current[processId]) {
+        processSectorMapRef.current[processId] = new Set();
       }
-      // Resetar flag de inicialização quando o componente é desmontado
-      initializedRef.current = false;
+      processSectorMapRef.current[processId].add(sectorId);
+
+      // Limpar timeout anterior se existir
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Processar imediatamente se atingir tamanho máximo do lote
+      if (batchQueueRef.current.length >= MAX_BATCH_SIZE) {
+        processBatchQueue();
+      } else {
+        // Caso contrário, agendar processamento
+        timeoutRef.current = setTimeout(processBatchQueue, BATCH_DELAY);
+      }
+    });
+  }, [processBatchQueue]);
+
+  // Pré-carregar responsáveis com otimização
+  const preloadResponsibles = useCallback(async (processes: Process[]) => {
+    if (!processes.length) return;
+
+    try {
+      const processIds = processes.map(p => p.id);
+      const { data: history, error } = await supabase
+        .from('processos_historico')
+        .select('processo_id, setor_id')
+        .in('processo_id', processIds);
+
+      if (error) {
+        console.error('Erro ao buscar histórico para preload:', error);
+        return;
+      }
+
+      // Agrupar por processo para otimizar carregamento
+      const processGroups: ProcessSectorMap = {};
+      history.forEach(({ processo_id, setor_id }) => {
+        if (!processGroups[processo_id]) {
+          processGroups[processo_id] = new Set();
+        }
+        processGroups[processo_id].add(setor_id);
+      });
+
+      // Carregar em lotes menores para evitar sobrecarga
+      const batchSize = Math.ceil(Object.keys(processGroups).length / 3);
+      const processEntries = Object.entries(processGroups);
+      
+      for (let i = 0; i < processEntries.length; i += batchSize) {
+        const batch = processEntries.slice(i, i + batchSize);
+        const loadPromises = batch.flatMap(([processId, sectors]) => 
+          Array.from(sectors).map(sectorId => loadResponsible(processId, sectorId))
+        );
+        await Promise.all(loadPromises);
+      }
+    } catch (error) {
+      console.error('Erro no preload de responsáveis:', error);
+    }
+  }, [loadResponsible]);
+
+  // Limpeza e manutenção do cache
+  useEffect(() => {
+    const interval = setInterval(cleanExpiredCache, CACHE_TTL);
+    
+    return () => {
+      clearInterval(interval);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, []);
-  
+  }, [cleanExpiredCache]);
+
   return {
-    queueProcessForLoading,
-    queueMultipleProcesses,
-    cancelPendingLoads,
-    isLoading,
-    getResponsibleData,
-    hasResponsibleForSector,
-    isUserResponsibleForSector,
-    responsiblesData
+    loadResponsible,
+    preloadResponsibles,
+    isLoading
   };
 };
+
