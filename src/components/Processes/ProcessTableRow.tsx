@@ -85,7 +85,7 @@ const ProcessTableRow = ({
       onClick={handleRowClick}
     >
       {/* Protocolo - Largura fixa de 70px */}
-      <TableCell className="w-[70px] whitespace-nowrap font-medium">
+      <TableCell className="w-[70px] whitespace-nowrap text-left font-medium">
         {process.protocolNumber}
       </TableCell>
       
