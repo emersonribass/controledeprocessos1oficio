@@ -1,4 +1,3 @@
-
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -84,11 +83,11 @@ const ProcessTableRow = ({
       )}
       onClick={handleRowClick}
     >
-      <TableCell className="font-medium w-[150px] whitespace-nowrap">
+      <TableCell className="w-[180px] whitespace-nowrap">
         {process.protocolNumber}
       </TableCell>
       
-      <TableCell className="process-action text-center" onClick={e => e.stopPropagation()}>
+      <TableCell className="w-[180px] text-center process-action" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
           currentTypeId={process.processType} 
@@ -98,20 +97,24 @@ const ProcessTableRow = ({
         />
       </TableCell>
       
-      <ProcessDepartmentsSection 
-        sortedDepartments={sortedDepartments}
-        isProcessStarted={process.status !== "not_started"}
-        getMostRecentEntryDate={(departmentId) => getMostRecentEntryDate(departmentId)}
-        hasPassedDepartment={(departmentId) => hasPassedDepartment(departmentId)}
-        isCurrentDepartment={(departmentId) => isCurrentDepartment(departmentId)}
-        isPreviousDepartment={(departmentId) => isPreviousDepartment(departmentId)}
-        isDepartmentOverdue={(departmentId, isProcessStarted) => isDepartmentOverdue(departmentId, isProcessStarted)}
-        processId={process.id}
-        processResponsible={processResponsibles?.initial}
-        sectorResponsibles={processResponsibles}
-      />
+      {sortedDepartments.map((dept) => (
+        <TableCell key={dept.id} className="text-center min-w-[150px]">
+          <ProcessDepartmentCell 
+            departmentId={dept.id}
+            isCurrentDepartment={isCurrentDepartment(dept.id)}
+            hasPassedDepartment={hasPassedDepartment(dept.id)}
+            entryDate={getMostRecentEntryDate(dept.id)}
+            showDate={isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)}
+            isDepartmentOverdue={isCurrentDepartment(dept.id) && isDepartmentOverdue(dept.id, process.status !== "not_started")}
+            departmentTimeLimit={dept.timeLimit}
+            isProcessStarted={process.status !== "not_started"}
+            responsible={processResponsibles?.[dept.id]}
+            isFirstDepartment={dept.id === sortedDepartments[0]?.id}
+          />
+        </TableCell>
+      ))}
     
-      <TableCell className="text-right process-action w-[120px]">
+      <TableCell className="w-[120px] text-right process-action">
         <ProcessRowActions 
           processId={process.id}
           protocolNumber={process.protocolNumber}
