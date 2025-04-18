@@ -49,7 +49,7 @@ const ProcessTableHeader = ({
           </TableHead>
         ))}
         
-        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Ações</TableHead>
+        <TableHead className="w-[150px] text-center whitespace-nowrap">Ações</TableHead>
       </TableRow>
     </TableHeader>
   );
