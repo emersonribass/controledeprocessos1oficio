@@ -110,7 +110,7 @@ const ProcessTableRow = ({
         sectorResponsibles={processResponsibles}
       />
     
-      <TableCell className="text-right process-action">
+//      <TableCell className="text-right process-action">
         <ProcessRowActions 
           processId={process.id}
           protocolNumber={process.protocolNumber}
@@ -126,7 +126,7 @@ const ProcessTableRow = ({
           isAccepting={isAccepting}
           sectorId={process.currentDepartment}
         />
-      </TableCell>
+//      </TableCell>
     </TableRow>
   );
 };
