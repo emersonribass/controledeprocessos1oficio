@@ -34,7 +34,7 @@ const ProcessTableHeader = ({
           className="w-[70px] whitespace-nowrap" 
           onClick={(e) => handleSortClick("protocolNumber", e)}
         >
-          <div className="text-left">
+          <div className="text-center">
             Protocolo
           </div>
         </TableHead>
@@ -49,7 +49,7 @@ const ProcessTableHeader = ({
           </TableHead>
         ))}
         
-        <TableHead className="w-[120px] text-center whitespace-nowrap">Ações</TableHead>
+        <TableHead className="w-[150px] text-center whitespace-nowrap">Ações</TableHead>
       </TableRow>
     </TableHeader>
   );
