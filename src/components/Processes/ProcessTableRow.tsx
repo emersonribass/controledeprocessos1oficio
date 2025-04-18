@@ -110,7 +110,23 @@ const ProcessTableRow = ({
         sectorResponsibles={processResponsibles}
       />
     
-
+      <TableCell className="text-right process-action">
+        <ProcessRowActions 
+          processId={process.id}
+          protocolNumber={process.protocolNumber}
+          processType={process.processType}
+          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+          moveProcessToNextDepartment={moveProcessToNextDepartment}
+          isFirstDepartment={isFirstDepartment}
+          isLastDepartment={isLastDepartment}
+          status={process.status}
+          startProcess={canInitiateProcesses || process.status !== "not_started" ? startProcess : undefined}
+          hasSectorResponsible={hasResponsible}
+          onAcceptResponsibility={onAcceptResponsibility}
+          isAccepting={isAccepting}
+          sectorId={process.currentDepartment}
+        />
+      </TableCell>
     </TableRow>
   );
 };
