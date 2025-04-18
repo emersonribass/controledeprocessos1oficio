@@ -1,3 +1,4 @@
+
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -7,12 +8,11 @@ import ProcessDepartmentsSection from "./ProcessDepartmentsSection";
 import ProcessRowActions from "./ProcessRowActions";
 import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
 import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
-import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 
 interface ProcessTableRowProps {
   process: Process;
-  processTypes: ProcessType[];
   departments: Department[];
+  processTypes: ProcessType[];
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
   moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   getProcessTypeName: (id: string) => string;
@@ -21,14 +21,13 @@ interface ProcessTableRowProps {
   onAcceptResponsibility: () => Promise<void>;
   isAccepting: boolean;
   hasSectorResponsible?: boolean; 
-  canInitiateProcesses?: boolean;
-  processResponsibles?: Record<string, any>;
+  canInitiateProcesses?: boolean; 
 }
 
 const ProcessTableRow = ({
   process,
-  processTypes,
   departments,
+  processTypes,
   moveProcessToNextDepartment,
   moveProcessToPreviousDepartment,
   getProcessTypeName,
@@ -37,14 +36,16 @@ const ProcessTableRow = ({
   onAcceptResponsibility,
   isAccepting,
   hasSectorResponsible = false,
-  canInitiateProcesses = false,
-  processResponsibles
+  canInitiateProcesses = false
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
   
+  // Usar o hook para obter informações sobre responsabilidade
   const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
-  const { getProcessResponsible } = useProcessResponsibility();
   
+  // Verificar se há um responsável para o setor atual
+  // Importante: verificamos tanto o hasSectorResponsible (que pode vir de um contexto mais amplo)
+  // quanto o sectorResponsible (que é buscado diretamente por este componente)
   const hasResponsible = hasSectorResponsible || !!sectorResponsible;
   
   const {
@@ -59,17 +60,16 @@ const ProcessTableRow = ({
     isDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
-  const processSpecificResponsibles = processResponsibles;
-
+  // Função para definir a cor de fundo com base no status
   const getRowBackgroundColor = (status: string) => {
-    if (status === "completed") return "bg-green-400";
+    if (status === "completed") return "bg-green-200";
     if (status === "overdue") return "bg-red-200";
     if (status === "pending") return "bg-blue-200";
-    if (status === "not_started") return "bg-green-200";
     return "";
   };
 
   const handleRowClick = (e: React.MouseEvent) => {
+    // Não navegar se o clique foi em um elemento de ação (botões, selects, etc)
     if ((e.target as HTMLElement).closest('.process-action')) {
       e.stopPropagation();
       return;
@@ -81,15 +81,15 @@ const ProcessTableRow = ({
   return (
     <TableRow 
       className={cn(
-        "cursor-pointer hover:bg-gray-200",
+        "cursor-pointer hover:bg-gray-100",
         getRowBackgroundColor(process.status)
       )}
       onClick={handleRowClick}
     >
-      <TableCell className="font-medium w-[180px] px-2">
+      <TableCell className="font-medium">
         {process.protocolNumber}
       </TableCell>
-      <TableCell className="process-action w-[180px] px-2" onClick={e => e.stopPropagation()}>
+      <TableCell className="process-action" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
           currentTypeId={process.processType} 
@@ -98,7 +98,7 @@ const ProcessTableRow = ({
           updateProcessType={updateProcessType} 
         />
       </TableCell>
-
+      
       <ProcessDepartmentsSection 
         sortedDepartments={sortedDepartments}
         isProcessStarted={process.status !== "not_started"}
@@ -107,28 +107,22 @@ const ProcessTableRow = ({
         isCurrentDepartment={(departmentId) => isCurrentDepartment(departmentId)}
         isPreviousDepartment={(departmentId) => isPreviousDepartment(departmentId)}
         isDepartmentOverdue={(departmentId, isProcessStarted) => isDepartmentOverdue(departmentId, isProcessStarted)}
-        processId={process.id}
-        processResponsible={processSpecificResponsibles?.initial}
-        sectorResponsibles={processSpecificResponsibles}
       />
-    
-      <TableCell className="text-right process-action w-[120px] px-2">
-        <ProcessRowActions 
-          processId={process.id}
-          protocolNumber={process.protocolNumber}
-          processType={process.processType}
-          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-          moveProcessToNextDepartment={moveProcessToNextDepartment}
-          isFirstDepartment={isFirstDepartment}
-          isLastDepartment={isLastDepartment}
-          status={process.status}
-          startProcess={canInitiateProcesses || process.status !== "not_started" ? startProcess : undefined}
-          hasSectorResponsible={hasResponsible}
-          onAcceptResponsibility={onAcceptResponsibility}
-          isAccepting={isAccepting}
-          sectorId={process.currentDepartment}
-        />
-      </TableCell>
+      
+      <ProcessRowActions 
+        processId={process.id}
+        protocolNumber={process.protocolNumber}
+        moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+        moveProcessToNextDepartment={moveProcessToNextDepartment}
+        isFirstDepartment={isFirstDepartment}
+        isLastDepartment={isLastDepartment}
+        status={process.status}
+        startProcess={canInitiateProcesses || process.status !== "not_started" ? startProcess : undefined}
+        hasSectorResponsible={hasResponsible}
+        onAcceptResponsibility={onAcceptResponsibility}
+        isAccepting={isAccepting}
+        sectorId={process.currentDepartment}
+      />
     </TableRow>
   );
 };
