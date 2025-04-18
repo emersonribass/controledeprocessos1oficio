@@ -83,17 +83,10 @@ const ProcessTableRow = ({
       )}
       onClick={handleRowClick}
     >
+      <TableCell className="font-medium">
+        {process.protocolNumber}
+      </TableCell>
       
-       <TableCell className="process-action" onClick={e => e.stopPropagation()}>
-        <ProcessTypePicker 
-          processId={process.id} 
-          currentTypeId={process.processType} 
-          processTypes={processTypes} 
-          getProcessTypeName={getProcessTypeName} 
-          updateProcessType={updateProcessType} 
-        />
-      </TableCell> 
-
       <ProcessDepartmentsSection 
         sortedDepartments={sortedDepartments}
         isProcessStarted={process.status !== "not_started"}
