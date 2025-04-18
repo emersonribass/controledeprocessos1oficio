@@ -34,7 +34,7 @@ const ProcessTableHeader = ({
           className="w-[70px] whitespace-nowrap" 
           onClick={(e) => handleSortClick("protocolNumber", e)}
         >
-          <div className="flex items-center text-center">
+          <div className="flex items-center text-left">
             Protocolo
           </div>
         </TableHead>
