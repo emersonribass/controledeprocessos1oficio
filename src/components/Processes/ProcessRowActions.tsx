@@ -35,25 +35,23 @@ const ProcessRowActions = ({
   sectorId
 }: ProcessRowActionsProps) => {
   return (
-    <div className="flex justify-end">
-      <ProcessActionButtons 
-        processId={processId} 
-        protocolNumber={protocolNumber}
-        processType={processType}
-        moveProcessToPreviousDepartment={moveProcessToPreviousDepartment} 
-        moveProcessToNextDepartment={moveProcessToNextDepartment} 
-        isFirstDepartment={isFirstDepartment} 
-        isLastDepartment={isLastDepartment} 
-        setIsEditing={() => {}} 
-        isEditing={false} 
-        status={status} 
-        startProcess={startProcess} 
-        hasSectorResponsible={hasSectorResponsible} 
-        onAcceptResponsibility={onAcceptResponsibility} 
-        isAccepting={isAccepting} 
-        sectorId={sectorId} 
-      />
-    </div>
+    <ProcessActionButtons 
+      processId={processId} 
+      protocolNumber={protocolNumber}
+      processType={processType}
+      moveProcessToPreviousDepartment={moveProcessToPreviousDepartment} 
+      moveProcessToNextDepartment={moveProcessToNextDepartment} 
+      isFirstDepartment={isFirstDepartment} 
+      isLastDepartment={isLastDepartment} 
+      setIsEditing={() => {}} 
+      isEditing={false} 
+      status={status} 
+      startProcess={startProcess} 
+      hasSectorResponsible={hasSectorResponsible} 
+      onAcceptResponsibility={onAcceptResponsibility} 
+      isAccepting={isAccepting} 
+      sectorId={sectorId} 
+    />
   );
 };
 
