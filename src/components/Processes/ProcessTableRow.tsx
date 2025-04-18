@@ -1,3 +1,4 @@
+
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -83,10 +84,12 @@ const ProcessTableRow = ({
       )}
       onClick={handleRowClick}
     >
+      {/* Protocolo - Largura fixa de 180px */}
       <TableCell className="w-[180px] whitespace-nowrap">
         {process.protocolNumber}
       </TableCell>
       
+      {/* Tipo de Processo - Largura fixa de 180px */}
       <TableCell className="w-[180px] text-center process-action" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
@@ -97,6 +100,7 @@ const ProcessTableRow = ({
         />
       </TableCell>
       
+      {/* Departamentos - Largura mínima de 150px para cada */}
       {sortedDepartments.map((dept) => (
         <TableCell key={dept.id} className="text-center min-w-[150px]">
           <ProcessDepartmentCell 
@@ -114,6 +118,7 @@ const ProcessTableRow = ({
         </TableCell>
       ))}
     
+      {/* Ações - Largura fixa de 120px */}
       <TableCell className="w-[120px] text-right process-action">
         <ProcessRowActions 
           processId={process.id}

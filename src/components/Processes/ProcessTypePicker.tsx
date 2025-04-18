@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProcessType } from "@/types";
@@ -49,7 +50,7 @@ const ProcessTypePicker = ({
   const activeProcessTypes = processTypes.filter(type => type.active !== false);
 
   return (
-    <div className="w-full px-4">
+    <div className="w-full max-w-[160px] mx-auto">
       <Select value={selectedType} onValueChange={handleChange}>
         <SelectTrigger className="h-8">
           <SelectValue placeholder="Selecione o tipo" />

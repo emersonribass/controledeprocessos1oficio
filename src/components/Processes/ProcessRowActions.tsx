@@ -35,7 +35,7 @@ const ProcessRowActions = ({
   sectorId
 }: ProcessRowActionsProps) => {
   return (
-    <TableCell className="text-right process-action">
+    <div className="flex justify-end">
       <ProcessActionButtons 
         processId={processId} 
         protocolNumber={protocolNumber}
@@ -53,7 +53,7 @@ const ProcessRowActions = ({
         isAccepting={isAccepting} 
         sectorId={sectorId} 
       />
-    </TableCell>
+    </div>
   );
 };
 

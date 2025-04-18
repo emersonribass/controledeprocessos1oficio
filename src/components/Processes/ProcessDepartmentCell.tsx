@@ -32,9 +32,6 @@ const ProcessDepartmentCell = ({
   responsible,
   isFirstDepartment = false
 }: ProcessDepartmentCellProps) => {
-  // Adicionar console.log para debug
-  console.log(`ProcessDepartmentCell - Departamento ${departmentId}:`, { responsible });
-
   // Calcular dias restantes se for o departamento atual
   let remainingDays = 0;
   if (isProcessStarted && isCurrentDepartment && entryDate && departmentTimeLimit > 0) {
@@ -45,7 +42,7 @@ const ProcessDepartmentCell = ({
   }
 
   return (
-    <div className="text-center">
+    <div className="text-center w-full">
       {showDate && entryDate && (
         <div className="text-xs text-black">
           {format(new Date(entryDate), "dd/MM/yyyy", {
