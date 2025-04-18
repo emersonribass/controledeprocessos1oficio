@@ -50,10 +50,10 @@ const ProcessTypePicker = ({
   const activeProcessTypes = processTypes.filter(type => type.active !== false);
 
   return (
-    <div className="w-[180px] mx-auto">
+    <div className="w-[150px] mx-auto">
       <Select value={selectedType} onValueChange={handleChange}>
         <SelectTrigger className="h-8">
-          <SelectValue placeholder="Selecione o tipo" />
+          <SelectValue placeholder="Selecione o tipo" className="truncate" />
         </SelectTrigger>
         <SelectContent>
           {activeProcessTypes.map((type) => (
