@@ -71,19 +71,20 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
    */
   const hasSectorResponsible = async (processId: string, sectorId: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase
+      // Modificado para usar .select('count') em vez de .maybeSingle()
+      // porque pode haver múltiplos responsáveis por setor
+      const { data, error, count } = await supabase
         .from('setor_responsaveis')
-        .select('*')
+        .select('*', { count: 'exact', head: true })
         .eq('processo_id', processId)
-        .eq('setor_id', sectorId)
-        .maybeSingle();
+        .eq('setor_id', sectorId);
       
       if (error) {
         console.error("Erro ao verificar existência de responsável no setor:", error);
         return false;
       }
       
-      return !!data;
+      return count !== null && count > 0;
     } catch (error) {
       console.error("Erro ao verificar responsáveis de setor:", error);
       return false;
