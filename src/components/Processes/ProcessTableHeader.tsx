@@ -51,7 +51,7 @@ const ProcessTableHeader = ({
           </TableHead>
         ))}
         
-        <TableHead className="w-[100px] text-center whitespace-nowrap">Ações</TableHead>
+        <TableHead className="w-[110px] text-center whitespace-nowrap">Ações</TableHead>
       </TableRow>
     </TableHeader>
   );
