@@ -105,9 +105,9 @@ const ProcessTableRow = ({
         isCurrentDepartment={(departmentId) => isCurrentDepartment(departmentId)}
         isPreviousDepartment={(departmentId) => isPreviousDepartment(departmentId)}
         isDepartmentOverdue={(departmentId, isProcessStarted) => isDepartmentOverdue(departmentId, isProcessStarted)}
-/*        processId={process.id}
+        processId={process.id}
         processResponsible={processResponsibles?.initial}
-        sectorResponsibles={processResponsibles}*/
+        sectorResponsibles={processResponsibles}
       />
     
       <TableCell className="text-right process-action">
