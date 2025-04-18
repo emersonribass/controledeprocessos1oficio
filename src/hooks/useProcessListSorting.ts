@@ -32,15 +32,28 @@ export const useProcessListSorting = () => {
         return statusA - statusB;
       }
 
-      // 2. Ordenar por número de protocolo (sempre crescente)
+      // 2. Ordenar por número de protocolo
       const protocolA = a.protocolNumber || "";
       const protocolB = b.protocolNumber || "";
-      
-      // Remover caracteres não numéricos e converter para número
-      const numA = parseInt(protocolA.replace(/\D/g, ''));
-      const numB = parseInt(protocolB.replace(/\D/g, ''));
-      
-      return numA - numB;
+
+      // Função auxiliar para extrair e comparar números de protocolo
+      const compareProtocolNumbers = (a: string, b: string) => {
+        // Remover todos os caracteres não numéricos e converter para número
+        const numA = parseInt(a.replace(/\D/g, ''));
+        const numB = parseInt(b.replace(/\D/g, ''));
+        
+        // Se ambos são números válidos, compare-os
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return sortDirection === "asc" ? numA - numB : numB - numA;
+        }
+        
+        // Se algum não é número válido, compare as strings
+        return sortDirection === "asc" 
+          ? protocolA.localeCompare(protocolB) 
+          : protocolB.localeCompare(protocolA);
+      };
+
+      return compareProtocolNumbers(protocolA, protocolB);
     });
   };
 
@@ -51,3 +64,4 @@ export const useProcessListSorting = () => {
     sortProcesses,
   };
 };
+
