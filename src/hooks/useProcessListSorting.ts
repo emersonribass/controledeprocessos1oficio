@@ -17,17 +17,18 @@ export const useProcessListSorting = () => {
 
   const sortProcesses = (data: Process[]): Process[] => {
     return [...data].sort((a, b) => {
-      // 1. Ordenar por status primeiro - alterada a prioridade
+      // 1. Ordenar por status primeiro - corrigido para priorizar processos em andamento
       const statusPriority = {
         'pending': 0,     // Em andamento (prioridade máxima)
         'overdue': 1,     // Em andamento (atrasado)
-        'not_started': 2, // Não iniciado
-        'completed': 3    // Concluído (menor prioridade)
+        'completed': 2,   // Concluído
+        'not_started': 3  // Não iniciado (menor prioridade, independente da data de início)
       };
 
       const statusA = statusPriority[a.status] || 0;
       const statusB = statusPriority[b.status] || 0;
 
+      // Se os status são diferentes, ordenar por prioridade de status
       if (statusA !== statusB) {
         return statusA - statusB;
       }
