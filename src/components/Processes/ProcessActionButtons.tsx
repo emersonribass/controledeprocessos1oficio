@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
@@ -8,7 +9,7 @@ import { useUserProfile } from "@/hooks/auth/useUserProfile";
 
 interface ProcessActionButtonsProps {
   processId: string;
-  processType?: string; // Adicionado para verificar se existe um tipo selecionado
+  processType?: string;
   protocolNumber?: string;
   moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   moveProcessToNextDepartment: (processId: string) => Promise<void>;

@@ -41,22 +41,17 @@ const ProcessTable = ({
   filters
 }: ProcessTableProps) => {
   const { processesResponsibles, isLoading, queueSectorForLoading } = useProcessTableState(processes);
-  
-  // Adicionar console.log para debug
-  console.log("ProcessTable - processesResponsibles:", processesResponsibles);
 
   return (
-    <div className="border rounded-md">
-      <Table>
-        <TableHeader>
-          <ProcessTableHeader 
-            departments={departments}
-            getDepartmentName={getDepartmentName}
-            sortField={sortField}
-            sortDirection={sortDirection}
-            toggleSort={toggleSort}
-          />
-        </TableHeader>
+    <div className="border rounded-md overflow-x-auto">
+      <Table className="min-w-full table-fixed">
+        <ProcessTableHeader 
+          departments={departments}
+          getDepartmentName={getDepartmentName}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          toggleSort={toggleSort}
+        />
         
         <ProcessTableBody 
           processes={processes}

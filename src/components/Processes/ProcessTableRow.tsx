@@ -85,7 +85,7 @@ const ProcessTableRow = ({
       onClick={handleRowClick}
     >
       {/* Protocolo - Largura fixa de 180px */}
-      <TableCell className="w-[180px] whitespace-nowrap">
+      <TableCell className="w-[180px] whitespace-nowrap font-medium">
         {process.protocolNumber}
       </TableCell>
       
@@ -102,7 +102,7 @@ const ProcessTableRow = ({
       
       {/* Departamentos - Largura mínima de 150px para cada */}
       {sortedDepartments.map((dept) => (
-        <TableCell key={dept.id} className="text-center min-w-[150px]">
+        <TableCell key={dept.id} className="min-w-[150px] text-center">
           <ProcessDepartmentCell 
             departmentId={dept.id}
             isCurrentDepartment={isCurrentDepartment(dept.id)}
