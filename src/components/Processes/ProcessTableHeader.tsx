@@ -3,17 +3,21 @@ import { ArrowUpDown } from "lucide-react";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Process } from "@/types";
 import { Department } from "@/types";
+
 interface ProcessTableHeaderProps {
   sortField: keyof Process;
   sortDirection: "asc" | "desc";
   toggleSort: (field: keyof Process) => void;
   departments: Department[];
+  getDepartmentName: (id: string) => string;
 }
+
 const ProcessTableHeader = ({
   sortField,
   sortDirection,
   toggleSort,
-  departments
+  departments,
+  getDepartmentName
 }: ProcessTableHeaderProps) => {
   // Ordenar departamentos por ordem e filtrar o departamento "Concluído"
   const sortedDepartments = [...departments].filter(dept => dept.name !== "Concluído(a)").sort((a, b) => a.order - b.order);
@@ -46,4 +50,5 @@ const ProcessTableHeader = ({
       </TableRow>
     </TableHeader>;
 };
+
 export default ProcessTableHeader;
