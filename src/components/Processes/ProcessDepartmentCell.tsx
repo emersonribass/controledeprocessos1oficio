@@ -56,7 +56,7 @@ const ProcessDepartmentCell = ({
           <div className="flex items-center justify-center gap-1">
             <User className="h-3 w-3" />
             <span className="font-medium">
-              {isFirstDepartment ? "Resp. Inicial:" : "Resp. Atual:"}
+              {isFirstDepartment ? "Resp.:" : "Resp.:"}
             </span>
           </div>
           <span className="text-primary text-[11px]">
