@@ -2,7 +2,7 @@ import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import ProcessDepartmentsSection from "./ProcessDepartmentsSection";
+import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessTypePicker from "./ProcessTypePicker";
 import ProcessRowActions from "./ProcessRowActions";
 import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
