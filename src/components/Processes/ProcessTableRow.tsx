@@ -28,8 +28,8 @@ interface ProcessTableRowProps {
 
 const ProcessTableRow = ({
   process,
-  departments,
   processTypes,
+  departments,
   moveProcessToNextDepartment,
   moveProcessToPreviousDepartment,
   getProcessTypeName,
