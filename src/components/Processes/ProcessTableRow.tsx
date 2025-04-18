@@ -92,18 +92,22 @@ const ProcessTableRow = ({
       )}
       onClick={handleRowClick}
     >
-      <TableCell className="font-medium">
-        {process.protocolNumber}
+      <TableCell className="font-medium w-[200px]">
+  {process.protocolNumber}
       </TableCell>
-      <TableCell className="process-action" onClick={e => e.stopPropagation()}>
-        <ProcessTypePicker 
-          processId={process.id} 
-          currentTypeId={process.processType} 
-          processTypes={processTypes} 
-          getProcessTypeName={getProcessTypeName} 
-          updateProcessType={updateProcessType} 
-        />
-      </TableCell>
+        <TableCell className="process-action w-[200px]" onClick={e => e.stopPropagation()}>
+          <ProcessTypePicker 
+            processId={process.id} 
+            currentTypeId={process.processType} 
+            processTypes={processTypes} 
+            getProcessTypeName={getProcessTypeName} 
+            updateProcessType={updateProcessType} 
+          />
+        </TableCell>
+
+          <TableCell className="text-right process-action w-[100px]">
+            <ProcessActionButtons {...props} />
+          </TableCell>
       
       <ProcessDepartmentsSection 
         sortedDepartments={sortedDepartments}
