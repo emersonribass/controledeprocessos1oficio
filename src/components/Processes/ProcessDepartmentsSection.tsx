@@ -49,7 +49,7 @@ const ProcessDepartmentsSection = ({
         }
         
         return (
-          <TableCell key={dept.id}>
+          <TableCell key={dept.id} className="text-center">
             <ProcessDepartmentCell
               departmentId={dept.id}
               isCurrentDepartment={isActive}
