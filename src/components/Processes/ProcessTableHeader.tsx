@@ -43,13 +43,13 @@ const ProcessTableHeader = ({
                 {sortedDepartments.map(dept => (
           <TableHead 
             key={dept.id} 
-            className="text-center whitespace-nowrap min-w-[150px]"
+            className="min-w-[150px] text-center whitespace-nowrap"
           >
             {dept.name}
           </TableHead>
         ))}
         
-        <TableHead className="w-[150px] text-center whitespace-nowrap">Ações</TableHead>
+        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Ações</TableHead>
       </TableRow>
     </TableHeader>
   );
