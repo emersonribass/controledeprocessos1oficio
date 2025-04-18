@@ -31,7 +31,7 @@ const ProcessTableHeader = ({
   return <TableHeader>
       <TableRow>
         <TableHead 
-          className="cursor-pointer whitespace-nowrap w-[200px]" 
+          className="cursor-pointer whitespace-nowrap w-[150px]" 
           onClick={(e) => handleSortClick("protocolNumber", e)}
         >
           <div className="flex items-center">
@@ -41,14 +41,14 @@ const ProcessTableHeader = ({
         </TableHead>
         <TableHead className="whitespace-nowrap w-[200px]">Tipo</TableHead>
         
-        {/* Colunas dinâmicas para cada departamento */}
         {sortedDepartments.map(dept => <TableHead key={dept.id} className="text-center whitespace-nowrap">
             {dept.name}
           </TableHead>)}
         
-        <TableHead className="text-center whitespace-nowrap w-[100px]">Ações</TableHead>
+        <TableHead className="text-right whitespace-nowrap w-[100px]">Ações</TableHead>
       </TableRow>
     </TableHeader>;
 };
 
 export default ProcessTableHeader;
+

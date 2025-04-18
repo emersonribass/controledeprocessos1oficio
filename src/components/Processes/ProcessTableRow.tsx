@@ -92,20 +92,20 @@ const ProcessTableRow = ({
       )}
       onClick={handleRowClick}
     >
-      <TableCell className="font-medium w-[200px]">
-  {process.protocolNumber}
+      <TableCell className="font-medium w-[150px]">
+        {process.protocolNumber}
       </TableCell>
-        <TableCell className="process-action w-[200px]" onClick={e => e.stopPropagation()}>
-          <ProcessTypePicker 
-            processId={process.id} 
-            currentTypeId={process.processType} 
-            processTypes={processTypes} 
-            getProcessTypeName={getProcessTypeName} 
-            updateProcessType={updateProcessType} 
-          />
-        </TableCell>
+      <TableCell className="process-action w-[200px]" onClick={e => e.stopPropagation()}>
+        <ProcessTypePicker 
+          processId={process.id} 
+          currentTypeId={process.processType} 
+          processTypes={processTypes} 
+          getProcessTypeName={getProcessTypeName} 
+          updateProcessType={updateProcessType} 
+        />
+      </TableCell>
 
-     <ProcessDepartmentsSection 
+      <ProcessDepartmentsSection 
         sortedDepartments={sortedDepartments}
         isProcessStarted={process.status !== "not_started"}
         getMostRecentEntryDate={(departmentId) => getMostRecentEntryDate(departmentId)}
@@ -118,23 +118,26 @@ const ProcessTableRow = ({
         sectorResponsibles={processSpecificResponsibles}
       />
     
-      <ProcessRowActions 
-        processId={process.id}
-        protocolNumber={process.protocolNumber}
-        processType={process.processType}
-        moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-        moveProcessToNextDepartment={moveProcessToNextDepartment}
-        isFirstDepartment={isFirstDepartment}
-        isLastDepartment={isLastDepartment}
-        status={process.status}
-        startProcess={canInitiateProcesses || process.status !== "not_started" ? startProcess : undefined}
-        hasSectorResponsible={hasResponsible}
-        onAcceptResponsibility={onAcceptResponsibility}
-        isAccepting={isAccepting}
-        sectorId={process.currentDepartment}
-      />
+      <TableCell className="text-right process-action w-[100px]">
+        <ProcessRowActions 
+          processId={process.id}
+          protocolNumber={process.protocolNumber}
+          processType={process.processType}
+          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+          moveProcessToNextDepartment={moveProcessToNextDepartment}
+          isFirstDepartment={isFirstDepartment}
+          isLastDepartment={isLastDepartment}
+          status={process.status}
+          startProcess={canInitiateProcesses || process.status !== "not_started" ? startProcess : undefined}
+          hasSectorResponsible={hasResponsible}
+          onAcceptResponsibility={onAcceptResponsibility}
+          isAccepting={isAccepting}
+          sectorId={process.currentDepartment}
+        />
+      </TableCell>
     </TableRow>
   );
 };
 
 export default ProcessTableRow;
+
