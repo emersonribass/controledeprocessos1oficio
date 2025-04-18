@@ -83,7 +83,7 @@ const ProcessTableRow = ({
       )}
       onClick={handleRowClick}
     >
-      <TableCell className="font-medium">
+      <TableCell className="font-medium max-w-[20ch]">
         {process.protocolNumber}
       </TableCell>
       
