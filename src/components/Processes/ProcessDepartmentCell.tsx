@@ -61,7 +61,7 @@ const ProcessDepartmentCell = ({
             </span>
           </div>
           <span className="text-primary text-[11px]">
-            {responsible.nome}
+            {responsible.nome || "Aguardando"}
           </span>
         </div>
       )}
