@@ -38,21 +38,49 @@ export const useProcessTableState = (processes: Process[]) => {
 
       if (processError) throw processError;
 
-      // Buscar responsáveis por setor com dados do usuário
-      const { data: sectorResponsibles, error: sectorError } = await supabase
-        .from('setor_responsaveis')
-        .select(`
-          processo_id,
-          setor_id,
-          usuarios(
-            id,
-            nome,
-            email
-          )
-        `)
+      // Buscar histórico dos processos para identificar setores que já receberam o processo
+      const { data: processHistory, error: historyError } = await supabase
+        .from('processos_historico')
+        .select('processo_id, setor_id')
         .in('processo_id', startedProcessIds);
 
-      if (sectorError) throw sectorError;
+      if (historyError) throw historyError;
+
+      // Criar mapa de setores por processo que já receberam o processo
+      const processToSectorsMap: Record<string, Set<string>> = {};
+      processHistory.forEach(history => {
+        if (!processToSectorsMap[history.processo_id]) {
+          processToSectorsMap[history.processo_id] = new Set();
+        }
+        processToSectorsMap[history.processo_id].add(history.setor_id);
+      });
+
+      // Buscar responsáveis apenas para os setores que já receberam o processo
+      const sectorResponsiblesPromises = startedProcessIds.map(async (processId) => {
+        const sectors = processToSectorsMap[processId];
+        if (!sectors || sectors.size === 0) return null;
+
+        const { data: sectorResponsibles, error: sectorError } = await supabase
+          .from('setor_responsaveis')
+          .select(`
+            processo_id,
+            setor_id,
+            usuarios(
+              id,
+              nome,
+              email
+            )
+          `)
+          .eq('processo_id', processId)
+          .in('setor_id', Array.from(sectors));
+
+        if (sectorError) throw sectorError;
+        return sectorResponsibles;
+      });
+
+      const sectorResponsiblesResults = await Promise.all(
+        sectorResponsiblesPromises.filter(Boolean)
+      );
 
       // Organizar os dados em uma estrutura adequada
       const responsiblesMap: Record<string, Record<string, any>> = {};
@@ -66,11 +94,11 @@ export const useProcessTableState = (processes: Process[]) => {
       });
 
       // Mapear responsáveis por setor
-      sectorResponsibles?.forEach(resp => {
+      sectorResponsiblesResults.flat().forEach(resp => {
+        if (!resp) return;
         if (!responsiblesMap[resp.processo_id]) {
           responsiblesMap[resp.processo_id] = {};
         }
-        // Garantir que setor_id seja string para bater com dept.id
         const sectorId = String(resp.setor_id);
         responsiblesMap[resp.processo_id][sectorId] = resp.usuarios;
       });

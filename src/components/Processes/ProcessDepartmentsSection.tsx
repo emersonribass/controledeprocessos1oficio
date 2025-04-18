@@ -36,10 +36,11 @@ const ProcessDepartmentsSection = ({
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
-        // Determinar o responsável apropriado
+        // Determinar o responsável apenas se o setor já recebeu o processo
+        const hasPassedOrActive = hasPassedDepartment(dept.id) || isActive;
         const responsible = index === 0 
           ? processResponsible 
-          : sectorResponsibles?.[dept.id];
+          : hasPassedOrActive ? sectorResponsibles?.[dept.id] : undefined;
         
         return (
           <TableCell key={dept.id}>
