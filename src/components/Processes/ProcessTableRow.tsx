@@ -112,8 +112,8 @@ const ProcessTableRow = ({
     
       <TableCell className="text-right process-action">
         <ProcessRowActions 
-          processId={process.id}
-        //  protocolNumber={process.protocolNumber}
+       //   processId={process.id}
+          protocolNumber={process.protocolNumber}
           processType={process.processType}
           moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
           moveProcessToNextDepartment={moveProcessToNextDepartment}
