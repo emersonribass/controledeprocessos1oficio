@@ -59,10 +59,8 @@ const ProcessTableRow = ({
     isDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
-  const processSpecificResponsibles = processResponsibles;
-
   const getRowBackgroundColor = (status: string) => {
-    if (status === "completed") return "bg-green-400";
+    if (status === "completed") return "bg-green-200";
     if (status === "overdue") return "bg-red-200";
     if (status === "pending") return "bg-blue-200";
     if (status === "not_started") return "bg-green-200";
@@ -74,22 +72,22 @@ const ProcessTableRow = ({
       e.stopPropagation();
       return;
     }
-    
     navigate(`/processes/${process.id}`);
   };
 
   return (
     <TableRow 
       className={cn(
-        "cursor-pointer hover:bg-gray-200",
+        "cursor-pointer hover:bg-gray-100",
         getRowBackgroundColor(process.status)
       )}
       onClick={handleRowClick}
     >
-      <TableCell className="font-medium w-[180px] px-2">
+      <TableCell className="font-medium whitespace-nowrap">
         {process.protocolNumber}
       </TableCell>
-      <TableCell className="process-action w-[180px] px-2" onClick={e => e.stopPropagation()}>
+      
+      <TableCell className="process-action whitespace-nowrap" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
           currentTypeId={process.processType} 
@@ -108,11 +106,11 @@ const ProcessTableRow = ({
         isPreviousDepartment={(departmentId) => isPreviousDepartment(departmentId)}
         isDepartmentOverdue={(departmentId, isProcessStarted) => isDepartmentOverdue(departmentId, isProcessStarted)}
         processId={process.id}
-        processResponsible={processSpecificResponsibles?.initial}
-        sectorResponsibles={processSpecificResponsibles}
+        processResponsible={processResponsibles?.initial}
+        sectorResponsibles={processResponsibles}
       />
     
-      <TableCell className="text-right process-action w-[120px] px-2">
+      <TableCell className="text-right process-action whitespace-nowrap">
         <ProcessRowActions 
           processId={process.id}
           protocolNumber={process.protocolNumber}

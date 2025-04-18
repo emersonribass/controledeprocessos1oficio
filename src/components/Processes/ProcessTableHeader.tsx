@@ -1,8 +1,7 @@
 
 import { ArrowUpDown } from "lucide-react";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Process } from "@/types";
-import { Department } from "@/types";
+import { Process, Department } from "@/types";
 
 interface ProcessTableHeaderProps {
   sortField: keyof Process;
@@ -19,19 +18,20 @@ const ProcessTableHeader = ({
   departments,
   getDepartmentName
 }: ProcessTableHeaderProps) => {
-  // Ordenar departamentos por ordem e filtrar o departamento "Concluído"
-  const sortedDepartments = [...departments].filter(dept => dept.name !== "Concluído(a)").sort((a, b) => a.order - b.order);
+  const sortedDepartments = [...departments]
+    .filter(dept => dept.name !== "Concluído(a)")
+    .sort((a, b) => a.order - b.order);
   
-  // Handler de clique para ordenação
   const handleSortClick = (field: keyof Process, event: React.MouseEvent) => {
-    event.stopPropagation(); // Impede a propagação do evento para células
+    event.stopPropagation();
     toggleSort(field);
   };
   
-  return <TableHeader>
+  return (
+    <TableHeader>
       <TableRow>
         <TableHead 
-          className="cursor-pointer w-[180px] px-2" 
+          className="cursor-pointer whitespace-nowrap" 
           onClick={(e) => handleSortClick("protocolNumber", e)}
         >
           <div className="flex items-center">
@@ -39,17 +39,18 @@ const ProcessTableHeader = ({
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </div>
         </TableHead>
-        <TableHead className="w-[180px] px-2">Tipo</TableHead>
+        <TableHead className="whitespace-nowrap">Tipo</TableHead>
         
         {sortedDepartments.map(dept => (
-          <TableHead key={dept.id} className="text-center px-2">
+          <TableHead key={dept.id} className="text-center whitespace-nowrap">
             {dept.name}
           </TableHead>
         ))}
         
-        <TableHead className="text-right w-[120px] px-2">Ações</TableHead>
+        <TableHead className="text-center whitespace-nowrap px-0">Ações</TableHead>
       </TableRow>
-    </TableHeader>;
+    </TableHeader>
+  );
 };
 
 export default ProcessTableHeader;
