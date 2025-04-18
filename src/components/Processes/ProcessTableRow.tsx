@@ -117,11 +117,7 @@ const ProcessTableRow = ({
         processResponsible={processSpecificResponsibles?.initial}
         sectorResponsibles={processSpecificResponsibles}
       />
-
-      <TableCell className="text-right process-action w-[100px]">
-            <ProcessActionButtons {...props} />
-      </TableCell>
-      
+    
       <ProcessRowActions 
         processId={process.id}
         protocolNumber={process.protocolNumber}
