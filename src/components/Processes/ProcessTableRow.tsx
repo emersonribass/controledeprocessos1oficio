@@ -12,8 +12,8 @@ import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 
 interface ProcessTableRowProps {
   process: Process;
-  departments: Department[];
   processTypes: ProcessType[];
+  departments: Department[];
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
   moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   getProcessTypeName: (id: string) => string;
