@@ -51,7 +51,7 @@ const ProcessDepartmentCell = ({
       )}
 
       {/* Exibição do responsável */}
-      {responsible && isProcessStarted && (
+      {isProcessStarted && (
         <div className="text-xs text-gray-600 mt-1">
           <div className="flex items-center justify-center gap-1">
             <User className="h-3 w-3" />
@@ -59,9 +59,12 @@ const ProcessDepartmentCell = ({
               {isFirstDepartment ? "Resp. Inicial:" : "Resp. Atual:"}
             </span>
           </div>
-          <span className="text-primary text-[11px]">{responsible.nome}</span>
+          <span className="text-primary text-[11px]">
+            {responsible?.nome || "Aguardando"}
+          </span>
         </div>
       )}
+
 
       {isCurrentDepartment && isProcessStarted && departmentTimeLimit > 0 && (
         <div className={cn(
