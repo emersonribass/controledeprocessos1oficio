@@ -90,7 +90,7 @@ const ProcessTableRow = ({
       </TableCell>
       
       {/* Tipo de Processo - Largura fixa de 180px */}
-      <TableCell className="w-[150px] text-center process-action" onClick={e => e.stopPropagation()}>
+      <TableCell className="w-[160px] text-center process-action" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
           currentTypeId={process.processType} 
@@ -119,7 +119,7 @@ const ProcessTableRow = ({
       ))}
     
       {/* Ações - Largura fixa de 120px */}
-      <TableCell className="w-[120px] text-right process-action">
+      <TableCell className="w-[120px] text-center process-action">
         <ProcessRowActions 
           processId={process.id}
           protocolNumber={process.protocolNumber}
