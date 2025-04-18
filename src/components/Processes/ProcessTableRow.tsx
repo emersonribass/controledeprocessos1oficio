@@ -83,9 +83,9 @@ const ProcessTableRow = ({
       )}
       onClick={handleRowClick}
     >
-      <TableCell className="font-medium max-w-[20ch]">
+     /* <TableCell className="font-medium">
         {process.protocolNumber}
-      </TableCell>
+      </TableCell> */
       
       <TableCell className="process-action" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
