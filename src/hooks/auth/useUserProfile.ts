@@ -15,4 +15,5 @@ export const useUserProfile = () => {
   };
 };
 
-export { UserProfile } from "./UserProfileContext";
+// Utilizando 'export type' para exportar o tipo conforme recomendado quando isolatedModules está ativado
+export type { UserProfile } from "./UserProfileContext";
