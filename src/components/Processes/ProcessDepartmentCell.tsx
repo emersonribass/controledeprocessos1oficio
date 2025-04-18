@@ -65,7 +65,6 @@ const ProcessDepartmentCell = ({
         </div>
       )}
 
-
       {isCurrentDepartment && isProcessStarted && departmentTimeLimit > 0 && (
         <div className={cn(
           "text-xs font-medium mt-1",

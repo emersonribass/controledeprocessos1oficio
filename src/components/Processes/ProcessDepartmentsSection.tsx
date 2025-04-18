@@ -1,8 +1,4 @@
 
-import { TableCell } from "@/components/ui/table";
-import ProcessDepartmentCell from "./ProcessDepartmentCell";
-import { Department } from "@/types";
-
 interface ProcessDepartmentsSectionProps {
   sortedDepartments: Department[];
   isProcessStarted: boolean;

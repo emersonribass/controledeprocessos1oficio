@@ -22,7 +22,7 @@ export const useProcessTableState = (processes: Process[]) => {
         return;
       }
 
-      // Buscar responsáveis iniciais dos processos
+      // Buscar responsáveis iniciais dos processos com dados do usuário
       const { data: processResponsibles, error: processError } = await supabase
         .from('processos')
         .select(`
@@ -38,7 +38,7 @@ export const useProcessTableState = (processes: Process[]) => {
 
       if (processError) throw processError;
 
-      // Buscar responsáveis por setor
+      // Buscar responsáveis por setor com dados do usuário
       const { data: sectorResponsibles, error: sectorError } = await supabase
         .from('setor_responsaveis')
         .select(`
@@ -70,10 +70,11 @@ export const useProcessTableState = (processes: Process[]) => {
         if (!responsiblesMap[resp.processo_id]) {
           responsiblesMap[resp.processo_id] = {};
         }
-        // Garantir que setor_id seja string para bater com dept.id (caso venha como número)
+        // Garantir que setor_id seja string para bater com dept.id
         const sectorId = String(resp.setor_id);
-        responsiblesMap[resp.processo_id][resp.setor_id] = resp.usuarios;
+        responsiblesMap[resp.processo_id][sectorId] = resp.usuarios;
       });
+
       console.log("Responsáveis carregados:", responsiblesMap);
       
       setProcessesResponsibles(responsiblesMap);
