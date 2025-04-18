@@ -2,6 +2,7 @@
 import { useState, useCallback } from "react";
 import { ProcessResponsible } from "./types";
 import { useResponsibilityLoader } from "./useResponsibilityLoader";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useProcessResponsibleFetching = () => {
   const [processResponsibleCache, setProcessResponsibleCache] = useState<Record<string, ProcessResponsible | null>>({});
