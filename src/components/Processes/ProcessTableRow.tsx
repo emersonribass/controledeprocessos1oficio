@@ -90,7 +90,7 @@ const ProcessTableRow = ({
       </TableCell>
       
       {/* Tipo de Processo - Largura fixa de 180px */}
-      <TableCell className="w-[180px] text-center process-action" onClick={e => e.stopPropagation()}>
+      <TableCell className="w-[180px] whitespace-nowrap text-center process-action" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
           currentTypeId={process.processType} 
@@ -102,7 +102,7 @@ const ProcessTableRow = ({
       
       {/* Departamentos - Largura mínima de 120px para cada */}
       {sortedDepartments.map((dept) => (
-        <TableCell key={dept.id} className="min-w-[150px] text-center">
+        <TableCell key={dept.id} className="min-w-[120px] text-center">
           <ProcessDepartmentCell 
             departmentId={dept.id}
             isCurrentDepartment={isCurrentDepartment(dept.id)}
@@ -119,7 +119,7 @@ const ProcessTableRow = ({
       ))}
     
       {/* Ações - Largura fixa de 150px */}
-      <TableCell className="w-[150px] text-center process-action">
+      <TableCell className="w-[120px] text-center process-action">
         <ProcessRowActions 
           processId={process.id}
           protocolNumber={process.protocolNumber}
