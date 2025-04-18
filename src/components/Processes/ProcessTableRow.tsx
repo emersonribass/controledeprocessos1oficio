@@ -83,11 +83,11 @@ const ProcessTableRow = ({
       )}
       onClick={handleRowClick}
     >
-     /* <TableCell className="font-medium">
+      <TableCell className="font-medium">
         {process.protocolNumber}
-      </TableCell> */
+      </TableCell>
       
-      <TableCell className="process-action" onClick={e => e.stopPropagation()}>
+      /* <TableCell className="process-action" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
           currentTypeId={process.processType} 
@@ -95,7 +95,7 @@ const ProcessTableRow = ({
           getProcessTypeName={getProcessTypeName} 
           updateProcessType={updateProcessType} 
         />
-      </TableCell>
+      </TableCell> */
 
       <ProcessDepartmentsSection 
         sortedDepartments={sortedDepartments}
