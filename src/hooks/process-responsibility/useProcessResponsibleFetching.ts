@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { ProcessResponsible } from "./types";
 import { useResponsibilityLoader } from "./useResponsibilityLoader";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,9 +8,13 @@ export const useProcessResponsibleFetching = () => {
   const [processResponsibleCache, setProcessResponsibleCache] = useState<Record<string, ProcessResponsible | null>>({});
   const { loadResponsible, preloadResponsibles, isLoading } = useResponsibilityLoader();
   
+  // Memoização do objeto cache para evitar re-renders desnecessários
+  const memoizedCache = useMemo(() => processResponsibleCache, [processResponsibleCache]);
+  
   const getProcessResponsible = useCallback(async (processId: string): Promise<ProcessResponsible | null> => {
-    if (processResponsibleCache[processId] !== undefined) {
-      return processResponsibleCache[processId];
+    // Verificar se já temos em cache
+    if (memoizedCache[processId] !== undefined) {
+      return memoizedCache[processId];
     }
 
     try {
@@ -32,24 +36,61 @@ export const useProcessResponsibleFetching = () => {
       if (error) throw error;
       
       const responsible = data?.usuarios as ProcessResponsible | null;
-      setProcessResponsibleCache(prev => ({ ...prev, [processId]: responsible }));
+      
+      // Atualizar cache de forma imutável
+      setProcessResponsibleCache(prev => ({
+        ...prev,
+        [processId]: responsible
+      }));
+      
       return responsible;
 
     } catch (error) {
       console.error("Erro ao obter responsável pelo processo:", error);
-      setProcessResponsibleCache(prev => ({ ...prev, [processId]: null }));
+      
+      // Armazenar valor null no cache para evitar requisições repetidas
+      setProcessResponsibleCache(prev => ({
+        ...prev,
+        [processId]: null
+      }));
+      
       return null;
     }
-  }, [processResponsibleCache]);
+  }, [memoizedCache]);
 
   const getSectorResponsible = useCallback(async (processId: string, sectorId: string): Promise<ProcessResponsible | null> => {
+    // Criamos uma chave única para o cache combinando processo e setor
+    const cacheKey = `${processId}:${sectorId}`;
+    
+    // Verificar cache primeiro
+    if (memoizedCache[cacheKey] !== undefined) {
+      return memoizedCache[cacheKey];
+    }
+    
     try {
-      return await loadResponsible(processId, sectorId);
+      const responsible = await loadResponsible(processId, sectorId);
+      
+      // Atualizar cache
+      if (responsible) {
+        setProcessResponsibleCache(prev => ({
+          ...prev,
+          [cacheKey]: responsible
+        }));
+      }
+      
+      return responsible;
     } catch (error) {
       console.error("Erro ao buscar responsável do setor:", error);
+      
+      // Armazenar null no cache para evitar requisições repetidas
+      setProcessResponsibleCache(prev => ({
+        ...prev,
+        [cacheKey]: null
+      }));
+      
       return null;
     }
-  }, [loadResponsible]);
+  }, [memoizedCache, loadResponsible]);
 
   const clearCache = useCallback(() => {
     setProcessResponsibleCache({});

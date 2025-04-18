@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,7 +25,14 @@ import AdminProcessTypesPage from "@/pages/AdminProcessTypesPage";
 import NotFound from "@/pages/NotFound";
 import ChangePasswordPage from "@/pages/ChangePasswordPage";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutos
+      cacheTime: 1000 * 60 * 30, // 30 minutos
+    },
+  },
+});
 
 const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: { children: React.ReactNode, adminOnly?: boolean, needsProcesses?: boolean }) => {
   const { user, isLoading, isAdmin } = useAuth();

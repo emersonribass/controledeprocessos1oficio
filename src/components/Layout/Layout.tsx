@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Navbar from "./Navbar";
 import { useAuth } from "@/hooks/auth";
 import { NotificationsProvider } from "@/hooks/useNotifications";
+import { UserProfileProvider } from "@/hooks/auth/UserProfileContext";
 
 const Layout = () => {
   const { user, isLoading } = useAuth();
@@ -20,14 +21,16 @@ const Layout = () => {
   }
 
   return (
-    <NotificationsProvider>
-      <div className="h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-1 overflow-y-auto bg-background p-6">
-          <Outlet />
-        </main>
-      </div>
-    </NotificationsProvider>
+    <UserProfileProvider>
+      <NotificationsProvider>
+        <div className="h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-1 overflow-y-auto bg-background p-6">
+            <Outlet />
+          </main>
+        </div>
+      </NotificationsProvider>
+    </UserProfileProvider>
   );
 };
 
