@@ -11,8 +11,8 @@ import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 
 interface ProcessTableRowProps {
   process: Process;
-  processTypes: ProcessType[];
   departments: Department[];
+  processTypes: ProcessType[];
   moveProcessToNextDepartment: (processId: string) => Promise<void>;
   moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
   getProcessTypeName: (id: string) => string;
@@ -27,8 +27,8 @@ interface ProcessTableRowProps {
 
 const ProcessTableRow = ({
   process,
-  processTypes,
   departments,
+  processTypes,
   moveProcessToNextDepartment,
   moveProcessToPreviousDepartment,
   getProcessTypeName,
@@ -83,11 +83,11 @@ const ProcessTableRow = ({
       )}
       onClick={handleRowClick}
     >
-      <TableCell className="font-medium whitespace-nowrap">
+      <TableCell className="font-medium">
         {process.protocolNumber}
       </TableCell>
       
-      <TableCell className="process-action whitespace-nowrap" onClick={e => e.stopPropagation()}>
+      <TableCell className="process-action" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
           currentTypeId={process.processType} 
@@ -110,7 +110,7 @@ const ProcessTableRow = ({
         sectorResponsibles={processResponsibles}
       />
     
-      <TableCell className="text-right process-action whitespace-nowrap">
+      <TableCell className="text-right process-action">
         <ProcessRowActions 
           processId={process.id}
           protocolNumber={process.protocolNumber}
