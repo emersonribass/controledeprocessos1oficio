@@ -39,9 +39,8 @@ const ProcessTableHeader = ({
           </div>
         </TableHead>
         
-        <TableHead className="w-[160px] text-center whitespace-nowrap">Tipo</TableHead>
-        
-        {sortedDepartments.map(dept => (
+        <TableHead className="w-[180px] text-center whitespace-nowrap">Tipo</TableHead>
+                {sortedDepartments.map(dept => (
           <TableHead 
             key={dept.id} 
             className="text-center whitespace-nowrap min-w-[150px]"
