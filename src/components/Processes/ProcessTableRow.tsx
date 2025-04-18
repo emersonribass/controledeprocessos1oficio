@@ -89,8 +89,8 @@ const ProcessTableRow = ({
         {process.protocolNumber}
       </TableCell>
       
-      {/* Tipo de Processo - Largura fixa de 170px */}
-      <TableCell className="w-[170px] text-center process-action" onClick={e => e.stopPropagation()}>
+      {/* Tipo de Processo - Largura fixa de 180px */}
+      <TableCell className="w-[180px] text-center process-action" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
           currentTypeId={process.processType} 
