@@ -129,7 +129,7 @@ const ProcessTableRow = ({
           isFirstDepartment={isFirstDepartment}
           isLastDepartment={isLastDepartment}
           status={process.status}
-          startProcess={canInitiateProcesses || process.status == "not_started" ? startProcess : undefined}
+          startProcess={canInitiateProcesses || process.status === "not_started" ? startProcess : undefined}
           hasSectorResponsible={hasResponsible}
           onAcceptResponsibility={onAcceptResponsibility}
           isAccepting={isAccepting}
