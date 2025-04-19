@@ -120,7 +120,7 @@ const DashboardSummary = () => {
       
       <Card 
         className={cn(
-          "cursor-pointer transition-all hover:shadow-md bg-yellow-500/10 border-yellow-500/30",
+          "cursor-pointer transition-all hover:shadow-md bg-yellow-500/20 border-yellow-500/30",
         )}
         onClick={() => handleCardClick("pending")}
       >
@@ -138,7 +138,7 @@ const DashboardSummary = () => {
       
       <Card 
         className={cn(
-          "cursor-pointer transition-all hover:shadow-md bg-red-500/10 border-red-500/30",
+          "cursor-pointer transition-all hover:shadow-md bg-red-500/20 border-red-500/30",
         )}
         onClick={() => handleCardClick("overdue")}
       >
