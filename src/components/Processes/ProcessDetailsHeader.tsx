@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Printer, Check } from "lucide-react";
+import { ArrowLeft, Download, Printer, Check, Archive, ArchiveRestore } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProcesses } from "@/hooks/useProcesses";
 import ProcessStatusBadge from "./ProcessStatusBadge";
@@ -20,6 +20,7 @@ const ProcessDetailsHeader = ({
   
   const isSignatureDepartment = getDepartmentName(process.currentDepartment) === "Assinatura";
   const canCompleteProcess = isSignatureDepartment && process.status !== "completed";
+  const isArchived = process.status === "archived";
   
   const handleCompleteProcess = async () => {
     try {
@@ -28,6 +29,17 @@ const ProcessDetailsHeader = ({
     } catch (error) {
       console.error("Erro ao concluir processo:", error);
       toast.error("Erro ao concluir o processo");
+    }
+  };
+
+  const handleArchiveToggle = async () => {
+    try {
+      const newStatus = isArchived ? "Em andamento" : "Arquivado";
+      await updateProcessStatus(process.id, newStatus);
+      toast.success(isArchived ? "Processo restaurado com sucesso!" : "Processo arquivado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao alterar status do processo:", error);
+      toast.error(isArchived ? "Erro ao restaurar o processo" : "Erro ao arquivar o processo");
     }
   };
 
@@ -49,6 +61,28 @@ const ProcessDetailsHeader = ({
         </div>
         
         <div className="flex gap-2">
+          <Button
+            onClick={handleArchiveToggle}
+            variant="outline"
+            className={`gap-2 ${
+              isArchived 
+                ? "bg-amber-600 hover:bg-amber-500" 
+                : "bg-gray-600 hover:bg-gray-500"
+            } text-white`}
+          >
+            {isArchived ? (
+              <>
+                <ArchiveRestore className="h-4 w-4" />
+                <span className="hidden md:inline">Restaurar Processo</span>
+              </>
+            ) : (
+              <>
+                <Archive className="h-4 w-4" />
+                <span className="hidden md:inline">Arquivar Processo</span>
+              </>
+            )}
+          </Button>
+
           {canCompleteProcess && (
             <Button 
               onClick={handleCompleteProcess}
@@ -75,4 +109,3 @@ const ProcessDetailsHeader = ({
 };
 
 export default ProcessDetailsHeader;
-

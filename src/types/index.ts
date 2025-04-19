@@ -30,7 +30,7 @@ export type Process = {
   currentDepartment: string;
   startDate: string;
   expectedEndDate: string;
-  status: 'pending' | 'completed' | 'overdue' | 'not_started';
+  status: 'pending' | 'completed' | 'overdue' | 'not_started' | 'archived';
   history: ProcessHistory[];
   userId?: string;
   responsibleUserId?: string;
