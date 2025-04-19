@@ -23,6 +23,7 @@ interface ProcessTableBodyProps {
   sortDirection: "asc" | "desc";
   queueSectorForLoading: (processId: string, sectorId: string) => void;
   isLoading: boolean;
+  canInitiateProcesses?: boolean;
 }
 
 const ProcessTableBody = ({
