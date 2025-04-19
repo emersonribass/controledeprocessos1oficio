@@ -73,7 +73,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
       />
 
       <ProcessListContent
-        processes={Processes}
+        processes={processes}
         isLoading={isLoadingProcesses || isLoadingFiltered}
         filteredProcesses={filteredProcesses}
         filters={filters}
