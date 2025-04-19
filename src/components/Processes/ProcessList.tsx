@@ -48,8 +48,39 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
       try {
         // Filtrar processos com o método assíncrono
         const filtered = await filterProcesses(filters, processes);
-        setFilteredProcesses(filtered);
-          } catch (error) {
+        
+        // Nova lógica de ordenação
+        const sortedProcesses = [...filtered].sort((a, b) => {
+          // Função auxiliar para definir a prioridade do status
+          const getStatusPriority = (status: string): number => {
+            switch (status) {
+              case 'overdue': return 0; // Maior prioridade
+              case 'pending': return 1;
+              case 'completed': return 2;
+              case 'not_started': return 3; // Menor prioridade
+              default: return 4;
+            }
+          };
+
+          // Primeiro, ordenar por status
+          const statusDiff = getStatusPriority(a.status) - getStatusPriority(b.status);
+          if (statusDiff !== 0) return statusDiff;
+
+          // Se o status for igual, ordenar por número de protocolo
+          const numA = parseInt(a.protocolNumber.replace(/\D/g, ''));
+          const numB = parseInt(b.protocolNumber.replace(/\D/g, ''));
+          
+          // Se ambos são números válidos, compare-os
+          if (!isNaN(numA) && !isNaN(numB)) {
+            return numA - numB;
+          }
+          
+          // Se algum não é número válido, compare as strings
+          return a.protocolNumber.localeCompare(b.protocolNumber);
+        });
+
+        setFilteredProcesses(sortedProcesses);
+      } catch (error) {
         console.error("Erro ao filtrar processos:", error);
         setFilteredProcesses([]);
       } finally {
