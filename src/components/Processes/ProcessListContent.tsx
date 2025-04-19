@@ -127,6 +127,7 @@ const ProcessListContent = ({
         startProcess={startProcess}
         filterProcesses={filterProcesses}
         filters={filters}
+        isUserInAttendanceSector={isUserInAttendanceSector}
       />
     </div>
   );
