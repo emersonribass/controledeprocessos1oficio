@@ -26,7 +26,7 @@ export const useProcessUpdate = () => {
     }
   };
 
-  const updateProcessStatus = async (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => {
+  const updateProcessStatus = async (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado' | 'Arquivado') => {
     try {
       // Atualizar o status do processo
       const { error } = await supabaseService.updateProcessStatus(processId, newStatus);

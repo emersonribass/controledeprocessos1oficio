@@ -1,4 +1,3 @@
-
 import { Tables } from "@/integrations/supabase/schema";
 
 export type User = {

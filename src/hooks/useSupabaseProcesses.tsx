@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/schema";
@@ -63,10 +62,10 @@ export const useSupabaseProcesses = () => {
     }
   };
 
-  const updateProcessStatus = async (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado'): Promise<void> => {
+  const updateProcessStatus = async (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado' | 'Arquivado'): Promise<void> => {
     try {
       // Mapear o status amigável para o valor correto no banco de dados
-      let dbStatus: 'Em andamento' | 'Concluído' | 'Não iniciado';
+      let dbStatus: 'Em andamento' | 'Concluído' | 'Não iniciado' | 'Arquivado';
       switch (newStatus) {
         case 'Em andamento':
           dbStatus = 'Em andamento';
@@ -76,6 +75,9 @@ export const useSupabaseProcesses = () => {
           break;
         case 'Não iniciado':
           dbStatus = 'Não iniciado';
+          break;
+        case 'Arquivado':
+          dbStatus = 'Arquivado';
           break;
         default:
           throw new Error(`Status inválido: ${newStatus}`);
@@ -91,7 +93,7 @@ export const useSupabaseProcesses = () => {
       setProcesses(processes.map(process => {
         if (process.id === processId) {
           // Mapear o status do banco de dados de volta para o formato do frontend
-          let formattedStatus: 'pending' | 'completed' | 'not_started' = 'pending';
+          let formattedStatus: 'pending' | 'completed' | 'not_started' | 'archived' = 'pending';
           switch (dbStatus) {
             case 'Em andamento':
               formattedStatus = 'pending';
@@ -101,6 +103,9 @@ export const useSupabaseProcesses = () => {
               break;
             case 'Não iniciado':
               formattedStatus = 'not_started';
+              break;
+            case 'Arquivado':
+              formattedStatus = 'archived';
               break;
           }
           return { ...process, status: formattedStatus };

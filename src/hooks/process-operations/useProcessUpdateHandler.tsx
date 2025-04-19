@@ -17,7 +17,7 @@ export const useProcessUpdateHandler = (fetchProcesses: () => Promise<void>) => 
     }
   };
 
-  const handleUpdateProcessStatus = async (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => {
+  const handleUpdateProcessStatus = async (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado' | 'Arquivado') => {
     try {
       await updateProcessStatus(processId, newStatus);
       await fetchProcesses();

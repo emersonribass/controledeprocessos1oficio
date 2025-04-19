@@ -129,7 +129,7 @@ class SupabaseService {
   /**
    * Atualiza o status de um processo
    */
-  async updateProcessStatus(processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') {
+  async updateProcessStatus(processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado' | 'Arquivado') {
     return await supabase
       .from('processos')
       .update({ status: newStatus })
