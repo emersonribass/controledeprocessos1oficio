@@ -23,10 +23,6 @@ export const useProcessGeneration = () => {
     try {
       setIsGenerating(true);
       
-      // Calcular a data de fim esperada (30 dias a partir de hoje por padrão)
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + 30);
-      
       const processesToInsert = [];
       
       // Criar array de processos para inserção (sem setor atribuído inicialmente)
@@ -38,8 +34,8 @@ export const useProcessGeneration = () => {
           tipo_processo: "pendente", // Valor padrão para ser atualizado posteriormente
           setor_atual: null, // Sem setor atribuído inicialmente
           status: "Não iniciado",
-          data_inicio: null, // Definimos como null e será atribuído apenas quando iniciar o processo
-          data_fim_esperada: endDate.toISOString()
+          data_inicio: null, // Definido apenas quando o processo iniciar
+          data_fim_esperada: null // Definido apenas quando o processo iniciar
         });
       }
 
