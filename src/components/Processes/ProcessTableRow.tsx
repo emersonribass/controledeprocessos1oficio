@@ -3,8 +3,6 @@ import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import ProcessActionButtons from "./ProcessActionButtons";
 import ProcessTypePicker from "./ProcessTypePicker";
-import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -108,3 +106,4 @@ const ProcessTableRow = ({
 };
 
 export default ProcessTableRow;
+
