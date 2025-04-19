@@ -84,7 +84,7 @@ const DashboardSummary = () => {
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
       <Card 
         className={cn(
-          "cursor-pointer transition-all hover:shadow-md bg-blue-500/10 border-blue-500/30",
+          "cursor-pointer transition-all hover:shadow-md bg-blue-500/20 border-blue-500/30",
         )}
         onClick={() => navigate('/processes')}
       >
@@ -102,7 +102,7 @@ const DashboardSummary = () => {
       
       <Card 
         className={cn(
-          "cursor-pointer transition-all hover:shadow-md bg-green-500/30 border-green-500/30",
+          "cursor-pointer transition-all hover:shadow-md bg-green-500/20 border-green-500/30",
         )}
         onClick={() => handleCardClick("completed")}
       >
