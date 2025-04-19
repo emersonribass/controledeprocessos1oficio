@@ -27,7 +27,7 @@ type ProcessesContextType = {
   isLoading: boolean;
   refreshProcesses: () => Promise<void>;
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
-  updateProcessStatus: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
+  updateProcessStatus: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado' | 'Arquivado') => Promise<void>;
   startProcess: (processId: string) => Promise<void>;
   deleteProcess: (processId: string) => Promise<boolean>;
   deleteManyProcesses: (processIds: string[]) => Promise<boolean>;

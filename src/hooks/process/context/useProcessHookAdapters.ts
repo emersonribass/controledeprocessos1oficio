@@ -45,7 +45,7 @@ export const useProcessHookAdapters = (refreshProcesses: () => Promise<void>) =>
   const adaptUpdateStatus = async (
     updateStatus: (processId: string, newStatus: string) => Promise<boolean>,
     processId: string,
-    newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado'
+    newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado' | 'Arquivado'
   ): Promise<void> => {
     await updateStatus(processId, newStatus);
     await refreshProcesses();

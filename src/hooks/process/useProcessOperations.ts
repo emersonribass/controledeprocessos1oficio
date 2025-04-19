@@ -44,7 +44,9 @@ export const useProcessOperations = (onProcessUpdated: () => void) => {
           ? 'pending' 
           : data.status === 'Concluído' 
             ? 'completed' 
-            : 'not_started',
+            : data.status === 'Arquivado'
+              ? 'archived'
+              : 'not_started',
         history: data.processos_historico.map((h: any) => ({
           departmentId: h.setor_id,
           entryDate: h.data_entrada,
