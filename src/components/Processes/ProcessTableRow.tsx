@@ -61,10 +61,10 @@ const ProcessTableRow = ({
   } = useProcessDepartmentInfo(process, departments);
 
   const getRowBackgroundColor = (status: string) => {
-    if (status === "completed") return "bg-green-200";
+    if (status === "completed") return "bg-green-400";
     if (status === "overdue") return "bg-red-200";
     if (status === "pending") return "bg-blue-200";
-    if (status === "not_started") return "bg-green-200";
+    if (status === "not_started") return "bg-green-300";
     return "";
   };
 
