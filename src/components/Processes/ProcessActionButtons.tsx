@@ -118,7 +118,7 @@ const ProcessActionButtons = memo(({
     return <div className="flex justify-center gap-1 process-action">
         <Button variant="outline" size="sm" onClick={handleAcceptResponsibility} disabled={isAccepting} title="Aceitar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action mx-0 px-[6px]">
           <CheckCircle className="h-3 w-3" />
-          {isAccepting ? "Processando..." : "Aceitar Processo"}
+          {isAccepting ? "Processando..." : "Aceitar"}
         </Button>
       </div>;
   }
