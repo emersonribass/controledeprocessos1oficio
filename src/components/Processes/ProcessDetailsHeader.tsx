@@ -19,7 +19,7 @@ const ProcessDetailsHeader = ({
       
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold mb-1">Processo #{process.protocolNumber}</h1>
+          <h1 className="text-3xl font-bold mb-1">Protocolo n° {process.protocolNumber}</h1>
           <div className="flex items-center gap-2">
             <ProcessStatusBadge status={process.status} />
             <span className="text-muted-foreground">
