@@ -37,7 +37,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
 
   const { user, isAdmin } = useAuth();
   const { filters, setFilters } = useProcessListFilters(initialFilters);
-  const { sortProcesses } = useProcessListSorting();
+  const { sortField, sortDirection, toggleSort, sortProcesses } = useProcessListSorting();
   const [isLoadingFiltered, setIsLoadingFiltered] = useState(true);
   const [filteredProcesses, setFilteredProcesses] = useState<Process[]>([]);
 
@@ -48,10 +48,8 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
       try {
         // Filtrar processos com o método assíncrono
         const filtered = await filterProcesses(filters, processes);
-        // Aplicar ordenação nos processos filtrados
-        const sortedProcesses = sortProcesses(filtered);
-        setFilteredProcesses(sortedProcesses);
-      } catch (error) {
+        setFilteredProcesses(filtered);
+          } catch (error) {
         console.error("Erro ao filtrar processos:", error);
         setFilteredProcesses([]);
       } finally {
@@ -60,7 +58,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     };
 
     loadFilteredProcesses();
-  }, [processes, filters, filterProcesses, sortProcesses]);
+  }, [processes, filters, filterProcesses]);
 
   // Determinar os departamentos disponíveis para o usuário atual
   const availableDepartments = isAdmin(user?.email || "") || !user?.departments?.length 
@@ -75,16 +73,14 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
       />
 
       <ProcessListContent
-        processes={filteredProcesses}
+        processes={Processes}
         isLoading={isLoadingProcesses || isLoadingFiltered}
         filteredProcesses={filteredProcesses}
         filters={filters}
         setFilters={setFilters}
-        // Agora passamos valores fixos para sortField e sortDirection
-        sortField="protocolNumber"
-        sortDirection="asc"
-        // E uma função vazia para toggleSort já que não vamos mais alternar
-        toggleSort={() => {}}
+        sortField={sortField}
+        sortDirection={sortDirection}
+        toggleSort={toggleSort as (field: keyof Process) => void}
         getDepartmentName={getDepartmentName}
         getProcessTypeName={getProcessTypeName}
         moveProcessToNextDepartment={moveProcessToNextDepartment}
