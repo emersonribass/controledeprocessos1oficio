@@ -112,7 +112,7 @@ const ProcessMainDetails = ({
             processType={process.processType} {/* repassa para validar corretamente */}
             moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
             moveProcessToNextDepartment={moveProcessToNextDepartment}
-            isFirstDepartment={isAtendimento || isFirstDepartment} {/* aplica a lógica para desabilitar botão se for atendimento */}
+            isFirstDepartment={isAtendimento || isFirstDepartment} /* aplica a lógica para desabilitar botão se for atendimento */
             setIsEditing={() => {}}
             isEditing={false}
             status={process.status}
