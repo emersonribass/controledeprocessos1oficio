@@ -17,6 +17,10 @@ interface ProcessRowActionsProps {
   onAcceptResponsibility: () => Promise<void>;
   isAccepting: boolean;
   sectorId?: string;
+  isOverdue?: boolean;
+  currentDepartment?: string;
+  historyId?: number;
+  onRenewalComplete?: () => void;
 }
 
 const ProcessRowActions = ({
@@ -32,7 +36,11 @@ const ProcessRowActions = ({
   hasSectorResponsible,
   onAcceptResponsibility,
   isAccepting,
-  sectorId
+  sectorId,
+  isOverdue,
+  currentDepartment,
+  historyId,
+  onRenewalComplete
 }: ProcessRowActionsProps) => {
   return (
     <ProcessActionButtons 
@@ -50,7 +58,11 @@ const ProcessRowActions = ({
       hasSectorResponsible={hasSectorResponsible} 
       onAcceptResponsibility={onAcceptResponsibility} 
       isAccepting={isAccepting} 
-      sectorId={sectorId} 
+      sectorId={sectorId}
+      isOverdue={isOverdue}
+      currentDepartment={currentDepartment}
+      historyId={historyId}
+      onRenewalComplete={onRenewalComplete}
     />
   );
 };

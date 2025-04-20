@@ -1,3 +1,4 @@
+
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -8,6 +9,7 @@ import ProcessRowActions from "./ProcessRowActions";
 import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
 import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
+import { useProcesses } from "@/hooks/useProcesses";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -43,6 +45,7 @@ const ProcessTableRow = ({
   historyId
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
+  const { refreshProcesses } = useProcesses();
   
   const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
   const { getProcessResponsible } = useProcessResponsibility();
@@ -77,8 +80,10 @@ const ProcessTableRow = ({
     navigate(`/processes/${process.id}`);
   };
 
-  const isDepartmentOverdue = process.status === "overdue";
+  // Verificar se o processo está atrasado no departamento atual
+  const isProcessOverdue = process.status === "overdue";
   const currentDepartmentEntry = process.history.find(h => !h.exitDate);
+  const currentHistoryId = currentDepartmentEntry ? parseInt(currentDepartmentEntry.departmentId) : undefined;
 
   return (
     <TableRow 
@@ -138,7 +143,7 @@ const ProcessTableRow = ({
           onAcceptResponsibility={onAcceptResponsibility}
           isAccepting={isAccepting}
           sectorId={process.currentDepartment}
-          isOverdue={isDepartmentOverdue}
+          isOverdue={isProcessOverdue}
           currentDepartment={process.currentDepartment}
           historyId={currentDepartmentEntry?.id}
           onRenewalComplete={() => refreshProcesses()}
