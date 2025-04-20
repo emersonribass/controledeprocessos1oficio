@@ -25,7 +25,30 @@ export const useProcessDepartmentInfo = (
   };
 
   const hasPassedDepartment = (departmentId: string): boolean => {
-    return process.history.some((h: any) => h.departmentId === departmentId);
+    // Primeiro, encontrar o departamento atual na lista ordenada
+    const currentDeptIndex = sortedDepartments.findIndex(d => d.id === process.currentDepartment);
+    const targetDeptIndex = sortedDepartments.findIndex(d => d.id === departmentId);
+    
+    // Se o departamento alvo está depois do atual, não é um departamento passado
+    if (targetDeptIndex > currentDeptIndex) return false;
+    
+    // Verificar se há uma entrada com data de saída para este departamento
+    // E se essa foi a última entrada para este departamento
+    const departmentEntries = process.history
+      .filter((h: any) => h.departmentId === departmentId)
+      .sort((a: any, b: any) => new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime());
+    
+    // Se não há entradas ou a entrada mais recente não tem data de saída
+    // e não é o departamento atual, então não passou por ele
+    if (departmentEntries.length === 0) return false;
+    
+    const mostRecentEntry = departmentEntries[0];
+    
+    // Se é o departamento atual, não é considerado como "passado"
+    if (departmentId === process.currentDepartment) return false;
+    
+    // Se tem data de saída na entrada mais recente, passou pelo departamento
+    return !!mostRecentEntry.exitDate;
   };
 
   const isCurrentDepartment = (departmentId: string): boolean => {
