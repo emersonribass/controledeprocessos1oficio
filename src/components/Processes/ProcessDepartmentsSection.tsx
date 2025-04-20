@@ -36,18 +36,17 @@ const ProcessDepartmentsSection = ({
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
-        // Determinar o responsável para este departamento
+        // NOVA LÓGICA: Só passa responsável para setor atual ou passado
         let departmentResponsible = null;
-        
-        // Verificar se há um responsável específico para este setor
-        if (sectorResponsibles && sectorResponsibles[dept.id]) {
-          departmentResponsible = sectorResponsibles[dept.id];
+        const isCurrentOrPast = isActive || isPastDept;
+        if (isCurrentOrPast) {
+          if (sectorResponsibles && sectorResponsibles[dept.id]) {
+            departmentResponsible = sectorResponsibles[dept.id];
+          } else if (index === 0 && processResponsible) {
+            departmentResponsible = processResponsible;
+          }
         }
-        // Se for o primeiro departamento e não tiver responsável específico, usar o responsável inicial
-        else if (index === 0 && processResponsible) {
-          departmentResponsible = processResponsible;
-        }
-        
+
         return (
           <TableCell key={dept.id} className="text-center">
             <ProcessDepartmentCell
@@ -70,3 +69,4 @@ const ProcessDepartmentsSection = ({
 };
 
 export default ProcessDepartmentsSection;
+
