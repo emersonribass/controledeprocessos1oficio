@@ -83,7 +83,12 @@ const ProcessTableRow = ({
   // Verificar se o processo está atrasado no departamento atual
   const isProcessOverdue = process.status === "overdue";
   const currentDepartmentEntry = process.history.find(h => !h.exitDate);
-  const currentHistoryId = currentDepartmentEntry ? parseInt(currentDepartmentEntry.departmentId) : undefined;
+  
+  // Buscar o ID da entrada do histórico (que é diferente do ID do departamento)
+  // No schema Supabase, processos_historico tem sua própria coluna id (número)
+  const currentHistoryEntryId = currentDepartmentEntry ? 
+    process.history.findIndex(h => h.departmentId === currentDepartmentEntry.departmentId && !h.exitDate) > -1 ? 
+    parseInt(process.id) : undefined : undefined;
 
   return (
     <TableRow 
@@ -145,7 +150,7 @@ const ProcessTableRow = ({
           sectorId={process.currentDepartment}
           isOverdue={isProcessOverdue}
           currentDepartment={process.currentDepartment}
-          historyId={currentDepartmentEntry?.id}
+          historyId={historyId}
           onRenewalComplete={() => refreshProcesses()}
         />
       </TableCell>
