@@ -41,6 +41,9 @@ const ProcessDepartmentCell = ({
     remainingDays = Math.ceil((deadlineTime - currentTime) / (24 * 60 * 60 * 1000));
   }
 
+  // Apenas exibe responsáveis para departamentos atuais ou que já passaram
+  const shouldShowResponsible = isProcessStarted && responsible && (isCurrentDepartment || hasPassedDepartment);
+
   return (
     <div className="text-center w-full">
       {showDate && entryDate && (
@@ -51,8 +54,8 @@ const ProcessDepartmentCell = ({
         </div>
       )}
 
-      {/* Exibição do responsável apenas se existir e se o processo estiver iniciado */}
-      {isProcessStarted && responsible && (
+      {/* Exibição do responsável apenas se existir, se o processo estiver iniciado e se for departamento atual ou anterior */}
+      {shouldShowResponsible && (
         <div className="text-xs text-gray-600 mt-1">
           <div className="flex items-center justify-center gap-1">
             <User className="h-3 w-3" />
