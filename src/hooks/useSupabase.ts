@@ -11,6 +11,14 @@ export function useSupabase() {
       .order("order_num", { ascending: true });
   };
 
+  const getSetorById = (id: string | number) => {
+    return supabase
+      .from("setores")
+      .select("*")
+      .eq("id", id)
+      .single();
+  };
+
   const updateSetor = (id: number, data: Partial<Tables["setores"]>) => {
     return supabase.from("setores").update(data).eq("id", id);
   };
@@ -118,6 +126,7 @@ export function useSupabase() {
 
   return {
     getSetores,
+    getSetorById,
     updateSetor,
     deleteSetor,
     createSetor,
