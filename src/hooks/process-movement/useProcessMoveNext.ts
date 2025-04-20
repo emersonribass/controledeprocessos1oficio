@@ -125,19 +125,31 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
 
       if (updateError) throw updateError;
 
-      // 5. Remover responsável do setor destino (se existir)
-      const { error: deleteResponsibleError } = await supabase
+      // 5. Remover responsável do setor atual, pois ele já foi processado
+      const { error: deleteCurrentResponsibleError } = await supabase
+        .from('setor_responsaveis')
+        .delete()
+        .eq('processo_id', processId)
+        .eq('setor_id', process.setor_atual);
+
+      if (deleteCurrentResponsibleError) {
+        console.error("Erro ao remover responsável do setor atual:", deleteCurrentResponsibleError);
+        // Continuamos mesmo com erro
+      }
+
+      // 6. Remover responsável do setor destino (se existir)
+      const { error: deleteNextResponsibleError } = await supabase
         .from('setor_responsaveis')
         .delete()
         .eq('processo_id', processId)
         .eq('setor_id', nextDept.id.toString());
 
-      if (deleteResponsibleError) {
-        console.error("Erro ao remover responsável do setor:", deleteResponsibleError);
+      if (deleteNextResponsibleError) {
+        console.error("Erro ao remover responsável do setor destino:", deleteNextResponsibleError);
         // Continuamos mesmo com erro
       }
 
-      // 6. Enviar notificações apenas para o setor de destino
+      // 7. Enviar notificações apenas para o setor de destino
       await sendNotificationsToSectorUsers(
         processId, 
         nextDept.id.toString(), 

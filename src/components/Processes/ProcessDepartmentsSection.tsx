@@ -37,14 +37,14 @@ const ProcessDepartmentsSection = ({
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
         // Determinar o responsável para este departamento
+        // Apenas mostrar o responsável se for o departamento atual
         let departmentResponsible = null;
         
-        // Verificar se há um responsável específico para este setor
-        if (sectorResponsibles && sectorResponsibles[dept.id]) {
+        if (isActive && sectorResponsibles && sectorResponsibles[dept.id]) {
           departmentResponsible = sectorResponsibles[dept.id];
         }
-        // Se for o primeiro departamento e não tiver responsável específico, usar o responsável inicial
-        else if (index === 0 && processResponsible) {
+        // Caso especial para o primeiro departamento se for o atual
+        else if (isActive && index === 0 && processResponsible) {
           departmentResponsible = processResponsible;
         }
         
