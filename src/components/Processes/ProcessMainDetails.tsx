@@ -113,7 +113,6 @@ const ProcessMainDetails = ({
             moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
             moveProcessToNextDepartment={moveProcessToNextDepartment}
             isFirstDepartment={isAtendimento || isFirstDepartment} {/* aplica a lógica para desabilitar botão se for atendimento */}
-            isLastDepartment={isLastDepartment}
             setIsEditing={() => {}}
             isEditing={false}
             status={process.status}
