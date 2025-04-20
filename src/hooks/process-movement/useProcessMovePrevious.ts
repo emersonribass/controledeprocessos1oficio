@@ -140,41 +140,8 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
         console.error("Erro ao remover responsável do setor:", deleteResponsibleError);
         // Continuamos mesmo com erro
       }
-      
-      // 6. Remover todos os responsáveis de setores que não são mais relevantes
-      // Obter todos os setores entre o anterior e o atual (inclusive)
-      const { data: intermediateSetores, error: intermediateError } = await supabase
-        .from('setores')
-        .select('id')
-        .gte('order_num', prevDept.order_num)
-        .lt('order_num', currentDept.order_num);
-        
-      if (!intermediateError && intermediateSetores && intermediateSetores.length > 0) {
-        // Extrair os IDs dos setores intermediários
-        const setorIds = intermediateSetores.map(s => s.id.toString());
-        
-        // Adicionar o setor atual para remover seu responsável também
-        setorIds.push(process.setor_atual);
-        
-        // Remover responsáveis de todos os setores intermediários, exceto o setor de destino
-        const setoresParaLimpar = setorIds.filter(id => id !== prevDept.id.toString());
-        
-        if (setoresParaLimpar.length > 0) {
-          // Excluir responsáveis de todos os setores intermediários em uma única operação
-          const { error: cleanupError } = await supabase
-            .from('setor_responsaveis')
-            .delete()
-            .eq('processo_id', processId)
-            .in('setor_id', setoresParaLimpar);
-            
-          if (cleanupError) {
-            console.error("Erro ao limpar responsáveis intermediários:", cleanupError);
-            // Continuamos mesmo com erro
-          }
-        }
-      }
 
-      // 7. Enviar notificações apenas para o setor de destino
+      // 6. Enviar notificações apenas para o setor de destino
       await sendNotificationsToSectorUsers(
         processId, 
         prevDept.id.toString(), 

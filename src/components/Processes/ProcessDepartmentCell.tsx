@@ -51,8 +51,8 @@ const ProcessDepartmentCell = ({
         </div>
       )}
 
-      {/* Exibição do responsável apenas se existir, o processo estiver iniciado e for o departamento atual */}
-      {isProcessStarted && responsible && isCurrentDepartment && (
+      {/* Exibição do responsável apenas se existir e se o processo estiver iniciado */}
+      {isProcessStarted && responsible && (
         <div className="text-xs text-gray-600 mt-1">
           <div className="flex items-center justify-center gap-1">
             <User className="h-3 w-3" />
