@@ -37,6 +37,12 @@ const ProcessMainDetails = ({
     isAccepting 
   } = useProcessDetailsResponsibility(process.id, process.currentDepartment);
 
+  // Considera "Atendimento" como o primeiro setor (para garantir o disable no botão)
+  // Pode ser necessário ajustar aqui caso o nome/id do setor inicial mude
+  // Se for necessário refinar ainda mais, consulte a estrutura dos dados no backend
+  const atendimentoIds = ["1", 1, "atendimento", "Atendimento"]; // cubra possíveis variantes
+  const isAtendimento = atendimentoIds.includes(process.currentDepartment);
+
   return (
     <Card>
       <CardHeader>
@@ -103,9 +109,10 @@ const ProcessMainDetails = ({
           <ProcessActionButtons 
             processId={process.id}
             protocolNumber={process.protocolNumber}
+            processType={process.processType} {/* repassa para validar corretamente */}
             moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
             moveProcessToNextDepartment={moveProcessToNextDepartment}
-            isFirstDepartment={isFirstDepartment}
+            isFirstDepartment={isAtendimento || isFirstDepartment} {/* aplica a lógica para desabilitar botão se for atendimento */}
             isLastDepartment={isLastDepartment}
             setIsEditing={() => {}}
             isEditing={false}
