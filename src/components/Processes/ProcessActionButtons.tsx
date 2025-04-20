@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
@@ -6,6 +5,7 @@ import { useAuth } from "@/hooks/auth";
 import { memo } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/auth/useUserProfile";
+import RenewDeadlineButton from "./RenewDeadlineButton";
 
 interface ProcessActionButtonsProps {
   processId: string;
@@ -23,6 +23,10 @@ interface ProcessActionButtonsProps {
   onAcceptResponsibility?: () => Promise<void>;
   isAccepting?: boolean;
   sectorId?: string;
+  isOverdue?: boolean;
+  currentDepartment?: string;
+  historyId?: number;
+  onRenewalComplete?: () => void;
 }
 
 const ProcessActionButtons = memo(({
@@ -40,7 +44,11 @@ const ProcessActionButtons = memo(({
   hasSectorResponsible = false,
   onAcceptResponsibility,
   isAccepting = false,
-  sectorId
+  sectorId,
+  isOverdue = false,
+  currentDepartment,
+  historyId,
+  onRenewalComplete
 }: ProcessActionButtonsProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
@@ -49,10 +57,8 @@ const ProcessActionButtons = memo(({
   const isCompleted = status === "completed";
   const { toast } = useToast();
 
-  // Verifica se o usuário tem o setor atribuído
   const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
 
-  // Função para verificar se o tipo de processo está definido antes de mover
   const validateProcessType = (): boolean => {
     if (!processType) {
       toast({
@@ -69,7 +75,6 @@ const ProcessActionButtons = memo(({
     e.preventDefault();
     e.stopPropagation();
 
-    // Validar se o tipo está preenchido antes de mover
     if (!validateProcessType()) {
       return;
     }
@@ -86,7 +91,6 @@ const ProcessActionButtons = memo(({
     e.preventDefault();
     e.stopPropagation();
 
-    // Validar se o tipo está preenchido antes de iniciar
     if (!validateProcessType()) {
       return;
     }
@@ -103,7 +107,10 @@ const ProcessActionButtons = memo(({
     }
   };
 
-  // Se o processo não está iniciado E o usuário tem permissão para iniciar (startProcess está disponível)
+  const shouldShowRenewalButton = isOverdue && 
+    currentDepartment === "Aguard. Doc." && 
+    historyId !== undefined;
+
   if (isNotStarted && startProcess) {
     return <div className="flex justify-center gap-1 process-action">
         <Button variant="outline" size="sm" onClick={handleStartProcess} title="Iniciar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action px-[6px]">
@@ -113,7 +120,6 @@ const ProcessActionButtons = memo(({
       </div>;
   }
 
-  // Se não há responsável no setor e o processo não está concluído e o usuário está no setor atual do processo
   if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed" && isUserInSector) {
     return <div className="flex justify-center gap-1 process-action">
         <Button variant="outline" size="sm" onClick={handleAcceptResponsibility} disabled={isAccepting} title="Aceitar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action mx-0 px-[6px]">
@@ -123,17 +129,38 @@ const ProcessActionButtons = memo(({
       </div>;
   }
 
-  // Caso contrário, mostra os botões de navegação entre departamentos
-  return <div className="flex justify-center gap-2 process-action">
-      <Button variant="ghost" size="icon" onClick={handleMoveToPrevious} disabled={isFirstDepartment} title="Mover para setor anterior" className={`process-action ${isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}`}>
+  return (
+    <div className="flex justify-center gap-2 process-action">
+      {shouldShowRenewalButton && historyId && (
+        <RenewDeadlineButton
+          processId={processId}
+          historyId={historyId}
+          onRenewalComplete={onRenewalComplete}
+        />
+      )}
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={handleMoveToPrevious} 
+        disabled={isFirstDepartment} 
+        title="Mover para setor anterior" 
+        className={`process-action ${isFirstDepartment ? "opacity-50 cursor-not-allowed" : ""}`}
+      >
         <MoveLeft className="h-4 w-4" />
       </Button>
-      <Button variant="ghost" size="icon" onClick={handleMoveToNext} disabled={isCompleted} title="Mover para próximo setor" className={`process-action ${isCompleted ? "opacity-50 cursor-not-allowed" : ""}`}>
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        onClick={handleMoveToNext} 
+        disabled={isCompleted} 
+        title="Mover para próximo setor" 
+        className={`process-action ${isCompleted ? "opacity-50 cursor-not-allowed" : ""}`}
+      >
         <MoveRight className="h-4 w-4" />
       </Button>
-    </div>;
+    </div>
+  );
 });
 
-// Adicionando displayName para facilitar debugging
 ProcessActionButtons.displayName = 'ProcessActionButtons';
 export default ProcessActionButtons;

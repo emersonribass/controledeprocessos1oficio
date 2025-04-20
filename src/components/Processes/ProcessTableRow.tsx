@@ -1,4 +1,3 @@
-
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -24,6 +23,7 @@ interface ProcessTableRowProps {
   hasSectorResponsible?: boolean; 
   canInitiateProcesses?: boolean;
   processResponsibles?: Record<string, any>;
+  historyId?: number;
 }
 
 const ProcessTableRow = ({
@@ -39,7 +39,8 @@ const ProcessTableRow = ({
   isAccepting,
   hasSectorResponsible = false,
   canInitiateProcesses = false,
-  processResponsibles
+  processResponsibles,
+  historyId
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
   
@@ -75,6 +76,9 @@ const ProcessTableRow = ({
     }
     navigate(`/processes/${process.id}`);
   };
+
+  const isDepartmentOverdue = process.status === "overdue";
+  const currentDepartmentEntry = process.history.find(h => !h.exitDate);
 
   return (
     <TableRow 
@@ -134,6 +138,10 @@ const ProcessTableRow = ({
           onAcceptResponsibility={onAcceptResponsibility}
           isAccepting={isAccepting}
           sectorId={process.currentDepartment}
+          isOverdue={isDepartmentOverdue}
+          currentDepartment={process.currentDepartment}
+          historyId={currentDepartmentEntry?.id}
+          onRenewalComplete={() => refreshProcesses()}
         />
       </TableCell>
     </TableRow>
