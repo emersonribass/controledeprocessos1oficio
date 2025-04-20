@@ -12,10 +12,13 @@ export function useSupabase() {
   };
 
   const getSetorById = (id: string | number) => {
+    // Converter o id para número, garantindo que seja um inteiro válido
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+    
     return supabase
       .from("setores")
       .select("*")
-      .eq("id", id)
+      .eq("id", numericId)
       .single();
   };
 
