@@ -35,17 +35,24 @@ const ProcessDepartmentsSection = ({
         const isPastDept = hasPassedDepartment(dept.id);
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
+        const isPrevious = isPreviousDepartment(dept.id);
         
         // Determinar o responsável para este departamento
-        // Apenas mostrar o responsável se for o departamento atual
         let departmentResponsible = null;
         
+        // Mostra o responsável se:
+        // 1. É o departamento atual
+        // 2. É um departamento anterior (isPrevious) E tem um responsável registrado
         if (isActive && sectorResponsibles && sectorResponsibles[dept.id]) {
           departmentResponsible = sectorResponsibles[dept.id];
         }
         // Caso especial para o primeiro departamento se for o atual
         else if (isActive && index === 0 && processResponsible) {
           departmentResponsible = processResponsible;
+        }
+        // Para departamentos anteriores, mostrar o responsável se existir
+        else if (isPrevious && sectorResponsibles && sectorResponsibles[dept.id]) {
+          departmentResponsible = sectorResponsibles[dept.id];
         }
         
         return (
