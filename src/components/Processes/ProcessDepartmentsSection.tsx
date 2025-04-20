@@ -28,6 +28,16 @@ const ProcessDepartmentsSection = ({
   processResponsible,
   sectorResponsibles
 }: ProcessDepartmentsSectionProps) => {
+  // Encontrar o order_num do departamento atual
+  const findCurrentDepartmentOrder = (): number => {
+    // Encontra o departamento atual
+    const currentDept = sortedDepartments.find(dept => isCurrentDepartment(dept.id));
+    // Retorna seu order_num, ou um valor muito grande se não encontrar
+    return currentDept ? currentDept.order : Number.MAX_SAFE_INTEGER;
+  };
+
+  const currentDeptOrder = findCurrentDepartmentOrder();
+
   return (
     <>
       {sortedDepartments.map((dept, index) => {
@@ -36,10 +46,11 @@ const ProcessDepartmentsSection = ({
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
-        // NOVA LÓGICA: Só passa responsável para setor atual ou passado
+        // Nova lógica: Exibe responsáveis apenas para o setor atual e setores com order_num menor
         let departmentResponsible = null;
-        const isCurrentOrPast = isActive || isPastDept;
-        if (isCurrentOrPast) {
+        const showResponsible = isActive || dept.order < currentDeptOrder;
+        
+        if (showResponsible && isProcessStarted) {
           if (sectorResponsibles && sectorResponsibles[dept.id]) {
             departmentResponsible = sectorResponsibles[dept.id];
           } else if (index === 0 && processResponsible) {
@@ -69,4 +80,3 @@ const ProcessDepartmentsSection = ({
 };
 
 export default ProcessDepartmentsSection;
-
