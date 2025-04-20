@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
@@ -106,6 +107,14 @@ const ProcessActionButtons = memo(({
       onAcceptResponsibility();
     }
   };
+
+  // Verificação melhorada para debug
+  console.log("Condições para mostrar o botão de renovação:", {
+    isOverdue,
+    currentDepartment,
+    historyId,
+    shouldShow: isOverdue && currentDepartment === "Aguard. Doc." && historyId !== undefined
+  });
 
   const shouldShowRenewalButton = isOverdue && 
     currentDepartment === "Aguard. Doc." && 

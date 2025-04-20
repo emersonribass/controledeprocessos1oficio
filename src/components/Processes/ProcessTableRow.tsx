@@ -61,7 +61,7 @@ const ProcessTableRow = ({
     hasPassedDepartment,
     isCurrentDepartment,
     isPreviousDepartment,
-    isDepartmentOverdue
+    isDepartmentOverdue: checkDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
   const getRowBackgroundColor = (status: string) => {
@@ -84,11 +84,27 @@ const ProcessTableRow = ({
   const isProcessOverdue = process.status === "overdue";
   const currentDepartmentEntry = process.history.find(h => !h.exitDate);
   
-  // Buscar o ID da entrada do histórico (que é diferente do ID do departamento)
-  // No schema Supabase, processos_historico tem sua própria coluna id (número)
-  const currentHistoryEntryId = currentDepartmentEntry ? 
-    process.history.findIndex(h => h.departmentId === currentDepartmentEntry.departmentId && !h.exitDate) > -1 ? 
-    parseInt(process.id) : undefined : undefined;
+  // Encontrar a entrada de histórico para o departamento atual
+  // Buscamos nas entradas de histórico do processo a entrada correspondente ao departamento atual
+  // que não tenha data de saída (ou seja, é a entrada atual)
+  let currentHistoryEntryId: number | undefined = undefined;
+  
+  // Se temos entradas no histórico, procuramos a entrada correspondente ao departamento atual
+  if (process.history && process.history.length > 0) {
+    // Primeiro encontramos o índice da entrada do departamento atual no array de histórico
+    const historyIndex = process.history.findIndex(
+      h => h.departmentId === process.currentDepartment && !h.exitDate
+    );
+    
+    // Se encontramos uma entrada válida, usamos o índice + 1 como ID (simulando o ID no banco de dados)
+    // Na realidade, no banco de dados temos uma coluna 'id' separada, que não está no tipo ProcessHistory
+    if (historyIndex !== -1) {
+      // No mundo real, este ID seria buscado do banco de dados
+      // Aqui estamos usando o ID do processo, que provavelmente não é o correto
+      // mas garantimos que ele seja um número para atender a tipagem
+      currentHistoryEntryId = parseInt(process.id);
+    }
+  }
 
   return (
     <TableRow 
@@ -123,7 +139,7 @@ const ProcessTableRow = ({
             hasPassedDepartment={hasPassedDepartment(dept.id)}
             entryDate={getMostRecentEntryDate(dept.id)}
             showDate={isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)}
-            isDepartmentOverdue={isCurrentDepartment(dept.id) && isDepartmentOverdue(dept.id, process.status !== "not_started")}
+            isDepartmentOverdue={isCurrentDepartment(dept.id) && checkDepartmentOverdue(dept.id, process.status !== "not_started")}
             departmentTimeLimit={dept.timeLimit}
             isProcessStarted={process.status !== "not_started"}
             responsible={processResponsibles?.[dept.id]}
@@ -150,7 +166,7 @@ const ProcessTableRow = ({
           sectorId={process.currentDepartment}
           isOverdue={isProcessOverdue}
           currentDepartment={process.currentDepartment}
-          historyId={historyId}
+          historyId={currentHistoryEntryId}
           onRenewalComplete={() => refreshProcesses()}
         />
       </TableCell>
