@@ -1,6 +1,6 @@
 
 import { ArrowUpDown } from "lucide-react";
-import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TableHead, TableRow } from "@/components/ui/table";
 import { Process, Department } from "@/types";
 
 interface ProcessTableHeaderProps {
@@ -28,30 +28,32 @@ const ProcessTableHeader = ({
   };
   
   return (
-    <TableHeader>
-      <TableRow>
+    <TableRow>
+      <TableHead 
+        className="w-[70px] whitespace-nowrap" 
+        onClick={(e) => handleSortClick("protocolNumber", e)}
+      >
+        <div className="text-center flex items-center justify-center">
+          Protocolo
+          {sortField === "protocolNumber" && (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
+        </div>
+      </TableHead>
+      
+      <TableHead className="w-[150px] text-center whitespace-nowrap">Tipo</TableHead>
+      
+      {sortedDepartments.map(dept => (
         <TableHead 
-          className="w-[70px] whitespace-nowrap" 
-          onClick={(e) => handleSortClick("protocolNumber", e)}
+          key={dept.id} 
+          className="min-w-[150px] text-center whitespace-nowrap"
         >
-          <div className="text-center">
-            Protocolo
-          </div>
+          {dept.name}
         </TableHead>
-        
-        <TableHead className="w-[150px] text-center whitespace-nowrap">Tipo</TableHead>
-                {sortedDepartments.map(dept => (
-          <TableHead 
-            key={dept.id} 
-            className="min-w-[150px] text-center whitespace-nowrap"
-          >
-            {dept.name}
-          </TableHead>
-        ))}
-        
-        <TableHead className="min-w-[150px] text-center whitespace-nowrap">Ações</TableHead>
-      </TableRow>
-    </TableHeader>
+      ))}
+      
+      <TableHead className="min-w-[150px] text-center whitespace-nowrap">Ações</TableHead>
+    </TableRow>
   );
 };
 
