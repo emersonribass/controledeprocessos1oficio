@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useProcesses } from "@/hooks/useProcesses";
 import { useDepartments } from "@/hooks/useDepartments";
@@ -6,11 +7,35 @@ import { useAvailableUsers } from "@/hooks/useAvailableUsers";
 import { useSupabase } from "@/hooks/useSupabase";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
-import ProcessListSkeleton from "./ProcessListSkeleton";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useAuth } from "@/hooks/auth";
 import { useUserProfile } from "@/hooks/auth/useUserProfile";
+import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
+
+// Componente de esqueleto simples para carregamento
+const ProcessListSkeleton = () => {
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between mb-4">
+        <Skeleton className="h-10 w-1/3" />
+        <Skeleton className="h-10 w-28" />
+      </div>
+      <Skeleton className="h-[120px] w-full mb-6" />
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2">
+          <Skeleton className="h-8 w-full" />
+        </div>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className="flex flex-col space-y-2">
+            <Skeleton className="h-16 w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const ProcessListContent = () => {
   const { user } = useAuth();
@@ -19,7 +44,7 @@ const ProcessListContent = () => {
   const { departments } = useDepartments();
   const { processTypes } = useProcessTypes();
   const { usuarios } = useAvailableUsers();
-  const { getProcessResponsibles } = useSupabase();
+  const supabaseClient = useSupabase();
   
   const [filteredProcesses, setFilteredProcesses] = useState(processes);
   const [isFiltering, setIsFiltering] = useState(false);
@@ -71,7 +96,19 @@ const ProcessListContent = () => {
     
     try {
       const processIds = processes.map(p => p.id);
-      const { data } = await getProcessResponsibles(processIds);
+      
+      // Buscar responsáveis diretamente do supabase
+      const { data, error } = await supabase
+        .from('setor_responsaveis')
+        .select(`
+          processo_id,
+          setor_id,
+          usuario_id,
+          usuarios(id, nome, email)
+        `)
+        .in('processo_id', processIds);
+      
+      if (error) throw error;
       
       if (data) {
         // Organizar por processo_id
@@ -88,7 +125,7 @@ const ProcessListContent = () => {
     } catch (error) {
       console.error("Erro ao buscar responsáveis:", error);
     }
-  }, [processes, getProcessResponsibles]);
+  }, [processes]);
 
   // Efeito para buscar responsáveis quando a lista de processos mudar
   useEffect(() => {
@@ -170,7 +207,6 @@ const ProcessListContent = () => {
 
       <ProcessTable
         processes={filteredProcesses}
-        isLoading={isFiltering}
         processesResponsibles={processesResponsibles}
       />
 
