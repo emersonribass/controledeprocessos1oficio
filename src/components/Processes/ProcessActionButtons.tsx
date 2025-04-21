@@ -54,12 +54,12 @@ const ProcessActionButtons = memo(({
   const isCompleted = status === "completed";
   const { toast } = useToast();
 
-  // Adicionando log detalhado para debug das propriedades relacionadas ao botão de renovação
+  // Log das propriedades relacionadas ao botão de renovação com mais detalhes
   useEffect(() => {
-    console.log(`[ProcessActionButtons] ID: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId:`, renewalHistoryId);
+    console.log(`[ProcessActionButtons] ID: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId: ${renewalHistoryId}`);
     
     if (showRenewDeadlineButton) {
-      console.log(`[RenewButton] ProcessId: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId:`, renewalHistoryId);
+      console.log(`[RenewButton] ProcessId: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId: ${renewalHistoryId}`);
       console.log(`[RenewButton] Tipo do HistoryId:`, typeof renewalHistoryId);
       console.log(`[RenewButton] HistoryId é undefined?`, renewalHistoryId === undefined);
       console.log(`[RenewButton] HistoryId é válido?`, typeof renewalHistoryId === 'number' && !isNaN(renewalHistoryId));

@@ -41,6 +41,9 @@ const ProcessMainDetails = ({
     isAccepting 
   } = useProcessDetailsResponsibility(process.id, process.currentDepartment);
 
+  // Log para debug do button de renovação
+  console.log(`[ProcessMainDetails] ID: ${process.id}, CanRenew: ${canRenewDeadline}, HistoryId: ${renewalHistoryId}, Type: ${typeof renewalHistoryId}`);
+
   // Considera "Atendimento" como o primeiro setor (para garantir o disable no botão)
   // Pode ser necessário ajustar aqui caso o nome/id do setor inicial mude
   // Se for necessário refinar ainda mais, consulte a estrutura dos dados no backend
