@@ -185,7 +185,7 @@ const ProcessFilters = ({
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className={`w-[115px] justify-start text-left font-normal ${!initialDate && "text-muted-foreground"}`}
+                  className={`w-[140px] justify-start text-left font-normal ${!initialDate && "text-muted-foreground"}`}
                 >
                   <Calendar className="mr-2 h-4 w-4 opacity-70" />
                   {initialDate ? format(initialDate, "dd/MM/yyyy", { locale: ptBR }) : "Início"}
@@ -209,7 +209,7 @@ const ProcessFilters = ({
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className={`w-[115px] justify-start text-left font-normal ${!finalDate && "text-muted-foreground"}`}
+                  className={`w-[140px] justify-start text-left font-normal ${!finalDate && "text-muted-foreground"}`}
                 >
                   <Calendar className="mr-2 h-4 w-4 opacity-70" />
                   {finalDate ? format(finalDate, "dd/MM/yyyy", { locale: ptBR }) : "Fim"}
@@ -272,3 +272,4 @@ const ProcessFilters = ({
 };
 
 export default ProcessFilters;
+
