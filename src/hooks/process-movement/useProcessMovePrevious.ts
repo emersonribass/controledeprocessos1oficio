@@ -12,7 +12,7 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
 
   const moveProcessToPreviousDepartment = async (
     processId: string, 
-    showToast: boolean = true  // Novo parâmetro com valor padrão true
+    showToast: boolean = false  // Novo parâmetro com valor padrão true
   ) => {
     if (!user) return false;
     
