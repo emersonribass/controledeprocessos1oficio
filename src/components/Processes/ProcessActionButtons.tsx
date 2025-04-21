@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
-import { memo } from "react";
+import { memo, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/auth/useUserProfile";
 import RenewDeadlineButton from "./RenewDeadlineButton";
@@ -54,6 +54,13 @@ const ProcessActionButtons = memo(({
   const isCompleted = status === "completed";
   const { toast } = useToast();
 
+  // Adicionando log para debug das propriedades relacionadas ao botão de renovação
+  useEffect(() => {
+    if (showRenewDeadlineButton) {
+      console.log(`[RenewButton] ProcessId: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId: ${renewalHistoryId}`);
+    }
+  }, [processId, showRenewDeadlineButton, renewalHistoryId]);
+
   const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
 
   const validateProcessType = (): boolean => {
@@ -103,6 +110,7 @@ const ProcessActionButtons = memo(({
   };
 
   // Exibe o botão de renovação somente se a tela de detalhe indicou que pode exibir
+  // e se houver um ID de histórico válido para renovar
   if (isNotStarted && startProcess) {
     return <div className="flex justify-center gap-1 process-action">
         <Button variant="outline" size="sm" onClick={handleStartProcess} title="Iniciar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action px-[6px]">

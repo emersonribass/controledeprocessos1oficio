@@ -87,6 +87,7 @@ export const useDeadlineRenewalCondition = (
           // O id pode ser "id", ou pode ser undefined dependendo do mapeamento
           setHistoryId(entradaMaisRecente.id || undefined);
           setCanRenewDeadline(true);
+          console.log('[RenewDeadline] Pode renovar prazo. History ID:', entradaMaisRecente.id);
         } else {
           setHistoryId(undefined);
           setCanRenewDeadline(false);
