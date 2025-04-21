@@ -24,7 +24,7 @@ export const useProcessMovementHandler = (
     } catch (error) {
       console.error('Erro ao mover processo para o departamento anterior:', error);
     }
-  }, [movePrevious, fetchProcesses]);
+  }, [moveToPrevious, fetchProcesses]);
   
   const startProcess = useCallback(async (processId: string): Promise<void> => {
     try {
