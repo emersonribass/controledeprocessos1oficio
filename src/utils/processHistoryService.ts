@@ -82,6 +82,36 @@ export class ProcessHistoryService {
       }
     }
     
+    // Estratégia 5: Criar um ID sintético a partir dos dados disponíveis
+    // Isso é necessário porque o objeto em alguns casos tem apenas departmentId, entryDate, exitDate, userId
+    try {
+      logger.debug("Criando ID sintético a partir dos dados disponíveis");
+      
+      // Priorizar campos relacionados a datas
+      const dateStr = historyEntry.entryDate || historyEntry.data_entrada || new Date().toISOString();
+      const deptStr = historyEntry.departmentId || historyEntry.setor_id || historyEntry.setorId || "0";
+      const userStr = historyEntry.userId || historyEntry.usuario_id || "0";
+      
+      // Criar uma combinação única que podemos converter em um número
+      const hashBase = `${dateStr}_${deptStr}_${userStr}`;
+      
+      // Um método simples para converter a string em número
+      let numericHash = 0;
+      for (let i = 0; i < hashBase.length; i++) {
+        const char = hashBase.charCodeAt(i);
+        numericHash = ((numericHash << 5) - numericHash) + char;
+        numericHash = numericHash & numericHash; // Converter para 32bit int
+      }
+      
+      // Garantir que seja positivo e não muito grande
+      const syntheticId = Math.abs(numericHash) % 1000000;
+      
+      logger.info(`ID sintético criado: ${syntheticId} para entryDate=${dateStr}, deptId=${deptStr}`);
+      return syntheticId;
+    } catch (e) {
+      logger.error("Erro ao criar ID sintético:", e);
+    }
+    
     // Logar campos disponíveis para depuração
     logger.warn("Não foi possível extrair ID. Campos disponíveis:", Object.keys(historyEntry));
     return undefined;

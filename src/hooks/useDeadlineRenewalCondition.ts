@@ -57,6 +57,16 @@ export const useDeadlineRenewalCondition = (process: any) => {
 
     // As condições principais foram satisfeitas, agora precisamos encontrar o historyId
 
+    // Verificar se o processo tem histórico
+    if (!process.history || !Array.isArray(process.history) || process.history.length === 0) {
+      logger.warn(`Processo ${process.id} não tem histórico válido`);
+      return;
+    }
+
+    // Log o primeiro item do histórico para debug
+    logger.debug("Exemplo do formato do histórico:", 
+      process.history.length > 0 ? process.history[0] : "Histórico vazio");
+
     // Busca a entrada mais recente do histórico usando o serviço
     const entradaMaisRecente = ProcessHistoryService.findLatestHistoryEntry(
       process.history,
@@ -80,5 +90,6 @@ export const useDeadlineRenewalCondition = (process: any) => {
     }
   }, [process, isOverdue]);
 
+  // Se as duas condições principais foram satisfeitas e temos um ID, retornamos true
   return { canRenewDeadline, historyId };
 };

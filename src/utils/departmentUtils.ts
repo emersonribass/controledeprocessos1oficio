@@ -9,9 +9,19 @@ export const isAwaitingDocsSection = (departmentId: string | number): boolean =>
   // O setor "Aguardando Documentação" tem ID 2 no sistema
   const awaitingDocsDepartmentId = 2;
   
+  // Normalizar a comparação para aceitar string ou número
+  let normalizedId: number;
+  
   if (typeof departmentId === 'string') {
-    return departmentId === String(awaitingDocsDepartmentId);
+    // Remover espaços e tentar converter para número
+    const cleanedId = departmentId.trim();
+    normalizedId = isNaN(Number(cleanedId)) ? -1 : Number(cleanedId);
+  } else if (typeof departmentId === 'number') {
+    normalizedId = departmentId;
+  } else {
+    // Se não for string nem número, retorna false
+    return false;
   }
   
-  return departmentId === awaitingDocsDepartmentId;
+  return normalizedId === awaitingDocsDepartmentId;
 };
