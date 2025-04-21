@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
@@ -57,8 +58,8 @@ const ProcessActionButtons = memo(({
   const validateProcessType = (): boolean => {
     if (!processType) {
       toast.error(
-        "Aviso", 
-        "É necessário selecionar um tipo de processo antes de movê-lo para o próximo setor."
+        "Tipo de processo obrigatório", 
+        "É necessário selecionar um tipo de processo antes de iniciá-lo."
       );
       return false;
     }
@@ -101,7 +102,13 @@ const ProcessActionButtons = memo(({
 
   if (isNotStarted && startProcess) {
     return <div className="flex justify-center gap-1 process-action">
-        <Button variant="outline" size="sm" onClick={handleStartProcess} title="Iniciar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action px-[6px]">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleStartProcess} 
+          title={!processType ? "Selecione um tipo de processo" : "Iniciar processo"} 
+          className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action px-[6px]"
+        >
           <Play className="h-3 w-3" />
           Iniciar
         </Button>
