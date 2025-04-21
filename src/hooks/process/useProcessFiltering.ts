@@ -11,26 +11,20 @@ interface ResponsibilityCheckers {
   isUserResponsibleForSector?: (process: Process, userId: string) => boolean;
 }
 
-/**
- * Hook principal para filtragem de processos com base em permissões e critérios
- */
 export const useProcessFiltering = (
   processes: Process[],
   checkers: ResponsibilityCheckers = {}
 ) => {
   const { user } = useAuth();
   
-  // Usar os hooks específicos para cada funcionalidade
   const permissionCheckers = useProcessPermissionCheckers();
   const responsibilityCache = useProcessResponsibilityCache(processes);
   const visibilityPermissions = useProcessVisibilityPermissions(processes);
   const statusFilters = useProcessStatusFilters();
   
-  // Usar as funções de verificação passadas ou usar as implementações padrão
   const isUserResponsibleForProcess = checkers.isUserResponsibleForProcess || 
     permissionCheckers.isUserResponsibleForProcess;
-  
-  // Esta função agora é explicitamente assíncrona e retorna uma Promise<Process[]>
+
   const filterProcesses = async (
     filters: {
       department?: string;
@@ -38,40 +32,55 @@ export const useProcessFiltering = (
       processType?: string;
       search?: string;
       excludeCompleted?: boolean;
+      startDate?: string;
+      endDate?: string;
+      responsibleUser?: string;
     },
     processesToFilter: Process[] = processes,
     processesResponsibles?: Record<string, any>
   ): Promise<Process[]> => {
     const baseList = processesToFilter;
     
-    if (!user) return []; // Sem usuário, não há processos para mostrar
+    if (!user) return [];
 
-    // Primeiro filtrar por permissões do usuário - lógica mais restritiva aqui
     const visibleProcessesPromises = baseList.map(async (process) => {
+      // Verificar se o usuário tem permissão para ver o processo
       const canView = await visibilityPermissions.canUserViewProcess(
         process, 
         user.id, 
         processesResponsibles
       );
-      return canView ? process : null;
+
+      // Se não tem permissão ou não atende aos critérios de filtragem, retorna null
+      if (!canView) return null;
+
+      // Verificar o filtro de responsável
+      if (filters.responsibleUser) {
+        const isResponsible = 
+          // Verifica se é responsável geral pelo processo
+          process.usuario_responsavel === filters.responsibleUser ||
+          // Verifica se é responsável em algum setor
+          (processesResponsibles?.[process.id]?.some(
+            (resp: any) => resp.usuario_id === filters.responsibleUser
+          ));
+
+        if (!isResponsible) return null;
+      }
+
+      return process;
     });
     
-    // Resolver todas as promessas
     const visibleProcessesResults = await Promise.all(visibleProcessesPromises);
-    
-    // Filtrar os resultados nulos (processos não visíveis)
     const visibleProcesses = visibleProcessesResults.filter(
       (process): process is Process => process !== null
     );
 
-    // Depois aplicar os filtros selecionados pelo usuário
     return statusFilters.applyUserFilters(visibleProcesses, filters);
   };
 
   return {
     filterProcesses,
     isProcessOverdue: statusFilters.isProcessOverdue,
-    // Exportar as funções de verificação para reuso
     ...permissionCheckers,
     ...responsibilityCache
   };

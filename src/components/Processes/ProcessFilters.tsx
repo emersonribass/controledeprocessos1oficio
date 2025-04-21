@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { useAvailableUsers } from "@/hooks/useAvailableUsers";
@@ -132,7 +131,7 @@ const ProcessFilters = ({
     Object.keys(filters)
       .filter(k => !["excludeCompleted"].includes(k))
       .some(k => filters[k as keyof typeof filters] !== undefined)
-  ) || search;
+  );
 
   return (
     <div className="space-y-3">
@@ -161,7 +160,7 @@ const ProcessFilters = ({
       </div>
 
       <FilterActions
-        excludeCompleted={filters.excludeCompleted}
+        excludeCompleted={!!filters.excludeCompleted}
         onToggleExcludeCompleted={toggleExcludeCompleted}
         hasActiveFilters={hasActiveFilters}
         onClearFilters={handleClearFilters}
