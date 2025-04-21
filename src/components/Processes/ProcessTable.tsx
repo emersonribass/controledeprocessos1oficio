@@ -1,3 +1,4 @@
+
 import { Table, TableHeader, TableBody } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
@@ -21,6 +22,7 @@ interface ProcessTableProps {
   filterProcesses: (filters: any, processes: Process[], processesResponsibles?: Record<string, any>) => Promise<Process[]>;
   filters: any;
   isUserInAttendanceSector?: () => boolean;
+  processesResponsibles?: Record<string, Record<string, any>>;
 }
 
 const ProcessTable = ({
@@ -39,9 +41,13 @@ const ProcessTable = ({
   startProcess,
   filterProcesses,
   filters,
-  isUserInAttendanceSector
+  isUserInAttendanceSector,
+  processesResponsibles
 }: ProcessTableProps) => {
-  const { processesResponsibles, isLoading, queueSectorForLoading } = useProcessTableState(processes);
+  const { processesResponsibles: localProcessesResponsibles, isLoading, queueSectorForLoading } = useProcessTableState(processes);
+
+  // Usar os responsáveis passados como propriedade, se disponíveis, ou os carregados localmente
+  const effectiveResponsibles = processesResponsibles || localProcessesResponsibles;
 
   return (
     <div className="border rounded-md overflow-x-auto">
@@ -63,7 +69,7 @@ const ProcessTable = ({
           getProcessTypeName={getProcessTypeName}
           updateProcessType={updateProcessType}
           startProcess={startProcess}
-          processesResponsibles={processesResponsibles}
+          processesResponsibles={effectiveResponsibles}
           sortField={sortField}
           sortDirection={sortDirection}
           queueSectorForLoading={queueSectorForLoading}
