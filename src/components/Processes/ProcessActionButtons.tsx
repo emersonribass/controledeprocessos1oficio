@@ -29,6 +29,7 @@ interface ProcessActionButtonsProps {
   sectorId?: string;
   showRenewDeadlineButton?: boolean;
   renewalHistoryId?: number;
+  onRenewalComplete?: () => void;
 }
 
 const ProcessActionButtons = memo(({
@@ -48,7 +49,8 @@ const ProcessActionButtons = memo(({
   isAccepting = false,
   sectorId,
   showRenewDeadlineButton = false,
-  renewalHistoryId
+  renewalHistoryId,
+  onRenewalComplete
 }: ProcessActionButtonsProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
@@ -141,6 +143,7 @@ const ProcessActionButtons = memo(({
         <RenewDeadlineButton
           processId={processId}
           historyId={renewalHistoryId as number}
+          onRenewalComplete={onRenewalComplete}
         />
       )}
       <Button 
