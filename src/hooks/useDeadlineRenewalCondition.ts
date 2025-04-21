@@ -8,72 +8,76 @@ import { createLogger } from "@/utils/loggerUtils";
 const logger = createLogger("DeadlineRenewalCondition");
 
 /**
- * Hook para verificar se um processo pode ter seu prazo renovado.
- * Retorna um objeto com duas propriedades:
- * - canRenewDeadline: booleano que indica se o prazo pode ser renovado
- * - historyId: o ID do histórico que seria renovado, ou undefined se não puder ser renovado
+ * Hook que verifica se um processo pode ter seu prazo renovado.
+ * 
+ * Condições principais:
+ * 1. Processo deve estar no setor "Aguardando Documentação"
+ * 2. Processo deve estar com o prazo vencido
+ * 
+ * @returns Objeto contendo:
+ *   - canRenewDeadline: se o prazo pode ser renovado
+ *   - historyId: o ID do histórico para renovação
  */
 export const useDeadlineRenewalCondition = (process: any) => {
   const [canRenewDeadline, setCanRenewDeadline] = useState(false);
   const [historyId, setHistoryId] = useState<number | undefined>(undefined);
 
-  // Verifica se o processo está atrasado
+  // Verifica se o processo está atrasado (CONDIÇÃO 2)
   const isOverdue = useDeadlineVerification(
     process?.currentDepartment,
     process?.history
   );
 
   useEffect(() => {
-    const checkRenewalCondition = () => {
-      // Resetar o estado
-      setCanRenewDeadline(false);
-      setHistoryId(undefined);
+    // Resetar o estado no início de cada verificação
+    setCanRenewDeadline(false);
+    setHistoryId(undefined);
 
-      // Verificações básicas do processo
-      if (!process?.id || !process?.currentDepartment) {
-        logger.debug(`Processo inválido: ID=${process?.id}, Setor=${process?.currentDepartment}`);
-        return;
-      }
+    // Verificações básicas do processo
+    if (!process?.id || !process?.currentDepartment) {
+      logger.debug(`Processo inválido ou incompleto: ID=${process?.id}, Setor=${process?.currentDepartment}`);
+      return;
+    }
 
-      // Verifica se está no setor "Aguard. Doc."
-      if (!isAwaitingDocsSection(process.currentDepartment)) {
-        logger.debug(`Não é setor de Aguardando Documentação: ${process.currentDepartment}`);
-        return;
-      }
+    // CONDIÇÃO 1: Verificar se está no setor "Aguardando Documentação"
+    const isAwaitingDocs = isAwaitingDocsSection(process.currentDepartment);
+    logger.debug(`Setor é "Aguard. Doc."? ${isAwaitingDocs} (id=${process.currentDepartment})`);
+    
+    if (!isAwaitingDocs) {
+      logger.debug(`Processo ${process.id} não está no setor de Aguardando Documentação`);
+      return;
+    }
 
-      // Se não estiver atrasado, não pode renovar
-      if (!isOverdue) {
-        logger.debug(`Processo ${process.id} não está atrasado`);
-        return;
-      }
+    // CONDIÇÃO 2: Verificar se está atrasado
+    logger.debug(`Processo ${process.id} está atrasado? ${isOverdue}`);
+    if (!isOverdue) {
+      logger.debug(`Processo ${process.id} não está atrasado`);
+      return;
+    }
 
-      // Busca a entrada mais recente do histórico usando o serviço
-      const entradaMaisRecente = ProcessHistoryService.findLatestHistoryEntry(
-        process.history,
-        process.currentDepartment
-      );
+    // As condições principais foram satisfeitas, agora precisamos encontrar o historyId
 
-      if (!entradaMaisRecente) {
-        logger.warn(`Não encontrada entrada no histórico para setor ${process.currentDepartment}`);
-        return;
-      }
+    // Busca a entrada mais recente do histórico usando o serviço
+    const entradaMaisRecente = ProcessHistoryService.findLatestHistoryEntry(
+      process.history,
+      process.currentDepartment
+    );
 
-      // Extrai o ID do histórico usando o serviço
-      const id = ProcessHistoryService.extractHistoryId(entradaMaisRecente);
-      logger.debug(`Processo ${process.id}: Histórico encontrado`, entradaMaisRecente);
-      logger.debug(`ID extraído: ${id}, tipo: ${typeof id}`);
-      
-      // Se há um ID válido, habilitamos a renovação
-      if (id !== undefined) {
-        setHistoryId(id);
-        setCanRenewDeadline(true);
-        logger.info(`Renovação habilitada para processo ${process.id}, historyId=${id}`);
-      } else {
-        logger.warn(`ID indefinido para processo ${process.id}`);
-      }
-    };
+    if (!entradaMaisRecente) {
+      logger.warn(`Não encontrada entrada no histórico para setor ${process.currentDepartment}`);
+      return;
+    }
 
-    checkRenewalCondition();
+    // Extrai o ID do histórico usando o serviço
+    const id = ProcessHistoryService.extractHistoryId(entradaMaisRecente);
+    
+    if (id !== undefined) {
+      setHistoryId(id);
+      setCanRenewDeadline(true);
+      logger.info(`Renovação habilitada para processo ${process.id}, historyId=${id}`);
+    } else {
+      logger.warn(`ID indefinido para processo ${process.id}, não será possível renovar o prazo`);
+    }
   }, [process, isOverdue]);
 
   return { canRenewDeadline, historyId };
