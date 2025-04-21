@@ -1,60 +1,72 @@
 
 import { useState, useEffect } from "react";
 import { useSupabase } from "@/hooks/useSupabase";
+import { isDepartmentOverdue } from "@/utils/processDeadlines";
 
 /**
- * Hook para verificar se um processo pode ter seu prazo renovado
- * Este hook é usado exclusivamente na tela de detalhes do processo
+ * Hook para verificar se um processo pode ter seu prazo renovado.
+ * Este hook é usado exclusivamente na tela de detalhes do processo.
  */
-export const useDeadlineRenewalCondition = (processId: string, currentDepartment: string, isOverdue: boolean) => {
+export const useDeadlineRenewalCondition = (
+  process: any // Agora recebe o processo inteiro ao invés de campos quebrados
+) => {
   const [canRenewDeadline, setCanRenewDeadline] = useState(false);
   const [historyId, setHistoryId] = useState<number | undefined>(undefined);
-  const { getProcessoHistorico } = useSupabase();
+  const { getSetorById } = useSupabase();
 
   useEffect(() => {
     const checkRenewalCondition = async () => {
       // Setor "Aguard. Doc." tem ID 2 no sistema
-      const isAwaitingDocs = currentDepartment === "2";
-      
-      // Se não estiver atrasado ou não for o setor certo, não pode renovar
-      if (!isOverdue || !isAwaitingDocs) {
+      if (!process?.id || !process?.currentDepartment) {
         setCanRenewDeadline(false);
         return;
       }
-      
+
+      const isAwaitingDocs = process.currentDepartment === "2";
+      if (!isAwaitingDocs) {
+        setCanRenewDeadline(false);
+        return;
+      }
+
+      // Buscar tempo limite do setor atual
       try {
-        // Buscar o registro mais recente do histórico para o processo no departamento atual
-        const { data, error } = await getProcessoHistorico(processId, currentDepartment);
-        
-        if (error || !data || data.length === 0) {
-          console.error("Erro ao buscar histórico do processo:", error);
+        const { data: setor, error } = await getSetorById(process.currentDepartment);
+        if (error || !setor) {
           setCanRenewDeadline(false);
           return;
         }
-        
-        // Ordenar por mais recente e pegar o primeiro
-        const sortedHistory = data.sort((a, b) => 
-          new Date(b.data_entrada).getTime() - new Date(a.data_entrada).getTime()
-        );
-        
-        const latestEntry = sortedHistory[0];
-        
-        if (latestEntry && latestEntry.data_saida === null) {
-          setHistoryId(latestEntry.id);
+
+        // Usa utilitário para checar atraso REAL do setor atual, não só status "overdue"
+        const atrasadoNoSetor = isDepartmentOverdue({
+          history: process.history,
+          currentDepartment: process.currentDepartment,
+          departmentTimeLimit: setor.time_limit,
+        });
+
+        if (!atrasadoNoSetor) {
+          setCanRenewDeadline(false);
+          return;
+        }
+
+        // Buscar a entrada atual no histórico desse departamento
+        const entries = process.history
+          .filter((h: any) => h.departmentId === process.currentDepartment && h.exitDate === null)
+          .sort((a: any, b: any) => new Date(b.entryDate).getTime() - new Date(a.entryDate).getTime());
+        const entradaMaisRecente = entries[0];
+
+        if (entradaMaisRecente) {
+          setHistoryId(entradaMaisRecente.id || undefined); // id pode não existir, depende do mapeamento
           setCanRenewDeadline(true);
         } else {
           setCanRenewDeadline(false);
         }
       } catch (err) {
-        console.error("Erro ao verificar condição de renovação:", err);
         setCanRenewDeadline(false);
       }
     };
-    
-    if (processId && currentDepartment) {
-      checkRenewalCondition();
-    }
-  }, [processId, currentDepartment, isOverdue]);
-  
+
+    checkRenewalCondition();
+  }, [process]);
+
   return { canRenewDeadline, historyId };
 };

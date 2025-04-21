@@ -64,12 +64,8 @@ const ProcessDetailsPage = () => {
     return () => clearInterval(intervalId);
   }, [refreshProcesses]);
   
-  const { canRenewDeadline, historyId } = useDeadlineRenewalCondition(
-    process?.id,
-    process?.currentDepartment,
-    process?.status === "overdue"
-  );
-  
+  const { canRenewDeadline, historyId } = useDeadlineRenewalCondition(process);
+
   if (isLoading || !process) {
     return <ProcessDetailsSkeleton />;
   }
