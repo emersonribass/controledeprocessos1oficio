@@ -46,7 +46,7 @@ export const useDeadlineRenewalCondition = (
           return;
         }
         
-        // Aqui está a correção: usar apenas time_limit que é a propriedade real do objeto
+        // Corrige para o campo certo vindo do Supabase
         const timeLimit = setor.time_limit ?? null;
 
         // Usa utilitário para checar atraso REAL neste setor
@@ -84,10 +84,33 @@ export const useDeadlineRenewalCondition = (
         console.log('[RenewDeadline] Entrada mais recente no setor:', entradaMaisRecente);
 
         if (entradaMaisRecente) {
-          // O id pode ser "id", ou pode ser undefined dependendo do mapeamento
-          setHistoryId(entradaMaisRecente.id || undefined);
-          setCanRenewDeadline(true);
-          console.log('[RenewDeadline] Pode renovar prazo. History ID:', entradaMaisRecente.id);
+          // Procura o campo "id" direto ou, se não existir, tenta buscar por "historyId" ou procura pelo id real do registros históricos
+          // Padrão real Supabase para processos_historico: campo inteiro chamado "id"
+          // Como fallback adicional, busca no array original o item correspondente usando as datas/campos
+          let histId: number | undefined = undefined;
+          if (entradaMaisRecente.id) {
+            histId = entradaMaisRecente.id;
+          } else {
+            // Procura na lista bruta do histórico o item equivalente com id
+            const entradaOriginal = process.history.find(
+              (h: any) =>
+                // Confere entrada igual usada acima, mas restringe por campos + compara entryDate
+                (h.departmentId === process.currentDepartment ||
+                 h.setor_id === process.currentDepartment ||
+                 h.setorId === process.currentDepartment) &&
+                (h.exitDate === null || h.data_saida == null) &&
+                ((h.entryDate && entradaMaisRecente.entryDate && h.entryDate === entradaMaisRecente.entryDate) ||
+                 (h.data_entrada && entradaMaisRecente.data_entrada && h.data_entrada === entradaMaisRecente.data_entrada))
+                && h.id
+            );
+            if (entradaOriginal && entradaOriginal.id) {
+              histId = entradaOriginal.id;
+            }
+          }
+
+          setHistoryId(histId);
+          setCanRenewDeadline(!!histId);
+          console.log('[RenewDeadline] Pode renovar prazo. History ID:', histId);
         } else {
           setHistoryId(undefined);
           setCanRenewDeadline(false);
