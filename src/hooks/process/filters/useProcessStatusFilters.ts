@@ -1,4 +1,3 @@
-
 import { Process } from "@/types";
 
 /**
@@ -18,6 +17,7 @@ export const useProcessStatusFilters = () => {
       excludeCompleted?: boolean;
       startDate?: string;
       endDate?: string;
+      responsibleUser?: string;
     }
   ): Process[] => {
     return processes.filter((process) => {
@@ -61,6 +61,11 @@ export const useProcessStatusFilters = () => {
         if (!processStartDate || processStartDate > end) {
           return false;
         }
+      }
+
+      // Filtro por responsável
+      if (filters.responsibleUser && process.responsibleUserId !== filters.responsibleUser) {
+        return false;
       }
 
       return true;

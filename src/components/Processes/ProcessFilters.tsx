@@ -1,9 +1,9 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useDepartments } from "@/hooks/useDepartments";
 import { useProcessTypes } from "@/hooks/useProcessTypes";
+import { useAvailableUsers } from "@/hooks/useAvailableUsers";
 import { Department } from "@/types";
 import { X, Search, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ interface ProcessFiltersProps {
     excludeCompleted?: boolean;
     startDate?: string;
     endDate?: string;
+    responsibleUser?: string;
   };
   setFilters: React.Dispatch<React.SetStateAction<{
     department?: string;
@@ -31,6 +32,7 @@ interface ProcessFiltersProps {
     excludeCompleted?: boolean;
     startDate?: string;
     endDate?: string;
+    responsibleUser?: string;
   }>>;
   availableDepartments?: Department[];
 }
@@ -42,23 +44,20 @@ const ProcessFilters = ({
 }: ProcessFiltersProps) => {
   const { departments } = useDepartments();
   const { processTypes } = useProcessTypes();
+  const { usuarios, isLoading: isLoadingUsers } = useAvailableUsers();
   const [search, setSearch] = useState("");
   const [initialDate, setInitialDate] = useState<Date | undefined>(filters.startDate ? new Date(filters.startDate) : undefined);
   const [finalDate, setFinalDate] = useState<Date | undefined>(filters.endDate ? new Date(filters.endDate) : undefined);
 
-  // Atualiza o estado local de busca quando os filtros mudam externamente
   useEffect(() => {
     setSearch(filters.search || "");
   }, [filters.search]);
 
-  // Mantém controlados os DatePickers com base nos filtros externos
   useEffect(() => {
     setInitialDate(filters.startDate ? new Date(filters.startDate) : undefined);
     setFinalDate(filters.endDate ? new Date(filters.endDate) : undefined);
-    // eslint-disable-next-line
   }, [filters.startDate, filters.endDate]);
 
-  // Função de debounce
   const debounce = (func: Function, delay: number) => {
     let timeoutId: NodeJS.Timeout;
     return function (...args: any[]) {
@@ -69,7 +68,6 @@ const ProcessFilters = ({
     };
   };
 
-  // Debounce para busca por texto
   const debouncedSearch = useCallback(debounce((value: string) => {
     setFilters(prev => ({
       ...prev,
@@ -113,7 +111,6 @@ const ProcessFilters = ({
     }));
   };
 
-  // Mudança nos datepickers
   const handleInitialDateChange = (date: Date | undefined) => {
     setInitialDate(date);
     setFilters(prev => ({
@@ -132,10 +129,8 @@ const ProcessFilters = ({
   const deptsToShow = availableDepartments || departments;
   const hasActiveFilters = (Object.keys(filters).filter(k => !["excludeCompleted"].includes(k)).some(k => filters[k as keyof typeof filters] !== undefined)) || search;
 
-  // Layout com títulos de grupos: Situação, Setor, Data, Tipo
   return (
     <div className="space-y-3">
-      {/* Linha de pesquisa */}
       <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
         <div className="relative col-span-1 md:col-span-2">
           <div className="relative">
@@ -145,8 +140,7 @@ const ProcessFilters = ({
         </div>
       </div>
 
-      {/* Situação, Setor, Data, Tipo */}
-      <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
+      <div className="grid gap-3 grid-cols-1 md:grid-cols-5">
         <div>
           <label className="block text-sm font-semibold mb-1">Situação</label>
           <Select value={filters.status || "all"} onValueChange={value => handleSelectChange("status", value)}>
@@ -176,11 +170,28 @@ const ProcessFilters = ({
             </SelectContent>
           </Select>
         </div>
-        {/* Filtro de Datas */}
+        <div>
+          <label className="block text-sm font-semibold mb-1">Responsável</label>
+          <Select 
+            value={filters.responsibleUser || "all"} 
+            onValueChange={value => handleSelectChange("responsibleUser", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Responsável" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              {usuarios.map(usuario => (
+                <SelectItem key={usuario.id} value={usuario.id}>
+                  {usuario.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div>
           <label className="block text-sm font-semibold mb-1">Data de Entrada</label>
           <div className="flex gap-2">
-            {/* Data inicial */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -204,7 +215,6 @@ const ProcessFilters = ({
                 />
               </PopoverContent>
             </Popover>
-            {/* Data final */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -225,7 +235,6 @@ const ProcessFilters = ({
                   locale={ptBR}
                   footer={null}
                   fromDate={initialDate}
-                  // Não deixar escolher antes da inicial
                 />
               </PopoverContent>
             </Popover>
@@ -247,7 +256,6 @@ const ProcessFilters = ({
         </div>
       </div>
 
-      {/* Checkbox Ocultar concluídos, botão limpar filtros */}
       <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
         <div className="flex items-center space-x-2">
           <Checkbox 
@@ -272,4 +280,3 @@ const ProcessFilters = ({
 };
 
 export default ProcessFilters;
-
