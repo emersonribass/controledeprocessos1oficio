@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useEffect, useCallback, memo } from "react";
 import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { useAvailableUsers } from "@/hooks/useAvailableUsers";
 import { Department } from "@/types";
@@ -31,7 +32,8 @@ interface ProcessFiltersProps {
   availableDepartments?: Department[];
 }
 
-const ProcessFilters = ({
+// Usando memo para evitar renderizações desnecessárias
+const ProcessFilters = memo(({
   filters,
   setFilters,
   availableDepartments
@@ -65,6 +67,7 @@ const ProcessFilters = ({
     };
   };
 
+  // Usando useCallback para evitar recriação de funções a cada renderização
   const debouncedSearch = useCallback(
     debounce((value: string) => {
       setFilters(prev => ({
@@ -75,56 +78,56 @@ const ProcessFilters = ({
     [setFilters]
   );
 
-  const handleSearchChange = (value: string) => {
+  const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     debouncedSearch(value);
-  };
+  }, [debouncedSearch]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       setFilters(prev => ({
         ...prev,
         search: search.trim() === "" ? undefined : search
       }));
     }
-  };
+  }, [search, setFilters]);
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setFilters({ excludeCompleted: filters.excludeCompleted });
     setSearch("");
     setInitialDate(undefined);
     setFinalDate(undefined);
-  };
+  }, [filters.excludeCompleted, setFilters]);
 
-  const handleSelectChange = (key: string, value: string) => {
+  const handleSelectChange = useCallback((key: string, value: string) => {
     setFilters(prev => ({
       ...prev,
       [key]: value === "all" ? undefined : value
     }));
-  };
+  }, [setFilters]);
 
-  const toggleExcludeCompleted = () => {
+  const toggleExcludeCompleted = useCallback(() => {
     setFilters(prev => ({
       ...prev,
       excludeCompleted: !prev.excludeCompleted
     }));
-  };
+  }, [setFilters]);
 
-  const handleInitialDateChange = (date: Date | undefined) => {
+  const handleInitialDateChange = useCallback((date: Date | undefined) => {
     setInitialDate(date);
     setFilters(prev => ({
       ...prev,
       startDate: date ? date.toISOString().slice(0, 10) : undefined,
     }));
-  };
+  }, [setFilters]);
 
-  const handleFinalDateChange = (date: Date | undefined) => {
+  const handleFinalDateChange = useCallback((date: Date | undefined) => {
     setFinalDate(date);
     setFilters(prev => ({
       ...prev,
       endDate: date ? date.toISOString().slice(0, 10) : undefined,
     }));
-  };
+  }, [setFilters]);
 
   const deptsToShow = availableDepartments || [];
   const hasActiveFilters = (
@@ -167,6 +170,9 @@ const ProcessFilters = ({
       />
     </div>
   );
-};
+});
+
+// Adicionando displayName para melhorar a depuração
+ProcessFilters.displayName = 'ProcessFilters';
 
 export default ProcessFilters;

@@ -1,17 +1,45 @@
 
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { UsuarioSupabase, FormUsuario } from "@/types/usuario";
 import { supabaseService } from "@/services/supabase";
+
+// Tempo de validade do cache em milissegundos (5 minutos)
+const CACHE_TTL = 5 * 60 * 1000;
 
 export function useUsuarios() {
   const [usuarios, setUsuarios] = useState<UsuarioSupabase[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [usuarioAtual, setUsuarioAtual] = useState<UsuarioSupabase | null>(null);
   const { toast } = useToast();
+  
+  // Referências para controle de cache
+  const cacheRef = useRef<{
+    data: UsuarioSupabase[];
+    timestamp: number;
+  } | null>(null);
+  
+  // Controle para evitar múltiplas requisições simultâneas
+  const loadingRef = useRef(false);
 
-  const fetchUsuarios = async () => {
+  const fetchUsuarios = useCallback(async (forceRefresh = false) => {
+    // Verificar se já existe uma requisição em andamento
+    if (loadingRef.current) {
+      console.log("Já existe uma requisição em andamento. Ignorando nova solicitação.");
+      return;
+    }
+    
+    // Verificar se temos dados em cache válidos
+    const now = Date.now();
+    if (!forceRefresh && cacheRef.current && (now - cacheRef.current.timestamp < CACHE_TTL)) {
+      console.log("Usando dados em cache para 'usuarios'");
+      setUsuarios(cacheRef.current.data);
+      return;
+    }
+
+    loadingRef.current = true;
     setIsLoading(true);
+    
     try {
       console.log("Iniciando busca de usuários na tabela 'usuarios' do projeto controledeprocessos1oficio");
       const supabaseUrl = supabaseService.getUrl();
@@ -44,7 +72,15 @@ export function useUsuarios() {
         }
       }
 
-      setUsuarios(data as UsuarioSupabase[] || []);
+      // Atualizar o cache e o estado
+      const usuariosData = data as UsuarioSupabase[] || [];
+      setUsuarios(usuariosData);
+      
+      // Guardar no cache
+      cacheRef.current = {
+        data: usuariosData,
+        timestamp: now
+      };
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
       toast({
@@ -54,8 +90,19 @@ export function useUsuarios() {
       });
     } finally {
       setIsLoading(false);
+      loadingRef.current = false;
     }
-  };
+  }, [toast]);
+
+  // Carregar usuários na montagem do componente
+  useEffect(() => {
+    fetchUsuarios();
+    
+    // Limpar o cache na desmontagem
+    return () => {
+      cacheRef.current = null;
+    };
+  }, [fetchUsuarios]);
 
   const handleToggleAtivo = async (usuario: UsuarioSupabase) => {
     try {
@@ -70,7 +117,8 @@ export function useUsuarios() {
         description: `Usuário ${usuario.ativo ? 'desativado' : 'ativado'} com sucesso!`,
       });
 
-      await fetchUsuarios();
+      // Forçar atualização do cache após modificação
+      await fetchUsuarios(true);
     } catch (error) {
       console.error("Erro ao atualizar status do usuário:", error);
       toast({
@@ -94,7 +142,8 @@ export function useUsuarios() {
         description: "Usuário excluído com sucesso!",
       });
 
-      await fetchUsuarios();
+      // Forçar atualização do cache após modificação
+      await fetchUsuarios(true);
       return true;
     } catch (error) {
       console.error("Erro ao excluir usuário:", error);
@@ -148,7 +197,8 @@ export function useUsuarios() {
         });
       }
 
-      await fetchUsuarios();
+      // Forçar atualização do cache após modificação
+      await fetchUsuarios(true);
       return true;
     } catch (error) {
       console.error("Erro ao salvar usuário:", error);
