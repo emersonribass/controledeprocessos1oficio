@@ -45,7 +45,9 @@ export const useDeadlineRenewalCondition = (
           console.log('[RenewDeadline] Erro ao buscar setor:', error);
           return;
         }
-        const timeLimit = setor.time_limit ?? setor.timeLimit ?? null;
+        
+        // Aqui está a correção: usar apenas time_limit que é a propriedade real do objeto
+        const timeLimit = setor.time_limit ?? null;
 
         // Usa utilitário para checar atraso REAL neste setor
         const atrasadoNoSetor = isDepartmentOverdue({
