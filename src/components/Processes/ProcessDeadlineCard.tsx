@@ -46,7 +46,8 @@ const ProcessDeadlineCard = ({ process }: ProcessDeadlineCardProps) => {
     
     if (!currentEntry) return null;
     
-    const entryDate = new Date(currentEntry.entryDate);
+    // Compatibilidade com diferentes estruturas de dados
+    const entryDate = new Date(currentEntry.entryDate || currentEntry.data_entrada || "");
     const deadline = new Date(entryDate);
     deadline.setDate(deadline.getDate() + departmentTimeLimit);
     

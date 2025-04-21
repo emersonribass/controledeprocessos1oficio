@@ -33,14 +33,16 @@ export function isDepartmentOverdue({
       return departmentMatch && noExit;
     })
     .sort((a: any, b: any) => {
-      const dateA = new Date(a.entryDate || a.data_entrada).getTime();
-      const dateB = new Date(b.entryDate || b.data_entrada).getTime();
+      // Compatibilidade com ambas as estruturas de dados (entryDate ou data_entrada)
+      const dateA = new Date(a.entryDate || a.data_entrada || "").getTime();
+      const dateB = new Date(b.entryDate || b.data_entrada || "").getTime();
       return dateB - dateA;  // Mais recente primeiro
     })[0];
 
   if (!currentEntry) return false;
 
-  const entrada = new Date(currentEntry.entryDate || currentEntry.data_entrada);
+  // Usar operador de coalescência nula para acessar entryDate ou data_entrada
+  const entrada = new Date(currentEntry.entryDate || currentEntry.data_entrada || "");
   const prazo = new Date(entrada);
   prazo.setDate(prazo.getDate() + departmentTimeLimit);
 

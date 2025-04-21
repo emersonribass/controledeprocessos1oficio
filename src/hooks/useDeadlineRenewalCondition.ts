@@ -72,13 +72,14 @@ export const useDeadlineRenewalCondition = (
               (h.departmentId === process.currentDepartment ||
                h.setor_id === process.currentDepartment ||
                h.setorId === process.currentDepartment) &&
-              (h.exitDate === null || h.data_saida == null)
+              (h.exitDate === null || h.data_saida === null)
           )
           // Maior data de entrada primeiro
-          .sort((a: any, b: any) => 
-            new Date(b.entryDate || b.data_entrada).getTime()
-                 - new Date(a.entryDate || a.data_entrada).getTime()
-          );
+          .sort((a: any, b: any) => {
+            const dateA = new Date(a.entryDate || a.data_entrada || "").getTime();
+            const dateB = new Date(b.entryDate || b.data_entrada || "").getTime();
+            return dateB - dateA;
+          });
 
         const entradaMaisRecente = entries[0];
         

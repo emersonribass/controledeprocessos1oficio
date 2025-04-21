@@ -62,10 +62,14 @@ const ProcessActionButtons = memo(({
       console.log(`[RenewButton] ProcessId: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId:`, renewalHistoryId);
       console.log(`[RenewButton] Tipo do HistoryId:`, typeof renewalHistoryId);
       console.log(`[RenewButton] HistoryId é undefined?`, renewalHistoryId === undefined);
+      console.log(`[RenewButton] HistoryId é válido?`, typeof renewalHistoryId === 'number' && !isNaN(renewalHistoryId));
     }
   }, [processId, showRenewDeadlineButton, renewalHistoryId]);
 
   const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
+
+  // Verificar se o renewalHistoryId é um número válido
+  const isValidHistoryId = typeof renewalHistoryId === 'number' && !isNaN(renewalHistoryId);
 
   const validateProcessType = (): boolean => {
     if (!processType) {
@@ -135,10 +139,10 @@ const ProcessActionButtons = memo(({
 
   return (
     <div className="flex justify-center gap-2 process-action">
-      {showRenewDeadlineButton && typeof renewalHistoryId === 'number' && (
+      {showRenewDeadlineButton && isValidHistoryId && (
         <RenewDeadlineButton
           processId={processId}
-          historyId={renewalHistoryId}
+          historyId={renewalHistoryId as number}
         />
       )}
       <Button 
