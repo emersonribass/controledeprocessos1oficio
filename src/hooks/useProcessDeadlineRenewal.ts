@@ -1,69 +1,60 @@
 
 import { useState } from "react";
 import { useSupabase } from "@/hooks/useSupabase";
-import { useToast } from "@/hooks/use-toast";
-import { toast as sonnerToast } from "sonner";
+import { useToastService } from "@/utils/toastUtils";
+import { createLogger } from "@/utils/loggerUtils";
+
+const logger = createLogger("DeadlineRenewal");
 
 export const useProcessDeadlineRenewal = (onRenewalComplete?: () => void) => {
   const [isRenewing, setIsRenewing] = useState(false);
   const { updateProcessoHistorico } = useSupabase();
-  const { toast } = useToast();
+  const toast = useToastService();
 
   const renewDeadline = async (processId: string, historyId: number) => {
     if (!historyId || isNaN(historyId)) {
-      console.error("[renewDeadline] ID do histórico inválido:", historyId);
-      toast({
-        title: "Erro ao renovar prazo",
-        description: "ID do histórico inválido. Contate o suporte.",
-        variant: "destructive"
-      });
+      logger.error("ID do histórico inválido:", historyId);
+      toast.error(
+        "Erro ao renovar prazo",
+        "ID do histórico inválido. Contate o suporte."
+      );
       return;
     }
 
-    console.log(`[renewDeadline] Iniciando renovação para processo ${processId}, historyId=${historyId}`);
+    logger.info(`Iniciando renovação para processo ${processId}, historyId=${historyId}`);
     setIsRenewing(true);
     
     try {
       const now = new Date().toISOString();
-      console.log(`[renewDeadline] Atualizando data_entrada para ${now}`);
+      logger.debug(`Atualizando data_entrada para ${now}`);
       
       const { error, data } = await updateProcessoHistorico(historyId, {
         data_entrada: now
       });
 
       if (error) {
-        console.error("[renewDeadline] Erro retornado pela API:", error);
+        logger.error("Erro retornado pela API:", error);
         throw error;
       }
 
-      console.log(`[renewDeadline] Renovação concluída com sucesso para historyId=${historyId}`, data);
+      logger.info(`Renovação concluída com sucesso para historyId=${historyId}`, data);
       
-      // Usando os dois métodos de toast para garantir que a mensagem seja exibida
-      toast({
-        title: "Prazo renovado com sucesso",
-        description: "A data de entrada do processo foi atualizada.",
-      });
-      
-      sonnerToast.success("Prazo renovado com sucesso", {
-        description: "A data de entrada do processo foi atualizada."
-      });
+      toast.success(
+        "Prazo renovado com sucesso",
+        "A data de entrada do processo foi atualizada."
+      );
 
       if (onRenewalComplete) {
-        console.log("[renewDeadline] Chamando callback de conclusão");
+        logger.debug("Chamando callback de conclusão");
         onRenewalComplete();
       }
     } catch (error) {
-      console.error("[renewDeadline] Erro ao renovar prazo:", error);
+      logger.error("Erro ao renovar prazo:", error);
       
-      toast({
-        title: "Erro ao renovar prazo",
-        description: "Não foi possível renovar o prazo do processo.",
-        variant: "destructive"
-      });
-      
-      sonnerToast.error("Erro ao renovar prazo", {
-        description: "Não foi possível renovar o prazo do processo."
-      });
+      toast.error(
+        "Erro ao renovar prazo",
+        "Não foi possível renovar o prazo do processo."
+      );
     } finally {
       setIsRenewing(false);
     }

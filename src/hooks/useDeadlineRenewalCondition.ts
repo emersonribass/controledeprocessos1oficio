@@ -2,7 +2,10 @@
 import { useState, useEffect } from "react";
 import { useDeadlineVerification } from "./useDeadlineVerification";
 import { isAwaitingDocsSection } from "@/utils/departmentUtils";
-import { extractHistoryId, findLatestHistoryEntry } from "@/utils/historyUtils";
+import { ProcessHistoryService } from "@/utils/processHistoryService";
+import { createLogger } from "@/utils/loggerUtils";
+
+const logger = createLogger("DeadlineRenewalCondition");
 
 /**
  * Hook para verificar se um processo pode ter seu prazo renovado.
@@ -28,45 +31,45 @@ export const useDeadlineRenewalCondition = (process: any) => {
 
       // Verificações básicas do processo
       if (!process?.id || !process?.currentDepartment) {
-        console.log(`[DeadlineRenewal] Processo inválido: ID=${process?.id}, Setor=${process?.currentDepartment}`);
+        logger.debug(`Processo inválido: ID=${process?.id}, Setor=${process?.currentDepartment}`);
         return;
       }
 
       // Verifica se está no setor "Aguard. Doc."
       if (!isAwaitingDocsSection(process.currentDepartment)) {
-        console.log(`[DeadlineRenewal] Não é setor de Aguardando Documentação: ${process.currentDepartment}`);
+        logger.debug(`Não é setor de Aguardando Documentação: ${process.currentDepartment}`);
         return;
       }
 
       // Se não estiver atrasado, não pode renovar
       if (!isOverdue) {
-        console.log(`[DeadlineRenewal] Processo ${process.id} não está atrasado`);
+        logger.debug(`Processo ${process.id} não está atrasado`);
         return;
       }
 
-      // Busca a entrada mais recente do histórico
-      const entradaMaisRecente = findLatestHistoryEntry(
+      // Busca a entrada mais recente do histórico usando o serviço
+      const entradaMaisRecente = ProcessHistoryService.findLatestHistoryEntry(
         process.history,
         process.currentDepartment
       );
 
       if (!entradaMaisRecente) {
-        console.log(`[DeadlineRenewal] Não encontrada entrada no histórico para setor ${process.currentDepartment}`);
+        logger.warn(`Não encontrada entrada no histórico para setor ${process.currentDepartment}`);
         return;
       }
 
-      // Extrai o ID do histórico e fornece detalhes para debug
-      const id = extractHistoryId(entradaMaisRecente);
-      console.log(`[DeadlineRenewal] Processo ${process.id}: Histórico encontrado`, entradaMaisRecente);
-      console.log(`[DeadlineRenewal] ID extraído: ${id}, tipo: ${typeof id}`);
+      // Extrai o ID do histórico usando o serviço
+      const id = ProcessHistoryService.extractHistoryId(entradaMaisRecente);
+      logger.debug(`Processo ${process.id}: Histórico encontrado`, entradaMaisRecente);
+      logger.debug(`ID extraído: ${id}, tipo: ${typeof id}`);
       
       // Se há um ID válido, habilitamos a renovação
       if (id !== undefined) {
         setHistoryId(id);
         setCanRenewDeadline(true);
-        console.log(`[DeadlineRenewal] Renovação habilitada para processo ${process.id}, historyId=${id}`);
+        logger.info(`Renovação habilitada para processo ${process.id}, historyId=${id}`);
       } else {
-        console.log(`[DeadlineRenewal] ID indefinido para processo ${process.id}`);
+        logger.warn(`ID indefinido para processo ${process.id}`);
       }
     };
 

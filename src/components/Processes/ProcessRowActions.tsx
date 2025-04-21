@@ -2,6 +2,9 @@
 import { TableCell } from "@/components/ui/table";
 import ProcessActionButtons from "./ProcessActionButtons";
 import ProcessStatusBadge from "./ProcessStatusBadge";
+import { createLogger } from "@/utils/loggerUtils";
+
+const logger = createLogger("ProcessRowActions");
 
 interface ProcessRowActionsProps {
   processId: string;
@@ -21,6 +24,7 @@ interface ProcessRowActionsProps {
   currentDepartment?: string;
   historyId?: number;
   onRenewalComplete?: () => void;
+  showRenewDeadlineButton?: boolean; // Novo parâmetro para indicar se deve mostrar o botão
 }
 
 const ProcessRowActions = ({
@@ -40,8 +44,14 @@ const ProcessRowActions = ({
   isOverdue,
   currentDepartment,
   historyId,
-  onRenewalComplete
+  onRenewalComplete,
+  showRenewDeadlineButton = false
 }: ProcessRowActionsProps) => {
+  // Log somente quando o botão deve ser exibido
+  if (showRenewDeadlineButton && historyId) {
+    logger.debug(`Exibindo botão de renovação para processo ${processId}, historyId=${historyId}`);
+  }
+  
   return (
     <ProcessActionButtons 
       processId={processId} 
@@ -59,8 +69,9 @@ const ProcessRowActions = ({
       onAcceptResponsibility={onAcceptResponsibility} 
       isAccepting={isAccepting} 
       sectorId={sectorId}
-      // Não passamos as props relacionadas ao botão de renovação na lista de processos
-      // para evitar logs desnecessários
+      showRenewDeadlineButton={showRenewDeadlineButton}
+      renewalHistoryId={historyId}
+      onRenewalComplete={onRenewalComplete}
     />
   );
 };

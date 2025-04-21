@@ -10,6 +10,10 @@ import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
 import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useProcesses } from "@/hooks/useProcesses";
+import { useDeadlineRenewalCondition } from "@/hooks/useDeadlineRenewalCondition";
+import { createLogger } from "@/utils/loggerUtils";
+
+const logger = createLogger("ProcessTableRow");
 
 interface ProcessTableRowProps {
   process: Process;
@@ -52,6 +56,9 @@ const ProcessTableRow = ({
   
   const hasResponsible = hasSectorResponsible || !!sectorResponsible;
   
+  // Verificar se o processo pode ter o prazo renovado
+  const { canRenewDeadline, historyId: renewalHistoryId } = useDeadlineRenewalCondition(process);
+  
   const {
     sortedDepartments,
     concludedDept,
@@ -82,28 +89,10 @@ const ProcessTableRow = ({
 
   // Verificar se o processo está atrasado no departamento atual
   const isProcessOverdue = process.status === "overdue";
-  const currentDepartmentEntry = process.history.find(h => !h.exitDate);
   
-  // Encontrar a entrada de histórico para o departamento atual
-  // Buscamos nas entradas de histórico do processo a entrada correspondente ao departamento atual
-  // que não tenha data de saída (ou seja, é a entrada atual)
-  let currentHistoryEntryId: number | undefined = undefined;
-  
-  // Se temos entradas no histórico, procuramos a entrada correspondente ao departamento atual
-  if (process.history && process.history.length > 0) {
-    // Primeiro encontramos o índice da entrada do departamento atual no array de histórico
-    const historyIndex = process.history.findIndex(
-      h => h.departmentId === process.currentDepartment && !h.exitDate
-    );
-    
-    // Se encontramos uma entrada válida, usamos o índice + 1 como ID (simulando o ID no banco de dados)
-    // Na realidade, no banco de dados temos uma coluna 'id' separada, que não está no tipo ProcessHistory
-    if (historyIndex !== -1) {
-      // No mundo real, este ID seria buscado do banco de dados
-      // Aqui estamos usando o ID do processo, que provavelmente não é o correto
-      // mas garantimos que ele seja um número para atender a tipagem
-      currentHistoryEntryId = parseInt(process.id);
-    }
+  // Se canRenewDeadline for true e renewalHistoryId for válido, mostrar o botão
+  if (canRenewDeadline && renewalHistoryId) {
+    logger.debug(`Processo ${process.id} pode renovar prazo, historyId=${renewalHistoryId}`);
   }
 
   return (
@@ -166,7 +155,8 @@ const ProcessTableRow = ({
           sectorId={process.currentDepartment}
           isOverdue={isProcessOverdue}
           currentDepartment={process.currentDepartment}
-          historyId={currentHistoryEntryId}
+          historyId={renewalHistoryId} // Utilizar o ID identificado pelo hook
+          showRenewDeadlineButton={canRenewDeadline} // Passar a flag diretamente
           onRenewalComplete={() => refreshProcesses()}
         />
       </TableCell>

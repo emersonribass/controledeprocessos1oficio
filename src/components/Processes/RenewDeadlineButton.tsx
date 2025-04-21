@@ -2,6 +2,9 @@
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useProcessDeadlineRenewal } from "@/hooks/useProcessDeadlineRenewal";
+import { createLogger } from "@/utils/loggerUtils";
+
+const logger = createLogger("RenewDeadlineButton");
 
 interface RenewDeadlineButtonProps {
   processId: string;
@@ -14,6 +17,8 @@ const RenewDeadlineButton = ({
   historyId, 
   onRenewalComplete 
 }: RenewDeadlineButtonProps) => {
+  logger.debug(`Renderizando botão para processo ${processId}, historyId=${historyId}`);
+  
   const { renewDeadline, isRenewing } = useProcessDeadlineRenewal(onRenewalComplete);
 
   return (

@@ -4,9 +4,12 @@ import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
 import { memo, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/auth/useUserProfile";
 import RenewDeadlineButton from "./RenewDeadlineButton";
+import { createLogger } from "@/utils/loggerUtils";
+import { useToastService } from "@/utils/toastUtils";
+
+const logger = createLogger("ProcessActionButtons");
 
 interface ProcessActionButtonsProps {
   processId: string;
@@ -52,17 +55,13 @@ const ProcessActionButtons = memo(({
   const { isUserResponsibleForSector } = useProcessResponsibility();
   const isNotStarted = status === "not_started";
   const isCompleted = status === "completed";
-  const { toast } = useToast();
+  const toast = useToastService();
 
-  // Log das propriedades relacionadas ao botão de renovação com mais detalhes
+  // Registre apenas quando o botão de renovação está visível ou quando as propriedades mudam
   useEffect(() => {
-    console.log(`[ProcessActionButtons] ID: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId: ${renewalHistoryId}`);
-    
     if (showRenewDeadlineButton) {
-      console.log(`[RenewButton] ProcessId: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId: ${renewalHistoryId}`);
-      console.log(`[RenewButton] Tipo do HistoryId:`, typeof renewalHistoryId);
-      console.log(`[RenewButton] HistoryId é undefined?`, renewalHistoryId === undefined);
-      console.log(`[RenewButton] HistoryId é válido?`, typeof renewalHistoryId === 'number' && !isNaN(renewalHistoryId));
+      logger.debug(`[RenewButton] ProcessId: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId: ${renewalHistoryId}`);
+      logger.debug(`[RenewButton] HistoryId é válido?`, typeof renewalHistoryId === 'number' && !isNaN(renewalHistoryId));
     }
   }, [processId, showRenewDeadlineButton, renewalHistoryId]);
 
@@ -73,11 +72,10 @@ const ProcessActionButtons = memo(({
 
   const validateProcessType = (): boolean => {
     if (!processType) {
-      toast({
-        title: "Aviso",
-        description: "É necessário selecionar um tipo de processo antes de movê-lo para o próximo setor.",
-        variant: "destructive"
-      });
+      toast.error(
+        "Aviso", 
+        "É necessário selecionar um tipo de processo antes de movê-lo para o próximo setor."
+      );
       return false;
     }
     return true;
