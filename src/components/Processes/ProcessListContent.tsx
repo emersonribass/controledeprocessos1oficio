@@ -1,134 +1,186 @@
-
-import { Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { useProcesses } from "@/hooks/useProcesses";
+import { useDepartments } from "@/hooks/useDepartments";
+import { useProcessTypes } from "@/hooks/useProcessTypes";
+import { useAvailableUsers } from "@/hooks/useAvailableUsers";
+import { useSupabase } from "@/hooks/useSupabase";
 import ProcessFilters from "./ProcessFilters";
 import ProcessTable from "./ProcessTable";
-import { Process, Department } from "@/types";
+import ProcessListSkeleton from "./ProcessListSkeleton";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { useAuth } from "@/hooks/auth";
+import { useUserProfile } from "@/hooks/auth/useUserProfile";
 
-interface ProcessListContentProps {
-  processes: Process[];
-  isLoading: boolean;
-  filteredProcesses: Process[];
-  filters: {
-    department?: string;
-    status?: string;
-    processType?: string;
-    search?: string;
-    excludeCompleted?: boolean;
+const ProcessListContent = () => {
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile();
+  const { processes, isLoading, refreshProcesses, filterProcesses } = useProcesses();
+  const { departments } = useDepartments();
+  const { processTypes } = useProcessTypes();
+  const { usuarios } = useAvailableUsers();
+  const { getProcessResponsibles } = useSupabase();
+  
+  const [filteredProcesses, setFilteredProcesses] = useState(processes);
+  const [isFiltering, setIsFiltering] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
+  const [processesResponsibles, setProcessesResponsibles] = useState<Record<string, any>>({});
+  
+  // Estado para armazenar os filtros
+  const [filters, setFilters] = useState({
+    status: "",
+    department: "",
+    responsibleUser: "",
+    processType: "",
+    search: "",
+    startDate: "",
+    endDate: "",
+  });
+
+  // Função para atualizar um filtro específico
+  const updateFilter = (key: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
   };
-  setFilters: React.Dispatch<React.SetStateAction<{
-    department?: string;
-    status?: string;
-    processType?: string;
-    search?: string;
-    excludeCompleted?: boolean;
-  }>>;
-  sortField: keyof Process;
-  sortDirection: "asc" | "desc";
-  toggleSort: (field: keyof Process) => void;
-  getDepartmentName: (id: string) => string;
-  getProcessTypeName: (id: string) => string;
-  moveProcessToNextDepartment: (processId: string) => Promise<void>;
-  moveProcessToPreviousDepartment: (processId: string) => Promise<void>;
-  processTypes: any[];
-  updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
-  updateProcessStatus?: (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado') => Promise<void>;
-  departments: Department[];
-  startProcess?: (processId: string) => Promise<void>;
-  availableDepartments: Department[];
-  filterProcesses: (
-    filters: any, 
-    processes: Process[], 
-    processesResponsibles?: Record<string, any>
-  ) => Promise<Process[]>;
-  isUserInAttendanceSector?: () => boolean;
-}
 
-const ProcessListContent = ({
-  processes,
-  isLoading,
-  filteredProcesses,
-  filters,
-  setFilters,
-  sortField,
-  sortDirection,
-  toggleSort,
-  getDepartmentName,
-  getProcessTypeName,
-  moveProcessToNextDepartment,
-  moveProcessToPreviousDepartment,
-  processTypes,
-  updateProcessType,
-  updateProcessStatus,
-  departments,
-  startProcess,
-  availableDepartments,
-  filterProcesses,
-  isUserInAttendanceSector
-}: ProcessListContentProps) => {
+  // Função para limpar todos os filtros
+  const clearFilters = () => {
+    setFilters({
+      status: "",
+      department: "",
+      responsibleUser: "",
+      processType: "",
+      search: "",
+      startDate: "",
+      endDate: "",
+    });
+    applyFilters({
+      status: "",
+      department: "",
+      responsibleUser: "",
+      processType: "",
+      search: "",
+      startDate: "",
+      endDate: "",
+    });
+  };
+
+  // Função para buscar responsáveis por processos
+  const fetchProcessesResponsibles = useCallback(async () => {
+    if (!processes.length) return;
+    
+    try {
+      const processIds = processes.map(p => p.id);
+      const { data } = await getProcessResponsibles(processIds);
+      
+      if (data) {
+        // Organizar por processo_id
+        const responsiblesByProcess: Record<string, any[]> = {};
+        data.forEach(item => {
+          if (!responsiblesByProcess[item.processo_id]) {
+            responsiblesByProcess[item.processo_id] = [];
+          }
+          responsiblesByProcess[item.processo_id].push(item);
+        });
+        
+        setProcessesResponsibles(responsiblesByProcess);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar responsáveis:", error);
+    }
+  }, [processes, getProcessResponsibles]);
+
+  // Efeito para buscar responsáveis quando a lista de processos mudar
+  useEffect(() => {
+    fetchProcessesResponsibles();
+  }, [fetchProcessesResponsibles]);
+
+  // Função para aplicar os filtros
+  const applyFilters = useCallback(async (currentFilters = filters) => {
+    if (!user) return;
+    
+    setIsFiltering(true);
+    try {
+      const filtered = await filterProcesses(currentFilters, processes, processesResponsibles);
+      setFilteredProcesses(filtered);
+    } catch (error) {
+      console.error("Erro ao filtrar processos:", error);
+    } finally {
+      setIsFiltering(false);
+    }
+  }, [user, filterProcesses, filters, processes, processesResponsibles]);
+
+  // Aplicar filtros quando os processos ou filtros mudarem
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  // Função para atualizar a lista de processos
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refreshProcesses();
+    await fetchProcessesResponsibles();
+    await applyFilters();
+    setIsRefreshing(false);
+  };
+
+  // Verificar se o usuário tem permissão para ver a lista
+  const canViewProcesses = userProfile?.perfil === "admin" || 
+                          userProfile?.perfil === "gestor" || 
+                          (userProfile?.setores_atribuidos && userProfile.setores_atribuidos.length > 0);
+
+  if (!canViewProcesses) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-center">
+        <h2 className="text-2xl font-bold mb-2">Acesso Restrito</h2>
+        <p className="text-muted-foreground mb-4">
+          Você não tem permissão para visualizar a lista de processos.
+        </p>
+      </div>
+    );
+  }
+
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (processes.length === 0) {
-    return (
-      <div className="space-y-6">
-        <ProcessFilters 
-          filters={filters} 
-          setFilters={setFilters} 
-          availableDepartments={availableDepartments}
-        />
-        <div className="flex justify-center items-center h-64 border rounded-md p-6 mt-4 bg-gray-50">
-          <p className="text-muted-foreground text-lg">Nenhum processo encontrado</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (filteredProcesses.length === 0) {
-    return (
-      <div className="space-y-6">
-        <ProcessFilters 
-          filters={filters} 
-          setFilters={setFilters} 
-          availableDepartments={availableDepartments}
-        />
-        <div className="flex justify-center items-center h-64 border rounded-md p-6 mt-4 bg-gray-50">
-          <p className="text-muted-foreground text-lg">Nenhum processo corresponde aos filtros selecionados</p>
-        </div>
-      </div>
-    );
+    return <ProcessListSkeleton />;
   }
 
   return (
-    <div className="space-y-6">
-      <ProcessFilters 
-        filters={filters} 
-        setFilters={setFilters}
-        availableDepartments={availableDepartments}
+    <div className="space-y-4">
+      <div className="flex justify-end mb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-1"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          {isRefreshing ? "Atualizando..." : "Atualizar"}
+        </Button>
+      </div>
+
+      <ProcessFilters
+        isExpanded={isFiltersExpanded}
+        toggleExpanded={() => setIsFiltersExpanded(!isFiltersExpanded)}
+        filters={filters}
+        updateFilter={updateFilter}
+        clearFilters={clearFilters}
+        applyFilters={() => applyFilters()}
       />
 
       <ProcessTable
         processes={filteredProcesses}
-        sortField={sortField}
-        sortDirection={sortDirection}
-        toggleSort={toggleSort}
-        getDepartmentName={getDepartmentName}
-        getProcessTypeName={getProcessTypeName}
-        moveProcessToNextDepartment={moveProcessToNextDepartment}
-        moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-        processTypes={processTypes}
-        updateProcessType={updateProcessType}
-        updateProcessStatus={updateProcessStatus}
-        departments={departments}
-        startProcess={startProcess}
-        filterProcesses={filterProcesses}
-        filters={filters}
-        isUserInAttendanceSector={isUserInAttendanceSector}
+        isLoading={isFiltering}
+        processesResponsibles={processesResponsibles}
       />
+
+      {filteredProcesses.length === 0 && !isFiltering && (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">
+            Nenhum processo encontrado com os filtros selecionados.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

@@ -26,19 +26,29 @@ export const useAvailableUsers = () => {
       // Se já estiver carregando em outra instância, não faça nada
       if (fetchInProgressRef.current) return;
       
+      console.log("Verificando cache de usuários...");
+      
       // Verificar se o cache é válido
       const now = Date.now();
       if (cachedUsers && now - lastFetchTime < CACHE_TTL) {
+        console.log("Usando usuários do cache:", cachedUsers.length);
         setIsLoading(false);
         return;
       }
 
+      console.log("Cache expirado, buscando usuários do servidor...");
+
       try {
         fetchInProgressRef.current = true;
         await fetchUsuarios();
+        
         // Atualizar cache global
         lastFetchTime = Date.now();
         cachedUsers = usuarios;
+        
+        console.log("Usuários atualizados no cache:", usuarios.length);
+      } catch (error) {
+        console.error("Erro ao buscar usuários:", error);
       } finally {
         fetchInProgressRef.current = false;
         if (isMountedRef.current) {
@@ -48,10 +58,11 @@ export const useAvailableUsers = () => {
     };
     
     loadUsers();
-  }, [fetchUsuarios]);
+  }, [fetchUsuarios, usuarios]);
 
-  // Retorna dados do cache se disponível, caso contrário retorna dados da instância
+  // Adicionar log para depuração
   const availableUsers = cachedUsers || usuarios;
+  console.log("useAvailableUsers - retornando usuários:", availableUsers?.length);
 
   return {
     usuarios: availableUsers.filter(user => user.ativo),

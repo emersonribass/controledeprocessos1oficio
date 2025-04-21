@@ -23,6 +23,8 @@ const SelectFilters = ({
   processTypes,
   usuarios
 }: SelectFiltersProps) => {
+  console.log("Usuários disponíveis para filtro:", usuarios);
+  
   return (
     <>
       <div>
@@ -66,11 +68,15 @@ const SelectFilters = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos</SelectItem>
-            {usuarios.map(usuario => (
-              <SelectItem key={usuario.id} value={usuario.id}>
-                {usuario.nome}
-              </SelectItem>
-            ))}
+            {usuarios && usuarios.length > 0 ? (
+              usuarios.filter(u => u.ativo).map(usuario => (
+                <SelectItem key={usuario.id} value={usuario.id}>
+                  {usuario.nome}
+                </SelectItem>
+              ))
+            ) : (
+              <SelectItem value="none" disabled>Nenhum usuário encontrado</SelectItem>
+            )}
           </SelectContent>
         </Select>
       </div>

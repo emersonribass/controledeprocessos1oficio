@@ -1,170 +1,91 @@
-import { useState, useEffect, useCallback } from "react";
-import { useProcessTypes } from "@/hooks/useProcessTypes";
-import { useAvailableUsers } from "@/hooks/useAvailableUsers";
-import { Department } from "@/types";
+
+import { useEffect } from "react";
+import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
+import SelectFilters from "./Filters/SelectFilters";
 import SearchFilter from "./Filters/SearchFilter";
 import DateRangeFilter from "./Filters/DateRangeFilter";
-import SelectFilters from "./Filters/SelectFilters";
 import FilterActions from "./Filters/FilterActions";
+import { useProcessTypes } from "@/hooks/useProcessTypes";
+import { useDepartments } from "@/hooks/useDepartments";
+import { useAvailableUsers } from "@/hooks/useAvailableUsers";
 
 interface ProcessFiltersProps {
-  filters: {
-    department?: string;
-    status?: string;
-    processType?: string;
-    search?: string;
-    excludeCompleted?: boolean;
-    startDate?: string;
-    endDate?: string;
-    responsibleUser?: string;
-  };
-  setFilters: React.Dispatch<React.SetStateAction<{
-    department?: string;
-    status?: string;
-    processType?: string;
-    search?: string;
-    excludeCompleted?: boolean;
-    startDate?: string;
-    endDate?: string;
-    responsibleUser?: string;
-  }>>;
-  availableDepartments?: Department[];
+  isExpanded: boolean;
+  toggleExpanded: () => void;
+  filters: Record<string, string>;
+  updateFilter: (key: string, value: string) => void;
+  clearFilters: () => void;
+  applyFilters: () => void;
+  showApplyButton?: boolean;
 }
 
 const ProcessFilters = ({
+  isExpanded,
+  toggleExpanded,
   filters,
-  setFilters,
-  availableDepartments
+  updateFilter,
+  clearFilters,
+  applyFilters,
+  showApplyButton = true,
 }: ProcessFiltersProps) => {
   const { processTypes } = useProcessTypes();
-  const { usuarios } = useAvailableUsers();
-  const [search, setSearch] = useState("");
-  const [initialDate, setInitialDate] = useState<Date | undefined>(
-    filters.startDate ? new Date(filters.startDate) : undefined
-  );
-  const [finalDate, setFinalDate] = useState<Date | undefined>(
-    filters.endDate ? new Date(filters.endDate) : undefined
-  );
+  const { departments } = useDepartments();
+  // Usando o hook useAvailableUsers para obter apenas usuários ativos
+  const { usuarios, isLoading } = useAvailableUsers();
 
+  // Adicionando log para depuração
   useEffect(() => {
-    setSearch(filters.search || "");
-  }, [filters.search]);
-
-  useEffect(() => {
-    setInitialDate(filters.startDate ? new Date(filters.startDate) : undefined);
-    setFinalDate(filters.endDate ? new Date(filters.endDate) : undefined);
-  }, [filters.startDate, filters.endDate]);
-
-  const debounce = (func: Function, delay: number) => {
-    let timeoutId: NodeJS.Timeout;
-    return function (...args: any[]) {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        func(...args);
-      }, delay);
-    };
-  };
-
-  const debouncedSearch = useCallback(
-    debounce((value: string) => {
-      setFilters(prev => ({
-        ...prev,
-        search: value.trim() === "" ? undefined : value
-      }));
-    }, 300),
-    [setFilters]
-  );
-
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    debouncedSearch(value);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      setFilters(prev => ({
-        ...prev,
-        search: search.trim() === "" ? undefined : search
-      }));
-    }
-  };
-
-  const handleClearFilters = () => {
-    setFilters({ excludeCompleted: filters.excludeCompleted });
-    setSearch("");
-    setInitialDate(undefined);
-    setFinalDate(undefined);
-  };
-
-  const handleSelectChange = (key: string, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value === "all" ? undefined : value
-    }));
-  };
-
-  const toggleExcludeCompleted = () => {
-    setFilters(prev => ({
-      ...prev,
-      excludeCompleted: !prev.excludeCompleted
-    }));
-  };
-
-  const handleInitialDateChange = (date: Date | undefined) => {
-    setInitialDate(date);
-    setFilters(prev => ({
-      ...prev,
-      startDate: date ? date.toISOString().slice(0, 10) : undefined,
-    }));
-  };
-
-  const handleFinalDateChange = (date: Date | undefined) => {
-    setFinalDate(date);
-    setFilters(prev => ({
-      ...prev,
-      endDate: date ? date.toISOString().slice(0, 10) : undefined,
-    }));
-  };
-
-  const deptsToShow = availableDepartments || [];
-  const hasActiveFilters = (
-    Object.keys(filters)
-      .filter(k => !["excludeCompleted"].includes(k))
-      .some(k => filters[k as keyof typeof filters] !== undefined)
-  );
+    console.log("Usuários carregados no ProcessFilters:", usuarios);
+  }, [usuarios]);
 
   return (
-    <div className="space-y-3">
-      <div className="grid gap-3 grid-cols-1 md:grid-cols-4">
-        <SearchFilter
-          search={search}
-          onChange={handleSearchChange}
-          onKeyDown={handleKeyDown}
-        />
+    <div className="bg-white border rounded-lg shadow-sm mb-6">
+      <div
+        className="p-4 flex justify-between items-center cursor-pointer"
+        onClick={toggleExpanded}
+      >
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span className="font-medium">Filtros</span>
+        </div>
+        {isExpanded ? (
+          <ChevronUp className="h-4 w-4" />
+        ) : (
+          <ChevronDown className="h-4 w-4" />
+        )}
       </div>
 
-      <div className="grid gap-3 grid-cols-1 md:grid-cols-5">
-        <SelectFilters
-          filters={filters}
-          onSelectChange={handleSelectChange}
-          departments={deptsToShow}
-          processTypes={processTypes}
-          usuarios={usuarios}
-        />
-        <DateRangeFilter
-          initialDate={initialDate}
-          finalDate={finalDate}
-          onInitialDateChange={handleInitialDateChange}
-          onFinalDateChange={handleFinalDateChange}
-        />
-      </div>
+      {isExpanded && (
+        <div className="border-t p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <SearchFilter
+              value={filters.search || ""}
+              onChange={(value) => updateFilter("search", value)}
+            />
+            
+            <SelectFilters
+              filters={filters}
+              onSelectChange={updateFilter}
+              departments={departments}
+              processTypes={processTypes}
+              usuarios={isLoading ? [] : usuarios}
+            />
 
-      <FilterActions
-        excludeCompleted={!!filters.excludeCompleted}
-        onToggleExcludeCompleted={toggleExcludeCompleted}
-        hasActiveFilters={hasActiveFilters}
-        onClearFilters={handleClearFilters}
-      />
+            <DateRangeFilter
+              startDate={filters.startDate}
+              endDate={filters.endDate}
+              onStartDateChange={(date) => updateFilter("startDate", date)}
+              onEndDateChange={(date) => updateFilter("endDate", date)}
+            />
+          </div>
+
+          <FilterActions
+            clearFilters={clearFilters}
+            applyFilters={applyFilters}
+            showApplyButton={showApplyButton}
+          />
+        </div>
+      )}
     </div>
   );
 };
