@@ -22,7 +22,7 @@ interface ProcessRowActionsProps {
   isOverdue?: boolean;
   currentDepartment?: string;
   historyId?: number;
-  onRenewalComplete?: () => void; // Adicionando a propriedade aqui
+  onRenewalComplete?: () => void;
   showRenewDeadlineButton?: boolean;
 }
 
@@ -43,7 +43,7 @@ const ProcessRowActions = ({
   isOverdue,
   currentDepartment,
   historyId,
-  onRenewalComplete, // Incluindo na desestruturação
+  onRenewalComplete,
   showRenewDeadlineButton = false
 }: ProcessRowActionsProps) => {
   // Log para debug do button de renovação
@@ -68,9 +68,6 @@ const ProcessRowActions = ({
       onAcceptResponsibility={onAcceptResponsibility} 
       isAccepting={isAccepting} 
       sectorId={sectorId}
-      showRenewDeadlineButton={showRenewDeadlineButton}
-      renewalHistoryId={historyId}
-      onRenewalComplete={onRenewalComplete} // Passando a propriedade
     />
   );
 };

@@ -127,8 +127,6 @@ const ProcessMainDetails = ({
             onAcceptResponsibility={() => handleAcceptResponsibility(process.protocolNumber)}
             isAccepting={isAccepting}
             sectorId={process.currentDepartment}
-            showRenewDeadlineButton={canRenewDeadline}
-            renewalHistoryId={renewalHistoryId}
           />
         </div>
       </CardContent>
