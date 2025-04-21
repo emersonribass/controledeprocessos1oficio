@@ -14,6 +14,9 @@ interface ProcessListContentProps {
     processType?: string;
     search?: string;
     excludeCompleted?: boolean;
+    startDate?: string;
+    endDate?: string;
+    responsibleUser?: string;
   };
   setFilters: React.Dispatch<React.SetStateAction<{
     department?: string;
@@ -21,6 +24,9 @@ interface ProcessListContentProps {
     processType?: string;
     search?: string;
     excludeCompleted?: boolean;
+    startDate?: string;
+    endDate?: string;
+    responsibleUser?: string;
   }>>;
   sortField: keyof Process;
   sortDirection: "asc" | "desc";
@@ -41,6 +47,7 @@ interface ProcessListContentProps {
     processesResponsibles?: Record<string, any>
   ) => Promise<Process[]>;
   isUserInAttendanceSector?: () => boolean;
+  processesResponsibles?: Record<string, any>;
 }
 
 const ProcessListContent = ({
@@ -63,7 +70,8 @@ const ProcessListContent = ({
   startProcess,
   availableDepartments,
   filterProcesses,
-  isUserInAttendanceSector
+  isUserInAttendanceSector,
+  processesResponsibles
 }: ProcessListContentProps) => {
   if (isLoading) {
     return (
@@ -128,6 +136,7 @@ const ProcessListContent = ({
         filterProcesses={filterProcesses}
         filters={filters}
         isUserInAttendanceSector={isUserInAttendanceSector}
+        processesResponsibles={processesResponsibles}
       />
     </div>
   );

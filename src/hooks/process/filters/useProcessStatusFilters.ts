@@ -1,3 +1,4 @@
+
 import { Process } from "@/types";
 
 /**
@@ -18,7 +19,8 @@ export const useProcessStatusFilters = () => {
       startDate?: string;
       endDate?: string;
       responsibleUser?: string;
-    }
+    },
+    processesResponsibles?: Record<string, any>
   ): Process[] => {
     return processes.filter((process) => {
       if (filters.excludeCompleted && process.status === 'completed') {
@@ -63,9 +65,22 @@ export const useProcessStatusFilters = () => {
         }
       }
 
-      // Filtro por responsável
-      if (filters.responsibleUser && process.responsibleUserId !== filters.responsibleUser) {
-        return false;
+      // Filtro por responsável - corrigido para verificar tanto responsável direto quanto responsáveis por setor
+      if (filters.responsibleUser) {
+        const isResponsibleUser = process.responsibleUserId === filters.responsibleUser;
+        
+        // Verificar se é responsável em algum setor
+        let isResponsibleInAnySector = false;
+        if (processesResponsibles && processesResponsibles[process.id]) {
+          const processSectorResponsibles = processesResponsibles[process.id];
+          isResponsibleInAnySector = Object.values(processSectorResponsibles).some(
+            (sectorData: any) => sectorData && sectorData.usuario_id === filters.responsibleUser
+          );
+        }
+        
+        if (!isResponsibleUser && !isResponsibleInAnySector) {
+          return false;
+        }
       }
 
       return true;

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useProcesses } from "@/hooks/useProcesses";
 import { useProcessListFilters } from "@/hooks/useProcessListFilters";
 import { useProcessListSorting } from "@/hooks/useProcessListSorting";
+import { useProcessTableState } from "@/hooks/useProcessTableState";
 import { useAuth } from "@/hooks/auth";
 import { Process } from "@/types";
 import ProcessListHeader from "./ProcessListHeader";
@@ -40,14 +41,15 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const { sortField, sortDirection, toggleSort, sortProcesses } = useProcessListSorting();
   const [isLoadingFiltered, setIsLoadingFiltered] = useState(true);
   const [filteredProcesses, setFilteredProcesses] = useState<Process[]>([]);
+  const { processesResponsibles } = useProcessTableState(processes);
 
   // Efeito para aplicar filtros e ordenação de forma assíncrona
   useEffect(() => {
     const loadFilteredProcesses = async () => {
       setIsLoadingFiltered(true);
       try {
-        // Filtrar processos com o método assíncrono
-        const filtered = await filterProcesses(filters, processes);
+        // Filtrar processos com o método assíncrono, passando os responsáveis
+        const filtered = await filterProcesses(filters, processes, processesResponsibles);
         
         // Nova lógica de ordenação
         const sortedProcesses = [...filtered].sort((a, b) => {
@@ -89,7 +91,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     };
 
     loadFilteredProcesses();
-  }, [processes, filters, filterProcesses]);
+  }, [processes, filters, filterProcesses, processesResponsibles]);
 
   // Determinar os departamentos disponíveis para o usuário atual
   const availableDepartments = isAdmin(user?.email || "") || !user?.departments?.length 
@@ -124,6 +126,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
         availableDepartments={availableDepartments}
         filterProcesses={filterProcesses}
         isUserInAttendanceSector={isUserInAttendanceSector}
+        processesResponsibles={processesResponsibles}
       />
     </div>
   );

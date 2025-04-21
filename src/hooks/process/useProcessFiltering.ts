@@ -54,19 +54,6 @@ export const useProcessFiltering = (
       // Se não tem permissão ou não atende aos critérios de filtragem, retorna null
       if (!canView) return null;
 
-      // Verificar o filtro de responsável
-      if (filters.responsibleUser) {
-        const isResponsible = 
-          // Verifica se é responsável geral pelo processo
-          process.usuario_responsavel === filters.responsibleUser ||
-          // Verifica se é responsável em algum setor
-          (processesResponsibles?.[process.id]?.some(
-            (resp: any) => resp.usuario_id === filters.responsibleUser
-          ));
-
-        if (!isResponsible) return null;
-      }
-
       return process;
     });
     
@@ -75,7 +62,8 @@ export const useProcessFiltering = (
       (process): process is Process => process !== null
     );
 
-    return statusFilters.applyUserFilters(visibleProcesses, filters);
+    // Passando o objeto processesResponsibles para o filtro de status
+    return statusFilters.applyUserFilters(visibleProcesses, filters, processesResponsibles);
   };
 
   return {
