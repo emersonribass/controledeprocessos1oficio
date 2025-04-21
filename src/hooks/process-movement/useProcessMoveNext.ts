@@ -37,7 +37,7 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
         .single();
 
       if (currentDeptError || !currentDept) {
-        throw new Error("Departamento atual não encontrado");
+        throw new Error("Setor atual não encontrado");
       }
 
       // Buscar diretamente o próximo departamento pelo order_num
@@ -161,7 +161,7 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
       if (showToast) {
         uiToast({
           title: "Erro",
-          description: "Não foi possível mover o processo para o próximo departamento.",
+          description: "Não foi possível mover o processo para o próximo setor.",
           variant: "destructive"
         });
       }
