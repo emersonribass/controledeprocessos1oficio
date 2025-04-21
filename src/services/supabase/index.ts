@@ -9,6 +9,25 @@ import { ProcessType } from "@/types";
  * Centraliza chamadas de API e implementa o padrão DRY
  */
 class SupabaseService {
+  // Cache interno
+  private cache: {
+    usuarios?: {
+      data: any;
+      timestamp: number;
+    };
+    processTypes?: {
+      data: any;
+      timestamp: number;
+    };
+  } = {};
+
+  private CACHE_TTL = 60000; // 1 minuto
+
+  private isCacheValid(cacheKey: 'usuarios' | 'processTypes'): boolean {
+    const cache = this.cache[cacheKey];
+    return !!cache && Date.now() - cache.timestamp < this.CACHE_TTL;
+  }
+
   // Método para obter a URL do Supabase
   getUrl(): string {
     return supabase.getUrl();
@@ -20,10 +39,30 @@ class SupabaseService {
    * Busca todos os usuários no sistema
    */
   async fetchUsuarios() {
-    return await supabase
+    // Verificar cache
+    if (this.isCacheValid('usuarios')) {
+      console.log("Retornando usuários do cache");
+      return this.cache.usuarios!.data;
+    }
+
+    console.log("Iniciando busca de usuários na tabela 'usuarios' do projeto controledeprocessos1oficio");
+    console.log("URL do Supabase:", this.getUrl());
+    
+    const result = await supabase
       .from("usuarios")
       .select("*", { count: 'exact' })
       .order("nome");
+    
+    // Armazenar no cache
+    if (!result.error) {
+      this.cache.usuarios = {
+        data: result,
+        timestamp: Date.now()
+      };
+      console.log(`Encontrados ${result.count} usuários na tabela 'usuarios':`, result.data);
+    }
+    
+    return result;
   }
   
   /**
@@ -37,6 +76,11 @@ class SupabaseService {
    * Atualiza um usuário existente
    */
   async updateUsuario(id: string, data: Partial<UsuarioSupabase>) {
+    // Invalidar cache após atualização
+    if (this.cache.usuarios) {
+      delete this.cache.usuarios;
+    }
+    
     return await supabase
       .from("usuarios")
       .update(data)
@@ -47,6 +91,11 @@ class SupabaseService {
    * Cria um novo usuário
    */
   async createUsuario(data: Omit<UsuarioSupabase, "id" | "created_at" | "updated_at">) {
+    // Invalidar cache após criação
+    if (this.cache.usuarios) {
+      delete this.cache.usuarios;
+    }
+    
     return await supabase.from("usuarios").insert(data);
   }
   
@@ -54,6 +103,11 @@ class SupabaseService {
    * Remove um usuário
    */
   async deleteUsuario(id: string) {
+    // Invalidar cache após remoção
+    if (this.cache.usuarios) {
+      delete this.cache.usuarios;
+    }
+    
     return await supabase
       .from("usuarios")
       .delete()
@@ -64,6 +118,11 @@ class SupabaseService {
    * Alterna o status ativo/inativo de um usuário
    */
   async toggleUsuarioAtivo(id: string, ativo: boolean) {
+    // Invalidar cache após alteração
+    if (this.cache.usuarios) {
+      delete this.cache.usuarios;
+    }
+    
     return await supabase
       .from("usuarios")
       .update({ ativo: !ativo })
@@ -76,16 +135,36 @@ class SupabaseService {
    * Busca todos os tipos de processo
    */
   async fetchProcessTypes() {
-    return await supabase
+    // Verificar cache
+    if (this.isCacheValid('processTypes')) {
+      return this.cache.processTypes!.data;
+    }
+    
+    const result = await supabase
       .from('tipos_processo')
       .select('*')
       .order('name');
+      
+    // Armazenar no cache
+    if (!result.error) {
+      this.cache.processTypes = {
+        data: result,
+        timestamp: Date.now()
+      };
+    }
+    
+    return result;
   }
   
   /**
    * Cria um novo tipo de processo
    */
   async createProcessType(name: string, description?: string) {
+    // Invalidar cache após criação
+    if (this.cache.processTypes) {
+      delete this.cache.processTypes;
+    }
+    
     // Corrigido para incluir campo id que é obrigatório
     const id = crypto.randomUUID();
     return await supabase
@@ -98,6 +177,11 @@ class SupabaseService {
    * Atualiza um tipo de processo existente
    */
   async updateProcessType(id: string, data: Partial<ProcessType>) {
+    // Invalidar cache após atualização
+    if (this.cache.processTypes) {
+      delete this.cache.processTypes;
+    }
+    
     return await supabase
       .from('tipos_processo')
       .update(data)
@@ -108,6 +192,11 @@ class SupabaseService {
    * Alterna o status ativo/inativo de um tipo de processo
    */
   async toggleProcessTypeActive(id: string, active: boolean) {
+    // Invalidar cache após alteração
+    if (this.cache.processTypes) {
+      delete this.cache.processTypes;
+    }
+    
     return await supabase
       .from('tipos_processo')
       .update({ active })
@@ -148,6 +237,14 @@ class SupabaseService {
       `)
       .eq('id', processId)
       .single();
+  }
+  
+  /**
+   * Limpa todo o cache armazenado
+   */
+  clearCache() {
+    this.cache = {};
+    console.log("Cache do serviço Supabase limpo");
   }
 }
 

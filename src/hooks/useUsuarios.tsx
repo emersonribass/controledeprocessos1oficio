@@ -1,8 +1,11 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { UsuarioSupabase, FormUsuario } from "@/types/usuario";
 import { supabaseService } from "@/services/supabase";
+
+// Armazenamento de requisições em andamento para evitar duplicação
+const pendingRequests: Record<string, Promise<any>> = {};
 
 export function useUsuarios() {
   const [usuarios, setUsuarios] = useState<UsuarioSupabase[]>([]);
@@ -10,41 +13,49 @@ export function useUsuarios() {
   const [usuarioAtual, setUsuarioAtual] = useState<UsuarioSupabase | null>(null);
   const { toast } = useToast();
 
-  const fetchUsuarios = async () => {
+  const fetchUsuarios = useCallback(async () => {
+    // Se já existe uma requisição em andamento, reutilize-a
+    if (pendingRequests['fetchUsuarios']) {
+      try {
+        const result = await pendingRequests['fetchUsuarios'];
+        setUsuarios(result.data as UsuarioSupabase[] || []);
+        return result;
+      } catch (error) {
+        console.error("Erro ao buscar usuários (requisição existente):", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar a lista de usuários.",
+          variant: "destructive",
+        });
+        return { data: [], error };
+      }
+    }
+
     setIsLoading(true);
+    
+    // Cria uma nova promessa e a guarda para possível reuso
+    pendingRequests['fetchUsuarios'] = (async () => {
+      try {
+        const result = await supabaseService.fetchUsuarios();
+        return result;
+      } catch (error) {
+        console.error("Erro ao buscar usuários:", error);
+        return { data: [], error };
+      } finally {
+        // Remove a requisição pendente após conclusão
+        delete pendingRequests['fetchUsuarios'];
+      }
+    })();
+
     try {
-      console.log("Iniciando busca de usuários na tabela 'usuarios' do projeto controledeprocessos1oficio");
-      const supabaseUrl = supabaseService.getUrl();
-      console.log("URL do Supabase:", supabaseUrl);
+      const result = await pendingRequests['fetchUsuarios'];
       
-      const { data, error, count } = await supabaseService.fetchUsuarios();
-
-      if (error) {
-        throw error;
+      if (result.error) {
+        throw result.error;
       }
 
-      console.log(`Encontrados ${count} usuários na tabela 'usuarios':`, data);
-      
-      if (!data || data.length === 0) {
-        console.log("Nenhum usuário encontrado na tabela 'usuarios'. Verificando auth.users...");
-        
-        try {
-          const { data: authUsers, error: authError } = await supabaseService.checkAuthUsers();
-          
-          if (authError) {
-            console.error("Erro ao buscar usuários autenticados:", authError);
-          } else if (authUsers && authUsers.users && authUsers.users.length > 0) {
-            console.log(`Encontrados ${authUsers.users.length} usuários no sistema de autenticação.`);
-            console.log("É necessário sincronizar usuários do auth.users para a tabela 'usuarios'");
-          } else {
-            console.log("Nenhum usuário encontrado no sistema de autenticação.");
-          }
-        } catch (authError) {
-          console.log("Não foi possível verificar usuários no sistema de autenticação:", authError);
-        }
-      }
-
-      setUsuarios(data as UsuarioSupabase[] || []);
+      setUsuarios(result.data as UsuarioSupabase[] || []);
+      return result;
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
       toast({
@@ -52,10 +63,11 @@ export function useUsuarios() {
         description: "Não foi possível carregar a lista de usuários.",
         variant: "destructive",
       });
+      return { data: [], error };
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   const handleToggleAtivo = async (usuario: UsuarioSupabase) => {
     try {
@@ -70,6 +82,11 @@ export function useUsuarios() {
         description: `Usuário ${usuario.ativo ? 'desativado' : 'ativado'} com sucesso!`,
       });
 
+      // Atualizar estado local antes de buscar novamente
+      setUsuarios(prev => prev.map(u => 
+        u.id === usuario.id ? { ...u, ativo: !u.ativo } : u
+      ));
+      
       await fetchUsuarios();
     } catch (error) {
       console.error("Erro ao atualizar status do usuário:", error);
@@ -94,6 +111,9 @@ export function useUsuarios() {
         description: "Usuário excluído com sucesso!",
       });
 
+      // Atualizar estado local antes de buscar novamente
+      setUsuarios(prev => prev.filter(u => u.id !== id));
+      
       await fetchUsuarios();
       return true;
     } catch (error) {
@@ -125,6 +145,11 @@ export function useUsuarios() {
         const { error } = await supabaseService.updateUsuario(usuarioId, updateData);
 
         if (error) throw error;
+        
+        // Atualizar estado local antes de buscar novamente
+        setUsuarios(prev => prev.map(u => 
+          u.id === usuarioId ? { ...u, ...updateData } : u
+        ));
 
         toast({
           title: "Sucesso",
