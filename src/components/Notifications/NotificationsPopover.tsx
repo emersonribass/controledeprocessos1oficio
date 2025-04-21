@@ -33,6 +33,15 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
     await markAllAsRead();
   };
 
+  // Novo handler para clique na notificação
+  const handleNotificationClick = async (notification: any) => {
+    await markAsRead(notification.id);
+    // Se for uma notificação de processo, direcionar para detalhes
+    if (notification.processo_id) {
+      window.location.href = `/processes/${notification.processo_id}`;
+    }
+  };
+
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
@@ -67,7 +76,7 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
                 <div
                   key={notification.id}
                   className={`p-4 ${!notification.lida ? "bg-primary/5" : ""} cursor-pointer`}
-                  onClick={() => markAsRead(notification.id)}
+                  onClick={() => handleNotificationClick(notification)}
                 >
                   <p className="text-sm">{notification.mensagem}</p>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -84,3 +93,4 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
 };
 
 export default NotificationsPopover;
+
