@@ -6,7 +6,7 @@ import { Process } from "@/types";
  */
 export const useProcessStatusFilters = () => {
   /**
-   * Filtra processos com base em critérios selecionados pelo usuário
+   * Filtra processos com base em critérios selecionados pelo usuário, inclusive data de entrada
    */
   const applyUserFilters = (
     processes: Process[],
@@ -16,17 +16,17 @@ export const useProcessStatusFilters = () => {
       processType?: string;
       search?: string;
       excludeCompleted?: boolean;
+      startDate?: string;
+      endDate?: string;
     }
   ): Process[] => {
     return processes.filter((process) => {
       if (filters.excludeCompleted && process.status === 'completed') {
         return false;
       }
-
       if (filters.department && process.currentDepartment !== filters.department) {
         return false;
       }
-
       if (filters.status) {
         const statusMap: Record<string, string> = {
           pending: "pending",
@@ -38,15 +38,29 @@ export const useProcessStatusFilters = () => {
           return false;
         }
       }
-
       if (filters.processType && process.processType !== filters.processType) {
         return false;
       }
-
       if (filters.search &&
         !process.protocolNumber.toLowerCase().includes(filters.search.toLowerCase())
       ) {
         return false;
+      }
+
+      // Filtro por período de startDate
+      if (filters.startDate) {
+        const start = new Date(filters.startDate);
+        const processStartDate = process.startDate ? new Date(process.startDate) : null;
+        if (!processStartDate || processStartDate < start) {
+          return false;
+        }
+      }
+      if (filters.endDate) {
+        const end = new Date(filters.endDate);
+        const processStartDate = process.startDate ? new Date(process.startDate) : null;
+        if (!processStartDate || processStartDate > end) {
+          return false;
+        }
       }
 
       return true;
@@ -58,7 +72,6 @@ export const useProcessStatusFilters = () => {
    */
   const isProcessOverdue = (process: Process) => {
     if (process.status === 'overdue') return true;
-
     const now = new Date();
     const expectedEndDate = new Date(process.expectedEndDate);
     return now > expectedEndDate;
