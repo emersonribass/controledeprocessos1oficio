@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 interface SearchFilterProps {
   search: string;
   onChange: (value: string) => void;
-  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 const SearchFilter = ({ search, onChange, onKeyDown }: SearchFilterProps) => {

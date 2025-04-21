@@ -42,9 +42,6 @@ export const useProcessFiltering = (
     const baseList = processesToFilter;
     
     if (!user) return [];
-    
-    console.log("Filtrando processos com filtros:", filters);
-    console.log("Total de processos antes da filtragem:", baseList.length);
 
     const visibleProcessesPromises = baseList.map(async (process) => {
       // Verificar se o usuário tem permissão para ver o processo
@@ -58,28 +55,16 @@ export const useProcessFiltering = (
       if (!canView) return null;
 
       // Verificar o filtro de responsável
-      if (filters.responsibleUser && filters.responsibleUser !== 'all') {
-        console.log(`Verificando se o usuário ${filters.responsibleUser} é responsável pelo processo ${process.id}`);
-        
-        const isGeneralResponsible = process.usuario_responsavel === filters.responsibleUser;
-        
-        // Verificar se é responsável em algum setor (usando processesResponsibles)
-        let isSectorResponsible = false;
-        if (processesResponsibles && processesResponsibles[process.id]) {
-          isSectorResponsible = processesResponsibles[process.id].some(
+      if (filters.responsibleUser) {
+        const isResponsible = 
+          // Verifica se é responsável geral pelo processo
+          process.usuario_responsavel === filters.responsibleUser ||
+          // Verifica se é responsável em algum setor
+          (processesResponsibles?.[process.id]?.some(
             (resp: any) => resp.usuario_id === filters.responsibleUser
-          );
-        }
-        
-        console.log(`Processo ${process.id}:`, {
-          isGeneralResponsible,
-          isSectorResponsible,
-          usuario_responsavel: process.usuario_responsavel
-        });
-        
-        if (!isGeneralResponsible && !isSectorResponsible) {
-          return null;
-        }
+          ));
+
+        if (!isResponsible) return null;
       }
 
       return process;
@@ -89,8 +74,6 @@ export const useProcessFiltering = (
     const visibleProcesses = visibleProcessesResults.filter(
       (process): process is Process => process !== null
     );
-    
-    console.log("Total de processos após filtro de responsável:", visibleProcesses.length);
 
     return statusFilters.applyUserFilters(visibleProcesses, filters);
   };
