@@ -1,7 +1,6 @@
 
-import { TableCell } from "@/components/ui/table";
-import ProcessActionButtons from "./ProcessActionButtons";
-import ProcessStatusBadge from "./ProcessStatusBadge";
+import React from 'react';
+import ProcessActionButtons from './ProcessActionButtons';
 import { createLogger } from "@/utils/loggerUtils";
 
 const logger = createLogger("ProcessRowActions");
@@ -23,8 +22,8 @@ interface ProcessRowActionsProps {
   isOverdue?: boolean;
   currentDepartment?: string;
   historyId?: number;
-  onRenewalComplete?: () => void;
-  showRenewDeadlineButton?: boolean; // Novo parâmetro para indicar se deve mostrar o botão
+  onRenewalComplete?: () => void; // Adicionando a propriedade aqui
+  showRenewDeadlineButton?: boolean;
 }
 
 const ProcessRowActions = ({
@@ -44,10 +43,10 @@ const ProcessRowActions = ({
   isOverdue,
   currentDepartment,
   historyId,
-  onRenewalComplete,
+  onRenewalComplete, // Incluindo na desestruturação
   showRenewDeadlineButton = false
 }: ProcessRowActionsProps) => {
-  // Log somente quando o botão deve ser exibido
+  // Log para debug do button de renovação
   if (showRenewDeadlineButton && historyId) {
     logger.debug(`Exibindo botão de renovação para processo ${processId}, historyId=${historyId}`);
   }
@@ -71,7 +70,7 @@ const ProcessRowActions = ({
       sectorId={sectorId}
       showRenewDeadlineButton={showRenewDeadlineButton}
       renewalHistoryId={historyId}
-      onRenewalComplete={onRenewalComplete}
+      onRenewalComplete={onRenewalComplete} // Passando a propriedade
     />
   );
 };
