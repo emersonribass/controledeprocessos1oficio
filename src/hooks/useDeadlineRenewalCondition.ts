@@ -13,7 +13,7 @@ export const useDeadlineRenewalCondition = (processId: string, currentDepartment
 
   useEffect(() => {
     const checkRenewalCondition = async () => {
-      // Setor "Aguard. Doc." tem ID 5 no sistema
+      // Setor "Aguard. Doc." tem ID 2 no sistema
       const isAwaitingDocs = currentDepartment === "2";
       
       // Se não estiver atrasado ou não for o setor certo, não pode renovar
