@@ -9,6 +9,7 @@ import ProcessMainDetails from "@/components/Processes/ProcessMainDetails";
 import ProcessDetailsTabs from "@/components/Processes/ProcessDetailsTabs";
 import ProcessDetailsSkeleton from "@/components/Processes/ProcessDetailsSkeleton";
 import ProcessDeadlineCard from "@/components/Processes/ProcessDeadlineCard";
+import { useDeadlineRenewalCondition } from "@/hooks/useDeadlineRenewalCondition";
 
 const ProcessDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -80,6 +81,7 @@ const ProcessDetailsPage = () => {
   
   // Verificar se o processo ainda não foi iniciado
   const isNotStarted = process.status === "not_started";
+  const isOverdue = process.status === "overdue";
   
   return (
     <div className="container max-w-6xl mx-auto p-6">

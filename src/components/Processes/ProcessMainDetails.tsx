@@ -109,10 +109,11 @@ const ProcessMainDetails = ({
           <ProcessActionButtons 
             processId={process.id}
             protocolNumber={process.protocolNumber}
-            processType={process.processType} {/* repassa para validar corretamente */}
+            processType={process.processType}
             moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
             moveProcessToNextDepartment={moveProcessToNextDepartment}
-            isFirstDepartment={isAtendimento || isFirstDepartment} /* aplica a lógica para desabilitar botão se for atendimento */
+            isFirstDepartment={isAtendimento || isFirstDepartment}
+            isLastDepartment={isLastDepartment}
             setIsEditing={() => {}}
             isEditing={false}
             status={process.status}

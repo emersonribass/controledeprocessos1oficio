@@ -108,17 +108,12 @@ const ProcessActionButtons = memo(({
     }
   };
 
-  // Verificação melhorada para debug
-  console.log("Condições para mostrar o botão de renovação:", {
-    isOverdue,
-    currentDepartment,
-    historyId,
-    shouldShow: isOverdue && currentDepartment === "Aguard. Doc." && historyId !== undefined
-  });
-
+  // Condição para mostrar o botão de renovação de prazo somente na página de detalhes do processo
+  // e somente quando o setor atual for "Aguard. Doc." (com id '5')
   const shouldShowRenewalButton = isOverdue && 
-    currentDepartment === "Aguard. Doc." && 
-    historyId !== undefined;
+    currentDepartment === "5" && 
+    historyId !== undefined && 
+    window.location.pathname.includes('/process/');
 
   if (isNotStarted && startProcess) {
     return <div className="flex justify-center gap-1 process-action">

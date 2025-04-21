@@ -59,10 +59,8 @@ const ProcessRowActions = ({
       onAcceptResponsibility={onAcceptResponsibility} 
       isAccepting={isAccepting} 
       sectorId={sectorId}
-      isOverdue={isOverdue}
-      currentDepartment={currentDepartment}
-      historyId={historyId}
-      onRenewalComplete={onRenewalComplete}
+      // Não passamos as props relacionadas ao botão de renovação na lista de processos
+      // para evitar logs desnecessários
     />
   );
 };

@@ -1,8 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Database, Tables } from "@/integrations/supabase/schema";
 
-export function useSupabase() {
+export const useSupabase = () => {
   // Setores
   const getSetores = () => {
     return supabase
@@ -77,20 +76,34 @@ export function useSupabase() {
   };
 
   // Histórico de processos
-  const getProcessoHistorico = (processoId: string) => {
-    return supabase
-      .from("processos_historico")
-      .select("*")
-      .eq("processo_id", processoId)
-      .order("data_entrada", { ascending: true });
+  const getProcessoHistorico = async (processoId: string, setorId: string) => {
+    try {
+      return await supabase
+        .from('processos_historico')
+        .select('*')
+        .eq('processo_id', processoId)
+        .eq('setor_id', setorId)
+        .order('data_entrada', { ascending: false });
+    } catch (error) {
+      console.error('Erro ao buscar histórico do processo:', error);
+      return { data: null, error };
+    }
   };
 
   const createProcessoHistorico = (data: Omit<Tables["processos_historico"], "id">) => {
     return supabase.from("processos_historico").insert(data);
   };
 
-  const updateProcessoHistorico = (id: number, data: Partial<Tables["processos_historico"]>) => {
-    return supabase.from("processos_historico").update(data).eq("id", id);
+  const updateProcessoHistorico = async (id: number, updates: any) => {
+    try {
+      return await supabase
+        .from('processos_historico')
+        .update(updates)
+        .eq('id', id);
+    } catch (error) {
+      console.error('Erro ao atualizar histórico do processo:', error);
+      return { data: null, error };
+    }
   };
 
   // Notificações
@@ -153,4 +166,4 @@ export function useSupabase() {
     createSetorResponsavel,
     updateSetorResponsavel,
   };
-}
+};
