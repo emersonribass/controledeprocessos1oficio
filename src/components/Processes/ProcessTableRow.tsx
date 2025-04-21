@@ -1,4 +1,3 @@
-
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -12,6 +11,8 @@ import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useProcesses } from "@/hooks/useProcesses";
 import { useDeadlineRenewalCondition } from "@/hooks/useDeadlineRenewalCondition";
 import { createLogger } from "@/utils/loggerUtils";
+import { useCallback } from "react";
+import { useProcessTableState } from "@/hooks/useProcessTableState";
 
 const logger = createLogger("ProcessTableRow");
 
@@ -50,15 +51,15 @@ const ProcessTableRow = ({
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
   const { refreshProcesses } = useProcesses();
-  
+  const { queueSectorForLoading } = useProcessTableState([]);
+
   const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
   const { getProcessResponsible } = useProcessResponsibility();
   
   const hasResponsible = hasSectorResponsible || !!sectorResponsible;
   
-  // Verificar se o processo pode ter o prazo renovado
   const { canRenewDeadline, historyId: renewalHistoryId } = useDeadlineRenewalCondition(process);
-  
+
   const {
     sortedDepartments,
     concludedDept,
@@ -87,10 +88,14 @@ const ProcessTableRow = ({
     navigate(`/processes/${process.id}`);
   };
 
-  // Verificar se o processo está atrasado no departamento atual
+  const handleAcceptResponsibility = useCallback(async () => {
+    await onAcceptResponsibility();
+    queueSectorForLoading(process.id, process.currentDepartment);
+    await refreshProcesses();
+  }, [onAcceptResponsibility, process.id, process.currentDepartment, queueSectorForLoading, refreshProcesses]);
+
   const isProcessOverdue = process.status === "overdue";
   
-  // Se canRenewDeadline for true e renewalHistoryId for válido, mostrar o botão
   if (canRenewDeadline && renewalHistoryId) {
     logger.debug(`Processo ${process.id} pode renovar prazo, historyId=${renewalHistoryId}`);
   }
@@ -103,12 +108,10 @@ const ProcessTableRow = ({
       )}
       onClick={handleRowClick}
     >
-      {/* Protocolo - Largura fixa de 70px */}
       <TableCell className="w-[70px] whitespace-nowrap text-center font-medium">
         {process.protocolNumber}
       </TableCell>
       
-      {/* Tipo de Processo - Largura fixa de 180px */}
       <TableCell className="w-[180px] whitespace-nowrap text-center process-action" onClick={e => e.stopPropagation()}>
         <ProcessTypePicker 
           processId={process.id} 
@@ -119,7 +122,6 @@ const ProcessTableRow = ({
         />
       </TableCell>
       
-      {/* Departamentos - Largura mínima de 120px para cada */}
       {sortedDepartments.map((dept) => (
         <TableCell key={dept.id} className="min-w-[120px] text-center">
           <ProcessDepartmentCell 
@@ -137,7 +139,6 @@ const ProcessTableRow = ({
         </TableCell>
       ))}
     
-      {/* Ações - Largura fixa de 150px */}
       <TableCell className="w-[120px] process-action">
         <ProcessRowActions 
           processId={process.id}
@@ -150,13 +151,13 @@ const ProcessTableRow = ({
           status={process.status}
           startProcess={canInitiateProcesses || process.status === "not_started" ? startProcess : undefined}
           hasSectorResponsible={hasResponsible}
-          onAcceptResponsibility={onAcceptResponsibility}
+          onAcceptResponsibility={handleAcceptResponsibility}
           isAccepting={isAccepting}
           sectorId={process.currentDepartment}
           isOverdue={isProcessOverdue}
           currentDepartment={process.currentDepartment}
-          historyId={renewalHistoryId} // Utilizar o ID identificado pelo hook
-          showRenewDeadlineButton={canRenewDeadline} // Passar a flag diretamente
+          historyId={renewalHistoryId}
+          showRenewDeadlineButton={canRenewDeadline}
           onRenewalComplete={() => refreshProcesses()}
         />
       </TableCell>
