@@ -12,7 +12,7 @@ export const useProcessResponsibilityAcceptance = () => {
   const acceptProcessResponsibility = async (
     processId: string, 
     protocolNumber: string,
-    showToast: boolean = true
+    showToast: boolean = false
   ) => {
     if (!user) {
       if (showToast) {
