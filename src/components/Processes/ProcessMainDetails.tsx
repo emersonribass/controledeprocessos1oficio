@@ -17,6 +17,8 @@ interface ProcessMainDetailsProps {
   isLastDepartment: boolean;
   isNotStarted: boolean;
   startProcess?: (processId: string) => Promise<void>;
+  canRenewDeadline?: boolean;
+  renewalHistoryId?: number;
 }
 
 const ProcessMainDetails = ({
@@ -28,7 +30,9 @@ const ProcessMainDetails = ({
   isFirstDepartment,
   isLastDepartment,
   isNotStarted,
-  startProcess
+  startProcess,
+  canRenewDeadline,
+  renewalHistoryId
 }: ProcessMainDetailsProps) => {
   // Usando o hook para obter informações de responsabilidade
   const { 
@@ -102,10 +106,8 @@ const ProcessMainDetails = ({
         </div>
         
         <Separator />
-        
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-medium">Ações</h3>
-          
           <ProcessActionButtons 
             processId={process.id}
             protocolNumber={process.protocolNumber}
@@ -122,6 +124,8 @@ const ProcessMainDetails = ({
             onAcceptResponsibility={() => handleAcceptResponsibility(process.protocolNumber)}
             isAccepting={isAccepting}
             sectorId={process.currentDepartment}
+            showRenewDeadlineButton={canRenewDeadline}
+            renewalHistoryId={renewalHistoryId}
           />
         </div>
       </CardContent>

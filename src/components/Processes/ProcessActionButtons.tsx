@@ -24,10 +24,8 @@ interface ProcessActionButtonsProps {
   onAcceptResponsibility?: () => Promise<void>;
   isAccepting?: boolean;
   sectorId?: string;
-  isOverdue?: boolean;
-  currentDepartment?: string;
-  historyId?: number;
-  onRenewalComplete?: () => void;
+  showRenewDeadlineButton?: boolean;
+  renewalHistoryId?: number;
 }
 
 const ProcessActionButtons = memo(({
@@ -46,10 +44,8 @@ const ProcessActionButtons = memo(({
   onAcceptResponsibility,
   isAccepting = false,
   sectorId,
-  isOverdue = false,
-  currentDepartment,
-  historyId,
-  onRenewalComplete
+  showRenewDeadlineButton = false,
+  renewalHistoryId
 }: ProcessActionButtonsProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
@@ -75,7 +71,6 @@ const ProcessActionButtons = memo(({
   const handleMoveToNext = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (!validateProcessType()) {
       return;
     }
@@ -91,7 +86,6 @@ const ProcessActionButtons = memo(({
   const handleStartProcess = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (!validateProcessType()) {
       return;
     }
@@ -108,13 +102,7 @@ const ProcessActionButtons = memo(({
     }
   };
 
-  // Condição para mostrar o botão de renovação de prazo somente na página de detalhes do processo
-  // e somente quando o setor atual for "Aguard. Doc." (com id '5')
-  const shouldShowRenewalButton = isOverdue && 
-    currentDepartment === "5" && 
-    historyId !== undefined && 
-    window.location.pathname.includes('/process/');
-
+  // Exibe o botão de renovação somente se a tela de detalhe indicou que pode exibir
   if (isNotStarted && startProcess) {
     return <div className="flex justify-center gap-1 process-action">
         <Button variant="outline" size="sm" onClick={handleStartProcess} title="Iniciar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action px-[6px]">
@@ -135,11 +123,10 @@ const ProcessActionButtons = memo(({
 
   return (
     <div className="flex justify-center gap-2 process-action">
-      {shouldShowRenewalButton && historyId && (
+      {showRenewDeadlineButton && renewalHistoryId !== undefined && (
         <RenewDeadlineButton
           processId={processId}
-          historyId={historyId}
-          onRenewalComplete={onRenewalComplete}
+          historyId={renewalHistoryId}
         />
       )}
       <Button 

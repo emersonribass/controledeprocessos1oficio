@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useProcesses } from "@/hooks/useProcesses";
@@ -17,7 +16,6 @@ const ProcessDetailsPage = () => {
   const [process, setProcess] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Criando adaptadores para converter Promise<boolean> para Promise<void>
   const adaptMoveToNext = async (processId: string): Promise<void> => {
     if (!id) return;
     await moveProcessToNextDepartment(processId);
@@ -38,7 +36,6 @@ const ProcessDetailsPage = () => {
     loadProcess();
   });
   
-  // Usando useCallback para evitar recriações desnecessárias da função
   const loadProcess = useCallback(async () => {
     if (!id) return;
     
@@ -53,21 +50,25 @@ const ProcessDetailsPage = () => {
     }
   }, [id, getProcess]);
   
-  // Efeito para carregar o processo quando o id mudar
   useEffect(() => {
     if (!isLoadingProcesses && id) {
       loadProcess();
     }
   }, [id, isLoadingProcesses, loadProcess]);
   
-  // Efeito para atualizar a lista de processos periodicamente com intervalo maior
   useEffect(() => {
     const intervalId = setInterval(() => {
       refreshProcesses();
-    }, 120000); // Aumentado para 2 minutos para reduzir chamadas
+    }, 120000);
     
     return () => clearInterval(intervalId);
   }, [refreshProcesses]);
+  
+  const { canRenewDeadline, historyId } = useDeadlineRenewalCondition(
+    process?.id,
+    process?.currentDepartment,
+    process?.status === "overdue"
+  );
   
   if (isLoading || !process) {
     return <ProcessDetailsSkeleton />;
@@ -77,9 +78,8 @@ const ProcessDetailsPage = () => {
     item.departmentId !== process.currentDepartment && item.exitDate !== null
   );
   
-  const isLastDepartment = process.currentDepartment === "10"; // ID do último departamento (concluído)
+  const isLastDepartment = process.currentDepartment === "10";
   
-  // Verificar se o processo ainda não foi iniciado
   const isNotStarted = process.status === "not_started";
   const isOverdue = process.status === "overdue";
   
@@ -102,6 +102,8 @@ const ProcessDetailsPage = () => {
             isLastDepartment={isLastDepartment}
             isNotStarted={isNotStarted}
             startProcess={adaptStartProcess}
+            canRenewDeadline={canRenewDeadline}
+            renewalHistoryId={historyId}
           />
           
           <ProcessDetailsTabs 
