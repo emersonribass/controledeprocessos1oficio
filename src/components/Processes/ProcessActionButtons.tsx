@@ -1,11 +1,10 @@
-
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
-import { memo, useEffect } from "react";
+import { memo } from "react";
 import { useUserProfile } from "@/hooks/auth/useUserProfile";
-import RenewDeadlineButton from "./RenewDeadlineButton";
 import { createLogger } from "@/utils/loggerUtils";
 import { useToastService } from "@/utils/toastUtils";
 
@@ -27,9 +26,6 @@ interface ProcessActionButtonsProps {
   onAcceptResponsibility?: () => Promise<void>;
   isAccepting?: boolean;
   sectorId?: string;
-  showRenewDeadlineButton?: boolean;
-  renewalHistoryId?: number;
-  onRenewalComplete?: () => void;
 }
 
 const ProcessActionButtons = memo(({
@@ -48,9 +44,6 @@ const ProcessActionButtons = memo(({
   onAcceptResponsibility,
   isAccepting = false,
   sectorId,
-  showRenewDeadlineButton = false,
-  renewalHistoryId,
-  onRenewalComplete
 }: ProcessActionButtonsProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
@@ -59,18 +52,7 @@ const ProcessActionButtons = memo(({
   const isCompleted = status === "completed";
   const toast = useToastService();
 
-  // Registre apenas quando o botão de renovação está visível ou quando as propriedades mudam
-  useEffect(() => {
-    if (showRenewDeadlineButton) {
-      logger.debug(`[RenewButton] ProcessId: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId: ${renewalHistoryId}`);
-      logger.debug(`[RenewButton] HistoryId é válido?`, typeof renewalHistoryId === 'number' && !isNaN(renewalHistoryId));
-    }
-  }, [processId, showRenewDeadlineButton, renewalHistoryId]);
-
   const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
-
-  // Verificar se o renewalHistoryId é um número válido
-  const isValidHistoryId = typeof renewalHistoryId === 'number' && !isNaN(renewalHistoryId);
 
   const validateProcessType = (): boolean => {
     if (!processType) {
@@ -117,8 +99,6 @@ const ProcessActionButtons = memo(({
     }
   };
 
-  // Exibe o botão de renovação somente se a tela de detalhe indicou que pode exibir
-  // e se houver um ID de histórico válido para renovar
   if (isNotStarted && startProcess) {
     return <div className="flex justify-center gap-1 process-action">
         <Button variant="outline" size="sm" onClick={handleStartProcess} title="Iniciar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action px-[6px]">
@@ -139,13 +119,6 @@ const ProcessActionButtons = memo(({
 
   return (
     <div className="flex justify-center gap-2 process-action">
-      {showRenewDeadlineButton && isValidHistoryId && (
-        <RenewDeadlineButton
-          processId={processId}
-          historyId={renewalHistoryId as number}
-          onRenewalComplete={onRenewalComplete}
-        />
-      )}
       <Button 
         variant="ghost" 
         size="icon" 
