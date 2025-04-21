@@ -1,25 +1,29 @@
+
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Printer, Check, Archive, ArchiveRestore } from "lucide-react";
+import { ArrowLeft, Download, Printer, Check, Archive, ArchiveRestore, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useProcesses } from "@/hooks/useProcesses";
 import ProcessStatusBadge from "./ProcessStatusBadge";
+import { useDeadlineRenewalCondition } from "@/hooks/useDeadlineRenewalCondition";
+import RenewDeadlineButton from "./RenewDeadlineButton";
 import { toast } from "sonner";
+
 interface ProcessDetailsHeaderProps {
   process: any;
   getProcessTypeName: (id: string) => string;
 }
+
 const ProcessDetailsHeader = ({
   process,
   getProcessTypeName
 }: ProcessDetailsHeaderProps) => {
   const navigate = useNavigate();
-  const {
-    updateProcessStatus,
-    getDepartmentName
-  } = useProcesses();
+  const { updateProcessStatus, getDepartmentName } = useProcesses();
   const isSignatureDepartment = getDepartmentName(process.currentDepartment) === "Assinatura";
   const canCompleteProcess = isSignatureDepartment && process.status !== "completed";
   const isArchived = process.status === "archived";
+  const { canRenewDeadline, historyId } = useDeadlineRenewalCondition(process);
+
   const handleCompleteProcess = async () => {
     try {
       await updateProcessStatus(process.id, "Concluído");
@@ -29,6 +33,7 @@ const ProcessDetailsHeader = ({
       toast.error("Erro ao concluir o processo");
     }
   };
+
   const handleArchiveToggle = async () => {
     try {
       const newStatus = isArchived ? "Em andamento" : "Arquivado";
@@ -39,6 +44,7 @@ const ProcessDetailsHeader = ({
       toast.error(isArchived ? "Erro ao restaurar o processo" : "Erro ao arquivar o processo");
     }
   };
+
   return <div className="mb-6">
       <Button variant="outline" onClick={() => navigate(-1)} className="mb-4 bg-yellow-400 hover:bg-yellow-300 gap-0">
         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -57,6 +63,14 @@ const ProcessDetailsHeader = ({
         </div>
         
         <div className="flex gap-2">
+          {canRenewDeadline && historyId && (
+            <RenewDeadlineButton
+              processId={process.id}
+              historyId={historyId}
+              onRenewalComplete={() => window.location.reload()}
+            />
+          )}
+
           <Button onClick={handleArchiveToggle} variant="outline" className={`gap-2 ${isArchived ? "bg-amber-600 hover:bg-amber-500" : "bg-gray-600 hover:bg-gray-500"} text-white`}>
             {isArchived ? <>
                 <ArchiveRestore className="h-4 w-4" />
@@ -85,4 +99,5 @@ const ProcessDetailsHeader = ({
       </div>
     </div>;
 };
+
 export default ProcessDetailsHeader;
