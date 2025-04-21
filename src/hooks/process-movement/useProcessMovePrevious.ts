@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -11,10 +10,10 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
   const { user } = useAuth();
   const { sendNotificationsToSectorUsers } = useNotificationService();
 
-  /**
-   * Move o processo para o departamento anterior
-   */
-  const moveProcessToPreviousDepartment = async (processId: string) => {
+  const moveProcessToPreviousDepartment = async (
+    processId: string, 
+    showToast: boolean = true  // Novo parâmetro com valor padrão true
+  ) => {
     if (!user) return false;
     
     setIsMoving(true);
@@ -42,11 +41,13 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
 
       // Se já estiver no primeiro departamento, não pode voltar
       if (currentDept.order_num <= 1) {
-        uiToast({
-          title: "Aviso",
-          description: "Este processo já está no primeiro departamento.",
-          variant: "destructive"
-        });
+        if (showToast) {
+          uiToast({
+            title: "Aviso",
+            description: "Este processo já está no primeiro departamento.",
+            variant: "destructive"
+          });
+        }
         setIsMoving(false);
         return false;
       }
@@ -61,11 +62,13 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
         .single();
 
       if (prevDeptError) {
-        uiToast({
-          title: "Aviso",
-          description: "Não foi possível encontrar o departamento anterior.",
-          variant: "destructive"
-        });
+        if (showToast) {
+          uiToast({
+            title: "Aviso",
+            description: "Não foi possível encontrar o departamento anterior.",
+            variant: "destructive"
+          });
+        }
         setIsMoving(false);
         return false;
       }
@@ -149,19 +152,26 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
       );
 
       onProcessUpdated();
-      uiToast({
-        title: "Sucesso",
-        description: `Processo movido para ${prevDept.name}`,
-      });
+      // Modificando a chamada de toast para respeitar o parâmetro showToast
+      if (showToast) {
+        uiToast({
+          title: "Sucesso",
+          description: `Processo movido para ${prevDept.name}`,
+        });
+      }
       
       return true;
     } catch (error) {
       console.error("Erro ao mover processo:", error);
-      uiToast({
-        title: "Erro",
-        description: "Não foi possível mover o processo para o departamento anterior.",
-        variant: "destructive"
-      });
+      
+      // Modificando a chamada de toast para respeitar o parâmetro showToast
+      if (showToast) {
+        uiToast({
+          title: "Erro",
+          description: "Não foi possível mover o processo para o departamento anterior.",
+          variant: "destructive"
+        });
+      }
       return false;
     } finally {
       setIsMoving(false);

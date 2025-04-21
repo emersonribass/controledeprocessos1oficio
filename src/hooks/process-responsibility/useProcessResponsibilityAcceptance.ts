@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
@@ -10,16 +9,19 @@ export const useProcessResponsibilityAcceptance = () => {
   const { toast: uiToast } = useToast();
   const { user } = useAuth();
 
-  /**
-   * Aceita a responsabilidade por um processo em um setor
-   */
-  const acceptProcessResponsibility = async (processId: string, protocolNumber: string) => {
+  const acceptProcessResponsibility = async (
+    processId: string, 
+    protocolNumber: string,
+    showToast: boolean = true
+  ) => {
     if (!user) {
-      uiToast({
-        title: "Erro",
-        description: "Você precisa estar logado para aceitar processos.",
-        variant: "destructive",
-      });
+      if (showToast) {
+        uiToast({
+          title: "Erro",
+          description: "Você precisa estar logado para aceitar processos.",
+          variant: "destructive",
+        });
+      }
       return false;
     }
 
@@ -60,10 +62,12 @@ export const useProcessResponsibilityAcceptance = () => {
       if (existingResponsible) {
         // Se o usuário atual já é o responsável, apenas retornar
         if (existingResponsible.usuario_id === user.id) {
-          uiToast({
-            title: "Informação",
-            description: "Você já é o responsável por este processo neste setor.",
-          });
+          if (showToast) {
+            uiToast({
+              title: "Informação",
+              description: "Você já é o responsável por este processo neste setor.",
+            });
+          }
           return true;
         }
         
@@ -107,15 +111,20 @@ export const useProcessResponsibilityAcceptance = () => {
         console.error("Erro ao atualizar notificações:", notificationError);
       }
 
-      toast.success(`Você aceitou a responsabilidade pelo processo ${protocolNumber} neste setor.`);
+      if (showToast) {
+        toast.success(`Você aceitou a responsabilidade pelo processo ${protocolNumber} neste setor.`);
+      }
       return true;
     } catch (error) {
       console.error("Erro ao aceitar processo:", error);
-      uiToast({
-        title: "Erro",
-        description: "Não foi possível aceitar o processo.",
-        variant: "destructive",
-      });
+      
+      if (showToast) {
+        uiToast({
+          title: "Erro",
+          description: "Não foi possível aceitar o processo.",
+          variant: "destructive",
+        });
+      }
       return false;
     } finally {
       setIsAccepting(false);

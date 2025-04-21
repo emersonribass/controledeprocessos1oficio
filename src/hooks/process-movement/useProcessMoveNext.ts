@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -12,10 +11,10 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
   const { user } = useAuth();
   const { sendNotificationsToSectorUsers } = useNotificationService();
 
-  /**
-   * Move o processo para o próximo departamento
-   */
-  const moveProcessToNextDepartment = async (processId: string) => {
+  const moveProcessToNextDepartment = async (
+    processId: string, 
+    showToast: boolean = true  // Novo parâmetro com valor padrão true
+  ) => {
     if (!user) return false;
     
     setIsMoving(true);
@@ -145,19 +144,27 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
       );
 
       onProcessUpdated();
-      uiToast({
-        title: "Sucesso",
-        description: `Processo movido para ${nextDept.name}`,
-      });
+
+      // Modificando a chamada de toast para respeitar o parâmetro showToast
+      if (showToast) {
+        uiToast({
+          title: "Sucesso",
+          description: `Processo movido para ${nextDept.name}`,
+        });
+      }
       
       return true;
     } catch (error) {
       console.error("Erro ao mover processo:", error);
-      uiToast({
-        title: "Erro",
-        description: "Não foi possível mover o processo para o próximo departamento.",
-        variant: "destructive"
-      });
+      
+      // Modificando a chamada de toast para respeitar o parâmetro showToast
+      if (showToast) {
+        uiToast({
+          title: "Erro",
+          description: "Não foi possível mover o processo para o próximo departamento.",
+          variant: "destructive"
+        });
+      }
       return false;
     } finally {
       setIsMoving(false);
