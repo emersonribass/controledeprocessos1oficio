@@ -43,27 +43,15 @@ const DashboardSummary = () => {
   // Processos atrasados: aqueles com status "overdue" no setor atual
   const overdueProcesses = userProcesses.filter(p => p.status === "overdue").length;
   
-  // Processos concluídos: aqueles que foram processados pelo setor do usuário
-  // (têm uma entrada no histórico com o setor do usuário e data de saída não nula)
-  const completedProcesses = userProcesses.filter(process => {
-    if (!user?.departments?.length) return false;
-    
-    // Verificar se existe alguma entrada no histórico com o setor do usuário e data de saída não nula
-    return process.history.some(historyItem => {
-      // Convertendo ambos para string para garantir comparação correta
-      const userDepartmentsAsStrings = user.departments.map(dept => String(dept));
-      return userDepartmentsAsStrings.includes(String(historyItem.departmentId)) && 
-        historyItem.exitDate !== null;
-    });
-  }).length;
+  // Processos concluídos: considera apenas status igual a "completed" (AJUSTADO)
+  const completedProcesses = userProcesses.filter(p => p.status === "completed").length;
   
-  // Calculate completion rate
+  // Taxa de conclusão ajustada
   const completionRate = totalProcesses > 0 
     ? Math.round((completedProcesses / totalProcesses) * 100) 
     : 0;
 
-  // Função para redirecionar para a lista de processos com filtro
-  const handleCardClick = (status) => {
+  const handleCardClick = (status: string) => {
     navigate(`/processes?status=${status}`);
   };
 
