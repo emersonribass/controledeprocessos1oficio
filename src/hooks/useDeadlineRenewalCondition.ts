@@ -81,36 +81,112 @@ export const useDeadlineRenewalCondition = (
           );
 
         const entradaMaisRecente = entries[0];
-        console.log('[RenewDeadline] Entrada mais recente no setor:', entradaMaisRecente);
-
+        
+        // Log completo do objeto para depuração
+        console.log('[RenewDeadline] Entrada mais recente (objeto completo):', JSON.stringify(entradaMaisRecente));
+        console.log('[RenewDeadline] Estrutura do objeto:', Object.keys(entradaMaisRecente || {}));
+        
         if (entradaMaisRecente) {
-          // Procura o campo "id" direto ou, se não existir, tenta buscar por "historyId" ou procura pelo id real do registros históricos
-          // Padrão real Supabase para processos_historico: campo inteiro chamado "id"
-          // Como fallback adicional, busca no array original o item correspondente usando as datas/campos
+          // Log para depurar os campos específicos que estamos procurando
+          console.log('[RenewDeadline] ID direto:', entradaMaisRecente.id);
+          console.log('[RenewDeadline] historyId:', entradaMaisRecente.historyId);
+          console.log('[RenewDeadline] Outros campos potenciais:', { 
+            id_historico: entradaMaisRecente.id_historico,
+            historico_id: entradaMaisRecente.historico_id
+          });
+          
+          // Tenta encontrar o ID usando várias estratégias
           let histId: number | undefined = undefined;
-          if (entradaMaisRecente.id) {
+          
+          // Estratégia 1: Buscar o ID diretamente do objeto atual
+          if (typeof entradaMaisRecente.id === 'number') {
             histId = entradaMaisRecente.id;
-          } else {
-            // Procura na lista bruta do histórico o item equivalente com id
+            console.log('[RenewDeadline] ID encontrado diretamente:', histId);
+          } 
+          // Estratégia 2: Verificar campos alternativos de ID
+          else if (typeof entradaMaisRecente.historyId === 'number') {
+            histId = entradaMaisRecente.historyId;
+            console.log('[RenewDeadline] ID encontrado em historyId:', histId);
+          } 
+          else if (typeof entradaMaisRecente.id_historico === 'number') {
+            histId = entradaMaisRecente.id_historico;
+            console.log('[RenewDeadline] ID encontrado em id_historico:', histId);
+          }
+          else if (typeof entradaMaisRecente.historico_id === 'number') {
+            histId = entradaMaisRecente.historico_id;
+            console.log('[RenewDeadline] ID encontrado em historico_id:', histId);
+          }
+          // Estratégia 3: Se o ID existir como string, converter para número
+          else if (typeof entradaMaisRecente.id === 'string' && !isNaN(Number(entradaMaisRecente.id))) {
+            histId = Number(entradaMaisRecente.id);
+            console.log('[RenewDeadline] ID convertido de string:', histId);
+          }
+          
+          // Estratégia 4: Buscar o registro original no histórico completo usando correspondência de campos
+          if (histId === undefined) {
+            console.log('[RenewDeadline] Buscando no histórico completo...');
+            
+            // Primeiro, vamos fazer um log de todos os registros históricos para debug
+            console.log('[RenewDeadline] Todos os registros históricos:', 
+                       process.history.map((h: any) => ({ 
+                         id: h.id, 
+                         departmentId: h.departmentId || h.setor_id || h.setorId,
+                         entryDate: h.entryDate || h.data_entrada,
+                         exitDate: h.exitDate || h.data_saida
+                       })));
+            
             const entradaOriginal = process.history.find(
-              (h: any) =>
-                // Confere entrada igual usada acima, mas restringe por campos + compara entryDate
-                (h.departmentId === process.currentDepartment ||
-                 h.setor_id === process.currentDepartment ||
-                 h.setorId === process.currentDepartment) &&
-                (h.exitDate === null || h.data_saida == null) &&
-                ((h.entryDate && entradaMaisRecente.entryDate && h.entryDate === entradaMaisRecente.entryDate) ||
-                 (h.data_entrada && entradaMaisRecente.data_entrada && h.data_entrada === entradaMaisRecente.data_entrada))
-                && h.id
+              (h: any) => {
+                const matchDepartment = (
+                  h.departmentId === process.currentDepartment ||
+                  h.setor_id === process.currentDepartment ||
+                  h.setorId === process.currentDepartment
+                );
+                
+                const noExit = (
+                  h.exitDate === null || 
+                  h.data_saida === null
+                );
+                
+                const matchEntryDate = (
+                  (h.entryDate && entradaMaisRecente.entryDate && 
+                   h.entryDate === entradaMaisRecente.entryDate) ||
+                  (h.data_entrada && entradaMaisRecente.data_entrada && 
+                   h.data_entrada === entradaMaisRecente.data_entrada)
+                );
+                
+                const hasId = (
+                  typeof h.id === 'number' || 
+                  (typeof h.id === 'string' && !isNaN(Number(h.id)))
+                );
+                
+                console.log('[RenewDeadline] Comparando registro:', { 
+                  id: h.id, 
+                  matchDepartment, 
+                  noExit, 
+                  matchEntryDate, 
+                  hasId 
+                });
+                
+                return matchDepartment && noExit && matchEntryDate && hasId;
+              }
             );
-            if (entradaOriginal && entradaOriginal.id) {
-              histId = entradaOriginal.id;
+            
+            if (entradaOriginal) {
+              console.log('[RenewDeadline] Entrada original encontrada:', entradaOriginal);
+              if (typeof entradaOriginal.id === 'number') {
+                histId = entradaOriginal.id;
+              } else if (typeof entradaOriginal.id === 'string' && !isNaN(Number(entradaOriginal.id))) {
+                histId = Number(entradaOriginal.id);
+              }
+              console.log('[RenewDeadline] ID encontrado no registro original:', histId);
             }
           }
 
+          // Finalmente, depois de tentar todas as estratégias, usamos o ID encontrado
           setHistoryId(histId);
-          setCanRenewDeadline(!!histId);
-          console.log('[RenewDeadline] Pode renovar prazo. History ID:', histId);
+          setCanRenewDeadline(histId !== undefined);
+          console.log('[RenewDeadline] Resultado final - Pode renovar prazo:', !!histId, '| History ID:', histId);
         } else {
           setHistoryId(undefined);
           setCanRenewDeadline(false);

@@ -54,10 +54,14 @@ const ProcessActionButtons = memo(({
   const isCompleted = status === "completed";
   const { toast } = useToast();
 
-  // Adicionando log para debug das propriedades relacionadas ao botão de renovação
+  // Adicionando log detalhado para debug das propriedades relacionadas ao botão de renovação
   useEffect(() => {
+    console.log(`[ProcessActionButtons] ID: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId:`, renewalHistoryId);
+    
     if (showRenewDeadlineButton) {
-      console.log(`[RenewButton] ProcessId: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId: ${renewalHistoryId}`);
+      console.log(`[RenewButton] ProcessId: ${processId}, Show: ${showRenewDeadlineButton}, HistoryId:`, renewalHistoryId);
+      console.log(`[RenewButton] Tipo do HistoryId:`, typeof renewalHistoryId);
+      console.log(`[RenewButton] HistoryId é undefined?`, renewalHistoryId === undefined);
     }
   }, [processId, showRenewDeadlineButton, renewalHistoryId]);
 
@@ -131,7 +135,7 @@ const ProcessActionButtons = memo(({
 
   return (
     <div className="flex justify-center gap-2 process-action">
-      {showRenewDeadlineButton && renewalHistoryId !== undefined && (
+      {showRenewDeadlineButton && typeof renewalHistoryId === 'number' && (
         <RenewDeadlineButton
           processId={processId}
           historyId={renewalHistoryId}
