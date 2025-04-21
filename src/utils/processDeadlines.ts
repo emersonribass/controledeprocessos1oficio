@@ -1,26 +1,28 @@
 
-/**
- * Utilitário para cálculo de atraso de processos por setor
- */
+interface HistoryEntry {
+  departmentId: string;
+  entryDate: string;
+  exitDate: string | null;
+  data_entrada?: string; // Campo opcional para compatibilidade
+  data_saida?: string | null; // Campo opcional para compatibilidade
+  setor_id?: string; // Campo opcional para compatibilidade
+  setorId?: string; // Campo opcional para compatibilidade
+}
+
 export function isDepartmentOverdue({
   history,
   currentDepartment,
   departmentTimeLimit,
 }: {
-  history: Array<{
-    departmentId: string;
-    entryDate: string;
-    exitDate: string | null;
-  }>;
+  history: Array<HistoryEntry>;
   currentDepartment: string;
   departmentTimeLimit: number | null | undefined;
 }): boolean {
   if (!departmentTimeLimit || !history?.length) return false;
 
-  // Busca a entrada mais recente (sem saída) para o setor atual - agora mais flexível
+  // Busca a entrada mais recente (sem saída) para o setor atual
   const currentEntry = history
-    .filter((h: any) => {
-      // Flexibilidade para diferentes estruturas de dados
+    .filter((h: HistoryEntry) => {
       const departmentMatch = 
         h.departmentId === currentDepartment || 
         h.setor_id === currentDepartment || 
@@ -32,19 +34,18 @@ export function isDepartmentOverdue({
       
       return departmentMatch && noExit;
     })
-    .sort((a: any, b: any) => {
-      // Compatibilidade com ambas as estruturas de dados (entryDate ou data_entrada)
+    .sort((a: HistoryEntry, b: HistoryEntry) => {
       const dateA = new Date(a.entryDate || a.data_entrada || "").getTime();
       const dateB = new Date(b.entryDate || b.data_entrada || "").getTime();
-      return dateB - dateA;  // Mais recente primeiro
+      return dateB - dateA;
     })[0];
 
   if (!currentEntry) return false;
 
-  // Usar operador de coalescência nula para acessar entryDate ou data_entrada
   const entrada = new Date(currentEntry.entryDate || currentEntry.data_entrada || "");
   const prazo = new Date(entrada);
   prazo.setDate(prazo.getDate() + departmentTimeLimit);
 
   return new Date() > prazo;
 }
+
