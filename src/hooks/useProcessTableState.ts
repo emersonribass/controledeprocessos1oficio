@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Process } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,7 +73,7 @@ export const useProcessTableState = (processes: Process[]): ProcessTableState =>
       setIsLoading(false);
       processingRef.current = false;
     }
-  }, [processes]);
+  }, [processes, processesResponsibles]);
 
   useEffect(() => {
     if (processes && processes.length > 0) {
