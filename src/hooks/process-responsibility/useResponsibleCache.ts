@@ -1,55 +1,79 @@
 
 import { useCallback, useRef } from 'react';
-import { ProcessResponsible } from './types';
 
-interface CacheData {
-  data: ProcessResponsible;
-  timestamp: number;
+interface ResponsibleData {
+  id: string;
+  nome: string;
+  email: string;
 }
 
-interface CacheMap {
-  [key: string]: CacheData;
+interface CacheEntry {
+  timestamp: number;
+  data: ResponsibleData | null;
 }
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 export const useResponsibleCache = () => {
-  const cacheRef = useRef<CacheMap>({});
+  // Cache de responsáveis: {processId-sectorId: {timestamp, data}}
+  const cacheRef = useRef<Record<string, CacheEntry>>({});
 
-  const getCacheKey = (processId: string, sectorId: string) => 
-    `${processId}:${sectorId}`;
+  // Gerar chave de cache
+  const getCacheKey = useCallback((processId: string, sectorId: string): string => {
+    return `${processId}:${sectorId}`;
+  }, []);
 
-  const getFromCache = useCallback((processId: string, sectorId: string): ProcessResponsible | null => {
+  // Obter responsável do cache
+  const getFromCache = useCallback((processId: string, sectorId: string): ResponsibleData | null => {
     const key = getCacheKey(processId, sectorId);
-    const cached = cacheRef.current[key];
+    const entry = cacheRef.current[key];
     
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return cached.data;
+    if (entry && (Date.now() - entry.timestamp < CACHE_TTL)) {
+      return entry.data;
     }
     
     return null;
-  }, []);
+  }, [getCacheKey]);
 
-  const setInCache = useCallback((processId: string, sectorId: string, data: ProcessResponsible) => {
+  // Armazenar responsável no cache
+  const setInCache = useCallback((processId: string, sectorId: string, data: ResponsibleData | null): void => {
     const key = getCacheKey(processId, sectorId);
+    
     cacheRef.current[key] = {
-      data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      data
     };
-  }, []);
+  }, [getCacheKey]);
 
-  const cleanExpiredCache = useCallback(() => {
+  // Limpar entradas expiradas do cache
+  const cleanExpiredCache = useCallback((): void => {
     const now = Date.now();
+    
     Object.keys(cacheRef.current).forEach(key => {
-      if (now - cacheRef.current[key].timestamp > CACHE_TTL) {
+      const entry = cacheRef.current[key];
+      
+      if (now - entry.timestamp > CACHE_TTL) {
         delete cacheRef.current[key];
       }
     });
   }, []);
 
+  // Invalidar uma entrada específica do cache
+  const invalidateCache = useCallback((processId: string, sectorId: string): void => {
+    const key = getCacheKey(processId, sectorId);
+    delete cacheRef.current[key];
+  }, [getCacheKey]);
+
+  // Limpar todo o cache
+  const clearCache = useCallback((): void => {
+    cacheRef.current = {};
+  }, []);
+
   return {
     getFromCache,
     setInCache,
-    cleanExpiredCache
+    cleanExpiredCache,
+    invalidateCache,
+    clearCache
   };
 };

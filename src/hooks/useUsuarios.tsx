@@ -1,11 +1,15 @@
-
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { UsuarioSupabase, FormUsuario } from "@/types/usuario";
 import { supabaseService } from "@/services/supabase";
 
-// Tempo de validade do cache em milissegundos (5 minutos)
-const CACHE_TTL = 5 * 60 * 1000;
+// Tempo de validade do cache em milissegundos (10 minutos)
+const CACHE_TTL = 10 * 60 * 1000;
+
+// Sistema de deduplicação de requisições
+let pendingFetchPromise: Promise<UsuarioSupabase[]> | null = null;
+let lastFetchTimestamp = 0;
+const DEBOUNCE_TIME = 300; // 300ms de debounce
 
 export function useUsuarios() {
   const [usuarios, setUsuarios] = useState<UsuarioSupabase[]>([]);
@@ -19,88 +23,100 @@ export function useUsuarios() {
     timestamp: number;
   } | null>(null);
   
-  // Controle para evitar múltiplas requisições simultâneas
-  const loadingRef = useRef(false);
+  // Timeout para debounce
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchUsuarios = useCallback(async (forceRefresh = false) => {
-    // Verificar se já existe uma requisição em andamento
-    if (loadingRef.current) {
-      console.log("Já existe uma requisição em andamento. Ignorando nova solicitação.");
-      return;
-    }
-    
-    // Verificar se temos dados em cache válidos
-    const now = Date.now();
-    if (!forceRefresh && cacheRef.current && (now - cacheRef.current.timestamp < CACHE_TTL)) {
-      console.log("Usando dados em cache para 'usuarios'");
-      setUsuarios(cacheRef.current.data);
-      return;
+    // Implementar debounce para evitar múltiplas chamadas em sequência rápida
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
     }
 
-    loadingRef.current = true;
-    setIsLoading(true);
-    
-    try {
-      console.log("Iniciando busca de usuários na tabela 'usuarios' do projeto controledeprocessos1oficio");
-      const supabaseUrl = supabaseService.getUrl();
-      console.log("URL do Supabase:", supabaseUrl);
-      
-      const { data, error, count } = await supabaseService.fetchUsuarios();
-
-      if (error) {
-        throw error;
-      }
-
-      console.log(`Encontrados ${count} usuários na tabela 'usuarios':`, data);
-      
-      if (!data || data.length === 0) {
-        console.log("Nenhum usuário encontrado na tabela 'usuarios'. Verificando auth.users...");
+    return new Promise<UsuarioSupabase[]>((resolve) => {
+      debounceTimeoutRef.current = setTimeout(async () => {
+        const now = Date.now();
         
-        try {
-          const { data: authUsers, error: authError } = await supabaseService.checkAuthUsers();
-          
-          if (authError) {
-            console.error("Erro ao buscar usuários autenticados:", authError);
-          } else if (authUsers && authUsers.users && authUsers.users.length > 0) {
-            console.log(`Encontrados ${authUsers.users.length} usuários no sistema de autenticação.`);
-            console.log("É necessário sincronizar usuários do auth.users para a tabela 'usuarios'");
-          } else {
-            console.log("Nenhum usuário encontrado no sistema de autenticação.");
-          }
-        } catch (authError) {
-          console.log("Não foi possível verificar usuários no sistema de autenticação:", authError);
+        // Verificar se já existe uma requisição em andamento
+        if (pendingFetchPromise && now - lastFetchTimestamp < 5000) {
+          const result = await pendingFetchPromise;
+          resolve(result);
+          return;
         }
-      }
+        
+        // Verificar se temos dados em cache válidos
+        if (!forceRefresh && cacheRef.current && (now - cacheRef.current.timestamp < CACHE_TTL)) {
+          console.log("Usando dados em cache para 'usuarios'");
+          setUsuarios(cacheRef.current.data);
+          resolve(cacheRef.current.data);
+          return;
+        }
 
-      // Atualizar o cache e o estado
-      const usuariosData = data as UsuarioSupabase[] || [];
-      setUsuarios(usuariosData);
-      
-      // Guardar no cache
-      cacheRef.current = {
-        data: usuariosData,
-        timestamp: now
-      };
-    } catch (error) {
-      console.error("Erro ao buscar usuários:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar a lista de usuários.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-      loadingRef.current = false;
-    }
+        setIsLoading(true);
+        
+        // Criar uma promessa para a requisição atual
+        const fetchPromise = (async () => {
+          try {
+            console.log("Iniciando busca de usuários na tabela 'usuarios' do projeto controledeprocessos1oficio");
+            const supabaseUrl = supabaseService.getUrl();
+            console.log("URL do Supabase:", supabaseUrl);
+            
+            const { data, error, count } = await supabaseService.fetchUsuarios();
+
+            if (error) {
+              throw error;
+            }
+
+            console.log(`Encontrados ${count} usuários na tabela 'usuarios'`);
+            
+            // Atualizar o cache e o estado
+            const usuariosData = data as UsuarioSupabase[] || [];
+            setUsuarios(usuariosData);
+            
+            // Guardar no cache
+            cacheRef.current = {
+              data: usuariosData,
+              timestamp: now
+            };
+            
+            return usuariosData;
+          } catch (error) {
+            console.error("Erro ao buscar usuários:", error);
+            toast({
+              title: "Erro",
+              description: "Não foi possível carregar a lista de usuários.",
+              variant: "destructive",
+            });
+            return [] as UsuarioSupabase[];
+          } finally {
+            setIsLoading(false);
+            // Limpar a promessa pendente
+            if (pendingFetchPromise === fetchPromise) {
+              pendingFetchPromise = null;
+            }
+          }
+        })();
+        
+        // Armazenar a promessa e o timestamp
+        pendingFetchPromise = fetchPromise;
+        lastFetchTimestamp = now;
+        
+        const result = await fetchPromise;
+        resolve(result);
+      }, DEBOUNCE_TIME);
+    });
   }, [toast]);
 
-  // Carregar usuários na montagem do componente
+  // Carregar usuários na montagem do componente, mas apenas se não tivermos cache
   useEffect(() => {
-    fetchUsuarios();
+    if (!cacheRef.current) {
+      fetchUsuarios();
+    }
     
-    // Limpar o cache na desmontagem
+    // Limpar o cache e timeouts na desmontagem
     return () => {
-      cacheRef.current = null;
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
     };
   }, [fetchUsuarios]);
 
