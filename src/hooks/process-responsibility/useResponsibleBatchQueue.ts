@@ -1,12 +1,11 @@
 
 import { useCallback, useRef } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { ProcessResponsible } from './types';
 
 interface BatchQueue {
   processId: string;
   sectorId: string;
-  resolve: (data: ProcessResponsible | null) => void;
+  resolve: (data: any) => void;
   reject: (error: any) => void;
 }
 
@@ -91,7 +90,7 @@ export const useResponsibleBatchQueue = () => {
   const addToQueue = useCallback((
     processId: string,
     sectorId: string,
-    resolve: (data: ProcessResponsible | null) => void,
+    resolve: (data: any) => void,
     reject: (error: any) => void
   ) => {
     queueRef.current.push({ processId, sectorId, resolve, reject });

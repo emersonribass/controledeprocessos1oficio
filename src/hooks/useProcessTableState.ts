@@ -1,122 +1,151 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect } from "react";
 import { Process } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 
-interface ProcessTableState {
-  processesResponsibles: Record<string, Record<string, any>>;
-  isLoading: boolean;
-  queueSectorForLoading: (processId: string, sectorId: string) => void;
-}
-
-export const useProcessTableState = (processes: Process[]): ProcessTableState => {
+export const useProcessTableState = (processes: Process[]) => {
   const [processesResponsibles, setProcessesResponsibles] = useState<Record<string, Record<string, any>>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const processingRef = useRef(false);
 
-  const queue = useRef<Array<{ processId: string; sectorId: string }>>([]);
+  const fetchResponsibles = useCallback(async () => {
+    if (!processes.length) return;
 
-  const queueSectorForLoading = useCallback((processId: string, sectorId: string) => {
-    queue.current.push({ processId, sectorId });
-    if (!processingRef.current) {
-      checkResponsibles();
-    }
-  }, []);
-
-  const checkResponsibles = useCallback(async () => {
-    if (processingRef.current || queue.current.length === 0) return;
-    
-    processingRef.current = true;
     setIsLoading(true);
-
-    const sectorsToCheck: Record<string, Set<string>> = {};
-
-    while (queue.current.length > 0) {
-      const { processId, sectorId } = queue.current.shift()!;
-      if (!sectorsToCheck[processId]) {
-        sectorsToCheck[processId] = new Set();
-      }
-      sectorsToCheck[processId].add(sectorId);
-    }
-
     try {
-      const { data: responsibleData, error } = await supabase
-        .from('setor_responsaveis')
+      // Filtrar apenas os processos iniciados
+      const startedProcessIds = processes
+        .filter(p => p.status !== 'not_started')
+        .map(p => p.id);
+
+      if (startedProcessIds.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Buscar responsáveis iniciais dos processos com dados do usuário
+      const { data: processResponsibles, error: processError } = await supabase
+        .from('processos')
         .select(`
-          processo_id,
-          setor_id,
-          usuario_id,
-          usuarios:usuario_id (
+          id,
+          usuario_responsavel,
+          usuarios!processos_usuario_responsavel_fkey(
             id,
             nome,
             email
           )
         `)
-        .in('processo_id', Object.keys(sectorsToCheck));
+        .in('id', startedProcessIds);
 
-      if (error) throw error;
+      if (processError) throw processError;
 
-      const newResponsibles: Record<string, Record<string, any>> = { ...processesResponsibles };
+      // Buscar histórico dos processos para identificar setores que já receberam o processo
+      const { data: processHistory, error: historyError } = await supabase
+        .from('processos_historico')
+        .select('processo_id, setor_id')
+        .in('processo_id', startedProcessIds);
 
-      if (responsibleData) {
-        responsibleData.forEach(item => {
-          if (!newResponsibles[item.processo_id]) {
-            newResponsibles[item.processo_id] = {};
-          }
-          newResponsibles[item.processo_id][item.setor_id] = item.usuarios;
-        });
-      }
+      if (historyError) throw historyError;
 
-      setProcessesResponsibles(newResponsibles);
-    } catch (error) {
-      console.error('Erro ao verificar responsáveis:', error);
-    } finally {
-      setIsLoading(false);
-      processingRef.current = false;
-      
-      // Verificar se novos itens foram adicionados à fila durante o processamento
-      if (queue.current.length > 0) {
-        setTimeout(checkResponsibles, 100);
-      }
-    }
-  }, [processesResponsibles]);
-
-  // Função para carregar inicialmente os responsáveis para todos os processos
-  const loadInitialResponsibles = useCallback(async () => {
-    if (!processes || processes.length === 0 || processingRef.current) return;
-    
-    setIsLoading(true);
-    processingRef.current = true;
-    
-    try {
-      // Preparar a lista de todos os processos e seus setores atuais
-      const processesWithSectors = processes.filter(p => p.currentDepartment).map(p => ({
-        processId: p.id,
-        sectorId: p.currentDepartment
-      }));
-      
-      // Adicionar todos à fila
-      processesWithSectors.forEach(({ processId, sectorId }) => {
-        queue.current.push({ processId, sectorId });
+      // Criar mapa de setores por processo que já receberam o processo
+      const processToSectorsMap: Record<string, Set<string>> = {};
+      processHistory.forEach(history => {
+        if (!processToSectorsMap[history.processo_id]) {
+          processToSectorsMap[history.processo_id] = new Set();
+        }
+        processToSectorsMap[history.processo_id].add(history.setor_id);
       });
+
+      // Buscar responsáveis apenas para os setores que já receberam o processo
+      const sectorResponsiblesPromises = startedProcessIds.map(async (processId) => {
+        const sectors = processToSectorsMap[processId];
+        if (!sectors || sectors.size === 0) return null;
+
+        // Buscar todos os responsáveis por setor de uma vez
+        const { data: sectorResponsibles, error: sectorError } = await supabase
+          .from('setor_responsaveis')
+          .select(`
+            processo_id,
+            setor_id,
+            usuario_id,
+            usuarios:usuario_id(
+              id,
+              nome,
+              email
+            )
+          `)
+          .eq('processo_id', processId)
+          .in('setor_id', Array.from(sectors));
+
+        if (sectorError) {
+          console.error("Erro ao buscar responsáveis de setor:", sectorError);
+          throw sectorError;
+        }
+        
+        return sectorResponsibles;
+      });
+
+      const sectorResponsiblesResults = await Promise.all(
+        sectorResponsiblesPromises.filter(Boolean)
+      );
+
+      // Organizar os dados em uma estrutura adequada
+      const responsiblesMap: Record<string, Record<string, any>> = {};
+
+      // Mapear responsáveis iniciais
+      processResponsibles?.forEach(process => {
+        if (!responsiblesMap[process.id]) {
+          responsiblesMap[process.id] = {};
+        }
+        // Armazenar o responsável inicial do processo
+        if (process.usuarios) {
+          responsiblesMap[process.id].initial = process.usuarios;
+        }
+      });
+
+      // Mapear responsáveis por setor
+      sectorResponsiblesResults.flat().forEach(resp => {
+        if (!resp) return;
+        
+        const processId = resp.processo_id;
+        const sectorId = String(resp.setor_id);
+        
+        if (!responsiblesMap[processId]) {
+          responsiblesMap[processId] = {};
+        }
+        
+        // Garante que temos os dados formatados corretamente
+        if (resp.usuarios) {
+          responsiblesMap[processId][sectorId] = resp.usuarios;
+        }
+      });
+
+      // Log de todos os responsáveis carregados
+      console.log("Responsáveis carregados:", responsiblesMap);
       
-      // Processar a fila
-      await checkResponsibles();
+      setProcessesResponsibles(responsiblesMap);
     } catch (error) {
-      console.error('Erro ao carregar responsáveis iniciais:', error);
+      console.error("Erro ao buscar responsáveis:", error);
     } finally {
       setIsLoading(false);
-      processingRef.current = false;
     }
-  }, [processes, checkResponsibles]);
+  }, [processes]);
 
   useEffect(() => {
-    loadInitialResponsibles();
-  }, [loadInitialResponsibles]);
+    fetchResponsibles();
+  }, [fetchResponsibles]);
+
+  const queueSectorForLoading = useCallback((processId: string, sectorId: string) => {
+    // Recarregar os responsáveis quando necessário
+    console.log(`Recarregando responsáveis para processo ${processId}, setor ${sectorId}`);
+    setTimeout(() => {
+      fetchResponsibles();
+    }, 500); // Pequeno delay para garantir que os dados estejam atualizados no banco
+  }, [fetchResponsibles]);
 
   return {
     processesResponsibles,
     isLoading,
+    fetchResponsibles,
     queueSectorForLoading
   };
 };

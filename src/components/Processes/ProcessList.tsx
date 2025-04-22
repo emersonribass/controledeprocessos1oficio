@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useProcesses } from "@/hooks/useProcesses";
 import { useProcessListFilters } from "@/hooks/useProcessListFilters";
 import { useProcessListSorting } from "@/hooks/useProcessListSorting";
@@ -38,82 +38,65 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
 
   const { user, isAdmin } = useAuth();
   const { filters, setFilters } = useProcessListFilters(initialFilters);
-  const { sortField, sortDirection, toggleSort } = useProcessListSorting();
+  const { sortField, sortDirection, toggleSort, sortProcesses } = useProcessListSorting();
   const [isLoadingFiltered, setIsLoadingFiltered] = useState(true);
   const [filteredProcesses, setFilteredProcesses] = useState<Process[]>([]);
-  const { processesResponsibles, isLoading: isLoadingResponsibles } = useProcessTableState(processes);
-  
-  // Ref para controlar processamento em andamento
-  const isProcessingRef = useRef(false);
-  // Usar memo para dependências estáveis
-  const stableFilters = useMemo(() => filters, [JSON.stringify(filters)]);
-  
-  // Função otimizada para aplicar filtros
-  const applyFilters = useCallback(async () => {
-    if (isProcessingRef.current) return;
-    isProcessingRef.current = true;
-    setIsLoadingFiltered(true);
-    
-    try {
-      // Filtrar processos com o método assíncrono, passando os responsáveis
-      const filtered = await filterProcesses(stableFilters, processes, processesResponsibles);
-      
-      // Ordenar processos
-      const sortedProcesses = [...filtered].sort((a, b) => {
-        // Função auxiliar para definir a prioridade do status
-        const getStatusPriority = (status: string): number => {
-          switch (status) {
-            case 'overdue': return 0; // Maior prioridade
-            case 'pending': return 1;
-            case 'completed': return 2;
-            case 'not_started': return 3; // Menor prioridade
-            default: return 4;
-          }
-        };
+  const { processesResponsibles } = useProcessTableState(processes);
 
-        // Primeiro, ordenar por status
-        const statusDiff = getStatusPriority(a.status) - getStatusPriority(b.status);
-        if (statusDiff !== 0) return statusDiff;
-
-        // Se o status for igual, ordenar por número de protocolo
-        const numA = parseInt(a.protocolNumber.replace(/\D/g, ''));
-        const numB = parseInt(b.protocolNumber.replace(/\D/g, ''));
-        
-        // Se ambos são números válidos, compare-os
-        if (!isNaN(numA) && !isNaN(numB)) {
-          return numA - numB;
-        }
-        
-        // Se algum não é número válido, compare as strings
-        return a.protocolNumber.localeCompare(b.protocolNumber);
-      });
-
-      setFilteredProcesses(sortedProcesses);
-    } catch (error) {
-      console.error("Erro ao filtrar processos:", error);
-      setFilteredProcesses([]);
-    } finally {
-      setIsLoadingFiltered(false);
-      isProcessingRef.current = false;
-    }
-  }, [stableFilters, processes, processesResponsibles, filterProcesses]);
-
-  // Aplicar filtros quando os processos ou filtros mudarem
+  // Efeito para aplicar filtros e ordenação de forma assíncrona
   useEffect(() => {
-    // Usar um debounce para evitar múltiplas atualizações
-    const timeoutId = setTimeout(() => {
-      applyFilters();
-    }, 300);
-    
-    return () => clearTimeout(timeoutId);
-  }, [applyFilters]);
+    const loadFilteredProcesses = async () => {
+      setIsLoadingFiltered(true);
+      try {
+        // Filtrar processos com o método assíncrono, passando os responsáveis
+        const filtered = await filterProcesses(filters, processes, processesResponsibles);
+        
+        // Nova lógica de ordenação
+        const sortedProcesses = [...filtered].sort((a, b) => {
+          // Função auxiliar para definir a prioridade do status
+          const getStatusPriority = (status: string): number => {
+            switch (status) {
+              case 'overdue': return 0; // Maior prioridade
+              case 'pending': return 1;
+              case 'completed': return 2;
+              case 'not_started': return 3; // Menor prioridade
+              default: return 4;
+            }
+          };
+
+          // Primeiro, ordenar por status
+          const statusDiff = getStatusPriority(a.status) - getStatusPriority(b.status);
+          if (statusDiff !== 0) return statusDiff;
+
+          // Se o status for igual, ordenar por número de protocolo
+          const numA = parseInt(a.protocolNumber.replace(/\D/g, ''));
+          const numB = parseInt(b.protocolNumber.replace(/\D/g, ''));
+          
+          // Se ambos são números válidos, compare-os
+          if (!isNaN(numA) && !isNaN(numB)) {
+            return numA - numB;
+          }
+          
+          // Se algum não é número válido, compare as strings
+          return a.protocolNumber.localeCompare(b.protocolNumber);
+        });
+
+        setFilteredProcesses(sortedProcesses);
+      } catch (error) {
+        console.error("Erro ao filtrar processos:", error);
+        setFilteredProcesses([]);
+      } finally {
+        setIsLoadingFiltered(false);
+      }
+    };
+
+    loadFilteredProcesses();
+  }, [processes, filters, filterProcesses, processesResponsibles]);
 
   // Determinar os departamentos disponíveis para o usuário atual
-  const availableDepartments = useMemo(() => {
-    return isAdmin(user?.email || "") || !user?.departments?.length 
-      ? departments 
-      : departments.filter(dept => user?.departments.includes(dept.id));
-  }, [isAdmin, user, departments]);
+  const availableDepartments = isAdmin(user?.email || "") || !user?.departments?.length 
+    ? departments 
+    : departments.filter(dept => user?.departments.includes(dept.id));
 
   return (
     <div className="space-y-6">
@@ -124,7 +107,7 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
 
       <ProcessListContent
         processes={processes}
-        isLoading={isLoadingProcesses || isLoadingFiltered || isLoadingResponsibles}
+        isLoading={isLoadingProcesses || isLoadingFiltered}
         filteredProcesses={filteredProcesses}
         filters={filters}
         setFilters={setFilters}

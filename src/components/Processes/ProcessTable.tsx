@@ -1,5 +1,5 @@
 
-import { Table } from "@/components/ui/table";
+import { Table, TableHeader, TableBody } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
 import { useProcessTableState } from "@/hooks/useProcessTableState";
@@ -37,17 +37,17 @@ const ProcessTable = ({
   moveProcessToNextDepartment,
   moveProcessToPreviousDepartment,
   updateProcessType,
+  updateProcessStatus,
   startProcess,
   filterProcesses,
   filters,
   isUserInAttendanceSector,
-  processesResponsibles: externalResponsibles
+  processesResponsibles
 }: ProcessTableProps) => {
-  // Use o hook para gerenciar o estado dos responsáveis
-  const { processesResponsibles: localResponsibles, isLoading, queueSectorForLoading } = useProcessTableState(processes);
+  const { processesResponsibles: localProcessesResponsibles, isLoading, queueSectorForLoading } = useProcessTableState(processes);
 
-  // Usar os responsáveis passados como prop, se disponíveis, ou os carregados localmente
-  const effectiveResponsibles = externalResponsibles || localResponsibles;
+  // Usar os responsáveis passados como propriedade, se disponíveis, ou os carregados localmente
+  const effectiveResponsibles = processesResponsibles || localProcessesResponsibles;
 
   return (
     <div className="border rounded-md overflow-x-auto">

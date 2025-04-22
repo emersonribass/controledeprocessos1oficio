@@ -17,7 +17,7 @@ interface ProcessTableBodyProps {
   getProcessTypeName: (id: string) => string;
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   startProcess?: (processId: string) => Promise<void>;
-  processesResponsibles: Record<string, Record<string, any>>;
+  processesResponsibles: Record<string, any>;
   isUserInAttendanceSector?: () => boolean;
   sortField: keyof Process;
   sortDirection: "asc" | "desc";
@@ -78,7 +78,7 @@ const ProcessTableBody = ({
     );
   };
 
-  if (isLoading && processes.length === 0) {
+  if (isLoading) {
     return (
       <TableBody>
         <TableRow>
@@ -122,7 +122,7 @@ const ProcessTableBody = ({
           onAcceptResponsibility={() => handleAcceptResponsibility(process.id, process.protocolNumber)}
           isAccepting={isAccepting && acceptingProcessId === process.id}
           canInitiateProcesses={isUserInAttendanceSector()}
-          processResponsibles={processesResponsibles[process.id] || {}}
+          processResponsibles={processesResponsibles[process.id]}
         />
       ))}
     </TableBody>

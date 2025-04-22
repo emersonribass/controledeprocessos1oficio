@@ -2,43 +2,44 @@
 import { useCallback, useRef } from 'react';
 import { ProcessResponsible } from './types';
 
-interface CacheItem {
-  data: ProcessResponsible | null;
+interface CacheData {
+  data: ProcessResponsible;
   timestamp: number;
 }
 
+interface CacheMap {
+  [key: string]: CacheData;
+}
+
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
 export const useResponsibleCache = () => {
-  const cacheRef = useRef<Record<string, CacheItem>>({});
-  const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+  const cacheRef = useRef<CacheMap>({});
 
-  // Criar chave de cache
-  const createCacheKey = (processId: string, sectorId: string) => `${processId}:${sectorId}`;
+  const getCacheKey = (processId: string, sectorId: string) => 
+    `${processId}:${sectorId}`;
 
-  // Obter dados do cache
   const getFromCache = useCallback((processId: string, sectorId: string): ProcessResponsible | null => {
-    const key = createCacheKey(processId, sectorId);
-    const item = cacheRef.current[key];
+    const key = getCacheKey(processId, sectorId);
+    const cached = cacheRef.current[key];
     
-    if (item && Date.now() - item.timestamp < CACHE_TTL) {
-      return item.data;
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
     }
     
     return null;
   }, []);
 
-  // Armazenar no cache
-  const setInCache = useCallback((processId: string, sectorId: string, data: ProcessResponsible | null) => {
-    const key = createCacheKey(processId, sectorId);
+  const setInCache = useCallback((processId: string, sectorId: string, data: ProcessResponsible) => {
+    const key = getCacheKey(processId, sectorId);
     cacheRef.current[key] = {
       data,
       timestamp: Date.now()
     };
   }, []);
 
-  // Limpar itens expirados do cache
   const cleanExpiredCache = useCallback(() => {
     const now = Date.now();
-    
     Object.keys(cacheRef.current).forEach(key => {
       if (now - cacheRef.current[key].timestamp > CACHE_TTL) {
         delete cacheRef.current[key];
@@ -46,15 +47,9 @@ export const useResponsibleCache = () => {
     });
   }, []);
 
-  // Limpar todo o cache
-  const clearCache = useCallback(() => {
-    cacheRef.current = {};
-  }, []);
-
   return {
     getFromCache,
     setInCache,
-    cleanExpiredCache,
-    clearCache
+    cleanExpiredCache
   };
 };

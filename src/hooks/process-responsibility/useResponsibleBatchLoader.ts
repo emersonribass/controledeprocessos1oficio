@@ -4,7 +4,12 @@ import { useAuth } from "@/hooks/auth";
 import { useResponsibleCache } from "./useResponsibleCache";
 import { useResponsibleBatchQueue } from "./useResponsibleBatchQueue";
 import { Process } from "@/types";
-import { ProcessResponsible } from "./types";
+
+interface ResponsibleData {
+  id: string;
+  nome: string;
+  email: string;
+}
 
 export const useResponsibleBatchLoader = () => {
   const { user } = useAuth();
@@ -13,7 +18,7 @@ export const useResponsibleBatchLoader = () => {
   const { addToQueue } = useResponsibleBatchQueue();
 
   // Carregar responsável com otimização de cache
-  const loadResponsible = useCallback((processId: string, sectorId: string): Promise<ProcessResponsible | null> => {
+  const loadResponsible = useCallback((processId: string, sectorId: string): Promise<ResponsibleData | null> => {
     const cached = getFromCache(processId, sectorId);
     if (cached) {
       return Promise.resolve(cached);

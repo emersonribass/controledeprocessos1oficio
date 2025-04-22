@@ -2,18 +2,28 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Process } from '@/types';
-import { ProcessResponsible } from './types';
+
+interface ResponsibleData {
+  id: string;
+  nome: string;
+  email: string;
+}
+
+interface CacheData {
+  timestamp: number;
+  data: ResponsibleData;
+}
 
 interface BatchQueue {
   processId: string;
   sectorId: string;
-  resolve: (data: ProcessResponsible | null) => void;
+  resolve: (data: ResponsibleData | null) => void;
   reject: (error: any) => void;
 }
 
 export const useResponsibilityLoader = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const cacheRef = useRef<Record<string, {timestamp: number, data: ProcessResponsible}>>({});
+  const cacheRef = useRef<Record<string, CacheData>>({});
   const batchQueueRef = useRef<BatchQueue[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
@@ -79,7 +89,7 @@ export const useResponsibilityLoader = () => {
 
         data.forEach((item) => {
           const cacheKey = getCacheKey(processId, item.setor_id);
-          const responsibleData = item.usuarios as ProcessResponsible;
+          const responsibleData = item.usuarios as ResponsibleData;
           
           // Atualizar cache
           cacheRef.current[cacheKey] = {
@@ -111,7 +121,7 @@ export const useResponsibilityLoader = () => {
   }, []);
 
   // Carregar responsável
-  const loadResponsible = useCallback((processId: string, sectorId: string): Promise<ProcessResponsible | null> => {
+  const loadResponsible = useCallback((processId: string, sectorId: string): Promise<ResponsibleData | null> => {
     const cacheKey = getCacheKey(processId, sectorId);
     const cached = cacheRef.current[cacheKey];
 

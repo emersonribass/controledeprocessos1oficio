@@ -5,7 +5,7 @@ import { UsersTable } from "@/components/Admin/UsersTable";
 import { DeleteUserDialog } from "@/components/Admin/DeleteUserDialog";
 import { UserFormDialog } from "@/components/Admin/UserFormDialog";
 import { UsersPageHeader } from "@/components/Admin/UsersPageHeader";
-import { useUsuarios } from "@/hooks/usuarios/useUsuarios";
+import { useUsuarios } from "@/hooks/useUsuarios";
 import { UsuarioSupabase } from "@/types/usuario";
 import { useAuth } from "@/hooks/auth";
 
