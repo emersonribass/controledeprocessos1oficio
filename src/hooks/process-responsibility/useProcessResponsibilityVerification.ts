@@ -37,7 +37,7 @@ export const useProcessResponsibilityVerification = () => {
     if (isAdmin()) return true;
     
     // Verificar se é o criador ou responsável direto
-    return process.userId === checkUserId || process.responsibleUserId === checkUserId;
+    return process.userId === checkUserId || process.responsibleUserId === checkUserId || process.usuario_responsavel === checkUserId;
   }, [userId, isAdmin]);
 
   // Verificar se o usuário é responsável por um setor específico em um processo
