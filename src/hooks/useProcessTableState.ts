@@ -38,6 +38,13 @@ export const useProcessTableState = (processes: Process[]): ProcessTableState =>
       sectorsToCheck[processId].add(sectorId);
     }
 
+    // Se não há setores para verificar, encerre o processamento
+    if (Object.keys(sectorsToCheck).length === 0) {
+      setIsLoading(false);
+      processingRef.current = false;
+      return;
+    }
+
     try {
       const { data: responsibleData, error } = await supabase
         .from('setor_responsaveis')
@@ -73,13 +80,19 @@ export const useProcessTableState = (processes: Process[]): ProcessTableState =>
       setIsLoading(false);
       processingRef.current = false;
     }
-  }, [processes, processesResponsibles]);
+  }, [processesResponsibles]); // Removido 'processes' da dependência
 
   useEffect(() => {
-    if (processes && processes.length > 0) {
-      checkResponsibles();
-    }
-  }, [processes, checkResponsibles]);
+    // Função para iniciar o carregamento inicial
+    const initializeLoading = () => {
+      if (processes && processes.length > 0 && !processingRef.current) {
+        // Verificar apenas se houver processos e não estiver já processando
+        checkResponsibles();
+      }
+    };
+    
+    initializeLoading();
+  }, [processes]); // Dependência apenas em processes
 
   return {
     processesResponsibles,

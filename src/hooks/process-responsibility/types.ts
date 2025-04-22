@@ -1,51 +1,20 @@
 
-/**
- * Interface para responsável por processo
- */
+// Definição das interfaces para responsabilidade de processos
+
 export interface ProcessResponsible {
   id: string;
   nome: string;
   email: string;
 }
 
-/**
- * Interface para dados de responsabilidade em processos
- */
 export interface ProcessResponsibilityState {
   isAssigning: boolean;
   isAccepting: boolean;
 }
 
-/**
- * Interface para as funcionalidades de responsabilidade em processos
- */
-export interface ProcessResponsibilityActions {
-  assignResponsible: (processId: string, userId: string) => Promise<boolean>;
-  acceptProcessResponsibility: (processId: string, protocolNumber: string) => Promise<boolean>;
+export interface ResponsibilityUserData {
+  id: string;
+  nome?: string;
+  email?: string;
+  avatar?: string;
 }
-
-/**
- * Interface para verificações de responsabilidade
- */
-export interface ProcessResponsibilityVerification {
-  isUserResponsibleForProcess: (process: any, userId?: string) => boolean;
-  isUserResponsibleForSector: (processId: string, sectorId: string, userId?: string) => Promise<boolean>;
-}
-
-/**
- * Interface para busca de responsáveis
- */
-export interface ProcessResponsibleFetching {
-  getProcessResponsible: (processId: string) => Promise<ProcessResponsible | null>;
-  getSectorResponsible: (processId: string, sectorId: string) => Promise<ProcessResponsible | null>;
-  preloadResponsibles: (processes: any[]) => Promise<void>;
-}
-
-/**
- * Interface principal do hook useProcessResponsibility
- */
-export interface ProcessResponsibility extends 
-  ProcessResponsibilityState, 
-  ProcessResponsibilityActions,
-  ProcessResponsibilityVerification,
-  ProcessResponsibleFetching {}
