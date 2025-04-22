@@ -1,5 +1,14 @@
 
 /**
+ * Interface para responsável por processo
+ */
+export interface ProcessResponsible {
+  id: string;
+  nome: string;
+  email: string;
+}
+
+/**
  * Interface para dados de responsabilidade em processos
  */
 export interface ProcessResponsibilityState {
@@ -27,8 +36,8 @@ export interface ProcessResponsibilityVerification {
  * Interface para busca de responsáveis
  */
 export interface ProcessResponsibleFetching {
-  getProcessResponsible: (processId: string) => Promise<any>;
-  getSectorResponsible: (processId: string, sectorId: string) => Promise<any>;
+  getProcessResponsible: (processId: string) => Promise<ProcessResponsible | null>;
+  getSectorResponsible: (processId: string, sectorId: string) => Promise<ProcessResponsible | null>;
   preloadResponsibles: (processes: any[]) => Promise<void>;
 }
 

@@ -4,6 +4,7 @@ import { useProcessResponsibleAssignment } from "./useProcessResponsibleAssignme
 import { useProcessResponsibilityAcceptance } from "./useProcessResponsibilityAcceptance";
 import { useProcessResponsibilityVerification } from "./useProcessResponsibilityVerification";
 import { useResponsibleBatchLoader } from "./useResponsibleBatchLoader";
+import { useCallback } from "react";
 
 /**
  * Hook unificado para gerenciar responsabilidade em processos
@@ -22,6 +23,15 @@ export const useProcessResponsibility = (): ProcessResponsibility => {
   // Hook para carregamento otimizado de responsáveis
   const { loadResponsible, preloadResponsibles } = useResponsibleBatchLoader();
 
+  // Adaptar a função loadResponsible para satisfazer a interface ProcessResponsibleFetching
+  const getProcessResponsible = useCallback(async (processId: string) => {
+    return loadResponsible(processId, ''); // Passamos um setor vazio para processo
+  }, [loadResponsible]);
+
+  const getSectorResponsible = useCallback(async (processId: string, sectorId: string) => {
+    return loadResponsible(processId, sectorId);
+  }, [loadResponsible]);
+
   return {
     // Estados
     isAssigning,
@@ -38,8 +48,8 @@ export const useProcessResponsibility = (): ProcessResponsibility => {
     isUserResponsibleForSector,
     
     // Busca de responsáveis
-    getProcessResponsible: loadResponsible,
-    getSectorResponsible: loadResponsible,
+    getProcessResponsible,
+    getSectorResponsible,
     preloadResponsibles
   };
 };
