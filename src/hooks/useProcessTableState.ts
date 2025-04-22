@@ -24,7 +24,8 @@ export const useProcessTableState = (processes: Process[]): ProcessTableState =>
   }, []);
 
   const checkResponsibles = useCallback(async () => {
-    if (processingRef.current) return;
+    if (processingRef.current || queue.current.length === 0) return;
+    
     processingRef.current = true;
     setIsLoading(true);
 
@@ -36,13 +37,6 @@ export const useProcessTableState = (processes: Process[]): ProcessTableState =>
         sectorsToCheck[processId] = new Set();
       }
       sectorsToCheck[processId].add(sectorId);
-    }
-
-    // Se não há setores para verificar, encerre o processamento
-    if (Object.keys(sectorsToCheck).length === 0) {
-      setIsLoading(false);
-      processingRef.current = false;
-      return;
     }
 
     try {
@@ -79,20 +73,46 @@ export const useProcessTableState = (processes: Process[]): ProcessTableState =>
     } finally {
       setIsLoading(false);
       processingRef.current = false;
+      
+      // Verificar se novos itens foram adicionados à fila durante o processamento
+      if (queue.current.length > 0) {
+        setTimeout(checkResponsibles, 100);
+      }
     }
-  }, [processesResponsibles]); // Removido 'processes' da dependência
+  }, [processesResponsibles]);
+
+  // Função para carregar inicialmente os responsáveis para todos os processos
+  const loadInitialResponsibles = useCallback(async () => {
+    if (!processes || processes.length === 0 || processingRef.current) return;
+    
+    setIsLoading(true);
+    processingRef.current = true;
+    
+    try {
+      // Preparar a lista de todos os processos e seus setores atuais
+      const processesWithSectors = processes.filter(p => p.currentDepartment).map(p => ({
+        processId: p.id,
+        sectorId: p.currentDepartment
+      }));
+      
+      // Adicionar todos à fila
+      processesWithSectors.forEach(({ processId, sectorId }) => {
+        queue.current.push({ processId, sectorId });
+      });
+      
+      // Processar a fila
+      await checkResponsibles();
+    } catch (error) {
+      console.error('Erro ao carregar responsáveis iniciais:', error);
+    } finally {
+      setIsLoading(false);
+      processingRef.current = false;
+    }
+  }, [processes, checkResponsibles]);
 
   useEffect(() => {
-    // Função para iniciar o carregamento inicial
-    const initializeLoading = () => {
-      if (processes && processes.length > 0 && !processingRef.current) {
-        // Verificar apenas se houver processos e não estiver já processando
-        checkResponsibles();
-      }
-    };
-    
-    initializeLoading();
-  }, [processes]); // Dependência apenas em processes
+    loadInitialResponsibles();
+  }, [loadInitialResponsibles]);
 
   return {
     processesResponsibles,

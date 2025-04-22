@@ -1,3 +1,4 @@
+
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -6,13 +7,10 @@ import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import ProcessTypePicker from "./ProcessTypePicker";
 import ProcessRowActions from "./ProcessRowActions";
 import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
-import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
-import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useProcesses } from "@/hooks/useProcesses";
 import { useDeadlineRenewalCondition } from "@/hooks/useDeadlineRenewalCondition";
 import { createLogger } from "@/utils/loggerUtils";
 import { useCallback } from "react";
-import { useProcessTableState } from "@/hooks/useProcessTableState";
 
 const logger = createLogger("ProcessTableRow");
 
@@ -46,30 +44,25 @@ const ProcessTableRow = ({
   isAccepting,
   hasSectorResponsible = false,
   canInitiateProcesses = false,
-  processResponsibles,
+  processResponsibles = {},
   historyId
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
-  const { refreshProcesses } = useProcesses();
-  const { queueSectorForLoading } = useProcessTableState([]);
-
-  const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
-  const { getProcessResponsible } = useProcessResponsibility();
+  const { refreshProcesses, queueSectorForLoading } = useProcesses();
   
-  const hasResponsible = hasSectorResponsible || !!sectorResponsible;
+  const hasResponsible = hasSectorResponsible || !!(processResponsibles && processResponsibles[process.currentDepartment]);
   
   const { canRenewDeadline, historyId: renewalHistoryId } = useDeadlineRenewalCondition(process);
 
   const {
     sortedDepartments,
-    concludedDept,
     isFirstDepartment,
     isLastDepartment,
     getMostRecentEntryDate,
     hasPassedDepartment,
     isCurrentDepartment,
     isPreviousDepartment,
-    isDepartmentOverdue: checkDepartmentOverdue
+    isDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
   const getRowBackgroundColor = (status: string) => {
@@ -90,8 +83,11 @@ const ProcessTableRow = ({
 
   const handleAcceptResponsibility = useCallback(async () => {
     await onAcceptResponsibility();
-    queueSectorForLoading(process.id, process.currentDepartment);
     await refreshProcesses();
+    // Forçar carregamento do responsável após aceitar a responsabilidade
+    if (queueSectorForLoading) {
+      queueSectorForLoading(process.id, process.currentDepartment);
+    }
   }, [onAcceptResponsibility, process.id, process.currentDepartment, queueSectorForLoading, refreshProcesses]);
 
   const isProcessOverdue = process.status === "overdue";
@@ -122,22 +118,29 @@ const ProcessTableRow = ({
         />
       </TableCell>
       
-      {sortedDepartments.map((dept) => (
-        <TableCell key={dept.id} className="min-w-[120px] text-center">
-          <ProcessDepartmentCell 
-            departmentId={dept.id}
-            isCurrentDepartment={isCurrentDepartment(dept.id)}
-            hasPassedDepartment={hasPassedDepartment(dept.id)}
-            entryDate={getMostRecentEntryDate(dept.id)}
-            showDate={isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)}
-            isDepartmentOverdue={isCurrentDepartment(dept.id) && checkDepartmentOverdue(dept.id, process.status !== "not_started")}
-            departmentTimeLimit={dept.timeLimit}
-            isProcessStarted={process.status !== "not_started"}
-            responsible={processResponsibles?.[dept.id]}
-            isFirstDepartment={dept.id === sortedDepartments[0]?.id}
-          />
-        </TableCell>
-      ))}
+      {sortedDepartments.map((dept) => {
+        // Determinar se deve mostrar o responsável para este departamento
+        const currentDeptOrder = sortedDepartments.findIndex(d => isCurrentDepartment(d.id));
+        const deptIndex = sortedDepartments.findIndex(d => d.id === dept.id);
+        const showResponsible = isCurrentDepartment(dept.id) || deptIndex <= currentDeptOrder;
+        
+        return (
+          <TableCell key={dept.id} className="min-w-[120px] text-center">
+            <ProcessDepartmentCell 
+              departmentId={dept.id}
+              isCurrentDepartment={isCurrentDepartment(dept.id)}
+              hasPassedDepartment={hasPassedDepartment(dept.id)}
+              entryDate={getMostRecentEntryDate(dept.id)}
+              showDate={isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)}
+              isDepartmentOverdue={isCurrentDepartment(dept.id) && isDepartmentOverdue(dept.id, process.status !== "not_started")}
+              departmentTimeLimit={dept.timeLimit}
+              isProcessStarted={process.status !== "not_started"}
+              responsible={showResponsible ? processResponsibles[dept.id] : null}
+              isFirstDepartment={dept.id === sortedDepartments[0]?.id}
+            />
+          </TableCell>
+        );
+      })}
     
       <TableCell className="w-[120px] process-action">
         <ProcessRowActions 
