@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,7 +16,7 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
     
     setIsStarting(true);
     try {
-      // Primeiro, obter os dados do processo
+      // Buscar dados do processo
       const { data: process, error: processError } = await supabase
         .from('processos')
         .select('*')
@@ -25,8 +24,18 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
         .single();
 
       if (processError) throw processError;
-
       if (!process) throw new Error("Processo não encontrado");
+
+      // Validação: tipo do processo precisa estar definido
+      if (!process.tipo_processo) {
+        uiToast({
+          title: "Erro",
+          description: "Selecione um tipo de processo antes de iniciar.",
+          variant: "destructive"
+        });
+        setIsStarting(false);
+        return false;
+      }
 
       // Obter o primeiro departamento
       const { data: firstDepartment, error: firstDeptError } = await supabase
@@ -38,6 +47,15 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
 
       if (firstDeptError) throw firstDeptError;
 
+      // Definir data_fim_esperada de acordo com o time_limit do primeiro setor
+      let expectedEndDate: string | null = null;
+      if (firstDepartment && firstDepartment.time_limit) {
+        const now = new Date();
+        const prazo = new Date(now);
+        prazo.setDate(prazo.getDate() + Number(firstDepartment.time_limit));
+        expectedEndDate = prazo.toISOString();
+      }
+
       // Atualizar o processo
       const { error: updateError } = await supabase
         .from('processos')
@@ -46,7 +64,8 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
           updated_at: new Date().toISOString(),
           status: "Em andamento",
           data_inicio: new Date().toISOString(),
-          usuario_responsavel: user.id // Definir o usuário atual como responsável pelo processo
+          usuario_responsavel: user.id,
+          data_fim_esperada: expectedEndDate
         })
         .eq('id', processId);
 
