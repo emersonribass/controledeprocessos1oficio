@@ -1,4 +1,5 @@
 
+import { ProcessResponsibility } from "./types";
 import { useProcessResponsibleAssignment } from "./useProcessResponsibleAssignment";
 import { useProcessResponsibilityAcceptance } from "./useProcessResponsibilityAcceptance";
 import { useProcessResponsibilityVerification } from "./useProcessResponsibilityVerification";
@@ -6,22 +7,20 @@ import { useResponsibleBatchLoader } from "./useResponsibleBatchLoader";
 
 /**
  * Hook unificado para gerenciar responsabilidade em processos
+ * @returns {ProcessResponsibility} Interface unificada para gerenciamento de responsabilidade
  */
-export const useProcessResponsibility = () => {
-  // Hook para atribuir responsáveis
+export const useProcessResponsibility = (): ProcessResponsibility => {
+  // Hook para atribuição de responsáveis
   const { isAssigning, assignResponsible } = useProcessResponsibleAssignment();
   
-  // Hook para aceitar responsabilidade
+  // Hook para aceitação de responsabilidade
   const { isAccepting, acceptProcessResponsibility } = useProcessResponsibilityAcceptance();
   
-  // Hook para verificar responsabilidade
+  // Hook para verificação de responsabilidade
   const { isUserResponsibleForProcess, isUserResponsibleForSector } = useProcessResponsibilityVerification();
   
-  // Hook para carregar responsáveis
-  const { loadResponsible: getProcessResponsible, preloadResponsibles } = useResponsibleBatchLoader();
-
-  // Função para buscar responsável do setor - mantida para compatibilidade
-  const getSectorResponsible = getProcessResponsible;
+  // Hook para carregamento otimizado de responsáveis
+  const { loadResponsible, preloadResponsibles } = useResponsibleBatchLoader();
 
   return {
     // Estados
@@ -38,10 +37,9 @@ export const useProcessResponsibility = () => {
     isUserResponsibleForProcess,
     isUserResponsibleForSector,
     
-    // Busca
-    getProcessResponsible,
-    getSectorResponsible,
+    // Busca de responsáveis
+    getProcessResponsible: loadResponsible,
+    getSectorResponsible: loadResponsible,
     preloadResponsibles
   };
 };
-

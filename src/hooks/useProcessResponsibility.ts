@@ -1,4 +1,3 @@
-
 import { useProcessResponsibleAssignment } from "./process-responsibility/useProcessResponsibleAssignment";
 import { useProcessResponsibilityAcceptance } from "./process-responsibility/useProcessResponsibilityAcceptance";
 import { useProcessResponsibilityVerification } from "./process-responsibility/useProcessResponsibilityVerification";
