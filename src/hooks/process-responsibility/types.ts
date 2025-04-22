@@ -4,3 +4,4 @@ export interface ProcessResponsible {
   nome: string;
   email: string;
 }
+

@@ -1,7 +1,8 @@
+
 import { useProcessResponsibleAssignment } from "./useProcessResponsibleAssignment";
 import { useProcessResponsibilityAcceptance } from "./useProcessResponsibilityAcceptance";
 import { useProcessResponsibilityVerification } from "./useProcessResponsibilityVerification";
-import { useProcessResponsibleFetching } from "./useProcessResponsibleFetching";
+import { useResponsibleBatchLoader } from "./useResponsibleBatchLoader";
 
 /**
  * Hook unificado para gerenciar responsabilidade em processos
@@ -16,8 +17,11 @@ export const useProcessResponsibility = () => {
   // Hook para verificar responsabilidade
   const { isUserResponsibleForProcess, isUserResponsibleForSector } = useProcessResponsibilityVerification();
   
-  // Hook para buscar responsáveis
-  const { getProcessResponsible, getSectorResponsible } = useProcessResponsibleFetching();
+  // Hook para carregar responsáveis
+  const { loadResponsible: getProcessResponsible, preloadResponsibles } = useResponsibleBatchLoader();
+
+  // Função para buscar responsável do setor - mantida para compatibilidade
+  const getSectorResponsible = getProcessResponsible;
 
   return {
     // Estados
@@ -36,6 +40,8 @@ export const useProcessResponsibility = () => {
     
     // Busca
     getProcessResponsible,
-    getSectorResponsible
+    getSectorResponsible,
+    preloadResponsibles
   };
 };
+

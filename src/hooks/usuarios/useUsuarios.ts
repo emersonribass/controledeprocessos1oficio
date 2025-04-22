@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useRef, useEffect } from "react";
 import { UsuarioSupabase } from "@/types/usuario";
 import { supabaseService } from "@/services/supabase";
@@ -18,7 +17,7 @@ export function useUsuarios() {
   const { getCachedData, setCachedData } = useUsuariosCache();
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchUsuarios = useCallback(async (forceRefresh = false) => {
+  const fetchUsuarios = useCallback(async (forceRefresh = false): Promise<UsuarioSupabase[]> => {
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
@@ -79,7 +78,10 @@ export function useUsuarios() {
     });
   }, [getCachedData, setCachedData]);
 
-  const operations = useUsuariosOperations(() => fetchUsuarios(true));
+  const operations = useUsuariosOperations(async () => {
+    await fetchUsuarios(true);
+    return Promise.resolve();
+  });
 
   useEffect(() => {
     if (!getCachedData()) {
