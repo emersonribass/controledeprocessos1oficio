@@ -23,7 +23,7 @@ export const useProcessResponsibility = (): ProcessResponsibility => {
   // Hook para carregamento otimizado de responsáveis
   const { loadResponsible, preloadResponsibles } = useResponsibleBatchLoader();
 
-  // Adaptar a função loadResponsible para satisfazer a interface ProcessResponsibleFetching
+  // Adaptar a função loadResponsible para satisfazer a interface ProcessResponsibilityFetching
   const getProcessResponsible = useCallback(async (processId: string) => {
     return loadResponsible(processId, ''); // Passamos um setor vazio para processo
   }, [loadResponsible]);
