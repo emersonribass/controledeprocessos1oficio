@@ -29,18 +29,16 @@ export const useProcessStatusFilters = () => {
       if (filters.department && process.currentDepartment !== filters.department) {
         return false;
       }
-      if (filters.status) {
-        const statusMap: Record<string, string> = {
-          pending: "pending",
-          completed: "completed",
-          overdue: "overdue",
-          not_started: "not_started",
-          archived: "archived",
-        };
-        if (process.status !== statusMap[filters.status]) {
+
+      // Corrigido: só filtra por status se diferente de "all" e se houver filtro de status
+      if (filters.status && filters.status !== "all") {
+        // O status do filtro é do tipo 'pending', 'completed', 'overdue', 'not_started', 'archived'
+        // O status do processo também deve estar de acordo exatamente com esses valores
+        if (process.status !== filters.status) {
           return false;
         }
       }
+
       if (filters.processType && process.processType !== filters.processType) {
         return false;
       }
@@ -103,3 +101,4 @@ export const useProcessStatusFilters = () => {
     isProcessOverdue
   };
 };
+
