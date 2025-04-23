@@ -72,7 +72,7 @@ const DashboardSummary = () => {
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
       <Card 
         className={cn(
-          "cursor-pointer transition-all hover:shadow-md bg-blue-500/20 border-blue-500/30",
+          "cursor-pointer transition-all hover:shadow-md bg-gradient-to-br from-blue-400/30 to-blue-100/30 border-blue-400/70",
         )}
         onClick={() => navigate('/processes')}
       >
