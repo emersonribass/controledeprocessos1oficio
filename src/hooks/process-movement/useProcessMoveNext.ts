@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -62,7 +61,7 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
 
       // >>> ADICIONANDO AQUI A RESTRIÇÃO PARA O SETOR 2 <<<
       if (
-        (nextDept.id === 2 || nextDept.id === "2") &&
+        (nextDept.id === 2 || nextDept.id.toString() === "2") &&
         (!process.tipo_processo || process.tipo_processo === "")
       ) {
         uiToast({
