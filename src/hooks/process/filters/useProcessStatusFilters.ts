@@ -35,6 +35,7 @@ export const useProcessStatusFilters = () => {
           completed: "completed",
           overdue: "overdue",
           not_started: "not_started",
+          archived: "archived",
         };
         if (process.status !== statusMap[filters.status]) {
           return false;
