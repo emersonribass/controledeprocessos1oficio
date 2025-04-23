@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 
 const formSchema = z.object({
-  initialNumber: z.coerce.number().positive("Número inicial deve ser positivo"),
+  initialNumber: z.coerce.number().positive("Protocolo inicial deve ser positivo"),
   quantity: z.coerce.number().positive("Quantidade deve ser positiva").max(100, "Máximo de 100 processos por vez"),
 });
 
@@ -56,7 +56,7 @@ const ProcessGenerationForm = () => {
             name="initialNumber"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Número Inicial</FormLabel>
+                <FormLabel>Protocolo Inicial</FormLabel>
                 <FormControl>
                   <Input type="number" placeholder="1" {...field} />
                 </FormControl>
@@ -78,7 +78,7 @@ const ProcessGenerationForm = () => {
                   <Input type="number" placeholder="10" {...field} />
                 </FormControl>
                 <FormDescription>
-                  Quantidade de processos a serem gerados
+                  Quantidade de processo(s) a ser(em) gerado(s)
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -96,13 +96,13 @@ const ProcessGenerationForm = () => {
               <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Gerando...
             </>
           ) : (
-            "Gerar Processos"
+            "Gerar Processo(s)"
           )}
         </Button>
 
         {success && (
           <p className="text-green-600 mt-2">
-            Processos gerados com sucesso!
+            Processo(s) gerado(s) com sucesso!
           </p>
         )}
       </form>
