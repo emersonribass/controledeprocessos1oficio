@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -53,6 +54,20 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
         uiToast({
           title: "Aviso",
           description: "Não há próximo setor disponível.",
+          variant: "destructive"
+        });
+        setIsMoving(false);
+        return false;
+      }
+
+      // >>> ADICIONANDO AQUI A RESTRIÇÃO PARA O SETOR 2 <<<
+      if (
+        (nextDept.id === 2 || nextDept.id === "2") &&
+        (!process.tipo_processo || process.tipo_processo === "")
+      ) {
+        uiToast({
+          title: "Operação bloqueada",
+          description: "Você deve preencher o tipo do processo para mover para o setor 2.",
           variant: "destructive"
         });
         setIsMoving(false);
