@@ -62,7 +62,7 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
       // >>> ADICIONANDO AQUI A RESTRIÇÃO PARA O SETOR 2 <<<
       if (
         (nextDept.id === 2 || nextDept.id.toString() === "2") &&
-        (!process.tipo_processo || process.tipo_processo === "")
+        (!process.tipo_processo || process.tipo_processo === "pendente")
       ) {
         uiToast({
           title: "Operação bloqueada",
