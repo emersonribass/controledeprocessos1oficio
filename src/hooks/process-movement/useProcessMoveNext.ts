@@ -65,7 +65,7 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
         (!process.tipo_processo || process.tipo_processo === "pendente")
       ) {
         uiToast({
-          title: "Operação bloqueada",
+          title: "Atenção!",
           description: "Você deve preencher o tipo do processo para mover!",
           variant: "destructive"
         });
