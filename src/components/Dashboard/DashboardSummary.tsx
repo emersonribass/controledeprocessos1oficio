@@ -90,7 +90,7 @@ const DashboardSummary = () => {
       
       <Card 
         className={cn(
-          "cursor-pointer transition-all hover:shadow-md bg-green-500/20 border-green-500/30",
+          "cursor-pointer transition-all hover:shadow-md bg-gradient-to-br from-green-400/30 to-green-100/30 border-green-400/70",
         )}
         onClick={() => handleCardClick("completed")}
       >
