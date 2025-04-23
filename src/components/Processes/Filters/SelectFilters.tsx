@@ -37,6 +37,7 @@ const SelectFilters = ({
             <SelectItem value="overdue">Atrasado</SelectItem>
             <SelectItem value="completed">Concluído</SelectItem>
             <SelectItem value="not_started">Não iniciado</SelectItem>
+            <SelectItem value="archived">Arquivado</SelectItem>
           </SelectContent>
         </Select>
       </div>
