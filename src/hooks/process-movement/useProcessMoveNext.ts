@@ -66,7 +66,7 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
       ) {
         uiToast({
           title: "Operação bloqueada",
-          description: "Você deve preencher o tipo do processo para mover para o setor 2.",
+          description: "Você deve preencher o tipo do processo para mover!",
           variant: "destructive"
         });
         setIsMoving(false);
