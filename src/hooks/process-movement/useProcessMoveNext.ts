@@ -65,7 +65,7 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
         (!process.tipo_processo || process.tipo_processo === "pendente")
       ) {
         uiToast({
-          title: "Atenção!",
+          title: "Aviso",
           description: "Você deve preencher o tipo do processo para mover!",
           variant: "destructive"
         });
