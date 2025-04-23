@@ -91,7 +91,7 @@ export const useProcessBaseOperations = (refreshProcesses: () => Promise<void>) 
 
   const updateProcessStatus = async (
     processId: string, 
-    newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado'
+    newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado' | 'Arquivado'
   ): Promise<void> => {
     await adaptUpdateStatus(updateStatus, processId, newStatus);
   };
