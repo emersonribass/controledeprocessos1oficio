@@ -72,13 +72,13 @@ const ProcessTableRow = ({
     isDepartmentOverdue: checkDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
-  const getRowBackgroundColor = (status: string) => {
-    if (status === "completed") return "bg-green-400";
-    if (status === "overdue") return "bg-red-200";
-    if (status === "pending") return "bg-blue-200";
-    if (status === "not_started") return "bg-green-300";
-    return "";
-  };
+const getRowBorderColor = (status: string) => {
+  if (status === "completed") return "border-l-4 border-green-400";
+  if (status === "overdue") return "border-l-4 border-red-200";
+  if (status === "pending") return "border-l-4 border-blue-200";
+  if (status === "not_started") return "border-l-4 border-green-300";
+  return "";
+};
 
   const handleRowClick = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.process-action')) {
