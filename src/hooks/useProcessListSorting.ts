@@ -24,7 +24,7 @@ export const useProcessListSorting = () => {
   return {
     sortField,
     sortDirection,
-    toggleSort: () => {}, // Função vazia pois não vamos mais alternar a ordenação
     sortProcesses,
+    toggleSort: () => {}, // Mantido para compatibilidade da interface
   };
 };
