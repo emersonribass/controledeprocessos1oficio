@@ -73,10 +73,10 @@ const ProcessTableRow = ({
   } = useProcessDepartmentInfo(process, departments);
 
   const getRowBorderColor = (status: string) => {
-    if (status === "completed") return "border-l-4 border-l-green-400";
-    if (status === "overdue") return "border-l-4 border-l-red-200";
-    if (status === "pending") return "border-l-4 border-l-blue-200";
-    if (status === "not_started") return "border-l-4 border-l-green-300";
+    if (status === "completed") return "border-l-4 border-l-green-600";
+    if (status === "overdue") return "border-l-4 border-l-red-600";
+    if (status === "pending") return "border-l-4 border-l-blue-600";
+    if (status === "not_started") return "border-l-4 border-l-green-400";
     return "";
   };
 
