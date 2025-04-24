@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/auth";
 import { Process } from "@/types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 const DashboardSummary = () => {
   const { processes, filterProcesses } = useProcesses();
@@ -15,24 +15,24 @@ const DashboardSummary = () => {
   const [userProcesses, setUserProcesses] = useState<Process[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carregar processos filtrados de forma assíncrona
-  useEffect(() => {
-    const loadFilteredProcesses = async () => {
-      setIsLoading(true);
-      try {
-        // Filtrar processos com o método assíncrono
-        const filtered = await filterProcesses({});
-        setUserProcesses(filtered);
-      } catch (error) {
-        console.error("Erro ao filtrar processos:", error);
-        setUserProcesses([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Carregar processos filtrados de forma assíncrona com useCallback para evitar loops
+  const loadFilteredProcesses = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Filtrar processos com o método assíncrono
+      const filtered = await filterProcesses({});
+      setUserProcesses(filtered);
+    } catch (error) {
+      console.error("Erro ao filtrar processos:", error);
+      setUserProcesses([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filterProcesses]);
 
+  useEffect(() => {
     loadFilteredProcesses();
-  }, [processes, filterProcesses]);
+  }, [loadFilteredProcesses]);
   
   // Calculate summary statistics
   const totalProcesses = userProcesses.length;

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+
+import { useEffect, useState, useCallback } from "react";
 import { useProcesses } from "@/hooks/useProcesses";
 import { useProcessListFilters } from "@/hooks/useProcessListFilters";
 import { useProcessListSorting } from "@/hooks/useProcessListSorting";
@@ -42,23 +43,23 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   const [filteredProcesses, setFilteredProcesses] = useState<Process[]>([]);
   const { processesResponsibles } = useProcessTableState(processes);
 
-  useEffect(() => {
-    const loadFilteredProcesses = async () => {
-      setIsLoadingFiltered(true);
-      try {
-        const filtered = await filterProcesses(filters, processes, processesResponsibles);
-        const sortedProcesses = sortProcesses(filtered);
-        setFilteredProcesses(sortedProcesses);
-      } catch (error) {
-        console.error("Erro ao filtrar processos:", error);
-        setFilteredProcesses([]);
-      } finally {
-        setIsLoadingFiltered(false);
-      }
-    };
+  const loadFilteredProcesses = useCallback(async () => {
+    setIsLoadingFiltered(true);
+    try {
+      const filtered = await filterProcesses(filters, processes, processesResponsibles);
+      const sorted = sortProcesses(filtered);
+      setFilteredProcesses(sorted);
+    } catch (error) {
+      console.error("Erro ao filtrar processos:", error);
+      setFilteredProcesses([]);
+    } finally {
+      setIsLoadingFiltered(false);
+    }
+  }, [filters, processes, processesResponsibles, filterProcesses, sortProcesses]);
 
+  useEffect(() => {
     loadFilteredProcesses();
-  }, [processes, filters, filterProcesses, processesResponsibles, sortProcesses]);
+  }, [loadFilteredProcesses]);
 
   const availableDepartments = isAdmin(user?.email || "") || !user?.departments?.length 
     ? departments 
