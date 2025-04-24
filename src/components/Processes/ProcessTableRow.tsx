@@ -72,11 +72,11 @@ const ProcessTableRow = ({
     isDepartmentOverdue: checkDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
-  const getRowBackgroundColor = (status: string) => {
-    if (status === "completed") return "bg-green-400";
-    if (status === "overdue") return "bg-red-200";
-    if (status === "pending") return "bg-blue-200";
-    if (status === "not_started") return "bg-green-300";
+  const getRowBorderColor = (status: string) => {
+    if (status === "completed") return "border-l-4 border-l-green-400";
+    if (status === "overdue") return "border-l-4 border-l-red-200";
+    if (status === "pending") return "border-l-4 border-l-blue-200";
+    if (status === "not_started") return "border-l-4 border-l-green-300";
     return "";
   };
 
@@ -104,7 +104,7 @@ const ProcessTableRow = ({
     <TableRow 
       className={cn(
         "cursor-pointer hover:bg-gray-100",
-        getRowBackgroundColor(process.status)
+        getRowBorderColor(process.status)
       )}
       onClick={handleRowClick}
     >
