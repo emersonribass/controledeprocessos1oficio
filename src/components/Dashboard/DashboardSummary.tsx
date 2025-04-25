@@ -1,4 +1,3 @@
-
 import { useProcesses } from "@/hooks/useProcesses";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardCheck, AlertTriangle, BarChart, Clock } from "lucide-react";
@@ -8,19 +7,30 @@ import { useAuth } from "@/hooks/auth";
 import { Process } from "@/types";
 import { useEffect, useState, useCallback } from "react";
 
-const DashboardSummary = () => {
+interface DashboardSummaryProps {
+  filters: {
+    department?: string;
+    status?: string;
+    processType?: string;
+    search?: string;
+    excludeCompleted?: boolean;
+    startDate?: string;
+    endDate?: string;
+    responsibleUser?: string;
+  };
+}
+
+const DashboardSummary = ({ filters }: DashboardSummaryProps) => {
   const { processes, filterProcesses } = useProcesses();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [userProcesses, setUserProcesses] = useState<Process[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carregar processos filtrados de forma assíncrona com useCallback para evitar loops
   const loadFilteredProcesses = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Filtrar processos com o método assíncrono
-      const filtered = await filterProcesses({});
+      const filtered = await filterProcesses(filters);
       setUserProcesses(filtered);
     } catch (error) {
       console.error("Erro ao filtrar processos:", error);
@@ -28,25 +38,20 @@ const DashboardSummary = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [filterProcesses]);
+  }, [filterProcesses, filters]);
 
   useEffect(() => {
     loadFilteredProcesses();
   }, [loadFilteredProcesses]);
-  
-  // Calculate summary statistics
+
   const totalProcesses = userProcesses.length;
   
-  // Processos em andamento: aqueles que estão no setor atual do usuário
   const pendingProcesses = userProcesses.filter(p => p.status === "pending").length;
   
-  // Processos atrasados: aqueles com status "overdue" no setor atual
   const overdueProcesses = userProcesses.filter(p => p.status === "overdue").length;
   
-  // Processos concluídos: considera apenas status igual a "completed" (AJUSTADO)
   const completedProcesses = userProcesses.filter(p => p.status === "completed").length;
   
-  // Taxa de conclusão ajustada
   const completionRate = totalProcesses > 0 
     ? Math.round((completedProcesses / totalProcesses) * 100) 
     : 0;

@@ -4,8 +4,14 @@ import DashboardSummary from "@/components/Dashboard/DashboardSummary";
 import DepartmentStatusChart from "@/components/Dashboard/DepartmentStatusChart";
 import RecentProcessList from "@/components/Dashboard/RecentProcessList";
 import { ProcessesProvider } from "@/hooks/useProcesses";
+import DashboardFilters from "@/components/Dashboard/DashboardFilters";
+import { useProcessListFilters } from "@/hooks/useProcessListFilters";
+import { useProcesses } from "@/hooks/useProcesses";
 
 const Dashboard = () => {
+  const { departments } = useProcesses();
+  const { filters, setFilters } = useProcessListFilters({});
+
   return (
     <ProcessesProvider>
       <div className="space-y-6">
@@ -16,7 +22,13 @@ const Dashboard = () => {
           </p>
         </div>
 
-        <DashboardSummary />
+        <DashboardFilters 
+          filters={filters}
+          setFilters={setFilters}
+          availableDepartments={departments}
+        />
+
+        <DashboardSummary filters={filters} />
 
         <div className="grid gap-6 grid-cols-1 md:grid-cols-4">
           <DepartmentStatusChart />
