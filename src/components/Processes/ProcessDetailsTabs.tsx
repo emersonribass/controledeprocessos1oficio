@@ -25,7 +25,7 @@ const ProcessDetailsTabs = ({ process, getDepartmentName }: ProcessDetailsTabsPr
             <CardTitle>Histórico do Processo</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-8">
+            <div className="space-y-4">
               {process.history.length === 0 ? (
                 <p className="text-center text-muted-foreground">
                   Nenhum histórico disponível
