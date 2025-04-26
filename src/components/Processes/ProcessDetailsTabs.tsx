@@ -34,7 +34,7 @@ const ProcessDetailsTabs = ({ process, getDepartmentName }: ProcessDetailsTabsPr
                 process.history
                   .sort((a: any, b: any) => new Date(a.entryDate).getTime() - new Date(b.entryDate).getTime())
                   .map((entry: any, index: number) => (
-                    <div key={index} className="relative pl-6 pb-6 border-l-2 border-muted last:pb-0 my-[10px]">
+                    <div key={index} className="relative pl-6 pb-6 border-l-2 border-muted last:pb-0 px-[14px] py-0 my-[10px]">
                       <div className="absolute left-[-8px] top-0 h-4 w-4 rounded-full bg-primary"></div>
                       <div className="mb-1">
                         <span className="font-medium">
