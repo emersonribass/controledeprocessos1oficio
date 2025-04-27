@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { convertToUTC } from "@/utils/dateUtils";
+import { saveDateToDatabase } from "@/utils/dateUtils";
 
 export const useProcessResponsibilityAcceptance = () => {
   const [isAccepting, setIsAccepting] = useState<boolean>(false);
@@ -69,7 +69,7 @@ export const useProcessResponsibilityAcceptance = () => {
           return true;
         }
         
-        const now = convertToUTC(new Date()).toISOString();
+        const now = saveDateToDatabase(new Date());
 
         const { error: updateError } = await supabase
           .from('setor_responsaveis')
@@ -83,7 +83,7 @@ export const useProcessResponsibilityAcceptance = () => {
           throw updateError;
         }
       } else {
-        const now = convertToUTC(new Date()).toISOString();
+        const now = saveDateToDatabase(new Date());
         
         const { error: insertError } = await supabase
           .from('setor_responsaveis')

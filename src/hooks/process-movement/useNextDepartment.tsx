@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Process } from "@/types";
 import { Department } from "@/types";
 import { useNotificationsService } from "@/hooks/useNotificationsService";
-import { convertToUTC } from "@/utils/dateUtils";
+import { saveDateToDatabase } from "@/utils/dateUtils";
 
 export const useNextDepartment = (departments: Department[]) => {
   const { toast } = useToast();
@@ -15,7 +15,6 @@ export const useNextDepartment = (departments: Department[]) => {
 
       const currentDeptId = process.currentDepartment;
       
-      // Buscar em uma única consulta o departamento atual pelo ID
       const { data: currentDept, error: currentDeptError } = await supabase
         .from('setores')
         .select('*')
@@ -32,7 +31,6 @@ export const useNextDepartment = (departments: Department[]) => {
         return false;
       }
       
-      // Encontrar o próximo departamento com base no order_num (diretamente no banco)
       const { data: nextDept, error: nextDeptError } = await supabase
         .from('setores')
         .select('*')
@@ -51,10 +49,8 @@ export const useNextDepartment = (departments: Department[]) => {
         return false;
       }
 
-      // Atualizar saída no histórico atual
-      const now = convertToUTC(new Date()).toISOString();
+      const now = saveDateToDatabase(new Date());
       
-      // Buscar o histórico atual sem data de saída
       const { data: currentHistoryData, error: currentHistoryError } = await supabase
         .from('processos_historico')
         .select('*')
@@ -67,7 +63,6 @@ export const useNextDepartment = (departments: Department[]) => {
         throw currentHistoryError;
       }
 
-      // Atualizar a data de saída
       if (currentHistoryData) {
         const { error: updateError } = await supabase
           .from('processos_historico')
@@ -79,7 +74,6 @@ export const useNextDepartment = (departments: Department[]) => {
         }
       }
 
-      // Criar novo histórico para o próximo departamento
       const { error: newHistoryError } = await supabase
         .from('processos_historico')
         .insert({
@@ -94,8 +88,6 @@ export const useNextDepartment = (departments: Department[]) => {
         throw newHistoryError;
       }
 
-      // IMPORTANTE: Sempre deletar o responsável do setor destino se existir
-      // Isso garante que o usuário precise aceitar novamente a responsabilidade
       const { error: deleteResponsibleError } = await supabase
         .from('setor_responsaveis')
         .delete()
@@ -107,11 +99,9 @@ export const useNextDepartment = (departments: Department[]) => {
         // Não bloquear o processo se essa operação falhar
       }
 
-      // Verificar se é o departamento final para marcar como concluído
       const isLastDepartment = !departments.some(d => d.order > nextDept.order_num && d.name !== "Concluído(a)");
       const newStatus = isLastDepartment ? "Concluído" : "Em andamento";
 
-      // Atualizar o processo, mantendo o usuário responsável
       const { error: updateProcessError } = await supabase
         .from('processos')
         .update({ 
@@ -125,7 +115,6 @@ export const useNextDepartment = (departments: Department[]) => {
         throw updateProcessError;
       }
       
-      // Enviar notificações para usuários do próximo departamento - apenas uma vez
       await notifyDepartmentUsers(
         process.id, 
         nextDept.id.toString(), 
