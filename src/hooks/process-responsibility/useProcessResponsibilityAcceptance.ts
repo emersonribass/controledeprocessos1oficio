@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
@@ -82,6 +83,8 @@ export const useProcessResponsibilityAcceptance = () => {
           throw updateError;
         }
       } else {
+        const now = convertToUTC(new Date()).toISOString();
+        
         const { error: insertError } = await supabase
           .from('setor_responsaveis')
           .insert({ 
