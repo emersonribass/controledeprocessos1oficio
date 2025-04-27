@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
@@ -75,7 +74,8 @@ export const useProcessResponsibilityAcceptance = () => {
           .from('setor_responsaveis')
           .update({ 
             usuario_id: user.id,
-            data_atribuicao: now
+            data_atribuicao: now,
+            updated_at: now
           })
           .eq('id', existingResponsible.id);
 
@@ -91,7 +91,9 @@ export const useProcessResponsibilityAcceptance = () => {
             processo_id: processId,
             setor_id: currentDepartmentId,
             usuario_id: user.id,
-            data_atribuicao: now
+            data_atribuicao: now,
+            created_at: now,
+            updated_at: now
           });
 
         if (insertError) {

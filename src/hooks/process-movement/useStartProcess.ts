@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -10,9 +9,6 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
   const { toast: uiToast } = useToast();
   const { user } = useAuth();
 
-  /**
-   * Inicia um processo, movendo-o para o primeiro departamento e definindo o usuário como responsável
-   */
   const startProcess = async (processId: string): Promise<boolean> => {
     if (!user) return false;
     
@@ -83,23 +79,27 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
           setor_id: firstDepartment.id.toString(),
           data_entrada: now,
           data_saida: null,
-          usuario_id: user.id
+          usuario_id: user.id,
+          created_at: now,
+          updated_at: now
         });
 
       if (historyError) throw historyError;
 
-      // Atribuir o usuário como responsável no primeiro setor também
+      // Atribuir o usuário como responsável no primeiro setor
       const { error: responsibleError } = await supabase
         .from('setor_responsaveis')
         .insert({
           processo_id: processId,
           setor_id: firstDepartment.id.toString(),
-          usuario_id: user.id
+          usuario_id: user.id,
+          data_atribuicao: now,
+          created_at: now,
+          updated_at: now
         });
 
       if (responsibleError) {
         console.error("Erro ao atribuir responsável de setor:", responsibleError);
-        // Continuamos mesmo se houver erro aqui, não é crítico
       }
 
       onProcessUpdated();
