@@ -1,9 +1,9 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Notification } from "@/types";
 import { Tables } from "@/integrations/supabase/schema";
+import { saveDateToDatabase } from "@/utils/dateUtils";
 
 export const useNotificationsService = () => {
   const { toast } = useToast();
@@ -97,6 +97,7 @@ export const useNotificationsService = () => {
     type: string = 'movimento'
   ): Promise<boolean> => {
     try {
+      const now = saveDateToDatabase(new Date());
       const { error } = await supabase
         .from('notificacoes')
         .insert({
@@ -106,7 +107,9 @@ export const useNotificationsService = () => {
           tipo: type,
           lida: false,
           respondida: false,
-          data_criacao: new Date().toISOString()
+          data_criacao: now,
+          created_at: now,
+          updated_at: now
         });
 
       if (error) {

@@ -2,13 +2,11 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { saveDateToDatabase } from "@/utils/dateUtils";
 
 export const useNotificationService = () => {
   const { toast } = useToast();
   
-  /**
-   * Envia notificações para todos os usuários de um setor específico
-   */
   const sendNotificationsToSectorUsers = async (
     processId: string, 
     sectorId: string, 
@@ -32,6 +30,7 @@ export const useNotificationService = () => {
       }
       
       // Preparar todas as notificações em um array
+      const now = saveDateToDatabase(new Date());
       const notifications = users.map(user => ({
         processo_id: processId,
         usuario_id: user.id,
@@ -39,7 +38,9 @@ export const useNotificationService = () => {
         tipo: 'movimento',
         lida: false,
         respondida: false,
-        data_criacao: new Date().toISOString()
+        data_criacao: now,
+        created_at: now,
+        updated_at: now
       }));
       
       // Inserir todas as notificações em uma única chamada
