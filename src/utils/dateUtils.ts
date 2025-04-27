@@ -5,7 +5,7 @@ import { ptBR } from "date-fns/locale";
 export const convertToUTC = (date: Date): Date => {
   // Ajusta o offset do timezone para UTC (0)
   const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60000);
+  return new Date(date.getTime() + offset * 60000);
 };
 
 export const formatDateWithTimezone = (dateString: string): string => {
