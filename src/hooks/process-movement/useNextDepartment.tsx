@@ -66,7 +66,10 @@ export const useNextDepartment = (departments: Department[]) => {
       if (currentHistoryData) {
         const { error: updateError } = await supabase
           .from('processos_historico')
-          .update({ data_saida: now })
+          .update({ 
+            data_saida: now,
+            updated_at: now 
+          })
           .eq('id', currentHistoryData.id);
 
         if (updateError) {
@@ -81,7 +84,9 @@ export const useNextDepartment = (departments: Department[]) => {
           setor_id: nextDept.id.toString(),
           data_entrada: now,
           data_saida: null,
-          usuario_id: process.userId || "1"
+          usuario_id: process.userId || "1",
+          created_at: now,
+          updated_at: now
         });
 
       if (newHistoryError) {

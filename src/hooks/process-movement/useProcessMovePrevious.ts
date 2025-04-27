@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/auth";
 import { useNotificationService } from "./useNotificationService";
+import { saveDateToDatabase } from "@/utils/dateUtils";
 
 export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
   const [isMoving, setIsMoving] = useState(false);
@@ -12,7 +13,7 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
 
   const moveProcessToPreviousDepartment = async (
     processId: string, 
-    showToast: boolean = false  // Novo parâmetro com valor padrão true
+    showToast: boolean = false
   ) => {
     if (!user) return false;
     
@@ -74,7 +75,7 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
       }
 
       // Atualizar o histórico em uma transação
-      const now = new Date().toISOString();
+      const now = saveDateToDatabase(new Date());
       
       // 1. Fechar o histórico atual
       const { data: currentHistory, error: historyQueryError } = await supabase
@@ -109,7 +110,9 @@ export const useProcessMovePrevious = (onProcessUpdated: () => void) => {
           setor_id: prevDept.id.toString(),
           data_entrada: now,
           data_saida: null,
-          usuario_id: user.id
+          usuario_id: user.id,
+          created_at: now,
+          updated_at: now
         });
 
       if (newHistoryError) throw newHistoryError;
