@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { convertToUTC } from "@/utils/dateUtils";
+import { saveDateToDatabase } from "@/utils/dateUtils";
 
 export const useProcessGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -25,7 +25,8 @@ export const useProcessGeneration = () => {
       setIsGenerating(true);
       
       const processesToInsert = [];
-      const now = convertToUTC(new Date()); // Converter para UTC antes de inserir
+      const now = new Date(); // Criar uma nova data
+      const nowISO = saveDateToDatabase(now); // Usar a nova função para converter para o formato ISO no fuso de Brasília
       
       for (let i = 0; i < quantity; i++) {
         const protocolNumber = `${initialNumber + i}`;
@@ -37,8 +38,8 @@ export const useProcessGeneration = () => {
           status: "Não iniciado",
           data_inicio: null,
           data_fim_esperada: null,
-          created_at: now.toISOString(), // Usar o timestamp UTC
-          updated_at: now.toISOString() // Usar o timestamp UTC
+          created_at: nowISO, // Usar o timestamp já convertido
+          updated_at: nowISO // Usar o timestamp já convertido
         });
       }
 
@@ -74,3 +75,4 @@ export const useProcessGeneration = () => {
     generateProcesses
   };
 };
+
