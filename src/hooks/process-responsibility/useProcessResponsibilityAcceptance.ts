@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { convertToUTC } from "@/utils/dateUtils";
 
 export const useProcessResponsibilityAcceptance = () => {
   const [isAccepting, setIsAccepting] = useState<boolean>(false);
@@ -28,7 +29,6 @@ export const useProcessResponsibilityAcceptance = () => {
     setIsAccepting(true);
 
     try {
-      // Verificar se o processo já tem um responsável no setor atual
       const { data: processData, error: processError } = await supabase
         .from('processos')
         .select('*')
@@ -43,10 +43,8 @@ export const useProcessResponsibilityAcceptance = () => {
         throw new Error("Processo não encontrado");
       }
 
-      // Obter o departamento atual do processo
       const currentDepartmentId = processData.setor_atual;
       
-      // Verificar se já existe um responsável para este setor
       const { data: existingResponsibles, error: responsibleError } = await supabase
         .from('setor_responsaveis')
         .select('*')
@@ -60,7 +58,6 @@ export const useProcessResponsibilityAcceptance = () => {
       const existingResponsible = existingResponsibles && existingResponsibles.length > 0 ? existingResponsibles[0] : null;
 
       if (existingResponsible) {
-        // Se o usuário atual já é o responsável, apenas retornar
         if (existingResponsible.usuario_id === user.id) {
           if (showToast) {
             uiToast({
@@ -71,12 +68,13 @@ export const useProcessResponsibilityAcceptance = () => {
           return true;
         }
         
-        // Se outro usuário é responsável, atualizar
+        const now = convertToUTC(new Date()).toISOString();
+
         const { error: updateError } = await supabase
           .from('setor_responsaveis')
           .update({ 
             usuario_id: user.id,
-            data_atribuicao: new Date().toISOString()
+            data_atribuicao: now
           })
           .eq('id', existingResponsible.id);
 
@@ -84,14 +82,13 @@ export const useProcessResponsibilityAcceptance = () => {
           throw updateError;
         }
       } else {
-        // Se não existe responsável, criar novo
         const { error: insertError } = await supabase
           .from('setor_responsaveis')
           .insert({ 
             processo_id: processId,
             setor_id: currentDepartmentId,
             usuario_id: user.id,
-            data_atribuicao: new Date().toISOString()
+            data_atribuicao: now
           });
 
         if (insertError) {
@@ -99,7 +96,6 @@ export const useProcessResponsibilityAcceptance = () => {
         }
       }
 
-      // Marcar notificações como respondidas
       const { error: notificationError } = await supabase
         .from('notificacoes')
         .update({ respondida: true })

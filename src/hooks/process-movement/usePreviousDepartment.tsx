@@ -1,9 +1,9 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Process } from "@/types";
 import { Department } from "@/types";
 import { useNotificationsService } from "@/hooks/useNotificationsService";
+import { convertToUTC } from "@/utils/dateUtils";
 
 export const usePreviousDepartment = (departments: Department[]) => {
   const { toast } = useToast();
@@ -62,7 +62,7 @@ export const usePreviousDepartment = (departments: Department[]) => {
       }
 
       // Atualizar saída no histórico atual
-      const now = new Date().toISOString();
+      const now = convertToUTC(new Date()).toISOString();
       
       // Buscar o histórico atual sem data de saída
       const { data: currentHistoryData, error: currentHistoryError } = await supabase
@@ -97,7 +97,7 @@ export const usePreviousDepartment = (departments: Department[]) => {
           setor_id: prevDept.id.toString(),
           data_entrada: now,
           data_saida: null,
-          usuario_id: process.userId || "1" // Usuário atual
+          usuario_id: process.userId || "1"
         });
 
       if (newHistoryError) {
