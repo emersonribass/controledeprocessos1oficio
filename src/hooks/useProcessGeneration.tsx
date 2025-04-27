@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { convertToUTC } from "@/utils/dateUtils";
 
 export const useProcessGeneration = () => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -24,22 +25,23 @@ export const useProcessGeneration = () => {
       setIsGenerating(true);
       
       const processesToInsert = [];
+      const now = convertToUTC(new Date()); // Converter para UTC antes de inserir
       
-      // Criar array de processos para inserção (sem setor atribuído inicialmente)
       for (let i = 0; i < quantity; i++) {
         const protocolNumber = `${initialNumber + i}`;
         
         processesToInsert.push({
           numero_protocolo: protocolNumber,
-          tipo_processo: "pendente", // Valor padrão para ser atualizado posteriormente
-          setor_atual: null, // Sem setor atribuído inicialmente
+          tipo_processo: "pendente",
+          setor_atual: null,
           status: "Não iniciado",
-          data_inicio: null, // Definido apenas quando o processo iniciar
-          data_fim_esperada: null // Definido apenas quando o processo iniciar
+          data_inicio: null,
+          data_fim_esperada: null,
+          created_at: now.toISOString(), // Usar o timestamp UTC
+          updated_at: now.toISOString() // Usar o timestamp UTC
         });
       }
 
-      // Inserir processos no banco de dados
       const { data: insertedProcesses, error: insertError } = await supabase
         .from('processos')
         .insert(processesToInsert)
