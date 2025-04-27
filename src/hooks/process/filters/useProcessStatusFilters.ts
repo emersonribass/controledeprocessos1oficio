@@ -6,7 +6,7 @@ import { Process } from "@/types";
  */
 export const useProcessStatusFilters = () => {
   /**
-   * Filtra processos com base em critérios selecionados pelo usuário, inclusive data de entrada
+   * Filtra processos com base em critérios selecionados pelo usuário
    */
   const applyUserFilters = (
     processes: Process[],
@@ -23,32 +23,36 @@ export const useProcessStatusFilters = () => {
     processesResponsibles?: Record<string, any>
   ): Process[] => {
     return processes.filter((process) => {
+      // Se excludeCompleted está ativo, filtrar processos concluídos
       if (filters.excludeCompleted && process.status === 'completed') {
         return false;
       }
+
+      // Filtrar por departamento se especificado
       if (filters.department && process.currentDepartment !== filters.department) {
         return false;
       }
 
-      // Corrigido: só filtra por status se diferente de "all" e se houver filtro de status
+      // Filtrar por status apenas se um status específico foi selecionado
       if (filters.status && filters.status !== "all") {
-        // O status do filtro é do tipo 'pending', 'completed', 'overdue', 'not_started', 'archived'
-        // O status do processo também deve estar de acordo exatamente com esses valores
         if (process.status !== filters.status) {
           return false;
         }
       }
 
+      // Filtrar por tipo de processo
       if (filters.processType && process.processType !== filters.processType) {
         return false;
       }
+
+      // Filtrar por número de protocolo
       if (filters.search &&
         !process.protocolNumber.toLowerCase().includes(filters.search.toLowerCase())
       ) {
         return false;
       }
 
-      // Filtro por período de startDate
+      // Filtrar por período
       if (filters.startDate) {
         const start = new Date(filters.startDate);
         const processStartDate = process.startDate ? new Date(process.startDate) : null;
@@ -64,11 +68,11 @@ export const useProcessStatusFilters = () => {
         }
       }
 
-      // Filtro por responsável - corrigido para verificar tanto responsável direto quanto responsáveis por setor
+      // Filtrar por responsável
       if (filters.responsibleUser) {
         const isResponsibleUser = process.responsibleUserId === filters.responsibleUser;
         
-        // Verificar se é responsável em algum setor
+        // Verificar responsabilidade em qualquer setor
         let isResponsibleInAnySector = false;
         if (processesResponsibles && processesResponsibles[process.id]) {
           const processSectorResponsibles = processesResponsibles[process.id];
@@ -101,4 +105,3 @@ export const useProcessStatusFilters = () => {
     isProcessOverdue
   };
 };
-

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
@@ -35,13 +36,8 @@ export const useProcessResponsibilityAcceptance = () => {
         .eq('id', processId)
         .single();
 
-      if (processError) {
-        throw processError;
-      }
-
-      if (!processData) {
-        throw new Error("Processo não encontrado");
-      }
+      if (processError) throw processError;
+      if (!processData) throw new Error("Processo não encontrado");
 
       const currentDepartmentId = processData.setor_atual;
       
@@ -51,11 +47,11 @@ export const useProcessResponsibilityAcceptance = () => {
         .eq('processo_id', processId)
         .eq('setor_id', currentDepartmentId);
 
-      if (responsibleError) {
-        throw responsibleError;
-      }
+      if (responsibleError) throw responsibleError;
 
-      const existingResponsible = existingResponsibles && existingResponsibles.length > 0 ? existingResponsibles[0] : null;
+      const existingResponsible = existingResponsibles && existingResponsibles.length > 0 
+        ? existingResponsibles[0] 
+        : null;
 
       if (existingResponsible) {
         if (existingResponsible.usuario_id === user.id) {
@@ -79,9 +75,7 @@ export const useProcessResponsibilityAcceptance = () => {
           })
           .eq('id', existingResponsible.id);
 
-        if (updateError) {
-          throw updateError;
-        }
+        if (updateError) throw updateError;
       } else {
         const now = saveDateToDatabase(new Date());
         
@@ -96,11 +90,10 @@ export const useProcessResponsibilityAcceptance = () => {
             updated_at: now
           });
 
-        if (insertError) {
-          throw insertError;
-        }
+        if (insertError) throw insertError;
       }
 
+      // Atualizar notificações
       const { error: notificationError } = await supabase
         .from('notificacoes')
         .update({ respondida: true })
@@ -115,6 +108,7 @@ export const useProcessResponsibilityAcceptance = () => {
       if (showToast) {
         toast.success(`Você aceitou a responsabilidade pelo processo ${protocolNumber} neste setor.`);
       }
+      
       return true;
     } catch (error) {
       console.error("Erro ao aceitar processo:", error);
