@@ -1,25 +1,39 @@
 
 import { Process } from "@/types";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Hook para gerenciar cache de responsabilidades de processos por setor
  */
 export const useProcessResponsibilityCache = (processes: Process[]) => {
-  // Cache de responsabilidades por processo e setor
-  const processResponsibilitiesCache = useMemo(() => {
-    const cache: Record<string, Record<string, boolean>> = {};
-    
-    // Pré-inicializa o cache com valores vazios para cada processo
+  // Cache de responsabilidades por processo e setor usando useRef para manter entre renderizações
+  const processResponsibilitiesCacheRef = useRef<Record<string, Record<string, boolean>>>({});
+  
+  // Inicializa o cache se ainda não existir
+  useMemo(() => {
+    if (Object.keys(processResponsibilitiesCacheRef.current).length === 0) {
+      // Pré-inicializa o cache com valores vazios para cada processo
+      processes.forEach(process => {
+        if (!processResponsibilitiesCacheRef.current[process.id]) {
+          processResponsibilitiesCacheRef.current[process.id] = {};
+        }
+      });
+    }
+  }, [processes]);
+
+  /**
+   * Limpa o cache de responsabilidades para forçar uma nova verificação
+   */
+  const clearResponsibilityCache = () => {
+    processResponsibilitiesCacheRef.current = {};
+    // Reinicializa o cache
     processes.forEach(process => {
-      if (!cache[process.id]) {
-        cache[process.id] = {};
+      if (!processResponsibilitiesCacheRef.current[process.id]) {
+        processResponsibilitiesCacheRef.current[process.id] = {};
       }
     });
-    
-    return cache;
-  }, [processes]);
+  };
 
   /**
    * Função para verificar e armazenar em cache se um usuário é responsável por um processo em um setor
@@ -31,10 +45,10 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
   ): Promise<boolean> => {
     // Verificar se já temos no cache
     if (
-      processResponsibilitiesCache[processId] && 
-      processResponsibilitiesCache[processId][sectorId] !== undefined
+      processResponsibilitiesCacheRef.current[processId] && 
+      processResponsibilitiesCacheRef.current[processId][sectorId] !== undefined
     ) {
-      return processResponsibilitiesCache[processId][sectorId];
+      return processResponsibilitiesCacheRef.current[processId][sectorId];
     }
     
     try {
@@ -54,10 +68,10 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
       
       // Armazenar resultado no cache
       const isResponsible = !!data;
-      if (!processResponsibilitiesCache[processId]) {
-        processResponsibilitiesCache[processId] = {};
+      if (!processResponsibilitiesCacheRef.current[processId]) {
+        processResponsibilitiesCacheRef.current[processId] = {};
       }
-      processResponsibilitiesCache[processId][sectorId] = isResponsible;
+      processResponsibilitiesCacheRef.current[processId][sectorId] = isResponsible;
       
       return isResponsible;
     } catch (error) {
@@ -92,8 +106,9 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
   };
 
   return {
-    processResponsibilitiesCache,
+    processResponsibilitiesCache: processResponsibilitiesCacheRef.current,
     checkAndCacheResponsibility,
-    hasSectorResponsible
+    hasSectorResponsible,
+    clearResponsibilityCache
   };
 };

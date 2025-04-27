@@ -20,8 +20,16 @@ export const useProcessVisibilityPermissions = (processes: Process[]) => {
   
   const {
     checkAndCacheResponsibility,
-    hasSectorResponsible
+    hasSectorResponsible,
+    clearResponsibilityCache
   } = useProcessResponsibilityCache(processes);
+
+  /**
+   * Limpa o cache de responsabilidades para forçar uma nova verificação
+   */
+  const refreshResponsibilityCache = () => {
+    clearResponsibilityCache();
+  };
 
   /**
    * Verifica se um usuário tem permissão para visualizar um processo específico
@@ -45,13 +53,17 @@ export const useProcessVisibilityPermissions = (processes: Process[]) => {
       return true;
     }
 
-    // Se o usuário é responsável no setor atual (usando cache)
-    if (processesResponsibles?.[process.id]?.[process.currentDepartment]?.usuario_id === userId) {
+    // Verificar se o usuário é responsável pelo processo no setor atual (via cache)
+    if (processesResponsibles && 
+        processesResponsibles[process.id] && 
+        processesResponsibles[process.id][process.currentDepartment] &&
+        processesResponsibles[process.id][process.currentDepartment].usuario_id === userId) {
       return true;
     }
     
     // Se o usuário pertence ao setor atual
     if (isUserInCurrentSector(process)) {
+      // Verificar se existe um responsável para o setor
       const hasResponsible = await hasSectorResponsible(process.id, process.currentDepartment);
       if (!hasResponsible) {
         return true;
@@ -69,6 +81,7 @@ export const useProcessVisibilityPermissions = (processes: Process[]) => {
   };
 
   return {
-    canUserViewProcess
+    canUserViewProcess,
+    refreshResponsibilityCache
   };
 };

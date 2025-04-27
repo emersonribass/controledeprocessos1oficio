@@ -5,11 +5,14 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { saveDateToDatabase } from "@/utils/dateUtils";
+import { useProcessVisibilityPermissions } from "@/hooks/process/permission/useProcessVisibilityPermissions";
+import { Process } from "@/types";
 
-export const useProcessResponsibilityAcceptance = () => {
+export const useProcessResponsibilityAcceptance = (processes: Process[] = []) => {
   const [isAccepting, setIsAccepting] = useState<boolean>(false);
   const { toast: uiToast } = useToast();
   const { user } = useAuth();
+  const { refreshResponsibilityCache } = useProcessVisibilityPermissions(processes);
 
   const acceptProcessResponsibility = async (
     processId: string, 
@@ -104,6 +107,9 @@ export const useProcessResponsibilityAcceptance = () => {
       if (notificationError) {
         console.error("Erro ao atualizar notificações:", notificationError);
       }
+
+      // Limpar o cache de responsabilidades para forçar nova verificação
+      refreshResponsibilityCache();
 
       if (showToast) {
         toast.success(`Você aceitou a responsabilidade pelo processo ${protocolNumber} neste setor.`);
