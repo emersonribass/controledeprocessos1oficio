@@ -1,7 +1,9 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/auth";
+import { saveDateToDatabase } from "@/utils/dateUtils";
 
 export const useStartProcess = (onProcessUpdated: () => void) => {
   const [isStarting, setIsStarting] = useState(false);
@@ -53,17 +55,19 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
         const now = new Date();
         const prazo = new Date(now);
         prazo.setDate(prazo.getDate() + Number(firstDepartment.time_limit));
-        expectedEndDate = prazo.toISOString();
+        expectedEndDate = saveDateToDatabase(prazo);
       }
+
+      const now = saveDateToDatabase(new Date());
 
       // Atualizar o processo
       const { error: updateError } = await supabase
         .from('processos')
         .update({
           setor_atual: firstDepartment.id.toString(),
-          updated_at: new Date().toISOString(),
+          updated_at: now,
           status: "Em andamento",
-          data_inicio: new Date().toISOString(),
+          data_inicio: now,
           usuario_responsavel: user.id,
           data_fim_esperada: expectedEndDate
         })
@@ -77,7 +81,7 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
         .insert({
           processo_id: processId,
           setor_id: firstDepartment.id.toString(),
-          data_entrada: new Date().toISOString(),
+          data_entrada: now,
           data_saida: null,
           usuario_id: user.id
         });
