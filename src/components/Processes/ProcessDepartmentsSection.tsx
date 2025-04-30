@@ -46,20 +46,16 @@ const ProcessDepartmentsSection = ({
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
-        // Lógica melhorada: mostra responsáveis para processos concluídos e para departamentos relevantes
+        // Modificação para exibir responsáveis em processos concluídos
         let departmentResponsible = null;
-        
-        // Para processos concluídos, mostrar todos os responsáveis de todos os setores
-        // Para processos não concluídos, seguir a lógica original
         let showResponsible = false;
         
+        // Para processos concluídos, mostrar responsáveis para todos os departamentos
         if (isProcessCompleted) {
-          // Se o processo está concluído, mostrar todos os responsáveis
-          showResponsible = isProcessStarted && (sectorResponsibles && sectorResponsibles[dept.id]);
+          showResponsible = sectorResponsibles && sectorResponsibles[dept.id];
         } else {
-          // Lógica original para processos não concluídos
-          showResponsible = isActive || (dept.order < currentDeptOrder);
-          showResponsible = showResponsible && isProcessStarted;
+          // Para processos normais, mostrar responsáveis apenas para o departamento atual e anteriores
+          showResponsible = (isActive || dept.order < currentDeptOrder) && isProcessStarted;
         }
         
         if (showResponsible) {
@@ -75,9 +71,9 @@ const ProcessDepartmentsSection = ({
             <ProcessDepartmentCell
               departmentId={dept.id}
               isCurrentDepartment={isActive}
-              hasPassedDepartment={isPastDept || isProcessCompleted}
+              hasPassedDepartment={isPastDept}
               entryDate={entryDate}
-              showDate={isActive || isPastDept || isProcessCompleted}
+              showDate={isActive || isPastDept}
               isDepartmentOverdue={isActive && isOverdue}
               departmentTimeLimit={dept.timeLimit}
               isProcessStarted={isProcessStarted}
