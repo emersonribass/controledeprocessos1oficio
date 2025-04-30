@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -142,20 +141,16 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
 
       if (updateError) throw updateError;
 
-      // 5. Não remover o responsável do setor destino se for o setor Concluído
-      // ALTERAÇÃO: Verifica se NÃO é o setor concluído antes de remover responsáveis
-      if (!isConcludedDept) {
-        // Remover responsável do setor destino (se existir)
-        const { error: deleteResponsibleError } = await supabase
-          .from('setor_responsaveis')
-          .delete()
-          .eq('processo_id', processId)
-          .eq('setor_id', nextDept.id.toString());
+      // 5. Remover responsável do setor destino (se existir)
+      const { error: deleteResponsibleError } = await supabase
+        .from('setor_responsaveis')
+        .delete()
+        .eq('processo_id', processId)
+        .eq('setor_id', nextDept.id.toString());
 
-        if (deleteResponsibleError) {
-          console.error("Erro ao remover responsável do setor:", deleteResponsibleError);
-          // Continuamos mesmo com erro
-        }
+      if (deleteResponsibleError) {
+        console.error("Erro ao remover responsável do setor:", deleteResponsibleError);
+        // Continuamos mesmo com erro
       }
 
       // 6. Enviar notificações apenas para o setor de destino

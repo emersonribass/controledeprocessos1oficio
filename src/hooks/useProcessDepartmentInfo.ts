@@ -15,7 +15,6 @@ export const useProcessDepartmentInfo = (
   
   const isFirstDepartment = process.currentDepartment === sortedDepartments[0]?.id;
   const isLastDepartment = process.currentDepartment === concludedDept?.id;
-  const isProcessCompleted = process.status === "completed" || isLastDepartment;
 
   const getMostRecentEntryDate = (departmentId: string): string | null => {
     const departmentEntries = process.history
@@ -26,11 +25,6 @@ export const useProcessDepartmentInfo = (
   };
 
   const hasPassedDepartment = (departmentId: string): boolean => {
-    // Se o processo está concluído, todos os departamentos são considerados como passados
-    if (isProcessCompleted) {
-      return true;
-    }
-    
     // Primeiro, encontrar o departamento atual na lista ordenada
     const currentDeptIndex = sortedDepartments.findIndex(d => d.id === process.currentDepartment);
     const targetDeptIndex = sortedDepartments.findIndex(d => d.id === departmentId);
@@ -51,10 +45,10 @@ export const useProcessDepartmentInfo = (
     const mostRecentEntry = departmentEntries[0];
     
     // Se é o departamento atual, não é considerado como "passado"
-    if (departmentId === process.currentDepartment && !isProcessCompleted) return false;
+    if (departmentId === process.currentDepartment) return false;
     
     // Se tem data de saída na entrada mais recente, passou pelo departamento
-    return !!mostRecentEntry.exitDate || isProcessCompleted;
+    return !!mostRecentEntry.exitDate;
   };
 
   const isCurrentDepartment = (departmentId: string): boolean => {
@@ -68,9 +62,6 @@ export const useProcessDepartmentInfo = (
   };
 
   const isDepartmentOverdue = (departmentId: string, isProcessStarted: boolean): boolean => {
-    // Processos concluídos não estão em atraso
-    if (isProcessCompleted) return false;
-    
     if (departmentId !== process.currentDepartment || !isProcessStarted) return false;
     
     const dept = departments.find(d => d.id === departmentId);
@@ -91,7 +82,6 @@ export const useProcessDepartmentInfo = (
     concludedDept,
     isFirstDepartment,
     isLastDepartment,
-    isProcessCompleted,
     getMostRecentEntryDate,
     hasPassedDepartment,
     isCurrentDepartment,
