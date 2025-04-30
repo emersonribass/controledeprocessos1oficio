@@ -143,7 +143,7 @@ export const useProcessMoveNext = (onProcessUpdated: () => void) => {
       if (updateError) throw updateError;
 
       // 5. Não remover o responsável do setor destino se for o setor Concluído
-      // MANTER ESTA CORREÇÃO: Verifica se NÃO é o setor concluído antes de remover responsáveis
+      // ALTERAÇÃO: Verifica se NÃO é o setor concluído antes de remover responsáveis
       if (!isConcludedDept) {
         // Remover responsável do setor destino (se existir)
         const { error: deleteResponsibleError } = await supabase

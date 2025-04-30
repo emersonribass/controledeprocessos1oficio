@@ -10,7 +10,6 @@ interface ProcessTypePickerProps {
   processTypes: ProcessType[];
   getProcessTypeName: (id: string) => string;
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
-  isDisabled?: boolean;
 }
 
 const ProcessTypePicker = ({
@@ -19,7 +18,6 @@ const ProcessTypePicker = ({
   processTypes,
   getProcessTypeName,
   updateProcessType,
-  isDisabled = false
 }: ProcessTypePickerProps) => {
   const [selectedType, setSelectedType] = useState(currentTypeId);
   const { toast } = useToast();
@@ -29,7 +27,7 @@ const ProcessTypePicker = ({
   }, [currentTypeId]);
 
   const handleChange = async (value: string) => {
-    if (value === currentTypeId || isDisabled) return;
+    if (value === currentTypeId) return;
     
     setSelectedType(value);
     try {
@@ -53,7 +51,7 @@ const ProcessTypePicker = ({
 
   return (
     <div className="w-full max-w-[160px] mx-auto">
-      <Select value={selectedType} onValueChange={handleChange} disabled={isDisabled}>
+      <Select value={selectedType} onValueChange={handleChange}>
         <SelectTrigger className="h-8">
           <SelectValue placeholder="Selecione o tipo" />
         </SelectTrigger>

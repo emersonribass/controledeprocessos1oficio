@@ -65,9 +65,9 @@ const ProcessTableRow = ({
       <TableCell>
         <ProcessTypePicker
           processId={process.id}
-          currentTypeId={process.processType}
-          processTypes={processTypes}
-          getProcessTypeName={getProcessTypeName}
+          currentType={process.processType}
+          types={processTypes}
+          getTypeName={getProcessTypeName}
           updateProcessType={updateProcessType}
           isDisabled={process.status === "completed"}
         />
