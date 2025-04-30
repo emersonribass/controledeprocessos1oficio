@@ -25,6 +25,17 @@ export const useProcessDepartmentInfo = (
   };
 
   const hasPassedDepartment = (departmentId: string): boolean => {
+    // MODIFICAÇÃO: Se o processo está concluído (no departamento Concluído(a)),
+    // devemos considerar todos os departamentos anteriores como "passados"
+    if (isLastDepartment) {
+      // Se estivermos verificando o próprio departamento Concluído(a), retornar false
+      if (departmentId === concludedDept?.id) return false;
+      
+      // Para todos os outros departamentos em processo concluído, retornar true
+      return true;
+    }
+    
+    // Comportamento original para processos não concluídos
     // Primeiro, encontrar o departamento atual na lista ordenada
     const currentDeptIndex = sortedDepartments.findIndex(d => d.id === process.currentDepartment);
     const targetDeptIndex = sortedDepartments.findIndex(d => d.id === departmentId);
