@@ -1,20 +1,12 @@
-import { TableRow, TableCell } from "@/components/ui/table";
-import { Process, Department, ProcessType } from "@/types";
-import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
-import ProcessDepartmentCell from "./ProcessDepartmentCell";
-import ProcessTypePicker from "./ProcessTypePicker";
-import ProcessRowActions from "./ProcessRowActions";
-import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
-import { useProcessRowResponsibility } from "@/hooks/useProcessRowResponsibility";
-import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
-import { useProcesses } from "@/hooks/useProcesses";
-import { useDeadlineRenewalCondition } from "@/hooks/useDeadlineRenewalCondition";
-import { createLogger } from "@/utils/loggerUtils";
-import { useCallback } from "react";
-import { useProcessTableState } from "@/hooks/useProcessTableState";
 
-const logger = createLogger("ProcessTableRow");
+import { TableRow, TableCell } from "@/components/ui/table";
+import { Department, Process, ProcessType } from "@/types";
+import { useProcessDepartmentInfo } from "@/hooks/useProcessDepartmentInfo";
+import ProcessDepartmentsSection from "./ProcessDepartmentsSection";
+import ProcessTypePicker from "./ProcessTypePicker";
+import ProcessStatusBadge from "./ProcessStatusBadge";
+import ProcessRowActions from "./ProcessRowActions";
+import { Link } from "react-router-dom";
 
 interface ProcessTableRowProps {
   process: Process;
@@ -25,12 +17,11 @@ interface ProcessTableRowProps {
   getProcessTypeName: (id: string) => string;
   updateProcessType: (processId: string, newTypeId: string) => Promise<void>;
   startProcess?: (processId: string) => Promise<void>;
+  hasSectorResponsible: boolean;
   onAcceptResponsibility: () => Promise<void>;
   isAccepting: boolean;
-  hasSectorResponsible?: boolean; 
-  canInitiateProcesses?: boolean;
   processResponsibles?: Record<string, any>;
-  historyId?: number;
+  canInitiateProcesses?: boolean;
 }
 
 const ProcessTableRow = ({
@@ -42,123 +33,78 @@ const ProcessTableRow = ({
   getProcessTypeName,
   updateProcessType,
   startProcess,
+  hasSectorResponsible,
   onAcceptResponsibility,
   isAccepting,
-  hasSectorResponsible = false,
-  canInitiateProcesses = false,
   processResponsibles,
-  historyId
+  canInitiateProcesses
 }: ProcessTableRowProps) => {
-  const navigate = useNavigate();
-  const { refreshProcesses } = useProcesses();
-  const { queueSectorForLoading } = useProcessTableState([]);
-
-  const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
-  const { getProcessResponsible } = useProcessResponsibility();
-  
-  const hasResponsible = hasSectorResponsible || !!sectorResponsible;
-  
-  const { canRenewDeadline, historyId: renewalHistoryId } = useDeadlineRenewalCondition(process);
-
   const {
     sortedDepartments,
-    concludedDept,
     isFirstDepartment,
     isLastDepartment,
+    isProcessCompleted,
     getMostRecentEntryDate,
     hasPassedDepartment,
     isCurrentDepartment,
     isPreviousDepartment,
-    isDepartmentOverdue: checkDepartmentOverdue
+    isDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
-  const getRowBorderColor = (status: string) => {
-    if (status === "completed") return "border-l-4 border-l-green-600";
-    if (status === "overdue") return "border-l-4 border-l-red-600";
-    if (status === "pending") return "border-l-4 border-l-blue-600";
-    if (status === "not_started") return "border-l-4 border-l-green-400";
-    return "";
-  };
-
-  const handleRowClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.process-action')) {
-      e.stopPropagation();
-      return;
-    }
-    navigate(`/processes/${process.id}`);
-  };
-
-  const handleAcceptResponsibility = useCallback(async () => {
-    await onAcceptResponsibility();
-    queueSectorForLoading(process.id, process.currentDepartment);
-    await refreshProcesses();
-  }, [onAcceptResponsibility, process.id, process.currentDepartment, queueSectorForLoading, refreshProcesses]);
-
-  const isProcessOverdue = process.status === "overdue";
-  
-  if (canRenewDeadline && renewalHistoryId) {
-    logger.debug(`Processo ${process.id} pode renovar prazo, historyId=${renewalHistoryId}`);
-  }
+  // Verificar se o processo foi iniciado
+  const isProcessStarted = process.status !== "not_started";
+  const isOverdue = process.status === "overdue";
 
   return (
-    <TableRow 
-      className={cn(
-        "cursor-pointer hover:bg-gray-100",
-        getRowBorderColor(process.status)
-      )}
-      onClick={handleRowClick}
-    >
-      <TableCell className="w-[70px] whitespace-nowrap text-center font-medium">
-        {process.protocolNumber}
+    <TableRow>
+      <TableCell>
+        <Link to={`/process/${process.id}`} className="hover:underline text-primary">
+          {process.protocolNumber || "Sem protocolo"}
+        </Link>
       </TableCell>
-      
-      <TableCell className="w-[180px] whitespace-nowrap text-center process-action" onClick={e => e.stopPropagation()}>
-        <ProcessTypePicker 
-          processId={process.id} 
-          currentTypeId={process.processType} 
-          processTypes={processTypes} 
-          getProcessTypeName={getProcessTypeName} 
-          updateProcessType={updateProcessType} 
+      <TableCell>
+        <ProcessTypePicker
+          processId={process.id}
+          currentType={process.processType}
+          types={processTypes}
+          getTypeName={getProcessTypeName}
+          updateProcessType={updateProcessType}
+          isDisabled={process.status === "completed"}
         />
       </TableCell>
-      
-      {sortedDepartments.map((dept) => (
-        <TableCell key={dept.id} className="min-w-[120px] text-center">
-          <ProcessDepartmentCell 
-            departmentId={dept.id}
-            isCurrentDepartment={isCurrentDepartment(dept.id)}
-            hasPassedDepartment={hasPassedDepartment(dept.id)}
-            entryDate={getMostRecentEntryDate(dept.id)}
-            showDate={isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)}
-            isDepartmentOverdue={isCurrentDepartment(dept.id) && checkDepartmentOverdue(dept.id, process.status !== "not_started")}
-            departmentTimeLimit={dept.timeLimit}
-            isProcessStarted={process.status !== "not_started"}
-            responsible={processResponsibles?.[dept.id]}
-            isFirstDepartment={dept.id === sortedDepartments[0]?.id}
-          />
-        </TableCell>
-      ))}
-    
-      <TableCell className="w-[120px] process-action">
-        <ProcessRowActions 
+      <TableCell>
+        <ProcessStatusBadge status={process.status} />
+      </TableCell>
+      <ProcessDepartmentsSection
+        sortedDepartments={sortedDepartments}
+        isProcessStarted={isProcessStarted}
+        getMostRecentEntryDate={getMostRecentEntryDate}
+        hasPassedDepartment={hasPassedDepartment}
+        isCurrentDepartment={isCurrentDepartment}
+        isPreviousDepartment={isPreviousDepartment}
+        isDepartmentOverdue={isDepartmentOverdue}
+        processId={process.id}
+        processResponsible={processResponsibles?.initial}
+        sectorResponsibles={processResponsibles}
+        isProcessCompleted={isProcessCompleted}
+      />
+      <TableCell>
+        <ProcessRowActions
           processId={process.id}
           protocolNumber={process.protocolNumber}
           processType={process.processType}
-          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-          moveProcessToNextDepartment={moveProcessToNextDepartment}
+          moveProcessToPreviousDepartment={() => moveProcessToPreviousDepartment(process.id)}
+          moveProcessToNextDepartment={() => moveProcessToNextDepartment(process.id)}
           isFirstDepartment={isFirstDepartment}
           isLastDepartment={isLastDepartment}
           status={process.status}
-          startProcess={canInitiateProcesses || process.status === "not_started" ? startProcess : undefined}
-          hasSectorResponsible={hasResponsible}
-          onAcceptResponsibility={handleAcceptResponsibility}
+          startProcess={startProcess ? () => startProcess(process.id) : undefined}
+          hasSectorResponsible={hasSectorResponsible}
+          onAcceptResponsibility={onAcceptResponsibility}
           isAccepting={isAccepting}
           sectorId={process.currentDepartment}
-          isOverdue={isProcessOverdue}
+          isOverdue={isOverdue}
           currentDepartment={process.currentDepartment}
-          historyId={renewalHistoryId}
-          showRenewDeadlineButton={canRenewDeadline}
-          onRenewalComplete={() => refreshProcesses()}
         />
       </TableCell>
     </TableRow>

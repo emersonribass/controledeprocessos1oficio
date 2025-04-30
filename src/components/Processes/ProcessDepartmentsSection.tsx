@@ -14,6 +14,7 @@ interface ProcessDepartmentsSectionProps {
   processId: string;
   processResponsible?: any;
   sectorResponsibles?: Record<string, any>;
+  isProcessCompleted?: boolean;
 }
 
 const ProcessDepartmentsSection = ({
@@ -26,7 +27,8 @@ const ProcessDepartmentsSection = ({
   isDepartmentOverdue,
   processId,
   processResponsible,
-  sectorResponsibles
+  sectorResponsibles,
+  isProcessCompleted = false
 }: ProcessDepartmentsSectionProps) => {
   // Encontrar o order_num do departamento atual
   const findCurrentDepartmentOrder = (): number => {
@@ -44,16 +46,23 @@ const ProcessDepartmentsSection = ({
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
-        // Lógica corrigida: mostra responsáveis apenas para o setor atual e setores com order_num menor
+        // Lógica melhorada: mostra responsáveis para processos concluídos e para departamentos relevantes
         let departmentResponsible = null;
         
-        // Estritamente verificar se o dept.order é menor que o order do departamento atual
-        // ou se é o departamento atual
-        const showResponsible = isActive || (dept.order < currentDeptOrder);
+        // Para processos concluídos, mostrar todos os responsáveis de todos os setores
+        // Para processos não concluídos, seguir a lógica original
+        let showResponsible = false;
         
-        if (showResponsible && isProcessStarted) {
-          // Apenas mostra responsáveis se o processo estiver iniciado e 
-          // o departamento for atual ou anterior na ordem
+        if (isProcessCompleted) {
+          // Se o processo está concluído, mostrar todos os responsáveis
+          showResponsible = isProcessStarted && (sectorResponsibles && sectorResponsibles[dept.id]);
+        } else {
+          // Lógica original para processos não concluídos
+          showResponsible = isActive || (dept.order < currentDeptOrder);
+          showResponsible = showResponsible && isProcessStarted;
+        }
+        
+        if (showResponsible) {
           if (sectorResponsibles && sectorResponsibles[dept.id]) {
             departmentResponsible = sectorResponsibles[dept.id];
           } else if (index === 0 && processResponsible) {
@@ -66,14 +75,15 @@ const ProcessDepartmentsSection = ({
             <ProcessDepartmentCell
               departmentId={dept.id}
               isCurrentDepartment={isActive}
-              hasPassedDepartment={isPastDept}
+              hasPassedDepartment={isPastDept || isProcessCompleted}
               entryDate={entryDate}
-              showDate={isActive || isPastDept}
+              showDate={isActive || isPastDept || isProcessCompleted}
               isDepartmentOverdue={isActive && isOverdue}
               departmentTimeLimit={dept.timeLimit}
               isProcessStarted={isProcessStarted}
               responsible={departmentResponsible}
               isFirstDepartment={index === 0}
+              isProcessCompleted={isProcessCompleted}
             />
           </TableCell>
         );

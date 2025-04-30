@@ -18,6 +18,7 @@ interface ProcessDepartmentCellProps {
     email: string;
   } | null;
   isFirstDepartment?: boolean;
+  isProcessCompleted?: boolean;
 }
 
 const ProcessDepartmentCell = ({
@@ -30,7 +31,8 @@ const ProcessDepartmentCell = ({
   departmentTimeLimit = 0,
   isProcessStarted = true,
   responsible,
-  isFirstDepartment = false
+  isFirstDepartment = false,
+  isProcessCompleted = false
 }: ProcessDepartmentCellProps) => {
   // Calcular dias restantes se for o departamento atual
   let remainingDays = 0;
@@ -41,8 +43,11 @@ const ProcessDepartmentCell = ({
     remainingDays = Math.ceil((deadlineTime - currentTime) / (24 * 60 * 60 * 1000));
   }
 
-  // Apenas exibe responsáveis para departamentos atuais ou que já passaram
-  const shouldShowResponsible = isProcessStarted && responsible && (isCurrentDepartment || hasPassedDepartment);
+  // Lógica atualizada para exibição de responsáveis:
+  // - Para processos concluídos, mostra responsáveis para qualquer departamento que tenha responsável
+  // - Para processos não concluídos, segue a lógica original
+  const shouldShowResponsible = isProcessStarted && responsible && 
+    (isCurrentDepartment || hasPassedDepartment || isProcessCompleted);
 
   return (
     <div className="text-center w-full">
@@ -54,7 +59,7 @@ const ProcessDepartmentCell = ({
         </div>
       )}
 
-      {/* Exibição do responsável apenas se existir, se o processo estiver iniciado e se for departamento atual ou anterior */}
+      {/* Exibição do responsável com lógica atualizada */}
       {shouldShowResponsible && (
         <div className="text-xs text-gray-600 mt-1">
           <div className="flex items-center justify-center gap-1">
@@ -69,7 +74,7 @@ const ProcessDepartmentCell = ({
         </div>
       )}
 
-      {isCurrentDepartment && isProcessStarted && departmentTimeLimit > 0 && (
+      {isCurrentDepartment && isProcessStarted && departmentTimeLimit > 0 && !isProcessCompleted && (
         <div className={cn(
           "text-xs font-medium mt-1",
           isDepartmentOverdue ? "text-red-600" : "text-blue-600"

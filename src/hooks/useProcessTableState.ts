@@ -12,12 +12,10 @@ export const useProcessTableState = (processes: Process[]) => {
 
     setIsLoading(true);
     try {
-      // Filtrar apenas os processos iniciados
-      const startedProcessIds = processes
-        .filter(p => p.status !== 'not_started')
-        .map(p => p.id);
+      // Incluir todos os processos, não apenas os iniciados
+      const processIds = processes.map(p => p.id);
 
-      if (startedProcessIds.length === 0) {
+      if (processIds.length === 0) {
         setIsLoading(false);
         return;
       }
@@ -28,13 +26,14 @@ export const useProcessTableState = (processes: Process[]) => {
         .select(`
           id,
           usuario_responsavel,
+          status,
           usuarios!processos_usuario_responsavel_fkey(
             id,
             nome,
             email
           )
         `)
-        .in('id', startedProcessIds);
+        .in('id', processIds);
 
       if (processError) throw processError;
 
@@ -42,7 +41,7 @@ export const useProcessTableState = (processes: Process[]) => {
       const { data: processHistory, error: historyError } = await supabase
         .from('processos_historico')
         .select('processo_id, setor_id')
-        .in('processo_id', startedProcessIds);
+        .in('processo_id', processIds);
 
       if (historyError) throw historyError;
 
@@ -55,12 +54,13 @@ export const useProcessTableState = (processes: Process[]) => {
         processToSectorsMap[history.processo_id].add(history.setor_id);
       });
 
-      // Buscar responsáveis apenas para os setores que já receberam o processo
-      const sectorResponsiblesPromises = startedProcessIds.map(async (processId) => {
+      // Buscar todos os responsáveis para todos os processos
+      const sectorResponsiblesPromises = processIds.map(async (processId) => {
+        // Verificar se o processo tem setores associados no mapa
         const sectors = processToSectorsMap[processId];
         if (!sectors || sectors.size === 0) return null;
 
-        // Buscar todos os responsáveis por setor de uma vez
+        // Buscar todos os responsáveis por setor, independentemente do processo estar concluído
         const { data: sectorResponsibles, error: sectorError } = await supabase
           .from('setor_responsaveis')
           .select(`
@@ -73,8 +73,7 @@ export const useProcessTableState = (processes: Process[]) => {
               email
             )
           `)
-          .eq('processo_id', processId)
-          .in('setor_id', Array.from(sectors));
+          .eq('processo_id', processId);
 
         if (sectorError) {
           console.error("Erro ao buscar responsáveis de setor:", sectorError);
@@ -100,6 +99,8 @@ export const useProcessTableState = (processes: Process[]) => {
         if (process.usuarios) {
           responsiblesMap[process.id].initial = process.usuarios;
         }
+        // Armazenar também o status do processo para referência
+        responsiblesMap[process.id]._status = process.status;
       });
 
       // Mapear responsáveis por setor
