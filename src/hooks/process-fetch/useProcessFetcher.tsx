@@ -3,32 +3,45 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/schema";
 
+/**
+ * Hook otimizado para buscar processos com responsáveis em uma única consulta
+ */
 export const useProcessFetcher = () => {
   const [isLoading, setIsLoading] = useState(true);
 
+  /**
+   * Busca processos e informações relacionadas em uma única consulta
+   * Otimizado para reduzir o número de requisições ao servidor
+   */
   const fetchProcessesData = async () => {
     try {
       setIsLoading(true);
       
-      // Buscar processos
-      const { data: processesData, error: processesError } = await supabase
-        .from('processos')
-        .select(`
-          *,
-          processos_historico(*)
-        `);
-
-      if (processesError) {
-        throw processesError;
-      }
-
-      // Buscar todos os setores separadamente
+      // Buscar todos os setores uma única vez
       const { data: departmentsData, error: departmentsError } = await supabase
         .from('setores')
         .select('*');
 
       if (departmentsError) {
         throw departmentsError;
+      }
+      
+      // Consulta principal - buscar processos com histórico em uma única requisição
+      const { data: processesData, error: processesError } = await supabase
+        .from('processos')
+        .select(`
+          *,
+          processos_historico(*),
+          usuarios!processos_usuario_responsavel_fkey(
+            id,
+            nome,
+            email
+          )
+        `)
+        .order('updated_at', { ascending: false });
+
+      if (processesError) {
+        throw processesError;
       }
 
       // Combinar os dados dos processos com os setores correspondentes
@@ -44,6 +57,45 @@ export const useProcessFetcher = () => {
           setor_info: matchingDept || null
         };
       });
+
+      // Buscar responsáveis de setor para processos em andamento em uma única requisição
+      const startedProcessIds = processesData
+        .filter((p: any) => p.status !== 'Não iniciado')
+        .map((p: any) => p.id);
+
+      if (startedProcessIds.length > 0) {
+        const { data: sectorResponsibles, error: sectorsError } = await supabase
+          .from('setor_responsaveis')
+          .select(`
+            processo_id,
+            setor_id,
+            usuario_id,
+            usuarios:usuario_id(
+              id,
+              nome,
+              email
+            )
+          `)
+          .in('processo_id', startedProcessIds);
+
+        if (!sectorsError && sectorResponsibles) {
+          // Mapear responsáveis por processo e setor para uso posterior
+          const responsiblesMap: any = {};
+          
+          sectorResponsibles.forEach((resp) => {
+            if (!responsiblesMap[resp.processo_id]) {
+              responsiblesMap[resp.processo_id] = {};
+            }
+            
+            responsiblesMap[resp.processo_id][resp.setor_id] = resp.usuarios;
+          });
+          
+          // Anexar responsáveis aos dados do processo
+          processesWithDepartments.forEach((process: any) => {
+            process.responsibles = responsiblesMap[process.id] || {};
+          });
+        }
+      }
 
       return processesWithDepartments;
     } catch (error) {

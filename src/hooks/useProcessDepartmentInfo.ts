@@ -1,21 +1,41 @@
 
 import { Department } from "@/types";
+import { useMemo } from "react";
 
+/**
+ * Hook otimizado para processar informações de departamentos
+ */
 export const useProcessDepartmentInfo = (
   process: any, 
   departments: Department[]
 ) => {
-  // Ordenar departamentos por ordem e filtrar o departamento "Concluído(a)"
-  const sortedDepartments = [...departments]
-    .filter(dept => dept.name !== "Concluído(a)")
-    .sort((a, b) => a.order - b.order);
+  // Memoização das listas de departamentos para evitar recálculos desnecessários
+  const { 
+    sortedDepartments, 
+    concludedDept, 
+    isFirstDepartment, 
+    isLastDepartment 
+  } = useMemo(() => {
+    // Ordenar departamentos por ordem e filtrar o departamento "Concluído(a)"
+    const sortedDpts = [...departments]
+      .filter(dept => dept.name !== "Concluído(a)")
+      .sort((a, b) => a.order - b.order);
 
-  // Obter o departamento "Concluído(a)" para referência
-  const concludedDept = departments.find(dept => dept.name === "Concluído(a)");
-  
-  const isFirstDepartment = process.currentDepartment === sortedDepartments[0]?.id;
-  const isLastDepartment = process.currentDepartment === concludedDept?.id;
+    // Obter o departamento "Concluído(a)" para referência
+    const conclDept = departments.find(dept => dept.name === "Concluído(a)");
+    
+    const isFirstDpt = process.currentDepartment === sortedDpts[0]?.id;
+    const isLastDpt = process.currentDepartment === conclDept?.id;
 
+    return {
+      sortedDepartments: sortedDpts,
+      concludedDept: conclDept,
+      isFirstDepartment: isFirstDpt,
+      isLastDepartment: isLastDpt
+    };
+  }, [departments, process.currentDepartment]);
+
+  // Função otimizada para obter a data de entrada mais recente
   const getMostRecentEntryDate = (departmentId: string): string | null => {
     const departmentEntries = process.history
       .filter((h: any) => h.departmentId === departmentId)
