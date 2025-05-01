@@ -21,8 +21,16 @@ export function useUsuarios() {
   
   // Controle para evitar múltiplas requisições simultâneas
   const loadingRef = useRef(false);
+  
+  // Adicionar uma referência para controlar inicialização
+  const initializedRef = useRef(false);
 
   const fetchUsuarios = useCallback(async (forceRefresh = false) => {
+    // Se já inicializado e não forçar atualização, usar cache
+    if (initializedRef.current && !forceRefresh) {
+      return;
+    }
+    
     // Verificar se já existe uma requisição em andamento
     if (loadingRef.current) {
       console.log("Já existe uma requisição em andamento. Ignorando nova solicitação.");
@@ -81,6 +89,9 @@ export function useUsuarios() {
         data: usuariosData,
         timestamp: now
       };
+      
+      // Marcar como inicializado
+      initializedRef.current = true;
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
       toast({
@@ -94,13 +105,16 @@ export function useUsuarios() {
     }
   }, [toast]);
 
-  // Carregar usuários na montagem do componente
+  // Carregar usuários na montagem do componente apenas uma vez
   useEffect(() => {
-    fetchUsuarios();
+    if (!initializedRef.current) {
+      fetchUsuarios();
+    }
     
     // Limpar o cache na desmontagem
     return () => {
       cacheRef.current = null;
+      initializedRef.current = false;
     };
   }, [fetchUsuarios]);
 

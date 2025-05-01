@@ -13,6 +13,9 @@ export const useProcessesFetch = () => {
   const { formatProcesses } = useProcessFormatter();
   const isMountedRef = useRef(true);
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Adicionar referência para controlar se já carregou dados
+  const initialLoadCompleteRef = useRef(false);
 
   // Limpeza ao desmontar o componente
   useEffect(() => {
@@ -21,6 +24,8 @@ export const useProcessesFetch = () => {
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);
       }
+      // Reseta o status de carregamento ao desmontar
+      initialLoadCompleteRef.current = false;
     };
   }, []);
 
@@ -37,12 +42,14 @@ export const useProcessesFetch = () => {
 
       if (isMountedRef.current) {
         setProcesses(formattedProcesses);
+        initialLoadCompleteRef.current = true;
       }
     } catch (error) {
       console.error('Erro ao processar dados dos processos:', error);
       // Definir um array vazio mesmo em caso de erro
       if (isMountedRef.current) {
         setProcesses([]);
+        initialLoadCompleteRef.current = true;
       }
     } finally {
       if (isMountedRef.current) {
@@ -66,11 +73,13 @@ export const useProcessesFetch = () => {
   }, [fetchProcesses]);
 
   useEffect(() => {
-    // Carregar processos automaticamente ao montar o componente
-    fetchProcesses().catch(error => {
-      console.error("Erro ao buscar processos:", error);
-      setIsLoading(false); // Garantir que o loading termina mesmo com erro
-    });
+    // Carregar processos automaticamente ao montar o componente apenas se não carregou ainda
+    if (!initialLoadCompleteRef.current) {
+      fetchProcesses().catch(error => {
+        console.error("Erro ao buscar processos:", error);
+        setIsLoading(false); // Garantir que o loading termina mesmo com erro
+      });
+    }
   }, [fetchProcesses, setIsLoading]);
 
   return {
