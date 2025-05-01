@@ -95,19 +95,19 @@ export const useProcessStatusFilters = () => {
       }
 
       // Filtro por data de início
-      if (filters.startDate && process.createdAt) {
+      if (filters.startDate && process.startDate) {
         const filterStartDate = new Date(filters.startDate);
         filterStartDate.setHours(0, 0, 0, 0);
-        const createdAt = new Date(process.createdAt);
-        if (createdAt < filterStartDate) return false;
+        const processDate = new Date(process.startDate);
+        if (processDate < filterStartDate) return false;
       }
 
       // Filtro por data de fim
-      if (filters.endDate && process.createdAt) {
+      if (filters.endDate && process.startDate) {
         const filterEndDate = new Date(filters.endDate);
         filterEndDate.setHours(23, 59, 59, 999);
-        const createdAt = new Date(process.createdAt);
-        if (createdAt > filterEndDate) return false;
+        const processDate = new Date(process.startDate);
+        if (processDate > filterEndDate) return false;
       }
 
       // Filtro por usuário responsável

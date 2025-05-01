@@ -52,14 +52,17 @@ export const useProcessesFetch = () => {
   }, [fetchProcessesData, formatProcesses, setIsLoading]);
 
   // Função com debounce para reagendamento de atualização
-  const debouncedFetchProcesses = useCallback(() => {
+  const debouncedFetchProcesses = useCallback(async () => {
     if (fetchTimeoutRef.current) {
       clearTimeout(fetchTimeoutRef.current);
     }
     
-    fetchTimeoutRef.current = setTimeout(() => {
-      fetchProcesses();
-    }, 300); // 300ms de debounce para evitar múltiplas chamadas em sequência
+    return new Promise<void>((resolve) => {
+      fetchTimeoutRef.current = setTimeout(async () => {
+        await fetchProcesses();
+        resolve();
+      }, 300); // 300ms de debounce para evitar múltiplas chamadas em sequência
+    });
   }, [fetchProcesses]);
 
   useEffect(() => {

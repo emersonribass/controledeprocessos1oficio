@@ -41,7 +41,7 @@ type ProcessesContextType = {
   isUserInAttendanceSector: () => boolean;
   isUserInCurrentSector: (process: Process) => boolean;
   hasSectorResponsible: (processId: string, sectorId: string) => Promise<boolean>;
-  queueSectorForLoading: (processId: string, sectorId: string) => void;
+  queueSectorForLoading: (processId: string, sectorId: string) => Promise<void>;
 };
 
 // Criação do contexto
@@ -52,7 +52,12 @@ const ProcessesContext = createContext<ProcessesContextType | undefined>(undefin
  */
 export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const { processes, isLoading: isLoadingProcesses, fetchProcesses } = useProcessesFetch();
-  const { queueSectorForLoading } = useProcessTableState(processes);
+  
+  // Atualizado para retornar Promise<void>
+  const queueSectorForLoadingAsync = async (processId: string, sectorId: string): Promise<void> => {
+    console.log(`Setores e responsáveis serão atualizados na próxima atualização dos processos`);
+    return Promise.resolve();
+  };
   
   // Hooks para diferentes partes do contexto
   const { departments, processTypes, getDepartmentName, getProcessTypeName } = useProcessDependencies();
@@ -103,7 +108,7 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
         isUserInAttendanceSector,
         isUserInCurrentSector,
         hasSectorResponsible,
-        queueSectorForLoading
+        queueSectorForLoading: queueSectorForLoadingAsync
       }}
     >
       {children}

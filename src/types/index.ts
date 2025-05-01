@@ -33,8 +33,11 @@ export type Process = {
   status: 'pending' | 'completed' | 'overdue' | 'not_started' | 'archived';
   history: ProcessHistory[];
   userId?: string;
-  usuario_responsavel?: string;  // Adicionando o campo que faltava
+  usuario_responsavel?: string;
   responsibleUserId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  responsibles?: Record<string, any>;
 };
 
 export type ProcessHistory = {

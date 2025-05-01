@@ -33,8 +33,10 @@ export const useProcessTableState = (processes: Process[]) => {
 
   // Função simplificada que agora apenas marca para recarregar os dados no próximo ciclo,
   // em vez de fazer novas requisições ao banco de dados
-  const queueSectorForLoading = useCallback((processId: string, sectorId: string) => {
+  // Atualizado para retornar uma Promise
+  const queueSectorForLoading = useCallback(async (processId: string, sectorId: string): Promise<void> => {
     console.log(`Setores e responsáveis serão atualizados na próxima atualização dos processos`);
+    return Promise.resolve();
   }, []);
 
   return {
