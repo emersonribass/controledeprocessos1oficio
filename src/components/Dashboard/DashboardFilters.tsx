@@ -1,6 +1,6 @@
 
 import { Department } from "@/types";
-import { useState, memo, useCallback, useMemo } from "react";
+import { useState, memo, useCallback } from "react";
 import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { useAvailableUsers } from "@/hooks/useAvailableUsers";
 import SelectFilters from "../Processes/Filters/SelectFilters";
@@ -43,15 +43,6 @@ const DashboardFilters = memo(({
   const [finalDate, setFinalDate] = useState<Date | undefined>(
     filters.endDate ? new Date(filters.endDate) : undefined
   );
-  
-  // Memorizar todos os dados para evitar recalcular e re-renderizar
-  const memoizedData = useMemo(() => {
-    return {
-      processTypes,
-      usuarios,
-      availableDepartments
-    };
-  }, [processTypes, usuarios, availableDepartments]);
 
   const handleInitialDateChange = useCallback((date: Date | undefined) => {
     setInitialDate(date);
@@ -82,9 +73,9 @@ const DashboardFilters = memo(({
         <SelectFilters
           filters={filters}
           onSelectChange={handleSelectChange}
-          departments={memoizedData.availableDepartments}
-          processTypes={memoizedData.processTypes}
-          usuarios={memoizedData.usuarios}
+          departments={availableDepartments}
+          processTypes={processTypes}
+          usuarios={usuarios}
         />
         <DateRangeFilter
           initialDate={initialDate}

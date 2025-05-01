@@ -10,9 +10,6 @@ export const useProcessPermissionCheckers = () => {
   
   /**
    * Verifica se o usuário é responsável direto pelo processo
-   * Um usuário é responsável direto se:
-   * 1. É o criador do processo (userId)
-   * 2. É o responsável atual pelo processo (responsibleUserId)
    */
   const isUserResponsibleForProcess = (process: Process, userId: string) => {
     // Verifica se o usuário é o criador ou o responsável direto pelo processo
@@ -47,18 +44,10 @@ export const useProcessPermissionCheckers = () => {
     return userProfile.setores_atribuidos.includes(process.currentDepartment);
   };
 
-  /**
-   * Verifica se o usuário é administrador
-   */
-  const isUserAdmin = () => {
-    return userProfile?.perfil === 'admin';
-  };
-
   return {
     isUserResponsibleForProcess,
     isUserResponsibleForSector,
     isUserInAttendanceSector,
-    isUserInCurrentSector,
-    isUserAdmin
+    isUserInCurrentSector
   };
 };

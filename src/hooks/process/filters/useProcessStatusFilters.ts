@@ -1,28 +1,12 @@
 
 import { Process } from "@/types";
-import { useMemo } from "react";
 
 /**
- * Hook otimizado para filtrar processos por status
+ * Hook para filtrar processos por status e outros critérios
  */
 export const useProcessStatusFilters = () => {
-  // Função memoizada para verificar se um processo está em atraso
-  const isProcessOverdue = useMemo(() => (process: Process): boolean => {
-    if (
-      process.status !== 'pending' || 
-      !process.startDate ||
-      !process.expectedEndDate
-    ) {
-      return false;
-    }
-
-    const now = new Date();
-    const expectedEndDate = new Date(process.expectedEndDate);
-    return now > expectedEndDate;
-  }, []);
-
   /**
-   * Aplica filtros de usuário com algoritmo otimizado
+   * Filtra processos com base em critérios selecionados pelo usuário
    */
   const applyUserFilters = (
     processes: Process[],
@@ -38,101 +22,86 @@ export const useProcessStatusFilters = () => {
     },
     processesResponsibles?: Record<string, any>
   ): Process[] => {
-    // Cache de departamento para evitar filtragem repetida
-    const departmentFilterCache: Record<string, boolean> = {};
-    // Cache de tipo de processo para evitar filtragem repetida
-    const processTypeFilterCache: Record<string, boolean> = {};
-    
-    return processes.filter(process => {
-      // Filtro por departamento
-      if (filters.department) {
-        // Usar cache para evitar verificações repetidas
-        const deptCacheKey = `${process.id}:${filters.department}`;
-        if (departmentFilterCache[deptCacheKey] === undefined) {
-          departmentFilterCache[deptCacheKey] = process.currentDepartment === filters.department;
-        }
-        if (!departmentFilterCache[deptCacheKey]) return false;
-      }
-
-      // Filtro por status
-      if (filters.status) {
-        switch (filters.status) {
-          case 'overdue':
-            if (!isProcessOverdue(process)) return false;
-            break;
-          case 'completed':
-            if (process.status !== 'completed') return false;
-            break;
-          case 'pending':
-            if (process.status !== 'pending') return false;
-            break;
-          case 'not_started':
-            if (process.status !== 'not_started') return false;
-            break;
-        }
-      }
-
-      // Filtro para excluir processos concluídos
+    return processes.filter((process) => {
+      // Se excludeCompleted está ativo, filtrar processos concluídos
       if (filters.excludeCompleted && process.status === 'completed') {
         return false;
       }
 
-      // Filtro por tipo de processo
-      if (filters.processType) {
-        // Usar cache para evitar verificações repetidas
-        const typeCacheKey = `${process.id}:${filters.processType}`;
-        if (processTypeFilterCache[typeCacheKey] === undefined) {
-          processTypeFilterCache[typeCacheKey] = process.processType === filters.processType;
+      // Filtrar por departamento se especificado
+      if (filters.department && process.currentDepartment !== filters.department) {
+        return false;
+      }
+
+      // Filtrar por status apenas se um status específico foi selecionado
+      if (filters.status && filters.status !== "all") {
+        if (process.status !== filters.status) {
+          return false;
         }
-        if (!processTypeFilterCache[typeCacheKey]) return false;
       }
 
-      // Filtro por texto de busca (número de protocolo)
-      if (filters.search && filters.search.trim() !== '') {
-        const searchText = filters.search.trim().toLowerCase();
-        const protocolNumber = process.protocolNumber?.toLowerCase() || '';
-        if (!protocolNumber.includes(searchText)) return false;
+      // Filtrar por tipo de processo
+      if (filters.processType && process.processType !== filters.processType) {
+        return false;
       }
 
-      // Filtro por data de início
-      if (filters.startDate && process.startDate) {
-        const filterStartDate = new Date(filters.startDate);
-        filterStartDate.setHours(0, 0, 0, 0);
-        const processDate = new Date(process.startDate);
-        if (processDate < filterStartDate) return false;
+      // Filtrar por número de protocolo
+      if (filters.search &&
+        !process.protocolNumber.toLowerCase().includes(filters.search.toLowerCase())
+      ) {
+        return false;
       }
 
-      // Filtro por data de fim
-      if (filters.endDate && process.startDate) {
-        const filterEndDate = new Date(filters.endDate);
-        filterEndDate.setHours(23, 59, 59, 999);
-        const processDate = new Date(process.startDate);
-        if (processDate > filterEndDate) return false;
+      // Filtrar por período
+      if (filters.startDate) {
+        const start = new Date(filters.startDate);
+        const processStartDate = process.startDate ? new Date(process.startDate) : null;
+        if (!processStartDate || processStartDate < start) {
+          return false;
+        }
+      }
+      if (filters.endDate) {
+        const end = new Date(filters.endDate);
+        const processStartDate = process.startDate ? new Date(process.startDate) : null;
+        if (!processStartDate || processStartDate > end) {
+          return false;
+        }
       }
 
-      // Filtro por usuário responsável
-      if (filters.responsibleUser && processesResponsibles) {
-        let isResponsibleMatched = false;
+      // Filtrar por responsável
+      if (filters.responsibleUser) {
+        const isResponsibleUser = process.responsibleUserId === filters.responsibleUser;
         
-        // Verificar se o usuário é responsável pelo processo em algum setor
-        if (processesResponsibles[process.id]) {
-          Object.values(processesResponsibles[process.id]).forEach((responsible: any) => {
-            if (responsible && responsible.id === filters.responsibleUser) {
-              isResponsibleMatched = true;
-            }
-          });
+        // Verificar responsabilidade em qualquer setor
+        let isResponsibleInAnySector = false;
+        if (processesResponsibles && processesResponsibles[process.id]) {
+          const processSectorResponsibles = processesResponsibles[process.id];
+          isResponsibleInAnySector = Object.values(processSectorResponsibles).some(
+            (sectorData: any) => sectorData && sectorData.usuario_id === filters.responsibleUser
+          );
         }
         
-        if (!isResponsibleMatched) return false;
+        if (!isResponsibleUser && !isResponsibleInAnySector) {
+          return false;
+        }
       }
 
-      // Processo passou por todos os filtros
       return true;
     });
   };
 
+  /**
+   * Verifica se um processo está atrasado
+   */
+  const isProcessOverdue = (process: Process) => {
+    if (process.status === 'overdue') return true;
+    const now = new Date();
+    const expectedEndDate = new Date(process.expectedEndDate);
+    return now > expectedEndDate;
+  };
+
   return {
-    isProcessOverdue,
-    applyUserFilters
+    applyUserFilters,
+    isProcessOverdue
   };
 };

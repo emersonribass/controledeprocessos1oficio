@@ -9,10 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 export const useProcessResponsibilityCache = (processes: Process[]) => {
   // Cache de responsabilidades por processo e setor usando useRef para manter entre renderizações
   const processResponsibilitiesCacheRef = useRef<Record<string, Record<string, boolean>>>({});
-  const sectorResponsibleCacheRef = useRef<Record<string, boolean>>({});
-  
-  // Controle para evitar múltiplas requisições simultâneas
-  const pendingRequestsRef = useRef<Record<string, Promise<boolean>>>({});
   
   // Inicializa o cache se ainda não existir
   useMemo(() => {
@@ -31,8 +27,6 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
    */
   const clearResponsibilityCache = () => {
     processResponsibilitiesCacheRef.current = {};
-    sectorResponsibleCacheRef.current = {};
-    pendingRequestsRef.current = {};
     // Reinicializa o cache
     processes.forEach(process => {
       if (!processResponsibilitiesCacheRef.current[process.id]) {
@@ -57,57 +51,29 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
       return processResponsibilitiesCacheRef.current[processId][sectorId];
     }
     
-    // Criar chave única para esta requisição
-    const requestKey = `${processId}:${sectorId}:${userId}`;
-    
-    // Se já existe uma requisição pendente para esta mesma combinação, reutilizá-la
-    if (pendingRequestsRef.current[requestKey]) {
-      return pendingRequestsRef.current[requestKey];
-    }
-    
     try {
-      // Criar uma nova Promise para esta requisição
-      const requestPromise = new Promise<boolean>(async (resolve) => {
-        try {
-          // Consultar a tabela setor_responsaveis
-          const { data, error } = await supabase
-            .from('setor_responsaveis')
-            .select('*')
-            .eq('processo_id', processId)
-            .eq('setor_id', sectorId)
-            .eq('usuario_id', userId)
-            .maybeSingle();
-          
-          if (error) {
-            console.error("Erro ao verificar responsabilidade:", error);
-            resolve(false);
-            return;
-          }
-          
-          // Armazenar resultado no cache
-          const isResponsible = !!data;
-          if (!processResponsibilitiesCacheRef.current[processId]) {
-            processResponsibilitiesCacheRef.current[processId] = {};
-          }
-          processResponsibilitiesCacheRef.current[processId][sectorId] = isResponsible;
-          
-          resolve(isResponsible);
-        } catch (error) {
-          console.error("Erro ao verificar responsabilidade para setor:", error);
-          resolve(false);
-        }
-      });
+      // Consultar a tabela setor_responsaveis
+      const { data, error } = await supabase
+        .from('setor_responsaveis')
+        .select('*')
+        .eq('processo_id', processId)
+        .eq('setor_id', sectorId)
+        .eq('usuario_id', userId)
+        .maybeSingle();
       
-      // Armazenar a promise no cache de requisições pendentes
-      pendingRequestsRef.current[requestKey] = requestPromise;
+      if (error) {
+        console.error("Erro ao verificar responsabilidade:", error);
+        return false;
+      }
       
-      // Aguardar o resultado
-      const result = await requestPromise;
+      // Armazenar resultado no cache
+      const isResponsible = !!data;
+      if (!processResponsibilitiesCacheRef.current[processId]) {
+        processResponsibilitiesCacheRef.current[processId] = {};
+      }
+      processResponsibilitiesCacheRef.current[processId][sectorId] = isResponsible;
       
-      // Remover do cache de requisições pendentes após conclusão
-      delete pendingRequestsRef.current[requestKey];
-      
-      return result;
+      return isResponsible;
     } catch (error) {
       console.error("Erro ao verificar responsabilidade para setor:", error);
       return false;
@@ -118,57 +84,21 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
    * Função para verificar se existe um responsável para o processo no setor
    */
   const hasSectorResponsible = async (processId: string, sectorId: string): Promise<boolean> => {
-    // Verificar se já temos no cache
-    const cacheKey = `${processId}:${sectorId}`;
-    if (sectorResponsibleCacheRef.current[cacheKey] !== undefined) {
-      return sectorResponsibleCacheRef.current[cacheKey];
-    }
-    
-    // Se já existe uma requisição pendente para esta mesma combinação, reutilizá-la
-    if (pendingRequestsRef.current[cacheKey]) {
-      return pendingRequestsRef.current[cacheKey];
-    }
-    
     try {
-      // Criar uma nova Promise para esta requisição
-      const requestPromise = new Promise<boolean>(async (resolve) => {
-        try {
-          // Modificado para usar .select('count') em vez de .maybeSingle()
-          // porque pode haver múltiplos responsáveis por setor
-          const { data, error, count } = await supabase
-            .from('setor_responsaveis')
-            .select('*', { count: 'exact', head: true })
-            .eq('processo_id', processId)
-            .eq('setor_id', sectorId);
-          
-          if (error) {
-            console.error("Erro ao verificar existência de responsável no setor:", error);
-            resolve(false);
-            return;
-          }
-          
-          const hasResponsible = count !== null && count > 0;
-          
-          // Armazenar no cache
-          sectorResponsibleCacheRef.current[cacheKey] = hasResponsible;
-          
-          resolve(hasResponsible);
-        } catch (error) {
-          console.error("Erro ao verificar responsáveis de setor:", error);
-          resolve(false);
-        }
-      });
+      // Modificado para usar .select('count') em vez de .maybeSingle()
+      // porque pode haver múltiplos responsáveis por setor
+      const { data, error, count } = await supabase
+        .from('setor_responsaveis')
+        .select('*', { count: 'exact', head: true })
+        .eq('processo_id', processId)
+        .eq('setor_id', sectorId);
       
-      // Armazenar a promise no cache de requisições pendentes
-      pendingRequestsRef.current[cacheKey] = requestPromise;
+      if (error) {
+        console.error("Erro ao verificar existência de responsável no setor:", error);
+        return false;
+      }
       
-      // Aguardar o resultado
-      const result = await requestPromise;
-      
-      // Remover do cache de requisições pendentes após conclusão
-      delete pendingRequestsRef.current[cacheKey];
-      
-      return result;
+      return count !== null && count > 0;
     } catch (error) {
       console.error("Erro ao verificar responsáveis de setor:", error);
       return false;

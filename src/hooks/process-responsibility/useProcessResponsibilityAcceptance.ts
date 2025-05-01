@@ -14,33 +14,10 @@ export const useProcessResponsibilityAcceptance = (processes: Process[] = []) =>
   const { user } = useAuth();
   const { refreshResponsibilityCache } = useProcessVisibilityPermissions(processes);
 
-  /**
-   * Verifica se o usuário é o criador do processo
-   * @param processId ID do processo
-   * @param userId ID do usuário
-   * @returns true se o usuário é o criador do processo, false caso contrário
-   */
-  const isUserProcessCreator = async (processId: string, userId: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from('processos')
-        .select('usuario_responsavel')
-        .eq('id', processId)
-        .single();
-        
-      if (error) throw error;
-      
-      return data && data.usuario_responsavel === userId;
-    } catch (error) {
-      console.error("Erro ao verificar se usuário é criador do processo:", error);
-      return false;
-    }
-  };
-
   const acceptProcessResponsibility = async (
     processId: string, 
     protocolNumber: string,
-    showToast: boolean = true
+    showToast: boolean = false
   ) => {
     if (!user) {
       if (showToast) {
@@ -66,9 +43,7 @@ export const useProcessResponsibilityAcceptance = (processes: Process[] = []) =>
       if (!processData) throw new Error("Processo não encontrado");
 
       const currentDepartmentId = processData.setor_atual;
-      const isCreator = await isUserProcessCreator(processId, user.id);
       
-      // Verificar se o usuário já é responsável por este processo neste setor
       const { data: existingResponsibles, error: responsibleError } = await supabase
         .from('setor_responsaveis')
         .select('*')
@@ -82,7 +57,6 @@ export const useProcessResponsibilityAcceptance = (processes: Process[] = []) =>
         : null;
 
       if (existingResponsible) {
-        // Se o usuário já for o responsável, apenas retornar sucesso
         if (existingResponsible.usuario_id === user.id) {
           if (showToast) {
             uiToast({
@@ -93,31 +67,18 @@ export const useProcessResponsibilityAcceptance = (processes: Process[] = []) =>
           return true;
         }
         
-        // Se o usuário não for o responsável atual, mas for o criador do processo, permitir aceitar
-        if (isCreator) {
-          const now = saveDateToDatabase(new Date());
+        const now = saveDateToDatabase(new Date());
 
-          const { error: updateError } = await supabase
-            .from('setor_responsaveis')
-            .update({ 
-              usuario_id: user.id,
-              data_atribuicao: now,
-              updated_at: now
-            })
-            .eq('id', existingResponsible.id);
+        const { error: updateError } = await supabase
+          .from('setor_responsaveis')
+          .update({ 
+            usuario_id: user.id,
+            data_atribuicao: now,
+            updated_at: now
+          })
+          .eq('id', existingResponsible.id);
 
-          if (updateError) throw updateError;
-        } else {
-          // Se já existe um responsável e o usuário não é o criador, não permitir aceitar
-          if (showToast) {
-            uiToast({
-              title: "Erro",
-              description: "Este processo já possui um responsável neste setor.",
-              variant: "destructive",
-            });
-          }
-          return false;
-        }
+        if (updateError) throw updateError;
       } else {
         const now = saveDateToDatabase(new Date());
         
