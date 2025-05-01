@@ -11,12 +11,13 @@ import { useMemo, useRef } from "react";
  */
 export const useProcessVisibilityPermissions = (processes: Process[]) => {
   const { user } = useAuth();
-  const { isAdmin } = useUserProfile();
+  const { userProfile } = useUserProfile();
   
   const {
     isUserResponsibleForProcess,
     isUserInAttendanceSector,
-    isUserInCurrentSector
+    isUserInCurrentSector,
+    isUserAdmin
   } = useProcessPermissionCheckers();
   
   const {
@@ -53,10 +54,10 @@ export const useProcessVisibilityPermissions = (processes: Process[]) => {
       let hasPermission = false;
       
       // Admin sempre tem acesso
-      if (isAdmin()) {
+      if (isUserAdmin()) {
         hasPermission = true;
       }
-      // Responsável direto pelo processo
+      // Responsável direto pelo processo (criador ou responsável atual)
       else if (isUserResponsibleForProcess(process, user.id)) {
         hasPermission = true;
       }
@@ -65,10 +66,12 @@ export const useProcessVisibilityPermissions = (processes: Process[]) => {
         hasPermission = true;
       }
       // Verificar se existe responsável no processo.responsibles
-      else if (process.responsibles && 
-          process.currentDepartment && 
-          process.responsibles[process.currentDepartment] &&
-          process.responsibles[process.currentDepartment].id === user.id) {
+      else if (
+        process.responsibles && 
+        process.currentDepartment && 
+        process.responsibles[process.currentDepartment] &&
+        process.responsibles[process.currentDepartment].id === user.id
+      ) {
         hasPermission = true;
       }
       
@@ -78,7 +81,7 @@ export const useProcessVisibilityPermissions = (processes: Process[]) => {
     });
 
     return result;
-  }, [processes, user, isAdmin, isUserResponsibleForProcess, isUserInAttendanceSector]);
+  }, [processes, user, isUserAdmin, isUserResponsibleForProcess, isUserInAttendanceSector]);
 
   /**
    * Verifica se um usuário tem permissão para visualizar um processo específico
@@ -102,20 +105,20 @@ export const useProcessVisibilityPermissions = (processes: Process[]) => {
     }
     
     // Admin sempre tem acesso (caso não tenha sido pré-verificado)
-    if (isAdmin()) {
+    if (isUserAdmin()) {
       const hasPermission = true;
       permissionsCheckedRef.current[process.id] = hasPermission;
       return hasPermission;
     }
 
-    // Verificar se o usuário é responsável direto pelo processo (caso não tenha sido pré-verificado)
+    // Verificar se o usuário é responsável direto pelo processo (criador ou responsável atual)
     if (isUserResponsibleForProcess(process, userId)) {
       const hasPermission = true;
       permissionsCheckedRef.current[process.id] = hasPermission;
       return hasPermission;
     }
     
-    // Usuários do setor de atendimento podem ver processos não iniciados (caso não tenha sido pré-verificado)
+    // Usuários do setor de atendimento podem ver processos não iniciados
     if (process.status === 'not_started' && isUserInAttendanceSector()) {
       const hasPermission = true;
       permissionsCheckedRef.current[process.id] = hasPermission;
@@ -123,40 +126,44 @@ export const useProcessVisibilityPermissions = (processes: Process[]) => {
     }
 
     // Verificar se o usuário é responsável pelo processo no setor atual (via processesResponsibles)
-    if (processesResponsibles && 
-        process.currentDepartment && 
-        processesResponsibles[process.id] && 
-        processesResponsibles[process.id][process.currentDepartment] &&
-        processesResponsibles[process.id][process.currentDepartment].id === userId) {
+    if (
+      processesResponsibles && 
+      process.currentDepartment && 
+      processesResponsibles[process.id] && 
+      processesResponsibles[process.id][process.currentDepartment] &&
+      processesResponsibles[process.id][process.currentDepartment].id === userId
+    ) {
       const hasPermission = true;
       permissionsCheckedRef.current[process.id] = hasPermission;
       return hasPermission;
     }
     
-    let hasPermission = false;
-    
     // Se o usuário pertence ao setor atual
     if (isUserInCurrentSector(process)) {
-      // Verificar se existe um responsável para o setor
-      const hasResponsible = await hasSectorResponsible(process.id, process.currentDepartment);
-      if (!hasResponsible) {
-        hasPermission = true;
-        permissionsCheckedRef.current[process.id] = hasPermission;
-        return hasPermission;
+      // Processos iniciados precisam verificar se existe um responsável para o setor
+      if (process.status !== 'not_started') {
+        // Verificar se existe um responsável para o setor
+        const hasResponsible = await hasSectorResponsible(process.id, process.currentDepartment);
+        
+        // Se não existe responsável no setor, o usuário do setor pode ver
+        if (!hasResponsible) {
+          const hasPermission = true;
+          permissionsCheckedRef.current[process.id] = hasPermission;
+          return hasPermission;
+        }
       }
     }
     
     // Verificar responsabilidade no setor atual (somente se as verificações anteriores falharem)
-    if (process.currentDepartment && !hasPermission) {
+    if (process.currentDepartment) {
       const isResponsible = await checkAndCacheResponsibility(
         process.id,
         process.currentDepartment,
         userId
       );
       
-      hasPermission = isResponsible;
-      permissionsCheckedRef.current[process.id] = hasPermission;
-      return hasPermission;
+      permissionsCheckedRef.current[process.id] = isResponsible;
+      return isResponsible;
     }
     
     // Não tem permissão

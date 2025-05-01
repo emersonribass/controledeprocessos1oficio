@@ -33,6 +33,9 @@ export const useProcessFormatter = () => {
         userId: h.usuario_id
       }));
 
+      // Garantir que a propriedade responsibles existe e é consistente
+      const responsibles = process.responsibles || {};
+
       // Construir o objeto de processo no formato esperado pelo frontend
       return {
         id: process.id,
@@ -43,11 +46,11 @@ export const useProcessFormatter = () => {
         expectedEndDate: process.data_fim_esperada,
         status: status,
         currentDepartment: process.setor_atual,
-        userId: process.usuario_responsavel,
+        userId: process.usuario_responsavel, // Criador do processo
         processType: process.tipo_processo,
         history: formattedHistory,
-        responsibleUserId: process.usuario_responsavel,
-        responsibles: process.responsibles || {}
+        responsibleUserId: process.usuario_responsavel, // Responsável atual pelo processo
+        responsibles: responsibles
       };
     });
   };

@@ -1,9 +1,10 @@
 
-import { useState } from "react";
+import { memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
+import { useProcesses } from "@/hooks/useProcesses";
 
 interface AcceptProcessButtonProps {
   processId: string;
@@ -12,7 +13,7 @@ interface AcceptProcessButtonProps {
   onAccept: () => void;
 }
 
-const AcceptProcessButton = ({
+const AcceptProcessButton = memo(({
   processId,
   protocolNumber,
   hasResponsibleUser,
@@ -20,13 +21,15 @@ const AcceptProcessButton = ({
 }: AcceptProcessButtonProps) => {
   const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const { user } = useAuth();
+  const { refreshProcesses } = useProcesses();
 
-  const handleAcceptProcess = async () => {
-    const success = await acceptProcessResponsibility(processId, protocolNumber);
+  const handleAcceptProcess = useCallback(async () => {
+    const success = await acceptProcessResponsibility(processId, protocolNumber, true);
     if (success) {
+      await refreshProcesses();
       onAccept();
     }
-  };
+  }, [processId, protocolNumber, acceptProcessResponsibility, refreshProcesses, onAccept]);
 
   if (hasResponsibleUser) {
     return null;
@@ -43,6 +46,8 @@ const AcceptProcessButton = ({
       {isAccepting ? "Processando..." : "Aceitar Processo"}
     </Button>
   );
-};
+});
+
+AcceptProcessButton.displayName = 'AcceptProcessButton';
 
 export default AcceptProcessButton;

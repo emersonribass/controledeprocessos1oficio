@@ -43,6 +43,11 @@ export const useProcessFiltering = (
     
     if (!user) return [];
 
+    // Se o usuário for administrador, pular verificações de permissão e aplicar apenas filtros
+    if (permissionCheckers.isUserAdmin()) {
+      return statusFilters.applyUserFilters(baseList, filters, processesResponsibles);
+    }
+
     const visibleProcessesPromises = baseList.map(async (process) => {
       // Verificar se o usuário tem permissão para ver o processo
       const canView = await visibilityPermissions.canUserViewProcess(
@@ -51,7 +56,7 @@ export const useProcessFiltering = (
         processesResponsibles
       );
 
-      // Se não tem permissão ou não atende aos critérios de filtragem, retorna null
+      // Se não tem permissão, retorna null
       if (!canView) return null;
 
       return process;
@@ -69,6 +74,7 @@ export const useProcessFiltering = (
   return {
     filterProcesses,
     isProcessOverdue: statusFilters.isProcessOverdue,
+    refreshResponsibilityCache: visibilityPermissions.refreshResponsibilityCache,
     ...permissionCheckers,
     ...responsibilityCache
   };

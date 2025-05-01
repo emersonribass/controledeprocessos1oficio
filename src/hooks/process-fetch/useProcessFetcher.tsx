@@ -63,6 +63,11 @@ export const useProcessFetcher = () => {
         .filter((p: any) => p.status !== 'Não iniciado')
         .map((p: any) => p.id);
 
+      // Inicializar uma estrutura vazia de responsáveis para todos os processos
+      processesWithDepartments.forEach((process: any) => {
+        process.responsibles = {};
+      });
+
       if (startedProcessIds.length > 0) {
         const { data: sectorResponsibles, error: sectorsError } = await supabase
           .from('setor_responsaveis')
@@ -80,19 +85,18 @@ export const useProcessFetcher = () => {
 
         if (!sectorsError && sectorResponsibles) {
           // Mapear responsáveis por processo e setor para uso posterior
-          const responsiblesMap: any = {};
-          
           sectorResponsibles.forEach((resp) => {
-            if (!responsiblesMap[resp.processo_id]) {
-              responsiblesMap[resp.processo_id] = {};
-            }
+            const processId = resp.processo_id;
+            const sectorId = resp.setor_id;
+            const process = processesWithDepartments.find((p: any) => p.id === processId);
             
-            responsiblesMap[resp.processo_id][resp.setor_id] = resp.usuarios;
-          });
-          
-          // Anexar responsáveis aos dados do processo
-          processesWithDepartments.forEach((process: any) => {
-            process.responsibles = responsiblesMap[process.id] || {};
+            if (process) {
+              if (!process.responsibles) {
+                process.responsibles = {};
+              }
+              
+              process.responsibles[sectorId] = resp.usuarios;
+            }
           });
         }
       }
