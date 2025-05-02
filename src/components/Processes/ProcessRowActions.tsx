@@ -48,7 +48,9 @@ const ProcessRowActions = ({
   showRenewDeadlineButton = false,
   isUserProcessOwner = false
 }: ProcessRowActionsProps) => {
-  // Log para debug
+  // Logs adicionais para diagnóstico
+  logger.debug(`ProcessRowActions: processId=${processId}, hasSectorResponsible=${hasSectorResponsible}, isUserProcessOwner=${isUserProcessOwner}, status=${status}`);
+  
   if (!hasSectorResponsible && isUserProcessOwner) {
     logger.debug(`ProcessRowActions: Botão aceitar deve ser exibido para processo ${processId}, isUserProcessOwner=${isUserProcessOwner}, hasSectorResponsible=${hasSectorResponsible}`);
   }

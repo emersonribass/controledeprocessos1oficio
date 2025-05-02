@@ -1,14 +1,14 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
-import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
 import { memo } from "react";
 import { useUserProfile } from "@/hooks/auth/useUserProfile";
 import { createLogger } from "@/utils/loggerUtils";
 import { useToastService } from "@/utils/toastUtils";
-import { useProcesses } from "@/hooks/useProcesses";
 import { Process } from "@/types";
+import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 
 const logger = createLogger("ProcessActionButtons");
 
@@ -52,20 +52,18 @@ const ProcessActionButtons = memo(({
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
   const toast = useToastService();
-  const { getProcess } = useProcesses();
-  const { isUserProcessOwner: checkIsUserProcessOwner } = useProcessResponsibility();
   
-  // Verifica se o usuário tem o setor atribuído ou é o proprietário do processo
+  // Verificação se o usuário pertence ao setor atual
   const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
   
-  // Usando exatamente a mesma lógica do ProcessResponsibleInfo.tsx
+  // Condição para exibir o botão aceitar (igual à ProcessResponsibleInfo.tsx)
   const canAcceptResponsibility = !hasSectorResponsible && (isUserInSector || isUserProcessOwner);
 
-  // Log para debugging detalhado
-  logger.debug(`ProcessActionButtons - processId: ${processId}, hasSectorResponsible: ${hasSectorResponsible}, isUserInSector: ${isUserInSector}, isUserProcessOwner: ${isUserProcessOwner}, canAcceptResponsibility: ${canAcceptResponsibility}, sectorId: ${sectorId}`);
+  // Log detalhado para diagnóstico
+  logger.debug(`ProcessActionButtons - processId: ${processId}, status: ${status}, hasSectorResponsible: ${hasSectorResponsible}, isUserInSector: ${isUserInSector}, isUserProcessOwner: ${isUserProcessOwner}, canAcceptResponsibility: ${canAcceptResponsibility}, sectorId: ${sectorId}, onAcceptResponsibility: ${!!onAcceptResponsibility}`);
   
   if (isUserProcessOwner) {
-    logger.debug(`Usuário é dono do processo ${processId} - verificando se botão aceitar será exibido: canAcceptResponsibility=${canAcceptResponsibility}`);
+    logger.debug(`Usuário é dono do processo ${processId} - verificando se botão aceitar será exibido: canAcceptResponsibility=${canAcceptResponsibility}, hasSectorResponsible=${hasSectorResponsible}, status=${status}, onAcceptResponsibility=${!!onAcceptResponsibility}`);
   }
 
   const isNotStarted = status === "not_started";
@@ -133,10 +131,24 @@ const ProcessActionButtons = memo(({
   }
 
   // Para processos sem responsável (exibir botão aceitar)
-  if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed" && canAcceptResponsibility) {
-    logger.debug(`Exibindo botão aceitar para processo ${processId}, hasSectorResponsible=${hasSectorResponsible}, isUserInSector=${isUserInSector}, isUserProcessOwner=${isUserProcessOwner}`);
+  // Verificar TODAS as condições necessárias
+  if (
+    onAcceptResponsibility && 
+    status !== "completed" && 
+    canAcceptResponsibility
+  ) {
+    logger.debug(`EXIBINDO BOTÃO ACEITAR para processo ${processId}`);
+    logger.debug(`Condições: onAcceptResponsibility=${!!onAcceptResponsibility}, status=${status}, canAcceptResponsibility=${canAcceptResponsibility}, hasSectorResponsible=${hasSectorResponsible}`);
+    
     return <div className="flex justify-center gap-1 process-action">
-        <Button variant="outline" size="sm" onClick={handleAcceptResponsibility} disabled={isAccepting} title="Aceitar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action mx-0 px-[6px]">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleAcceptResponsibility} 
+          disabled={isAccepting} 
+          title="Aceitar processo" 
+          className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action mx-0 px-[6px]"
+        >
           <CheckCircle className="h-3 w-3" />
           {isAccepting ? "Processando..." : "Aceitar"}
         </Button>
