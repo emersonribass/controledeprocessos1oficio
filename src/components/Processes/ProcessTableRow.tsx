@@ -1,4 +1,3 @@
-
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -15,6 +14,7 @@ import { createLogger } from "@/utils/loggerUtils";
 import { useCallback } from "react";
 import { useProcessTableState } from "@/hooks/useProcessTableState";
 import { useAuth } from "@/hooks/auth";
+import { useProcessPermissionCheckers } from "@/hooks/process/permission/useProcessPermissionCheckers";
 
 const logger = createLogger("ProcessTableRow");
 
@@ -55,14 +55,14 @@ const ProcessTableRow = ({
   const { refreshProcesses } = useProcesses();
   const { queueSectorForLoading } = useProcessTableState([]);
   const { user } = useAuth();
-  const { isUserProcessOwner } = useProcessResponsibility();
+  const { isUserProcessOwner } = useProcessPermissionCheckers();
 
   const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
-  const { getProcessResponsible } = useProcessResponsibility();
   
-  const hasResponsible = hasSectorResponsible || !!sectorResponsible;
+  // Verificação se o usuário é o proprietário do processo
   const isOwner = user ? isUserProcessOwner(process, user.id) : false;
   
+  const hasResponsible = hasSectorResponsible || !!sectorResponsible;
   const { canRenewDeadline, historyId: renewalHistoryId } = useDeadlineRenewalCondition(process);
 
   const {

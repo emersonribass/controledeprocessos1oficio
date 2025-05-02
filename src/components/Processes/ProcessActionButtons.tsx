@@ -9,6 +9,7 @@ import { useUserProfile } from "@/hooks/auth/useUserProfile";
 import { createLogger } from "@/utils/loggerUtils";
 import { useToastService } from "@/utils/toastUtils";
 import { useProcesses } from "@/hooks/useProcesses";
+import { useProcessPermissionCheckers } from "@/hooks/process/permission/useProcessPermissionCheckers";
 
 const logger = createLogger("ProcessActionButtons");
 
@@ -51,14 +52,14 @@ const ProcessActionButtons = memo(({
 }: ProcessActionButtonsProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
-  const { isUserResponsibleForProcess } = useProcessResponsibility();
-  const isNotStarted = status === "not_started";
-  const isCompleted = status === "completed";
   const toast = useToastService();
-
+  
   // Verifica se o usuário tem o setor atribuído ou é o proprietário do processo
   const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
   const canAcceptResponsibility = !hasSectorResponsible && (isUserInSector || isUserProcessOwner);
+
+  const isNotStarted = status === "not_started";
+  const isCompleted = status === "completed";
 
   const validateProcessType = (): boolean => {
     if (!processType) {
@@ -105,6 +106,7 @@ const ProcessActionButtons = memo(({
     }
   };
 
+  // Para processos não iniciados
   if (isNotStarted && startProcess) {
     return <div className="flex justify-center gap-1 process-action">
         <Button 
@@ -120,6 +122,7 @@ const ProcessActionButtons = memo(({
       </div>;
   }
 
+  // Para processos sem responsável (exibir botão aceitar)
   if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed" && canAcceptResponsibility) {
     return <div className="flex justify-center gap-1 process-action">
         <Button variant="outline" size="sm" onClick={handleAcceptResponsibility} disabled={isAccepting} title="Aceitar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action mx-0 px-[6px]">
@@ -129,6 +132,7 @@ const ProcessActionButtons = memo(({
       </div>;
   }
 
+  // Botões de navegação entre setores
   return (
     <div className="flex justify-center gap-2 process-action">
       <Button 
