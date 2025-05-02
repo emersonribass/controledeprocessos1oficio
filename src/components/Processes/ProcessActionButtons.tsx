@@ -135,7 +135,7 @@ const ProcessActionButtons = memo(({
   }
 
   // Para processos sem responsável (exibir botão aceitar)
-  if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed" && canAcceptResponsibility) {
+  if (!hasSectorResponsible && isUserProcessOwner && onAcceptResponsibility && status !== "completed" && canAcceptResponsibility) {
     logger.debug(`Exibindo botão aceitar para processo ${processId}, hasSectorResponsible=${hasSectorResponsible}, isUserInSector=${isUserInSector}, isUserProcessOwner=${isUserProcessOwner}`);
     return <div className="flex justify-center gap-1 process-action">
         <Button variant="outline" size="sm" onClick={handleAcceptResponsibility} disabled={isAccepting} title="Aceitar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action mx-0 px-[6px]">
