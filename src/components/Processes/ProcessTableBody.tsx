@@ -7,6 +7,9 @@ import { useAuth } from "@/hooks/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { createLogger } from "@/utils/loggerUtils";
+
+const logger = createLogger("ProcessTableBody");
 
 interface ProcessTableBodyProps {
   processes: Process[];
@@ -72,10 +75,14 @@ const ProcessTableBody = ({
 
   // Função para verificar se existe um responsável para o processo no setor atual
   const hasSectorResponsible = (processId: string, currentDepartment: string) => {
-    return !!(
+    // Adicionar log de debug para verificar hasSectorResponsible
+    const hasResponsible = !!(
       processesResponsibles[processId] && 
       processesResponsibles[processId][currentDepartment]
     );
+    
+    logger.debug(`hasSectorResponsible para processo ${processId}, setor ${currentDepartment}: ${hasResponsible}`);
+    return hasResponsible;
   };
 
   if (isLoading) {
@@ -107,24 +114,30 @@ const ProcessTableBody = ({
 
   return (
     <TableBody>
-      {processes.map(process => (
-        <ProcessTableRow
-          key={process.id}
-          process={process}
-          departments={departments}
-          processTypes={processTypes}
-          moveProcessToNextDepartment={moveProcessToNextDepartment}
-          moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
-          getProcessTypeName={getProcessTypeName}
-          updateProcessType={updateProcessType}
-          startProcess={startProcess}
-          hasSectorResponsible={hasSectorResponsible(process.id, process.currentDepartment)}
-          onAcceptResponsibility={() => handleAcceptResponsibility(process.id, process.protocolNumber)}
-          isAccepting={isAccepting && acceptingProcessId === process.id}
-          canInitiateProcesses={isUserInAttendanceSector()}
-          processResponsibles={processesResponsibles[process.id]}
-        />
-      ))}
+      {processes.map(process => {
+        // Adicionar log para verificar os valores para cada processo
+        const hasResponsible = hasSectorResponsible(process.id, process.currentDepartment);
+        logger.debug(`Processo ${process.id}: hasSectorResponsible=${hasResponsible}, currentDepartment=${process.currentDepartment}`);
+        
+        return (
+          <ProcessTableRow
+            key={process.id}
+            process={process}
+            departments={departments}
+            processTypes={processTypes}
+            moveProcessToNextDepartment={moveProcessToNextDepartment}
+            moveProcessToPreviousDepartment={moveProcessToPreviousDepartment}
+            getProcessTypeName={getProcessTypeName}
+            updateProcessType={updateProcessType}
+            startProcess={startProcess}
+            hasSectorResponsible={hasResponsible}
+            onAcceptResponsibility={() => handleAcceptResponsibility(process.id, process.protocolNumber)}
+            isAccepting={isAccepting && acceptingProcessId === process.id}
+            canInitiateProcesses={isUserInAttendanceSector()}
+            processResponsibles={processesResponsibles[process.id]}
+          />
+        );
+      })}
     </TableBody>
   );
 };
