@@ -10,6 +10,7 @@ import { createLogger } from "@/utils/loggerUtils";
 import { useToastService } from "@/utils/toastUtils";
 import { useProcesses } from "@/hooks/useProcesses";
 import { useProcessPermissionCheckers } from "@/hooks/process/permission/useProcessPermissionCheckers";
+import { Process } from "@/types";
 
 const logger = createLogger("ProcessActionButtons");
 
@@ -53,16 +54,21 @@ const ProcessActionButtons = memo(({
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
   const toast = useToastService();
+  const { isUserProcessOwner: checkIfUserIsProcessOwner } = useProcessPermissionCheckers();
   
   // Verifica se o usuário tem o setor atribuído ou é o proprietário do processo
   const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
   
-  // Corrigindo a lógica para exibir o botão aceitar
-  // Agora aceitaremos responsabilidade se o usuário estiver no setor OU for dono do processo
+  // Agora usando uma combinação das duas abordagens - o prop passado e a verificação direta
+  // Isso garante compatibilidade com ambos os padrões usados no sistema
   const canAcceptResponsibility = !hasSectorResponsible && (isUserInSector || isUserProcessOwner);
 
-  // Log para debugging
-  logger.debug(`ProcessActionButtons - processId: ${processId}, hasSectorResponsible: ${hasSectorResponsible}, isUserInSector: ${isUserInSector}, isUserProcessOwner: ${isUserProcessOwner}, canAcceptResponsibility: ${canAcceptResponsibility}`);
+  // Log para debugging detalhado
+  logger.debug(`ProcessActionButtons - processId: ${processId}, hasSectorResponsible: ${hasSectorResponsible}, isUserInSector: ${isUserInSector}, isUserProcessOwner: ${isUserProcessOwner}, canAcceptResponsibility: ${canAcceptResponsibility}, sectorId: ${sectorId}`);
+  
+  if (isUserProcessOwner) {
+    logger.debug(`Usuário é dono do processo ${processId} - verificando se botão aceitar será exibido: canAcceptResponsibility=${canAcceptResponsibility}`);
+  }
 
   const isNotStarted = status === "not_started";
   const isCompleted = status === "completed";
