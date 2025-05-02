@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
+import { useProcesses } from "@/hooks/useProcesses";
 
 interface AcceptProcessButtonProps {
   processId: string;
   protocolNumber: string;
   hasResponsibleUser: boolean;
   onAccept: () => void;
+  isUserProcessOwner?: boolean;
 }
 
 const AcceptProcessButton = ({
@@ -17,17 +19,21 @@ const AcceptProcessButton = ({
   protocolNumber,
   hasResponsibleUser,
   onAccept,
+  isUserProcessOwner = false
 }: AcceptProcessButtonProps) => {
   const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const { user } = useAuth();
+  const { refreshProcesses } = useProcesses();
 
   const handleAcceptProcess = async () => {
     const success = await acceptProcessResponsibility(processId, protocolNumber);
     if (success) {
       onAccept();
+      await refreshProcesses();
     }
   };
 
+  // Se já tiver um responsável, não mostra o botão
   if (hasResponsibleUser) {
     return null;
   }

@@ -1,116 +1,82 @@
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useProcessResponsibility } from "./useProcessResponsibility";
-import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "./use-toast";
+import { useAuth } from "./auth";
+import { useProcesses } from "./useProcesses";
 
 export const useProcessDetailsResponsibility = (processId: string, sectorId: string) => {
-  const [isLoading, setIsLoading] = useState(true);
+  const { getSectorResponsible, getProcessResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const [processResponsible, setProcessResponsible] = useState<any>(null);
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
-  const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
-  
-  // Referências para controlar se os dados já foram carregados
-  const loadedRef = useRef(false);
-  const loadingInProgressRef = useRef(false);
-  
-  // Função otimizada para buscar responsáveis
-  const loadResponsibles = useCallback(async () => {
-    if (!processId || !sectorId || loadingInProgressRef.current) {
-      return;
-    }
-    
-    // Evitar múltiplas chamadas simultâneas
-    loadingInProgressRef.current = true;
-    setIsLoading(true);
-    
-    try {
-      // Buscamos todos os responsáveis de uma vez
-      const { data: responsibleData, error: responsibleError } = await supabase
-        .from('processos')
-        .select(`
-          id,
-          usuario_responsavel,
-          setor_responsaveis(
-            id,
-            usuario_id,
-            setor_id
-          ),
-          usuarios!processos_usuario_responsavel_fkey(
-            id,
-            nome,
-            email
-          )
-        `)
-        .eq('id', processId)
-        .single();
-      
-      if (responsibleError) {
-        throw responsibleError;
-      }
-      
-      // Processo responsável
-      setProcessResponsible(
-        responsibleData?.usuario_responsavel ? 
-        responsibleData.usuarios : null
-      );
-      
-      // Responsável pelo setor
-      const sectorResp = responsibleData?.setor_responsaveis?.find(
-        (sr: any) => sr.setor_id === sectorId
-      );
-      
-      if (sectorResp?.usuario_id) {
-        // Buscar detalhes do usuário responsável pelo setor
-        const { data: userData, error: userError } = await supabase
-          .from('usuarios')
-          .select('id, nome, email')
-          .eq('id', sectorResp.usuario_id)
-          .single();
-        
-        if (userError) {
-          console.error("Erro ao buscar detalhes do usuário:", userError);
-          setSectorResponsible(null);
-        } else {
-          setSectorResponsible(userData);
-        }
-      } else {
-        setSectorResponsible(null);
-      }
-      
-      loadedRef.current = true;
-    } catch (error) {
-      console.error("Erro ao carregar responsáveis:", error);
-      setProcessResponsible(null);
-      setSectorResponsible(null);
-    } finally {
-      setIsLoading(false);
-      loadingInProgressRef.current = false;
-    }
-  }, [processId, sectorId]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [process, setProcess] = useState<any>(null);
+  const { toast } = useToast();
+  const { getProcess } = useProcesses();
+  const { user } = useAuth();
 
-  // Aceitar responsabilidade pelo processo
-  const handleAcceptResponsibility = useCallback(async (protocolNumber: string): Promise<void> => {
-    if (!processId || !protocolNumber) return;
-    
-    const success = await acceptProcessResponsibility(processId, protocolNumber);
-    if (success) {
-      await loadResponsibles();
-    }
-  }, [processId, acceptProcessResponsibility, loadResponsibles]);
-
-  // Carregar responsáveis quando os IDs mudarem
+  // Carregar o processo
   useEffect(() => {
-    // Resetar o estado quando os IDs mudam
-    if (processId && sectorId) {
-      loadedRef.current = false;
-      loadResponsibles();
-    }
-    
-    return () => {
-      // Limpar referências quando o componente é desmontado
-      loadedRef.current = false;
+    const loadProcess = async () => {
+      if (!processId) return;
+      try {
+        const processData = await getProcess(processId);
+        setProcess(processData);
+      } catch (error) {
+        console.error("Erro ao carregar processo:", error);
+      }
     };
-  }, [loadResponsibles, processId, sectorId]);
+    
+    loadProcess();
+  }, [processId, getProcess]);
+
+  // Carregar os responsáveis quando o componente é montado
+  useEffect(() => {
+    const loadResponsibles = async () => {
+      if (!processId || !sectorId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const [processResp, sectorResp] = await Promise.all([
+          getProcessResponsible(processId),
+          getSectorResponsible(processId, sectorId)
+        ]);
+
+        setProcessResponsible(processResp);
+        setSectorResponsible(sectorResp);
+      } catch (error) {
+        console.error("Erro ao carregar responsáveis:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadResponsibles();
+  }, [processId, sectorId, getProcessResponsible, getSectorResponsible]);
+
+  // Função para aceitar a responsabilidade
+  const handleAcceptResponsibility = useCallback(async (protocolNumber?: string) => {
+    if (!user || !processId || !protocolNumber) return;
+
+    try {
+      const success = await acceptProcessResponsibility(processId, protocolNumber, true);
+      
+      if (success) {
+        // Atualizar o responsável do setor após aceitar
+        const updatedSectorResponsible = await getSectorResponsible(processId, sectorId);
+        setSectorResponsible(updatedSectorResponsible);
+      }
+    } catch (error) {
+      console.error("Erro ao aceitar responsabilidade pelo processo:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível aceitar a responsabilidade pelo processo.",
+        variant: "destructive"
+      });
+    }
+  }, [processId, sectorId, user, acceptProcessResponsibility, getSectorResponsible, toast]);
 
   return {
     isLoading,
@@ -118,6 +84,6 @@ export const useProcessDetailsResponsibility = (processId: string, sectorId: str
     sectorResponsible,
     handleAcceptResponsibility,
     isAccepting,
-    refreshResponsibles: loadResponsibles
+    process
   };
 };

@@ -21,6 +21,7 @@ export const useProcessResponsibility = () => {
   // estas funções do hook useProcessFiltering via useProcesses
   const { 
     isUserResponsibleForProcess, 
+    isUserProcessOwner,
     isUserResponsibleForSector, 
     isUserInAttendanceSector, 
     isUserInCurrentSector,
@@ -43,6 +44,7 @@ export const useProcessResponsibility = () => {
     
     // Verificação
     isUserResponsibleForProcess,
+    isUserProcessOwner,
     isUserResponsibleForSector,
     isUserInAttendanceSector,
     isUserInCurrentSector,

@@ -24,6 +24,7 @@ interface ProcessRowActionsProps {
   historyId?: number;
   onRenewalComplete?: () => void;
   showRenewDeadlineButton?: boolean;
+  isUserProcessOwner?: boolean;
 }
 
 const ProcessRowActions = ({
@@ -44,7 +45,8 @@ const ProcessRowActions = ({
   currentDepartment,
   historyId,
   onRenewalComplete,
-  showRenewDeadlineButton = false
+  showRenewDeadlineButton = false,
+  isUserProcessOwner = false
 }: ProcessRowActionsProps) => {
   // Log para debug do button de renovação
   if (showRenewDeadlineButton && historyId) {
@@ -68,6 +70,7 @@ const ProcessRowActions = ({
       onAcceptResponsibility={onAcceptResponsibility} 
       isAccepting={isAccepting} 
       sectorId={sectorId}
+      isUserProcessOwner={isUserProcessOwner}
     />
   );
 };

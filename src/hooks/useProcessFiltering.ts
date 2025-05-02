@@ -8,6 +8,7 @@ import { useProcessStatusFilters } from "./process/filters/useProcessStatusFilte
 
 interface ResponsibilityCheckers {
   isUserResponsibleForProcess?: (process: Process, userId: string) => boolean;
+  isUserProcessOwner?: (process: Process, userId: string) => boolean;
   isUserResponsibleForSector?: (process: Process, userId: string) => boolean;
 }
 
@@ -24,6 +25,9 @@ export const useProcessFiltering = (
   
   const isUserResponsibleForProcess = checkers.isUserResponsibleForProcess || 
     permissionCheckers.isUserResponsibleForProcess;
+    
+  const isUserProcessOwner = checkers.isUserProcessOwner ||
+    permissionCheckers.isUserProcessOwner;
 
   const filterProcesses = async (
     filters: {
@@ -66,14 +70,9 @@ export const useProcessFiltering = (
     return statusFilters.applyUserFilters(visibleProcesses, filters, processesResponsibles);
   };
 
-  const refreshResponsibilityCache = () => {
-    visibilityPermissions.refreshResponsibilityCache();
-  };
-
   return {
     filterProcesses,
     isProcessOverdue: statusFilters.isProcessOverdue,
-    refreshResponsibilityCache,
     ...permissionCheckers,
     ...responsibilityCache
   };

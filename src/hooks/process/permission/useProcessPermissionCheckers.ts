@@ -17,6 +17,14 @@ export const useProcessPermissionCheckers = () => {
   };
   
   /**
+   * Verifica se o usuário é o criador/dono do processo
+   */
+  const isUserProcessOwner = (process: Process, userId: string) => {
+    // Verifica se o usuário é o criador do processo
+    return process.userId === userId;
+  };
+  
+  /**
    * Verifica se o usuário é responsável específico para este processo neste setor
    * Esta é apenas uma implementação padrão, a verificação real ocorre via consulta direta no banco
    */
@@ -46,6 +54,7 @@ export const useProcessPermissionCheckers = () => {
 
   return {
     isUserResponsibleForProcess,
+    isUserProcessOwner,
     isUserResponsibleForSector,
     isUserInAttendanceSector,
     isUserInCurrentSector

@@ -8,6 +8,7 @@ import { memo } from "react";
 import { useUserProfile } from "@/hooks/auth/useUserProfile";
 import { createLogger } from "@/utils/loggerUtils";
 import { useToastService } from "@/utils/toastUtils";
+import { useProcesses } from "@/hooks/useProcesses";
 
 const logger = createLogger("ProcessActionButtons");
 
@@ -27,6 +28,7 @@ interface ProcessActionButtonsProps {
   onAcceptResponsibility?: () => Promise<void>;
   isAccepting?: boolean;
   sectorId?: string;
+  isUserProcessOwner?: boolean;
 }
 
 const ProcessActionButtons = memo(({
@@ -45,15 +47,18 @@ const ProcessActionButtons = memo(({
   onAcceptResponsibility,
   isAccepting = false,
   sectorId,
+  isUserProcessOwner = false,
 }: ProcessActionButtonsProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
-  const { isUserResponsibleForSector } = useProcessResponsibility();
+  const { isUserResponsibleForProcess } = useProcessResponsibility();
   const isNotStarted = status === "not_started";
   const isCompleted = status === "completed";
   const toast = useToastService();
 
+  // Verifica se o usuário tem o setor atribuído ou é o proprietário do processo
   const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
+  const canAcceptResponsibility = !hasSectorResponsible && (isUserInSector || isUserProcessOwner);
 
   const validateProcessType = (): boolean => {
     if (!processType) {
@@ -115,7 +120,7 @@ const ProcessActionButtons = memo(({
       </div>;
   }
 
-  if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed" && isUserInSector) {
+  if (!hasSectorResponsible && onAcceptResponsibility && status !== "completed" && canAcceptResponsibility) {
     return <div className="flex justify-center gap-1 process-action">
         <Button variant="outline" size="sm" onClick={handleAcceptResponsibility} disabled={isAccepting} title="Aceitar processo" className="bg-green-100 hover:bg-green-200 text-green-800 border-green-300 flex items-center gap-1 process-action mx-0 px-[6px]">
           <CheckCircle className="h-3 w-3" />

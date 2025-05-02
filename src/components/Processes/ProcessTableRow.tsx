@@ -1,3 +1,4 @@
+
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,7 @@ import { useDeadlineRenewalCondition } from "@/hooks/useDeadlineRenewalCondition
 import { createLogger } from "@/utils/loggerUtils";
 import { useCallback } from "react";
 import { useProcessTableState } from "@/hooks/useProcessTableState";
+import { useAuth } from "@/hooks/auth";
 
 const logger = createLogger("ProcessTableRow");
 
@@ -52,11 +54,14 @@ const ProcessTableRow = ({
   const navigate = useNavigate();
   const { refreshProcesses } = useProcesses();
   const { queueSectorForLoading } = useProcessTableState([]);
+  const { user } = useAuth();
+  const { isUserProcessOwner } = useProcessResponsibility();
 
   const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
   const { getProcessResponsible } = useProcessResponsibility();
   
   const hasResponsible = hasSectorResponsible || !!sectorResponsible;
+  const isOwner = user ? isUserProcessOwner(process, user.id) : false;
   
   const { canRenewDeadline, historyId: renewalHistoryId } = useDeadlineRenewalCondition(process);
 
@@ -159,6 +164,7 @@ const ProcessTableRow = ({
           historyId={renewalHistoryId}
           showRenewDeadlineButton={canRenewDeadline}
           onRenewalComplete={() => refreshProcesses()}
+          isUserProcessOwner={isOwner}
         />
       </TableCell>
     </TableRow>

@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/auth";
 import { useProcessDetailsResponsibility } from "@/hooks/useProcessDetailsResponsibility";
 import { memo } from "react";
 import { useUserProfile } from "@/hooks/auth/useUserProfile";
+import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 
 interface ProcessResponsibleInfoProps {
   processId: string;
@@ -21,6 +22,7 @@ const ProcessResponsibleInfo = memo(({
 }: ProcessResponsibleInfoProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
+  const { isUserProcessOwner } = useProcessResponsibility();
   
   // Usando o hook refatorado para gerenciar o estado dos responsáveis
   const {
@@ -28,11 +30,14 @@ const ProcessResponsibleInfo = memo(({
     processResponsible,
     sectorResponsible,
     handleAcceptResponsibility,
-    isAccepting
+    isAccepting,
+    process
   } = useProcessDetailsResponsibility(processId, sectorId);
 
-  // Verifica se o usuário tem o setor atribuído
+  // Verifica se o usuário tem o setor atribuído ou é o dono do processo
   const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
+  const isOwner = user && process ? isUserProcessOwner(process, user.id) : false;
+  const canAcceptResponsibility = !sectorResponsible && (isUserInSector || isOwner);
 
   if (isLoading) {
     return <Card>
@@ -76,7 +81,7 @@ const ProcessResponsibleInfo = memo(({
                 Sem responsável no setor atual
               </Badge>
               
-              {user && !sectorResponsible && isUserInSector && <div className="mt-2">
+              {user && canAcceptResponsibility && <div className="mt-2">
                   <Button 
                     variant="outline" 
                     size="sm" 
