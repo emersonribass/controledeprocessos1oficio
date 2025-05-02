@@ -1,3 +1,4 @@
+
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,11 @@ const ProcessTableRow = ({
   
   // Verificação se o usuário é o proprietário do processo
   const isOwner = user ? isUserProcessOwner(process, user.id) : false;
+  
+  // Log para depuração
+  if (process.id === '118706' && user) {
+    logger.debug(`Processo 118706: isOwner=${isOwner}, userId=${user.id}, processUserId=${process.userId}, hasSectorResponsible=${hasSectorResponsible}`);
+  }
   
   const hasResponsible = hasSectorResponsible || !!sectorResponsible;
   const { canRenewDeadline, historyId: renewalHistoryId } = useDeadlineRenewalCondition(process);
