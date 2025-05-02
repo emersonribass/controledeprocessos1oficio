@@ -55,12 +55,12 @@ const ProcessActionButtons = memo(({
   const { userProfile } = useUserProfile();
   const toast = useToastService();
   const { isUserProcessOwner: checkIfUserIsProcessOwner } = useProcessPermissionCheckers();
+  const { getProcess } = useProcesses();
   
   // Verifica se o usuário tem o setor atribuído ou é o proprietário do processo
   const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
   
-  // Agora usando uma combinação das duas abordagens - o prop passado e a verificação direta
-  // Isso garante compatibilidade com ambos os padrões usados no sistema
+  // Usando exatamente a mesma lógica do ProcessResponsibleInfo.tsx
   const canAcceptResponsibility = !hasSectorResponsible && (isUserInSector || isUserProcessOwner);
 
   // Log para debugging detalhado
