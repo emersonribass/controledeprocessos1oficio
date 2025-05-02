@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
@@ -9,7 +8,6 @@ import { useUserProfile } from "@/hooks/auth/useUserProfile";
 import { createLogger } from "@/utils/loggerUtils";
 import { useToastService } from "@/utils/toastUtils";
 import { useProcesses } from "@/hooks/useProcesses";
-import { useProcessPermissionCheckers } from "@/hooks/process/permission/useProcessPermissionCheckers";
 import { Process } from "@/types";
 
 const logger = createLogger("ProcessActionButtons");
@@ -54,8 +52,8 @@ const ProcessActionButtons = memo(({
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
   const toast = useToastService();
-  const { isUserProcessOwner: checkIfUserIsProcessOwner } = useProcessPermissionCheckers();
   const { getProcess } = useProcesses();
+  const { isUserProcessOwner: checkIsUserProcessOwner } = useProcessResponsibility();
   
   // Verifica se o usuário tem o setor atribuído ou é o proprietário do processo
   const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
