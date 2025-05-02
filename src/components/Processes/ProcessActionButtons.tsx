@@ -29,6 +29,7 @@ interface ProcessActionButtonsProps {
   isAccepting?: boolean;
   sectorId?: string;
   isUserProcessOwner?: boolean;
+  process?: Process; // Novo: objeto process completo
 }
 
 const ProcessActionButtons = memo(({
@@ -48,21 +49,26 @@ const ProcessActionButtons = memo(({
   isAccepting = false,
   sectorId,
   isUserProcessOwner = false,
+  process,
 }: ProcessActionButtonsProps) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile();
   const toast = useToastService();
+  const { isUserProcessOwner: checkIsUserProcessOwner } = useProcessResponsibility();
   
   // Verificação se o usuário pertence ao setor atual
   const isUserInSector = sectorId && userProfile?.setores_atribuidos?.includes(sectorId);
   
+  // Determinamos se o usuário é dono do processo usando o hook diretamente quando possível
+  const isOwner = process && user ? checkIsUserProcessOwner(process, user.id) : isUserProcessOwner;
+  
   // Condição para exibir o botão aceitar (igual à ProcessResponsibleInfo.tsx)
-  const canAcceptResponsibility = !hasSectorResponsible && (isUserInSector || isUserProcessOwner);
+  const canAcceptResponsibility = !hasSectorResponsible && (isUserInSector || isOwner);
 
   // Log detalhado para diagnóstico
-  logger.debug(`ProcessActionButtons - processId: ${processId}, status: ${status}, hasSectorResponsible: ${hasSectorResponsible}, isUserInSector: ${isUserInSector}, isUserProcessOwner: ${isUserProcessOwner}, canAcceptResponsibility: ${canAcceptResponsibility}, sectorId: ${sectorId}, onAcceptResponsibility: ${!!onAcceptResponsibility}`);
+  logger.debug(`ProcessActionButtons - processId: ${processId}, status: ${status}, hasSectorResponsible: ${hasSectorResponsible}, isUserInSector: ${isUserInSector}, isOwner: ${isOwner}, canAcceptResponsibility: ${canAcceptResponsibility}, sectorId: ${sectorId}, onAcceptResponsibility: ${!!onAcceptResponsibility}`);
   
-  if (isUserProcessOwner) {
+  if (isOwner) {
     logger.debug(`Usuário é dono do processo ${processId} - verificando se botão aceitar será exibido: canAcceptResponsibility=${canAcceptResponsibility}, hasSectorResponsible=${hasSectorResponsible}, status=${status}, onAcceptResponsibility=${!!onAcceptResponsibility}`);
   }
 
@@ -138,7 +144,7 @@ const ProcessActionButtons = memo(({
     canAcceptResponsibility
   ) {
     logger.debug(`EXIBINDO BOTÃO ACEITAR para processo ${processId}`);
-    logger.debug(`Condições: onAcceptResponsibility=${!!onAcceptResponsibility}, status=${status}, canAcceptResponsibility=${canAcceptResponsibility}, hasSectorResponsible=${hasSectorResponsible}`);
+    logger.debug(`Condições: onAcceptResponsibility=${!!onAcceptResponsibility}, status=${status}, canAcceptResponsibility=${canAcceptResponsibility}, hasSectorResponsible=${hasSectorResponsible}, isOwner=${isOwner}`);
     
     return <div className="flex justify-center gap-1 process-action">
         <Button 

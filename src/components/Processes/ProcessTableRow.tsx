@@ -171,6 +171,7 @@ const ProcessTableRow = ({
           showRenewDeadlineButton={canRenewDeadline}
           onRenewalComplete={() => refreshProcesses()}
           isUserProcessOwner={isOwner}
+          process={process} // Passando o objeto process completo
         />
       </TableCell>
     </TableRow>
