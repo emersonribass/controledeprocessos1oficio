@@ -30,7 +30,7 @@ const ProcessGenerationForm = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       initialNumber: 1,
-      quantity: 10,
+      quantity: 1,
     },
   });
 
@@ -75,7 +75,7 @@ const ProcessGenerationForm = () => {
               <FormItem>
                 <FormLabel>Quantidade</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="10" {...field} />
+                  <Input type="number" placeholder="1" {...field} />
                 </FormControl>
                 <FormDescription>
                   Quantidade de processo(s) a ser(em) gerado(s)
