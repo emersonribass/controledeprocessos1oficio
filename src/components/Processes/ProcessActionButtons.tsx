@@ -58,7 +58,7 @@ const ProcessActionButtons = memo(({
   
   // Corrigindo a lógica para exibir o botão aceitar
   // Agora aceitaremos responsabilidade se o usuário estiver no setor OU for dono do processo
-  const canAcceptResponsibility = !hasSectorResponsible && (isUserInSector || isUserProcessOwner);
+  const canAcceptResponsibility = !hasSectorResponsible && isOwner && (isUserInSector || isUserProcessOwner);
 
   const isNotStarted = status === "not_started";
   const isCompleted = status === "completed";
