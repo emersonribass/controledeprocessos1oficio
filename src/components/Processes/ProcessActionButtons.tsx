@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { MoveLeft, MoveRight, Play, CheckCircle } from "lucide-react";
@@ -59,6 +60,9 @@ const ProcessActionButtons = memo(({
   // Corrigindo a lógica para exibir o botão aceitar
   // Agora aceitaremos responsabilidade se o usuário estiver no setor OU for dono do processo
   const canAcceptResponsibility = !hasSectorResponsible && (isUserInSector || isUserProcessOwner);
+
+  // Log para debugging
+  logger.debug(`ProcessActionButtons - processId: ${processId}, hasSectorResponsible: ${hasSectorResponsible}, isUserInSector: ${isUserInSector}, isUserProcessOwner: ${isUserProcessOwner}, canAcceptResponsibility: ${canAcceptResponsibility}`);
 
   const isNotStarted = status === "not_started";
   const isCompleted = status === "completed";
