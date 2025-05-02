@@ -3,8 +3,9 @@ import { useProcessResponsibleAssignment } from "./process-responsibility/usePro
 import { useProcessResponsibilityAcceptance } from "./process-responsibility/useProcessResponsibilityAcceptance";
 import { useProcessResponsibilityVerification } from "./process-responsibility/useProcessResponsibilityVerification";
 import { useProcessResponsibleFetching } from "./process-responsibility/useProcessResponsibleFetching";
-import { useProcesses } from "./process/useProcessContext";
+import { useProcesses } from "@/hooks/process/useProcessContext";
 import { Process } from "@/types";
+import { useProcessPermissionCheckers } from "./process/permission/useProcessPermissionCheckers";
 
 /**
  * Hook unificado para gerenciar responsabilidade em processos
@@ -21,12 +22,13 @@ export const useProcessResponsibility = () => {
   // estas funções do hook useProcessFiltering via useProcesses
   const { 
     isUserResponsibleForProcess, 
-    isUserProcessOwner,
-    isUserResponsibleForSector, 
     isUserInAttendanceSector, 
     isUserInCurrentSector,
     hasSectorResponsible
   } = useProcesses();
+
+  // Importando o hook de permissões diretamente para obter isUserProcessOwner
+  const { isUserProcessOwner } = useProcessPermissionCheckers();
   
   // Hook para buscar responsáveis
   const { getProcessResponsible, getSectorResponsible } = useProcessResponsibleFetching();
@@ -45,7 +47,6 @@ export const useProcessResponsibility = () => {
     // Verificação
     isUserResponsibleForProcess,
     isUserProcessOwner,
-    isUserResponsibleForSector,
     isUserInAttendanceSector,
     isUserInCurrentSector,
     hasSectorResponsible,
