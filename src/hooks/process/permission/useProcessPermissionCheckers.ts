@@ -20,8 +20,8 @@ export const useProcessPermissionCheckers = () => {
    * Verifica se o usuário é o criador/dono do processo
    */
   const isUserProcessOwner = (process: Process, userId: string) => {
-    // Verifica se o usuário é o criador do processo
-    return process.userId === userId;
+    // Verifica se o usuário é o criador OU o responsável pelo processo
+    return process.userId === userId || process.responsibleUserId === userId;
   };
   
   /**
