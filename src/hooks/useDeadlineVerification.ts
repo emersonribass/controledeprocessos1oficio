@@ -27,6 +27,7 @@ export const useDeadlineVerification = (
 
         const timeLimit = setor.time_limit ?? null;
         
+        // Usa a função isDepartmentOverdue que agora considera dias úteis
         const atrasadoNoSetor = isDepartmentOverdue({
           history,
           currentDepartment,
@@ -45,4 +46,3 @@ export const useDeadlineVerification = (
 
   return isOverdue;
 };
-

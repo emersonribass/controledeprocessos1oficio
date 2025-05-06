@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Clock, User } from "lucide-react";
+import { addBusinessDays, getRemainingBusinessDays } from "@/utils/dateUtils";
 
 interface ProcessDepartmentCellProps {
   departmentId: string;
@@ -32,13 +33,12 @@ const ProcessDepartmentCell = ({
   responsible,
   isFirstDepartment = false
 }: ProcessDepartmentCellProps) => {
-  // Calcular dias restantes se for o departamento atual
+  // Calcular dias úteis restantes se for o departamento atual
   let remainingDays = 0;
   if (isProcessStarted && isCurrentDepartment && entryDate && departmentTimeLimit > 0) {
-    const entryDateTime = new Date(entryDate).getTime();
-    const deadlineTime = entryDateTime + departmentTimeLimit * 24 * 60 * 60 * 1000;
-    const currentTime = new Date().getTime();
-    remainingDays = Math.ceil((deadlineTime - currentTime) / (24 * 60 * 60 * 1000));
+    const entryDateTime = new Date(entryDate);
+    const deadlineTime = addBusinessDays(entryDateTime, departmentTimeLimit);
+    remainingDays = getRemainingBusinessDays(deadlineTime);
   }
 
   // Apenas exibe responsáveis para departamentos atuais ou que já passaram
@@ -79,7 +79,7 @@ const ProcessDepartmentCell = ({
               <Clock className="h-3 w-3" /> Prazo expirado
             </span>
           ) : (
-            remainingDays > 0 ? `${remainingDays} dia(s) restante(s)` : "Vence hoje"
+            remainingDays > 0 ? `${remainingDays} dia(s) útil(is) restante(s)` : "Vence hoje"
           )}
         </div>
       )}

@@ -1,4 +1,6 @@
 
+import { isBusinessDeadlineExceeded } from "./dateUtils";
+
 interface HistoryEntry {
   departmentId: string;
   entryDate: string;
@@ -43,9 +45,7 @@ export function isDepartmentOverdue({
   if (!currentEntry) return false;
 
   const entrada = new Date(currentEntry.entryDate || currentEntry.data_entrada || "");
-  const prazo = new Date(entrada);
-  prazo.setDate(prazo.getDate() + departmentTimeLimit);
-
-  return new Date() > prazo;
+  
+  // Verifica se o prazo em dias úteis foi excedido
+  return isBusinessDeadlineExceeded(entrada, departmentTimeLimit);
 }
-

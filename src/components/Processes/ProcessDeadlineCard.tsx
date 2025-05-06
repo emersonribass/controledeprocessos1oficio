@@ -2,6 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useState, useEffect } from "react";
+import { addBusinessDays, getRemainingBusinessDays } from "@/utils/dateUtils";
 
 interface ProcessDeadlineCardProps {
   process: any;
@@ -35,8 +36,8 @@ const ProcessDeadlineCard = ({ process }: ProcessDeadlineCardProps) => {
     fetchDepartmentTimeLimit();
   }, [process.currentDepartment]);
 
-  // Calcular dias restantes
-  const calculateRemainingDays = () => {
+  // Calcular dias úteis restantes
+  const calculateRemainingBusinessDays = () => {
     if (!departmentTimeLimit || process.status === "not_started") return null;
     
     // Procurar a entrada atual no histórico (mais recente sem data de saída)
@@ -48,26 +49,24 @@ const ProcessDeadlineCard = ({ process }: ProcessDeadlineCardProps) => {
     
     // Compatibilidade com diferentes estruturas de dados
     const entryDate = new Date(currentEntry.entryDate || currentEntry.data_entrada || "");
-    const deadline = new Date(entryDate);
-    deadline.setDate(deadline.getDate() + departmentTimeLimit);
     
-    const now = new Date();
-    const diffInTime = deadline.getTime() - now.getTime();
-    const diffInDays = Math.ceil(diffInTime / (1000 * 3600 * 24));
+    // Calcular a data limite considerando dias úteis
+    const deadline = addBusinessDays(entryDate, departmentTimeLimit);
     
-    return diffInDays;
+    // Calcular dias úteis restantes
+    return getRemainingBusinessDays(deadline);
   };
 
-  const remainingDays = calculateRemainingDays();
-  const isOverdue = remainingDays !== null && remainingDays < 0;
-  const daysOverdue = isOverdue ? Math.abs(remainingDays) : null;
+  const remainingBusinessDays = calculateRemainingBusinessDays();
+  const isOverdue = remainingBusinessDays !== null && remainingBusinessDays < 0;
+  const daysOverdue = isOverdue ? Math.abs(remainingBusinessDays) : null;
 
   return (
     <Card className="mt-6">
       <CardHeader>
         <CardTitle>Prazo</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <div className="space-y-4">
           <div>
             <h3 className="text-sm font-medium text-muted-foreground mb-1">
@@ -76,10 +75,10 @@ const ProcessDeadlineCard = ({ process }: ProcessDeadlineCardProps) => {
             
             {departmentTimeLimit ? (
               <div className={`text-lg font-bold ${isOverdue ? "text-red-500" : ""}`}>
-                {departmentTimeLimit} dias
-                {remainingDays !== null && !isOverdue && (
+                {departmentTimeLimit} dias úteis
+                {remainingBusinessDays !== null && !isOverdue && (
                   <span className="text-sm font-normal text-muted-foreground ml-2">
-                    ({remainingDays} dias restantes)
+                    ({remainingBusinessDays} dias úteis restantes)
                   </span>
                 )}
               </div>
@@ -91,7 +90,7 @@ const ProcessDeadlineCard = ({ process }: ProcessDeadlineCardProps) => {
             
             {isOverdue && daysOverdue && (
               <p className="text-sm text-red-500 mt-1">
-                Prazo expirado há {daysOverdue} dias
+                Prazo expirado há {daysOverdue} dias úteis
               </p>
             )}
           </div>
