@@ -14,6 +14,7 @@ interface ProcessDepartmentsSectionProps {
   processId: string;
   processResponsible?: any;
   sectorResponsibles?: Record<string, any>;
+  isArchived?: boolean;
 }
 
 const ProcessDepartmentsSection = ({
@@ -26,7 +27,8 @@ const ProcessDepartmentsSection = ({
   isDepartmentOverdue,
   processId,
   processResponsible,
-  sectorResponsibles
+  sectorResponsibles,
+  isArchived = false
 }: ProcessDepartmentsSectionProps) => {
   // Encontrar o order_num do departamento atual
   const findCurrentDepartmentOrder = (): number => {
@@ -74,6 +76,7 @@ const ProcessDepartmentsSection = ({
               isProcessStarted={isProcessStarted}
               responsible={departmentResponsible}
               isFirstDepartment={index === 0}
+              isArchived={isArchived}
             />
           </TableCell>
         );

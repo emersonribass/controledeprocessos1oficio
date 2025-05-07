@@ -2,7 +2,7 @@
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Clock, User } from "lucide-react";
+import { Clock, User, Archive } from "lucide-react";
 import { addBusinessDays, getRemainingBusinessDays } from "@/utils/dateUtils";
 
 interface ProcessDepartmentCellProps {
@@ -19,6 +19,7 @@ interface ProcessDepartmentCellProps {
     email: string;
   } | null;
   isFirstDepartment?: boolean;
+  isArchived?: boolean;
 }
 
 const ProcessDepartmentCell = ({
@@ -31,11 +32,12 @@ const ProcessDepartmentCell = ({
   departmentTimeLimit = 0,
   isProcessStarted = true,
   responsible,
-  isFirstDepartment = false
+  isFirstDepartment = false,
+  isArchived = false
 }: ProcessDepartmentCellProps) => {
   // Calcular dias úteis restantes se for o departamento atual
   let remainingDays = 0;
-  if (isProcessStarted && isCurrentDepartment && entryDate && departmentTimeLimit > 0) {
+  if (isProcessStarted && isCurrentDepartment && entryDate && departmentTimeLimit > 0 && !isArchived) {
     const entryDateTime = new Date(entryDate);
     const deadlineTime = addBusinessDays(entryDateTime, departmentTimeLimit);
     remainingDays = getRemainingBusinessDays(deadlineTime);
@@ -69,17 +71,25 @@ const ProcessDepartmentCell = ({
         </div>
       )}
 
-      {isCurrentDepartment && isProcessStarted && departmentTimeLimit > 0 && (
+      {isCurrentDepartment && isProcessStarted && (
         <div className={cn(
           "text-xs font-medium mt-1",
-          isDepartmentOverdue ? "text-red-600" : "text-blue-600"
+          isArchived ? "text-orange-500" : (isDepartmentOverdue ? "text-red-600" : "text-blue-600")
         )}>
-          {isDepartmentOverdue ? (
+          {isArchived ? (
             <span className="flex items-center justify-center gap-1">
-              <Clock className="h-3 w-3" /> Prazo expirado
+              <Archive className="h-3 w-3" /> Arquivado
             </span>
           ) : (
-            remainingDays > 0 ? `${remainingDays} dia(s) útil(is) restante(s)` : "Vence hoje"
+            isDepartmentOverdue ? (
+              <span className="flex items-center justify-center gap-1">
+                <Clock className="h-3 w-3" /> Prazo expirado
+              </span>
+            ) : (
+              departmentTimeLimit > 0 ? (
+                remainingDays > 0 ? `${remainingDays} dia(s) útil(is) restante(s)` : "Vence hoje"
+              ) : null
+            )
           )}
         </div>
       )}
