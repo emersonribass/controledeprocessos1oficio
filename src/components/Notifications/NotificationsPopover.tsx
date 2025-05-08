@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useToast } from "@/hooks/use-toast";
+import { formatDateWithBrasiliaTimezone } from "@/utils/dateUtils";
 
 interface NotificationsPopoverProps {
   children: ReactNode;
@@ -80,7 +81,7 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
                 >
                   <p className="text-sm">{notification.mensagem}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {format(new Date(notification.data_criacao), "dd MMM, HH:mm", { locale: ptBR })}
+                    {formatDateWithBrasiliaTimezone(notification.data_criacao)}
                   </p>
                 </div>
               ))}
@@ -93,4 +94,3 @@ const NotificationsPopover = ({ children, open, onOpenChange }: NotificationsPop
 };
 
 export default NotificationsPopover;
-

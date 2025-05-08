@@ -1,9 +1,10 @@
 
 import { Process } from "@/types";
 import { User } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { InfoItem } from "./InfoItem";
+import { formatDateWithBrasiliaTimezone } from "@/utils/dateUtils";
 
 type ProcessCardInfoProps = {
   process: Process;
@@ -24,9 +25,7 @@ const ProcessCardInfo = ({
       />
       <InfoItem 
         label="Data de Início"
-        value={format(new Date(process.startDate), "dd/MM/yyyy", {
-          locale: ptBR
-        })}
+        value={formatDateWithBrasiliaTimezone(process.startDate)}
       />
       <InfoItem 
         label="Tempo de Processamento"
@@ -36,9 +35,7 @@ const ProcessCardInfo = ({
       />
       <InfoItem 
         label="Previsão de Conclusão"
-        value={format(new Date(process.expectedEndDate), "dd/MM/yyyy", {
-          locale: ptBR
-        })}
+        value={formatDateWithBrasiliaTimezone(process.expectedEndDate)}
       />
       {responsibleUserName && (
         <div className="col-span-2">
