@@ -4,9 +4,12 @@ import { ptBR } from "date-fns/locale";
 
 // Função para ajustar a data para o fuso de Brasília
 export const convertToBrasilia = (date: Date): Date => {
-  // Horário de Brasília é UTC-3
-  const brasiliaOffset = -180 * 60 * 1000; // -3 horas em milissegundos
-  return new Date(date.getTime() + brasiliaOffset + date.getTimezoneOffset() * 60 * 1000);
+  // Horário de Brasília é UTC-3 (ou UTC-2 no horário de verão, mas o Brasil aboliu o horário de verão)
+  const brasiliaOffset = 0 * 60; // 60 minutos
+  const currentOffset = date.getTimezoneOffset(); // Offset atual do navegador
+  
+  const diffMinutes = brasiliaOffset - currentOffset;
+  return new Date(date.getTime() + diffMinutes * 60000);
 };
 
 // Gravar no banco (como string ISO no fuso de Brasília)

@@ -1,7 +1,9 @@
 
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Clock, User, Archive } from "lucide-react";
-import { addBusinessDays, getRemainingBusinessDays, formatDateWithBrasiliaTimezone } from "@/utils/dateUtils";
+import { addBusinessDays, getRemainingBusinessDays } from "@/utils/dateUtils";
 
 interface ProcessDepartmentCellProps {
   departmentId: string;
@@ -48,7 +50,9 @@ const ProcessDepartmentCell = ({
     <div className="text-center w-full">
       {showDate && entryDate && (
         <div className="text-xs text-black">
-          {formatDateWithBrasiliaTimezone(entryDate).split(' ')[0]} {/* Exibir apenas a data, sem o horário */}
+          {format(new Date(entryDate), "dd/MM/yyyy", {
+            locale: ptBR
+          })}
         </div>
       )}
 

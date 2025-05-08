@@ -2,7 +2,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, Clock, FileText } from "lucide-react";
-import { formatDateWithBrasiliaTimezone } from "@/utils/dateUtils";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import ProcessActionButtons from "./ProcessActionButtons";
 import { useProcessDetailsResponsibility } from "@/hooks/useProcessDetailsResponsibility";
 
@@ -72,7 +73,9 @@ const ProcessMainDetails = ({
             <div className="flex items-center">
               <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
               <span>
-                {formatDateWithBrasiliaTimezone(process.startDate)}
+                {format(new Date(process.startDate), "dd 'de' MMMM 'de' yyyy", {
+                  locale: ptBR
+                })}
               </span>
             </div>
           </div>
