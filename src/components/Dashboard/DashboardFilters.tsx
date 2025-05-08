@@ -5,6 +5,7 @@ import { useProcessTypes } from "@/hooks/useProcessTypes";
 import { useAvailableUsers } from "@/hooks/useAvailableUsers";
 import SelectFilters from "../Processes/Filters/SelectFilters";
 import DateRangeFilter from "../Processes/Filters/DateRangeFilter";
+import { useProcesses } from "@/hooks/useProcesses";
 
 interface DashboardFiltersProps {
   filters: {
@@ -37,12 +38,18 @@ const DashboardFilters = memo(({
 }: DashboardFiltersProps) => {
   const { processTypes } = useProcessTypes();
   const { usuarios } = useAvailableUsers();
+  const { departments } = useProcesses();
   const [initialDate, setInitialDate] = useState<Date | undefined>(
     filters.startDate ? new Date(filters.startDate) : undefined
   );
   const [finalDate, setFinalDate] = useState<Date | undefined>(
     filters.endDate ? new Date(filters.endDate) : undefined
   );
+
+  // Usar os departamentos fornecidos pelo contexto ou pelos props
+  const departmentsToUse = availableDepartments && availableDepartments.length > 0 
+    ? availableDepartments 
+    : departments;
 
   const handleInitialDateChange = useCallback((date: Date | undefined) => {
     setInitialDate(date);
@@ -73,7 +80,7 @@ const DashboardFilters = memo(({
         <SelectFilters
           filters={filters}
           onSelectChange={handleSelectChange}
-          departments={availableDepartments}
+          departments={departmentsToUse}
           processTypes={processTypes}
           usuarios={usuarios}
         />

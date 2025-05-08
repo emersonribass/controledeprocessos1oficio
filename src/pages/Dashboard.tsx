@@ -6,8 +6,6 @@ import RecentProcessList from "@/components/Dashboard/RecentProcessList";
 import { ProcessesProvider } from "@/hooks/useProcesses";
 import DashboardFilters from "@/components/Dashboard/DashboardFilters";
 import { useProcessListFilters } from "@/hooks/useProcessListFilters";
-import { useState } from "react";
-import { useProcesses } from "@/hooks/useProcesses";
 
 const Dashboard = () => {
   const { filters, setFilters } = useProcessListFilters({});
@@ -36,14 +34,12 @@ const DashboardContent = ({
   filters: any; 
   setFilters: React.Dispatch<React.SetStateAction<any>> 
 }) => {
-  const { departments } = useProcesses();
-  
   return (
     <>
       <DashboardFilters 
         filters={filters}
         setFilters={setFilters}
-        availableDepartments={departments}
+        availableDepartments={[]} // Obteremos os departamentos do contexto no componente filho
       />
 
       <DashboardSummary filters={filters} />

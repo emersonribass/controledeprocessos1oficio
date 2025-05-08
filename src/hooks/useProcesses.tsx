@@ -54,7 +54,6 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const { processes, isLoading: isLoadingProcesses, fetchProcesses } = useProcessesFetch();
   const { departments, processTypes, getDepartmentName, getProcessTypeName } = useProcessDependencies();
-  const processManager = useProcessManager(processes);
   const statusFilters = useProcessStatusFilters();
   
   // Manter mapeamento de setores a serem atualizados
@@ -71,6 +70,12 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
       return newQueue;
     });
   }, []);
+
+  // Inicializando processManager com os processes e a função de atualização
+  const processManager = useProcessManager({ 
+    processes, 
+    refreshProcessesCallback: fetchProcesses 
+  });
 
   // Wrapper para moveToNextDepartment para manter compatibilidade com API
   const moveProcessToNextDepartment = async (processId: string) => {

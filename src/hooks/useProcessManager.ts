@@ -5,14 +5,20 @@ import { processDataService } from "@/services/ProcessDataService";
 import ProcessMovementService from "@/services/ProcessMovementService";
 import { useProcessAccessControl } from "./process/useProcessAccessControl";
 import { useAuth } from "@/hooks/auth";
-import { useProcesses } from "@/hooks/useProcesses";
 import { createLogger } from "@/utils/loggerUtils";
 
 const logger = createLogger("ProcessManager");
 
-export const useProcessManager = (processes: Process[] = []) => {
+type ProcessManagerProps = {
+  processes?: Process[];
+  refreshProcessesCallback?: () => Promise<void>;
+}
+
+export const useProcessManager = ({ 
+  processes = [], 
+  refreshProcessesCallback 
+}: ProcessManagerProps = {}) => {
   const { user } = useAuth();
-  const { refreshProcesses } = useProcesses();
   const [processesResponsibles, setProcessesResponsibles] = useState<Record<string, Record<string, any>>>({});
   const [isLoading, setIsLoading] = useState(false);
   const accessControl = useProcessAccessControl();
@@ -53,36 +59,36 @@ export const useProcessManager = (processes: Process[] = []) => {
     if (!user) return false;
     // Correção aqui: adicionando o terceiro parâmetro necessário (motivo)
     const success = await ProcessMovementService.moveToNextDepartment(processId, user.id, "");
-    if (success) {
-      await refreshProcesses();
+    if (success && refreshProcessesCallback) {
+      await refreshProcessesCallback();
       await loadAllResponsibles();
     }
     return success;
-  }, [refreshProcesses, loadAllResponsibles, user]);
+  }, [refreshProcessesCallback, loadAllResponsibles, user]);
   
   // Mover processo para o departamento anterior
   const moveToPreviousDepartment = useCallback(async (processId: string): Promise<boolean> => {
     if (!user) return false;
     // Correção aqui: adicionando o terceiro parâmetro necessário (motivo)
     const success = await ProcessMovementService.moveToPreviousDepartment(processId, user.id, "");
-    if (success) {
-      await refreshProcesses();
+    if (success && refreshProcessesCallback) {
+      await refreshProcessesCallback();
       await loadAllResponsibles();
     }
     return success;
-  }, [refreshProcesses, loadAllResponsibles, user]);
+  }, [refreshProcessesCallback, loadAllResponsibles, user]);
   
   // Iniciar um processo
   const startProcess = useCallback(async (processId: string): Promise<boolean> => {
     if (!user) return false;
     
     const success = await ProcessMovementService.startProcess(processId, user.id);
-    if (success) {
-      await refreshProcesses();
+    if (success && refreshProcessesCallback) {
+      await refreshProcessesCallback();
       await loadAllResponsibles();
     }
     return success;
-  }, [user, refreshProcesses, loadAllResponsibles]);
+  }, [user, refreshProcessesCallback, loadAllResponsibles]);
   
   // Aceitar responsabilidade por um processo
   const acceptResponsibility = useCallback(async (processId: string, sectorId: string): Promise<boolean> => {
