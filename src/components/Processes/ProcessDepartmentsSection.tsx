@@ -2,6 +2,10 @@
 import { TableCell } from "@/components/ui/table";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import { Department } from "@/types";
+import { useResponsibleDataAdapter } from "@/hooks/useResponsibleDataAdapter";
+import { createLogger } from "@/utils/loggerUtils";
+
+const logger = createLogger("ProcessDepartmentsSection");
 
 interface ProcessDepartmentsSectionProps {
   sortedDepartments: Department[];
@@ -28,6 +32,8 @@ const ProcessDepartmentsSection = ({
   processResponsible,
   sectorResponsibles
 }: ProcessDepartmentsSectionProps) => {
+  const { getAdaptedResponsible } = useResponsibleDataAdapter();
+
   // Encontrar o order_num do departamento atual
   const findCurrentDepartmentOrder = (): number => {
     const currentDept = sortedDepartments.find(dept => isCurrentDepartment(dept.id));
@@ -52,12 +58,15 @@ const ProcessDepartmentsSection = ({
         const showResponsible = isActive || (dept.order < currentDeptOrder);
         
         if (showResponsible && isProcessStarted) {
-          // Apenas mostra responsáveis se o processo estiver iniciado e 
-          // o departamento for atual ou anterior na ordem
-          if (sectorResponsibles && sectorResponsibles[dept.id]) {
-            departmentResponsible = sectorResponsibles[dept.id];
+          // Novidade: Usar o adaptador para obter os dados do responsável no formato correto
+          if (sectorResponsibles && sectorResponsibles[processId]) {
+            departmentResponsible = getAdaptedResponsible(sectorResponsibles[processId], dept.id);
           } else if (index === 0 && processResponsible) {
             departmentResponsible = processResponsible;
+          }
+          
+          if (departmentResponsible) {
+            logger.debug(`Responsável encontrado para processo ${processId}, setor ${dept.id}:`, departmentResponsible);
           }
         }
 

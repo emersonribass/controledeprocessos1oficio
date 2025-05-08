@@ -16,6 +16,7 @@ import { useCallback } from "react";
 import { useProcessTableState } from "@/hooks/useProcessTableState";
 import { useAuth } from "@/hooks/auth";
 import { useProcessPermissionCheckers } from "@/hooks/process/permission/useProcessPermissionCheckers";
+import { useResponsibleDataAdapter } from "@/hooks/useResponsibleDataAdapter";
 
 const logger = createLogger("ProcessTableRow");
 
@@ -57,6 +58,7 @@ const ProcessTableRow = ({
   const { queueSectorForLoading } = useProcessTableState([]);
   const { user } = useAuth();
   const { isUserProcessOwner } = useProcessPermissionCheckers();
+  const { getAdaptedResponsible } = useResponsibleDataAdapter();
 
   const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
   
@@ -111,6 +113,11 @@ const ProcessTableRow = ({
     logger.debug(`Processo ${process.id} pode renovar prazo, historyId=${renewalHistoryId}`);
   }
 
+  // Debug dos responsáveis por departamento
+  if (process.id === '118866' || process.id === '118865') {
+    logger.debug(`Responsáveis para processo ${process.id}:`, processResponsibles);
+  }
+
   return (
     <TableRow 
       className={cn(
@@ -133,22 +140,33 @@ const ProcessTableRow = ({
         />
       </TableCell>
       
-      {sortedDepartments.map((dept) => (
-        <TableCell key={dept.id} className="min-w-[120px] text-center">
-          <ProcessDepartmentCell 
-            departmentId={dept.id}
-            isCurrentDepartment={isCurrentDepartment(dept.id)}
-            hasPassedDepartment={hasPassedDepartment(dept.id)}
-            entryDate={getMostRecentEntryDate(dept.id)}
-            showDate={isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)}
-            isDepartmentOverdue={isCurrentDepartment(dept.id) && checkDepartmentOverdue(dept.id, process.status !== "not_started")}
-            departmentTimeLimit={dept.timeLimit}
-            isProcessStarted={process.status !== "not_started"}
-            responsible={processResponsibles?.[dept.id]}
-            isFirstDepartment={dept.id === sortedDepartments[0]?.id}
-          />
-        </TableCell>
-      ))}
+      {sortedDepartments.map((dept) => {
+        // Usar o adaptador para lidar com diferentes estruturas de dados de responsáveis
+        const responsibleData = processResponsibles ? 
+          getAdaptedResponsible(processResponsibles, dept.id) : null;
+        
+        // Registrar no log para depuração
+        if ((process.id === '118866' || process.id === '118865') && dept.id === '1') {
+          logger.debug(`Responsável adaptado para processo ${process.id}, setor ${dept.id}:`, responsibleData);
+        }
+        
+        return (
+          <TableCell key={dept.id} className="min-w-[120px] text-center">
+            <ProcessDepartmentCell 
+              departmentId={dept.id}
+              isCurrentDepartment={isCurrentDepartment(dept.id)}
+              hasPassedDepartment={hasPassedDepartment(dept.id)}
+              entryDate={getMostRecentEntryDate(dept.id)}
+              showDate={isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)}
+              isDepartmentOverdue={isCurrentDepartment(dept.id) && checkDepartmentOverdue(dept.id, process.status !== "not_started")}
+              departmentTimeLimit={dept.timeLimit}
+              isProcessStarted={process.status !== "not_started"}
+              responsible={responsibleData}
+              isFirstDepartment={dept.id === sortedDepartments[0]?.id}
+            />
+          </TableCell>
+        );
+      })}
     
       <TableCell className="w-[120px] process-action">
         <ProcessRowActions 

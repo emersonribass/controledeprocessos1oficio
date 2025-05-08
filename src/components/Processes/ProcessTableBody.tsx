@@ -75,14 +75,40 @@ const ProcessTableBody = ({
 
   // Função para verificar se existe um responsável para o processo no setor atual
   const hasSectorResponsible = (processId: string, currentDepartment: string) => {
-    // Adicionar log de debug para verificar hasSectorResponsible
-    const hasResponsible = !!(
-      processesResponsibles[processId] && 
-      processesResponsibles[processId][currentDepartment]
-    );
+    // Verificar se temos dados dos responsáveis para este processo
+    if (!processesResponsibles[processId]) {
+      return false;
+    }
     
-    logger.debug(`hasSectorResponsible para processo ${processId}, setor ${currentDepartment}: ${hasResponsible}`);
-    return hasResponsible;
+    // Verificar o formato padrão (responsáveis por setor)
+    if (
+      processesResponsibles[processId][currentDepartment] && 
+      (processesResponsibles[processId][currentDepartment].nome || 
+       processesResponsibles[processId][currentDepartment].email)
+    ) {
+      return true;
+    }
+    
+    // Verificar formato alternativo (responsável inicial)
+    if (
+      processesResponsibles[processId].initial && 
+      (processesResponsibles[processId].initial.nome || 
+       processesResponsibles[processId].initial.email)
+    ) {
+      // Para o setor inicial, o responsável inicial também é válido
+      const firstDept = departments.sort((a, b) => a.order - b.order)[0];
+      if (currentDepartment === String(firstDept?.id)) {
+        return true;
+      }
+    }
+
+    // Log de debug
+    if (processId === '118866' || processId === '118865') {
+      logger.debug(`hasSectorResponsible para processo ${processId}, setor ${currentDepartment}: false`, 
+        processesResponsibles[processId]);
+    }
+    
+    return false;
   };
 
   if (isLoading) {
@@ -112,12 +138,21 @@ const ProcessTableBody = ({
     );
   }
 
+  // Depuração dos responsáveis para processos específicos
+  if (processes.some(p => p.id === '118866' || p.id === '118865')) {
+    logger.debug('Estrutura de processesResponsibles:', processesResponsibles);
+  }
+
   return (
     <TableBody>
       {processes.map(process => {
-        // Adicionar log para verificar os valores para cada processo
+        // Verificar se há responsável para o setor atual
         const hasResponsible = hasSectorResponsible(process.id, process.currentDepartment);
-        logger.debug(`Processo ${process.id}: hasSectorResponsible=${hasResponsible}, currentDepartment=${process.currentDepartment}`);
+        
+        // Debug para processos específicos
+        if (process.id === '118866' || process.id === '118865') {
+          logger.debug(`Processo ${process.id}: hasSectorResponsible=${hasResponsible}, currentDepartment=${process.currentDepartment}`);
+        }
         
         return (
           <ProcessTableRow
