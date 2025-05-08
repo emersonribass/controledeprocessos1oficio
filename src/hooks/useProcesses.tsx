@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode, useState, useCallback } from "react";
 import { Process } from "@/types";
 import { useProcessesFetch } from "@/hooks/useProcessesFetch";
@@ -73,7 +74,10 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   // Inicializando processManager com os processes e a função de atualização
   const processManager = useProcessManager({ 
     processes, 
-    refreshProcessesCallback: fetchProcesses 
+    refreshProcessesCallback: async () => {
+      await fetchProcesses();
+      return;
+    }
   });
 
   // Wrapper para moveToNextDepartment para manter compatibilidade com API
@@ -176,6 +180,12 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
     return false;
   }, []);
   
+  // Wrapper para refreshProcesses para compatibilidade com a assinatura esperada
+  const refreshProcessesWrapper = async (): Promise<void> => {
+    await fetchProcesses();
+    return;
+  };
+  
   return (
     <ProcessesContext.Provider
       value={{
@@ -189,7 +199,7 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
         moveProcessToPreviousDepartment,
         isProcessOverdue: statusFilters.isProcessOverdue,
         isLoading: isLoadingProcesses || processManager.isLoading,
-        refreshProcesses: fetchProcesses,
+        refreshProcesses: refreshProcessesWrapper,
         updateProcessType,
         updateProcessStatus,
         startProcess,

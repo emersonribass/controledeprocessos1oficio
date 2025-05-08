@@ -24,7 +24,7 @@ export const useProcessesFetch = () => {
     });
   }, []);
 
-  const fetchProcesses = async () => {
+  const fetchProcesses = async (): Promise<Process[]> => {
     try {
       logger.debug("Buscando processos do banco de dados");
       setIsLoading(true);
