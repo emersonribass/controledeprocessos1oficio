@@ -2,12 +2,10 @@
 import { TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import ProcessTableRow from "./ProcessTableRow";
-import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
-import { useAuth } from "@/hooks/auth";
-import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { createLogger } from "@/utils/loggerUtils";
+import { useProcessManager } from "@/hooks/useProcessManager";
 
 const logger = createLogger("ProcessTableBody");
 
@@ -43,46 +41,27 @@ const ProcessTableBody = ({
   sortField,
   sortDirection,
   queueSectorForLoading,
-  isLoading
+  isLoading,
+  canInitiateProcesses
 }: ProcessTableBodyProps) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  const { acceptResponsibility, hasSectorResponsible, refreshResponsibles } = useProcessManager(processes);
   const [acceptingProcessId, setAcceptingProcessId] = useState<string | null>(null);
   
   // Função para aceitar a responsabilidade pelo processo
-  const handleAcceptResponsibility = async (processId: string, protocolNumber?: string) => {
-    if (!user || !protocolNumber) return;
+  const handleAcceptResponsibility = async (processId: string, sectorId: string, protocolNumber?: string) => {
+    if (!sectorId) return;
     
     setAcceptingProcessId(processId);
     try {
-      const success = await acceptProcessResponsibility(processId, protocolNumber);
-      
-      if (success) {
-        toast({
-          title: "Sucesso",
-          description: "Você aceitou a responsabilidade pelo processo."
-        });
-        // Atualizar cache de responsáveis
-        queueSectorForLoading(processId, processes.find(p => p.id === processId)?.currentDepartment || "");
-      }
+      await acceptResponsibility(processId, sectorId);
+      // Atualizar cache de responsáveis
+      queueSectorForLoading(processId, sectorId);
+      await refreshResponsibles();
     } catch (error) {
       console.error("Erro ao aceitar responsabilidade:", error);
     } finally {
       setAcceptingProcessId(null);
     }
-  };
-
-  // Função para verificar se existe um responsável para o processo no setor atual
-  const hasSectorResponsible = (processId: string, currentDepartment: string) => {
-    // Adicionar log de debug para verificar hasSectorResponsible
-    const hasResponsible = !!(
-      processesResponsibles[processId] && 
-      processesResponsibles[processId][currentDepartment]
-    );
-    
-    logger.debug(`hasSectorResponsible para processo ${processId}, setor ${currentDepartment}: ${hasResponsible}`);
-    return hasResponsible;
   };
 
   if (isLoading) {
@@ -115,7 +94,7 @@ const ProcessTableBody = ({
   return (
     <TableBody>
       {processes.map(process => {
-        // Adicionar log para verificar os valores para cada processo
+        // Verificar se o processo tem responsável no setor atual
         const hasResponsible = hasSectorResponsible(process.id, process.currentDepartment);
         logger.debug(`Processo ${process.id}: hasSectorResponsible=${hasResponsible}, currentDepartment=${process.currentDepartment}`);
         
@@ -131,8 +110,8 @@ const ProcessTableBody = ({
             updateProcessType={updateProcessType}
             startProcess={startProcess}
             hasSectorResponsible={hasResponsible}
-            onAcceptResponsibility={() => handleAcceptResponsibility(process.id, process.protocolNumber)}
-            isAccepting={isAccepting && acceptingProcessId === process.id}
+            onAcceptResponsibility={() => handleAcceptResponsibility(process.id, process.currentDepartment)}
+            isAccepting={acceptingProcessId === process.id}
             canInitiateProcesses={isUserInAttendanceSector()}
             processResponsibles={processesResponsibles[process.id]}
           />

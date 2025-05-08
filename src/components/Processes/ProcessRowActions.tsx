@@ -3,6 +3,7 @@ import React from 'react';
 import ProcessActionButtons from './ProcessActionButtons';
 import { createLogger } from "@/utils/loggerUtils";
 import { Process } from "@/types";
+import { useProcessManager } from '@/hooks/useProcessManager';
 
 const logger = createLogger("ProcessRowActions");
 
@@ -26,7 +27,7 @@ interface ProcessRowActionsProps {
   onRenewalComplete?: () => void;
   showRenewDeadlineButton?: boolean;
   isUserProcessOwner?: boolean;
-  process?: Process; // Novo: objeto process completo
+  process?: Process; // Objeto process completo
 }
 
 const ProcessRowActions = ({
@@ -51,7 +52,7 @@ const ProcessRowActions = ({
   isUserProcessOwner = false,
   process
 }: ProcessRowActionsProps) => {
-  // Logs adicionais para diagnóstico
+  // Logs para diagnóstico
   logger.debug(`ProcessRowActions: processId=${processId}, hasSectorResponsible=${hasSectorResponsible}, isUserProcessOwner=${isUserProcessOwner}, status=${status}`);
   
   if (!hasSectorResponsible && isUserProcessOwner) {
@@ -81,7 +82,7 @@ const ProcessRowActions = ({
       isAccepting={isAccepting} 
       sectorId={sectorId}
       isUserProcessOwner={isUserProcessOwner}
-      process={process} // Passando o objeto process completo
+      process={process}
     />
   );
 };

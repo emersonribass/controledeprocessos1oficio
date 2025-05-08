@@ -1,11 +1,12 @@
 
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
-import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
-import { useProcesses } from "@/hooks/useProcesses";
 import { memo, useCallback } from "react";
-import { useProcessTableState } from "@/hooks/useProcessTableState";
+import { createLogger } from "@/utils/loggerUtils";
+import { useProcessManager } from "@/hooks/useProcessManager";
+
+const logger = createLogger("AcceptProcessButton");
 
 interface AcceptProcessResponsibilityButtonProps {
   processId: string;
@@ -22,23 +23,19 @@ const AcceptProcessResponsibilityButton = memo(({
   hasResponsibleUser,
   onAccept,
 }: AcceptProcessResponsibilityButtonProps) => {
-  const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const { user } = useAuth();
-  const { refreshProcesses } = useProcesses();
-  const { queueSectorForLoading } = useProcessTableState([]);
+  const { acceptResponsibility, isLoading } = useProcessManager();
+  
+  logger.debug(`Button: processId=${processId}, sectorId=${sectorId}, hasResponsible=${hasResponsibleUser}`);
 
   const handleAcceptProcess = useCallback(async () => {
-    // Não exibir toast durante a aceitação
-    const success = await acceptProcessResponsibility(processId, protocolNumber, false);
+    if (!user || !sectorId) return;
+    
+    const success = await acceptResponsibility(processId, sectorId);
     if (success) {
-      // Atualizar o setor específico
-      queueSectorForLoading(processId, sectorId);
-      // Atualizar a lista de processos
-      await refreshProcesses();
-      // Chamar o callback de onAccept
       onAccept();
     }
-  }, [processId, protocolNumber, sectorId, acceptProcessResponsibility, queueSectorForLoading, refreshProcesses, onAccept]);
+  }, [processId, sectorId, acceptResponsibility, onAccept, user]);
 
   if (hasResponsibleUser) {
     return null;
@@ -47,12 +44,12 @@ const AcceptProcessResponsibilityButton = memo(({
   return (
     <Button
       onClick={handleAcceptProcess}
-      disabled={isAccepting || !user}
+      disabled={isLoading || !user}
       className="bg-green-600 hover:bg-green-700"
       size="sm"
     >
       <CheckCircle className="mr-2 h-4 w-4" />
-      {isAccepting ? "Processando..." : "Aceitar Processo"}
+      {isLoading ? "Processando..." : "Aceitar Processo"}
     </Button>
   );
 });

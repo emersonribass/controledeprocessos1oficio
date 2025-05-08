@@ -2,6 +2,8 @@
 import { TableCell } from "@/components/ui/table";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import { Department } from "@/types";
+import { useProcessManager } from "@/hooks/useProcessManager";
+import { useAuth } from "@/hooks/auth";
 
 interface ProcessDepartmentsSectionProps {
   sortedDepartments: Department[];
@@ -46,7 +48,7 @@ const ProcessDepartmentsSection = ({
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
-        // Lógica corrigida: mostra responsáveis apenas para o setor atual e setores com order_num menor
+        // Lógica para mostrar responsáveis apenas para o setor atual e setores com order_num menor
         let departmentResponsible = null;
         
         // Estritamente verificar se o dept.order é menor que o order do departamento atual
