@@ -57,7 +57,7 @@ const ProcessTableRow = ({
   const { queueSectorForLoading } = useProcessTableState([]);
   const { user } = useAuth();
   const { isUserProcessOwner } = useProcessPermissionCheckers();
-  
+
   const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
   
   // Verificação se o usuário é o proprietário do processo
@@ -84,7 +84,6 @@ const ProcessTableRow = ({
   } = useProcessDepartmentInfo(process, departments);
 
   const getRowBorderColor = (status: string) => {
-    if (status === "archived") return "border-l-4 border-l-orange-500";
     if (status === "completed") return "border-l-4 border-l-green-600";
     if (status === "overdue") return "border-l-4 border-l-red-600";
     if (status === "pending") return "border-l-4 border-l-blue-600";
@@ -107,7 +106,6 @@ const ProcessTableRow = ({
   }, [onAcceptResponsibility, process.id, process.currentDepartment, queueSectorForLoading, refreshProcesses]);
 
   const isProcessOverdue = process.status === "overdue";
-  const isProcessArchived = process.status === "archived";
   
   if (canRenewDeadline && renewalHistoryId) {
     logger.debug(`Processo ${process.id} pode renovar prazo, historyId=${renewalHistoryId}`);
@@ -148,7 +146,6 @@ const ProcessTableRow = ({
             isProcessStarted={process.status !== "not_started"}
             responsible={processResponsibles?.[dept.id]}
             isFirstDepartment={dept.id === sortedDepartments[0]?.id}
-            isArchived={isProcessArchived}
           />
         </TableCell>
       ))}
