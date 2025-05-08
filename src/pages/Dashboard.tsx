@@ -6,6 +6,7 @@ import RecentProcessList from "@/components/Dashboard/RecentProcessList";
 import { ProcessesProvider } from "@/hooks/useProcesses";
 import DashboardFilters from "@/components/Dashboard/DashboardFilters";
 import { useProcessListFilters } from "@/hooks/useProcessListFilters";
+import { useEffect } from "react";
 
 const Dashboard = () => {
   const { filters, setFilters } = useProcessListFilters({});
