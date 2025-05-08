@@ -1,3 +1,4 @@
+
 import { TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import ProcessTableRow from "./ProcessTableRow";
@@ -7,7 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { createLogger } from "@/utils/loggerUtils";
-import { useResponsibleDataAdapter } from "@/hooks/useResponsibleDataAdapter";
 
 const logger = createLogger("ProcessTableBody");
 
@@ -49,7 +49,6 @@ const ProcessTableBody = ({
   const { toast } = useToast();
   const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const [acceptingProcessId, setAcceptingProcessId] = useState<string | null>(null);
-  const { getAdaptedResponsible } = useResponsibleDataAdapter();
   
   // Função para aceitar a responsabilidade pelo processo
   const handleAcceptResponsibility = async (processId: string, protocolNumber?: string) => {
@@ -74,31 +73,16 @@ const ProcessTableBody = ({
     }
   };
 
-  // Função atualizada para verificar se existe um responsável para o processo no setor atual
+  // Função para verificar se existe um responsável para o processo no setor atual
   const hasSectorResponsible = (processId: string, currentDepartment: string) => {
-    // Verificar se temos dados dos responsáveis para este processo
-    if (!processesResponsibles[processId]) {
-      return false;
-    }
-    
-    // Determinar se o currentDepartment é o primeiro setor
-    const firstDept = departments.sort((a, b) => a.order - b.order)[0];
-    const isFirstDepartment = String(firstDept?.id) === String(currentDepartment);
-    
-    // Usar o adaptador para verificar se há responsável para o setor atual
-    const responsible = getAdaptedResponsible(
-      processesResponsibles[processId], 
-      currentDepartment, 
-      isFirstDepartment
+    // Adicionar log de debug para verificar hasSectorResponsible
+    const hasResponsible = !!(
+      processesResponsibles[processId] && 
+      processesResponsibles[processId][currentDepartment]
     );
     
-    // Log de debug
-    if (processId === '118866' || processId === '118865') {
-      logger.debug(`hasSectorResponsible para processo ${processId}, setor ${currentDepartment}, isFirstDepartment=${isFirstDepartment}: ${!!responsible}`,
-        processesResponsibles[processId]);
-    }
-    
-    return !!responsible;
+    logger.debug(`hasSectorResponsible para processo ${processId}, setor ${currentDepartment}: ${hasResponsible}`);
+    return hasResponsible;
   };
 
   if (isLoading) {
@@ -128,21 +112,12 @@ const ProcessTableBody = ({
     );
   }
 
-  // Depuração dos responsáveis para processos específicos
-  if (processes.some(p => p.id === '118866' || p.id === '118865')) {
-    logger.debug('Estrutura de processesResponsibles:', processesResponsibles);
-  }
-
   return (
     <TableBody>
       {processes.map(process => {
-        // Verificar se há responsável para o setor atual
+        // Adicionar log para verificar os valores para cada processo
         const hasResponsible = hasSectorResponsible(process.id, process.currentDepartment);
-        
-        // Debug para processos específicos
-        if (process.id === '118866' || process.id === '118865') {
-          logger.debug(`Processo ${process.id}: hasSectorResponsible=${hasResponsible}, currentDepartment=${process.currentDepartment}`);
-        }
+        logger.debug(`Processo ${process.id}: hasSectorResponsible=${hasResponsible}, currentDepartment=${process.currentDepartment}`);
         
         return (
           <ProcessTableRow
