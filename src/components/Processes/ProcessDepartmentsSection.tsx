@@ -49,6 +49,7 @@ const ProcessDepartmentsSection = ({
         const isPastDept = hasPassedDepartment(dept.id);
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
+        const isFirstDepartment = index === 0;
         
         // Lógica corrigida: mostra responsáveis apenas para o setor atual e setores com order_num menor
         let departmentResponsible = null;
@@ -58,15 +59,16 @@ const ProcessDepartmentsSection = ({
         const showResponsible = isActive || (dept.order < currentDeptOrder);
         
         if (showResponsible && isProcessStarted) {
-          // Novidade: Usar o adaptador para obter os dados do responsável no formato correto
+          // Usar o adaptador para obter os dados do responsável no formato correto, passando o flag isFirstDepartment
           if (sectorResponsibles && sectorResponsibles[processId]) {
-            departmentResponsible = getAdaptedResponsible(sectorResponsibles[processId], dept.id);
-          } else if (index === 0 && processResponsible) {
+            departmentResponsible = getAdaptedResponsible(sectorResponsibles[processId], dept.id, isFirstDepartment);
+          } else if (isFirstDepartment && processResponsible) {
+            // Responsável inicial só deve ser usado no primeiro setor
             departmentResponsible = processResponsible;
           }
           
           if (departmentResponsible) {
-            logger.debug(`Responsável encontrado para processo ${processId}, setor ${dept.id}:`, departmentResponsible);
+            logger.debug(`Responsável encontrado para processo ${processId}, setor ${dept.id}, isFirstDepartment=${isFirstDepartment}:`, departmentResponsible);
           }
         }
 
@@ -82,7 +84,7 @@ const ProcessDepartmentsSection = ({
               departmentTimeLimit={dept.timeLimit}
               isProcessStarted={isProcessStarted}
               responsible={departmentResponsible}
-              isFirstDepartment={index === 0}
+              isFirstDepartment={isFirstDepartment}
             />
           </TableCell>
         );

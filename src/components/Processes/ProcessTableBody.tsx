@@ -1,4 +1,3 @@
-
 import { TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Process, Department, ProcessType } from "@/types";
 import ProcessTableRow from "./ProcessTableRow";
@@ -8,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { createLogger } from "@/utils/loggerUtils";
+import { useResponsibleDataAdapter } from "@/hooks/useResponsibleDataAdapter";
 
 const logger = createLogger("ProcessTableBody");
 
@@ -49,6 +49,7 @@ const ProcessTableBody = ({
   const { toast } = useToast();
   const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const [acceptingProcessId, setAcceptingProcessId] = useState<string | null>(null);
+  const { getAdaptedResponsible } = useResponsibleDataAdapter();
   
   // Função para aceitar a responsabilidade pelo processo
   const handleAcceptResponsibility = async (processId: string, protocolNumber?: string) => {
@@ -73,42 +74,31 @@ const ProcessTableBody = ({
     }
   };
 
-  // Função para verificar se existe um responsável para o processo no setor atual
+  // Função atualizada para verificar se existe um responsável para o processo no setor atual
   const hasSectorResponsible = (processId: string, currentDepartment: string) => {
     // Verificar se temos dados dos responsáveis para este processo
     if (!processesResponsibles[processId]) {
       return false;
     }
     
-    // Verificar o formato padrão (responsáveis por setor)
-    if (
-      processesResponsibles[processId][currentDepartment] && 
-      (processesResponsibles[processId][currentDepartment].nome || 
-       processesResponsibles[processId][currentDepartment].email)
-    ) {
-      return true;
-    }
+    // Determinar se o currentDepartment é o primeiro setor
+    const firstDept = departments.sort((a, b) => a.order - b.order)[0];
+    const isFirstDepartment = String(firstDept?.id) === String(currentDepartment);
     
-    // Verificar formato alternativo (responsável inicial)
-    if (
-      processesResponsibles[processId].initial && 
-      (processesResponsibles[processId].initial.nome || 
-       processesResponsibles[processId].initial.email)
-    ) {
-      // Para o setor inicial, o responsável inicial também é válido
-      const firstDept = departments.sort((a, b) => a.order - b.order)[0];
-      if (currentDepartment === String(firstDept?.id)) {
-        return true;
-      }
-    }
-
+    // Usar o adaptador para verificar se há responsável para o setor atual
+    const responsible = getAdaptedResponsible(
+      processesResponsibles[processId], 
+      currentDepartment, 
+      isFirstDepartment
+    );
+    
     // Log de debug
     if (processId === '118866' || processId === '118865') {
-      logger.debug(`hasSectorResponsible para processo ${processId}, setor ${currentDepartment}: false`, 
+      logger.debug(`hasSectorResponsible para processo ${processId}, setor ${currentDepartment}, isFirstDepartment=${isFirstDepartment}: ${!!responsible}`,
         processesResponsibles[processId]);
     }
     
-    return false;
+    return !!responsible;
   };
 
   if (isLoading) {

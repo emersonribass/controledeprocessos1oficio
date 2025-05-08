@@ -12,11 +12,13 @@ export const useResponsibleDataAdapter = () => {
    * Adapta diferentes formatos de dados de responsáveis para um formato consistente
    * @param processResponsibles Dados de responsáveis do processo
    * @param departmentId ID do departamento
+   * @param isFirstDepartment Indica se é o primeiro departamento (Atendimento)
    * @returns Dados do responsável normalizados ou null se não houver responsável
    */
   const getAdaptedResponsible = (
     processResponsibles: any | undefined,
-    departmentId: string
+    departmentId: string,
+    isFirstDepartment: boolean = false
   ): { nome: string; email: string } | null => {
     if (!processResponsibles) {
       return null;
@@ -29,10 +31,10 @@ export const useResponsibleDataAdapter = () => {
       return processResponsibles[departmentId];
     }
     
-    // Caso 2: Se o processResponsibles contém initial e o departmentId atual é o primeiro setor
-    if (processResponsibles.initial && 
+    // Caso 2: Se o processResponsibles contém initial E estamos no primeiro setor (Atendimento)
+    if (isFirstDepartment && processResponsibles.initial && 
         (processResponsibles.initial.nome || processResponsibles.initial.email)) {
-      logger.debug(`Encontrou responsável inicial para setor ${departmentId}`);
+      logger.debug(`Encontrou responsável inicial para setor ${departmentId} (primeiro setor)`);
       return processResponsibles.initial;
     }
 

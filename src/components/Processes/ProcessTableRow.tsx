@@ -140,14 +140,17 @@ const ProcessTableRow = ({
         />
       </TableCell>
       
-      {sortedDepartments.map((dept) => {
+      {sortedDepartments.map((dept, index) => {
+        const isFirstDept = index === 0;
+        
         // Usar o adaptador para lidar com diferentes estruturas de dados de responsáveis
+        // Agora passamos o parâmetro isFirstDept para indicar se é o primeiro departamento
         const responsibleData = processResponsibles ? 
-          getAdaptedResponsible(processResponsibles, dept.id) : null;
+          getAdaptedResponsible(processResponsibles, dept.id, isFirstDept) : null;
         
         // Registrar no log para depuração
         if ((process.id === '118866' || process.id === '118865') && dept.id === '1') {
-          logger.debug(`Responsável adaptado para processo ${process.id}, setor ${dept.id}:`, responsibleData);
+          logger.debug(`Responsável adaptado para processo ${process.id}, setor ${dept.id}, isFirstDept=${isFirstDept}:`, responsibleData);
         }
         
         return (
@@ -162,7 +165,7 @@ const ProcessTableRow = ({
               departmentTimeLimit={dept.timeLimit}
               isProcessStarted={process.status !== "not_started"}
               responsible={responsibleData}
-              isFirstDepartment={dept.id === sortedDepartments[0]?.id}
+              isFirstDepartment={isFirstDept}
             />
           </TableCell>
         );
