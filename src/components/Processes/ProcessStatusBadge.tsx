@@ -16,7 +16,7 @@ const ProcessStatusBadge = ({ status }: StatusProps) => {
     case "not_started":
       return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Não iniciado</Badge>;
     case "archived":
-      return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100">Arquivado</Badge>;
+      return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Arquivado</Badge>;
     default:
       return <Badge>Desconhecido</Badge>;
   }
