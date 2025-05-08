@@ -24,7 +24,10 @@ const AcceptProcessResponsibilityButton = memo(({
   onAccept,
 }: AcceptProcessResponsibilityButtonProps) => {
   const { user } = useAuth();
-  const { acceptResponsibility, isLoading } = useProcessManager();
+  const { acceptResponsibility, isLoading } = useProcessManager({
+    processes: [], // Fornecendo um array vazio como argumento para satisfazer a interface
+    refreshProcessesCallback: async () => { /* função vazia */ }
+  });
   
   logger.debug(`Button: processId=${processId}, sectorId=${sectorId}, hasResponsible=${hasResponsibleUser}`);
 
