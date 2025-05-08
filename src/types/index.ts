@@ -7,6 +7,9 @@ export type User = {
   name: string;
   departments: string[];
   createdAt: string;
+  // Adicionando as propriedades necessárias que faltavam
+  perfil?: 'administrador' | 'usuario';
+  setores_atribuidos?: string[];
 };
 
 export type Department = {
@@ -54,7 +57,9 @@ export const mapSupabaseUserToUser = (dbUser: Tables["usuarios"]): User => {
     email: dbUser.email,
     name: dbUser.nome,
     departments: dbUser.setores_atribuidos || [],
-    createdAt: dbUser.created_at || new Date().toISOString()
+    createdAt: dbUser.created_at || new Date().toISOString(),
+    perfil: dbUser.perfil,
+    setores_atribuidos: dbUser.setores_atribuidos
   };
 };
 

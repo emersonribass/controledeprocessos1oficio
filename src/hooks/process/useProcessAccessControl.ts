@@ -98,6 +98,14 @@ export const useProcessAccessControl = () => {
   const isProcessOwner = (process: Process, userId: string): boolean => {
     return process.userId === userId || process.responsibleUserId === userId;
   };
+  
+  /**
+   * Verifica se o usuário está no setor atual do processo
+   */
+  const isUserInCurrentSector = (process: Process, userId: string): boolean => {
+    if (!process.currentDepartment) return false;
+    return isInSector(process.currentDepartment, userId);
+  };
 
   return {
     canViewProcess,
@@ -107,6 +115,7 @@ export const useProcessAccessControl = () => {
     isProcessOwner,
     isInAttendanceSector,
     isInSector,
-    isAdmin
+    isAdmin,
+    isUserInCurrentSector
   };
 };

@@ -7,6 +7,7 @@ import { ProcessesProvider } from "@/hooks/useProcesses";
 import DashboardFilters from "@/components/Dashboard/DashboardFilters";
 import { useProcessListFilters } from "@/hooks/useProcessListFilters";
 import { useState } from "react";
+import { useProcesses } from "@/hooks/useProcesses";
 
 const Dashboard = () => {
   const { filters, setFilters } = useProcessListFilters({});
@@ -54,8 +55,5 @@ const DashboardContent = ({
     </>
   );
 };
-
-// Não se esqueça de importar useProcesses
-import { useProcesses } from "@/hooks/useProcesses";
 
 export default Dashboard;

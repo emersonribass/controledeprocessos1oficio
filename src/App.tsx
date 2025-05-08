@@ -101,7 +101,7 @@ const AppRoutes = () => {
           <Route path="login" element={<LoginPage />} />
           
           <Route path="dashboard" element={
-            <ProtectedRoute needsProcesses={false}>
+            <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
           } />

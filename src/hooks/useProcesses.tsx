@@ -113,12 +113,13 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   
   // Verificar se um usuário está no setor de atendimento
   const isUserInAttendanceSector = useCallback(() => {
+    if (!user) return false;
     return getUserProfileInfo(user).isAtendimento;
   }, [user]);
   
   // Verificar se um usuário está no setor atual de um processo
   const isUserInCurrentSector = useCallback((process: Process) => {
-    if (!user?.setores_atribuidos || !process.currentDepartment) {
+    if (!user || !user.setores_atribuidos || !process.currentDepartment) {
       return false;
     }
     return user.setores_atribuidos.includes(process.currentDepartment);
@@ -133,23 +134,42 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   // Implementar updateProcessType para compatibilidade
   const updateProcessType = useCallback(async (processId: string, newTypeId: string) => {
     // Esta função seria mantida como está, pois não faz parte da refatoração atual
+    console.log(`Atualizando tipo de processo para: ${newTypeId}`);
   }, []);
   
   // Implementar updateProcessStatus para compatibilidade
   const updateProcessStatus = useCallback(async (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado' | 'Arquivado') => {
     // Esta função seria mantida como está, pois não faz parte da refatoração atual
+    console.log(`Atualizando status para: ${newStatus}`);
   }, []);
   
   // Implementar deleteProcess para compatibilidade
   const deleteProcess = useCallback(async (processId: string): Promise<boolean> => {
     // Esta função seria mantida como está, pois não faz parte da refatoração atual
+    console.log(`Deletando processo: ${processId}`);
     return true;
   }, []);
   
   // Implementar deleteManyProcesses para compatibilidade
   const deleteManyProcesses = useCallback(async (processIds: string[]): Promise<boolean> => {
     // Esta função seria mantida como está, pois não faz parte da refatoração atual
+    console.log(`Deletando múltiplos processos: ${processIds.join(', ')}`);
     return true;
+  }, []);
+
+  // Implementar hasSectorResponsible como promise para compatibilidade
+  const hasSectorResponsible = useCallback(async (processId: string, sectorId: string): Promise<boolean> => {
+    return Promise.resolve(processManager.hasSectorResponsible(processId, sectorId));
+  }, [processManager]);
+
+  // Implementar isUserResponsibleForProcess e isUserResponsibleForSector
+  const isUserResponsibleForProcess = useCallback((process: Process, userId: string): boolean => {
+    return process.responsibleUserId === userId;
+  }, []);
+
+  const isUserResponsibleForSector = useCallback((process: Process, userId: string): boolean => {
+    // Função simplificada, deve ser implementada com a lógica real
+    return false;
   }, []);
   
   return (
@@ -172,11 +192,11 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
         deleteProcess,
         deleteManyProcesses,
         getProcess,
-        isUserResponsibleForProcess: processManager.isUserProcessOwner,
-        isUserResponsibleForSector: async (process, userId) => false, // Substituído por processManager
+        isUserResponsibleForProcess,
+        isUserResponsibleForSector,
         isUserInAttendanceSector,
         isUserInCurrentSector,
-        hasSectorResponsible: async (processId, sectorId) => processManager.hasSectorResponsible(processId, sectorId),
+        hasSectorResponsible,
         queueSectorForLoading
       }}
     >

@@ -286,4 +286,5 @@ export const ProcessMovementService = {
   }
 };
 
+// Para compatibilidade com o código existente
 export default ProcessMovementService;
