@@ -51,7 +51,8 @@ export const useProcessManager = (processes: Process[] = []) => {
   // Mover processo para o próximo departamento
   const moveToNextDepartment = useCallback(async (processId: string): Promise<boolean> => {
     if (!user) return false;
-    const success = await ProcessMovementService.moveToNextDepartment(processId, user.id);
+    // Correção aqui: adicionando o terceiro parâmetro necessário (motivo)
+    const success = await ProcessMovementService.moveToNextDepartment(processId, user.id, "");
     if (success) {
       await refreshProcesses();
       await loadAllResponsibles();
@@ -62,7 +63,8 @@ export const useProcessManager = (processes: Process[] = []) => {
   // Mover processo para o departamento anterior
   const moveToPreviousDepartment = useCallback(async (processId: string): Promise<boolean> => {
     if (!user) return false;
-    const success = await ProcessMovementService.moveToPreviousDepartment(processId, user.id);
+    // Correção aqui: adicionando o terceiro parâmetro necessário (motivo)
+    const success = await ProcessMovementService.moveToPreviousDepartment(processId, user.id, "");
     if (success) {
       await refreshProcesses();
       await loadAllResponsibles();
