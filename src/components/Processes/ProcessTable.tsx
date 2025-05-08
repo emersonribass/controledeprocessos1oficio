@@ -46,7 +46,9 @@ const ProcessTable = ({
   processesResponsibles: externalResponsibles
 }: ProcessTableProps) => {
   const { isLoading: isLocalLoading, queueSectorForLoading } = useProcessTableState(processes);
-  const { processesResponsibles: managedResponsibles, isLoading: isManagerLoading } = useProcessManager(processes);
+  const { processesResponsibles: managedResponsibles, isLoading: isManagerLoading } = useProcessManager({ 
+    processes // Passando um objeto com a propriedade 'processes' conforme esperado pela interface
+  });
 
   // Usar os responsáveis passados como propriedade, se disponíveis, ou os carregados pelo gerente
   const effectiveResponsibles = externalResponsibles || managedResponsibles;

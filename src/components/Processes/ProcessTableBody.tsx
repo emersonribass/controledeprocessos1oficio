@@ -44,7 +44,9 @@ const ProcessTableBody = ({
   isLoading,
   canInitiateProcesses
 }: ProcessTableBodyProps) => {
-  const { acceptResponsibility, hasSectorResponsible, refreshResponsibles } = useProcessManager(processes);
+  const { acceptResponsibility, hasSectorResponsible, refreshResponsibles } = useProcessManager({ 
+    processes // Passando um objeto com a propriedade 'processes' conforme esperado pela interface
+  });
   const [acceptingProcessId, setAcceptingProcessId] = useState<string | null>(null);
   
   // Função para aceitar a responsabilidade pelo processo
