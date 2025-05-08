@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/auth";
 import { memo, useCallback } from "react";
 import { createLogger } from "@/utils/loggerUtils";
 import { useProcessManager } from "@/hooks/useProcessManager";
+import { ProcessResponsibilityService } from "@/services/ProcessResponsibilityService";
 
 const logger = createLogger("AcceptProcessButton");
 
@@ -36,6 +37,8 @@ const AcceptProcessResponsibilityButton = memo(({
     
     const success = await acceptResponsibility(processId, sectorId);
     if (success) {
+      // Limpa o cache após aceitar para garantir dados atualizados
+      ProcessResponsibilityService.clearCache();
       onAccept();
     }
   }, [processId, sectorId, acceptResponsibility, onAccept, user]);
