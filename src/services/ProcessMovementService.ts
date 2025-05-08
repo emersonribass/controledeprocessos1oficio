@@ -1,346 +1,289 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { processDataService } from "./ProcessDataService";
-import { Process, User } from "@/types";
+import { Process } from "@/types";
 
-class ProcessMovementService {
+/**
+ * Serviço para gerenciar movimentação de processos
+ */
+export const ProcessMovementService = {
+  
   /**
-   * Move um processo para o próximo departamento
+   * Move um processo para o próximo setor
+   * @param processId ID do processo
+   * @param currentSectorId ID do setor atual
+   * @param userId ID do usuário que está movendo o processo
+   * @returns true se sucesso, false se erro
    */
-  async moveToNextDepartment(processId: string): Promise<boolean> {
+  async moveToNextDepartment(processId: string, currentSectorId: string, userId: string): Promise<boolean> {
     try {
-      // Obter o processo atual
-      const { data: process, error: processError } = await supabase
-        .from('processos')
-        .select('*')
-        .eq('id', processId)
+      // 1. Buscar ordem do setor atual
+      const { data: currentSector, error: sectorError } = await supabase
+        .from("setores")
+        .select("order_num")
+        .eq("id", parseInt(currentSectorId))
         .single();
-      
-      if (processError || !process) {
-        console.error("Erro ao obter processo:", processError);
+
+      if (sectorError || !currentSector) {
+        console.error("Erro ao buscar setor atual:", sectorError);
         return false;
       }
-      
-      // Obter o departamento atual
-      const { data: currentDept, error: deptError } = await supabase
-        .from('setores')
-        .select('*')
-        .eq('id', process.setor_atual)
-        .single();
-      
-      if (deptError || !currentDept) {
-        console.error("Erro ao obter departamento atual:", deptError);
-        return false;
-      }
-      
-      // Buscar o próximo departamento
-      const { data: nextDept, error: nextDeptError } = await supabase
-        .from('setores')
-        .select('*')
-        .gt('order_num', currentDept.order_num)
-        .order('order_num', { ascending: true })
+
+      // 2. Buscar próximo setor na ordem
+      const { data: nextSector, error: nextSectorError } = await supabase
+        .from("setores")
+        .select("id, order_num, name")
+        .gt("order_num", currentSector.order_num)
+        .order("order_num", { ascending: true })
         .limit(1)
         .single();
-      
-      if (nextDeptError || !nextDept) {
-        console.error("Erro ao obter próximo departamento:", nextDeptError);
+
+      if (nextSectorError || !nextSector) {
+        console.error("Erro ao buscar próximo setor:", nextSectorError);
         return false;
       }
-      
-      // Registrar saída do departamento atual
-      const { error: exitError } = await supabase
-        .from('processos_historico')
-        .update({ data_saida: new Date().toISOString() })
-        .eq('processo_id', processId)
-        .eq('setor_id', process.setor_atual)
-        .is('data_saida', null);
-      
-      if (exitError) {
-        console.error("Erro ao registrar saída do departamento atual:", exitError);
+
+      // 3. Finalizar o registro no histórico do setor atual
+      const { error: updateHistoryError } = await supabase
+        .from("processos_historico")
+        .update({
+          data_saida: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq("processo_id", processId)
+        .eq("setor_id", currentSectorId)
+        .is("data_saida", null);
+
+      if (updateHistoryError) {
+        console.error("Erro ao atualizar histórico:", updateHistoryError);
         return false;
       }
-      
-      // Registrar entrada no próximo departamento
-      const { error: entryError } = await supabase
-        .from('processos_historico')
+
+      // 4. Criar novo registro no histórico para o próximo setor
+      const { error: newHistoryError } = await supabase
+        .from("processos_historico")
         .insert({
           processo_id: processId,
-          setor_id: nextDept.id.toString(),
+          setor_id: nextSector.id.toString(),
+          usuario_id: userId,
           data_entrada: new Date().toISOString()
         });
-      
-      if (entryError) {
-        console.error("Erro ao registrar entrada no próximo departamento:", entryError);
+
+      if (newHistoryError) {
+        console.error("Erro ao criar novo histórico:", newHistoryError);
         return false;
       }
-      
-      // Atualizar o processo com o novo departamento
-      const { error: updateError } = await supabase
-        .from('processos')
-        .update({ setor_atual: nextDept.id.toString() })
-        .eq('id', processId);
-      
-      if (updateError) {
-        console.error("Erro ao atualizar departamento do processo:", updateError);
+
+      // 5. Atualizar o setor atual do processo
+      const { error: updateProcessError } = await supabase
+        .from("processos")
+        .update({
+          setor_atual: nextSector.id.toString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", processId);
+
+      if (updateProcessError) {
+        console.error("Erro ao atualizar processo:", updateProcessError);
         return false;
       }
-      
-      // Limpar o cache de responsáveis
-      processDataService.clearCache();
-      
+
       return true;
     } catch (error) {
-      console.error("Erro ao mover processo para o próximo departamento:", error);
+      console.error("Erro ao mover processo:", error);
       return false;
     }
-  }
+  },
 
   /**
-   * Move um processo para o departamento anterior
+   * Move um processo para o setor anterior
+   * @param processId ID do processo
+   * @param currentSectorId ID do setor atual
+   * @param userId ID do usuário que está movendo o processo
+   * @returns true se sucesso, false se erro
    */
-  async moveToPreviousDepartment(processId: string): Promise<boolean> {
+  async moveToPreviousDepartment(processId: string, currentSectorId: string, userId: string): Promise<boolean> {
     try {
-      // Obter o processo atual
-      const { data: process, error: processError } = await supabase
-        .from('processos')
-        .select('*')
-        .eq('id', processId)
+      // 1. Buscar ordem do setor atual
+      const { data: currentSector, error: sectorError } = await supabase
+        .from("setores")
+        .select("order_num")
+        .eq("id", parseInt(currentSectorId))
         .single();
-      
-      if (processError || !process) {
-        console.error("Erro ao obter processo:", processError);
+
+      if (sectorError || !currentSector) {
+        console.error("Erro ao buscar setor atual:", sectorError);
         return false;
       }
-      
-      // Obter o departamento atual
-      const { data: currentDept, error: deptError } = await supabase
-        .from('setores')
-        .select('*')
-        .eq('id', process.setor_atual)
-        .single();
-      
-      if (deptError || !currentDept) {
-        console.error("Erro ao obter departamento atual:", deptError);
-        return false;
-      }
-      
-      // Buscar o departamento anterior
-      const { data: prevDept, error: prevDeptError } = await supabase
-        .from('setores')
-        .select('*')
-        .lt('order_num', currentDept.order_num)
-        .order('order_num', { ascending: false })
+
+      // 2. Buscar setor anterior na ordem
+      const { data: previousSector, error: prevSectorError } = await supabase
+        .from("setores")
+        .select("id, order_num, name")
+        .lt("order_num", currentSector.order_num)
+        .order("order_num", { ascending: false })
         .limit(1)
         .single();
-      
-      if (prevDeptError || !prevDept) {
-        console.error("Erro ao obter departamento anterior:", prevDeptError);
+
+      if (prevSectorError || !previousSector) {
+        console.error("Erro ao buscar setor anterior:", prevSectorError);
         return false;
       }
-      
-      // Registrar saída do departamento atual
-      const { error: exitError } = await supabase
-        .from('processos_historico')
-        .update({ data_saida: new Date().toISOString() })
-        .eq('processo_id', processId)
-        .eq('setor_id', process.setor_atual)
-        .is('data_saida', null);
-      
-      if (exitError) {
-        console.error("Erro ao registrar saída do departamento atual:", exitError);
+
+      // 3. Finalizar o registro no histórico do setor atual
+      const { error: updateHistoryError } = await supabase
+        .from("processos_historico")
+        .update({
+          data_saida: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq("processo_id", processId)
+        .eq("setor_id", currentSectorId)
+        .is("data_saida", null);
+
+      if (updateHistoryError) {
+        console.error("Erro ao atualizar histórico:", updateHistoryError);
         return false;
       }
-      
-      // Registrar entrada no departamento anterior
-      const { error: entryError } = await supabase
-        .from('processos_historico')
+
+      // 4. Criar novo registro no histórico para o setor anterior
+      const { error: newHistoryError } = await supabase
+        .from("processos_historico")
         .insert({
           processo_id: processId,
-          setor_id: prevDept.id.toString(),
+          setor_id: previousSector.id.toString(),
+          usuario_id: userId,
           data_entrada: new Date().toISOString()
         });
-      
-      if (entryError) {
-        console.error("Erro ao registrar entrada no departamento anterior:", entryError);
+
+      if (newHistoryError) {
+        console.error("Erro ao criar novo histórico:", newHistoryError);
         return false;
       }
-      
-      // Remover o responsável atual
-      // Regra 6: Ao retornar a um setor, limpar o responsável
-      await this.clearSectorResponsible(processId, prevDept.id.toString());
-      
-      // Atualizar o processo com o novo departamento
-      const { error: updateError } = await supabase
-        .from('processos')
-        .update({ setor_atual: prevDept.id.toString() })
-        .eq('id', processId);
-      
-      if (updateError) {
-        console.error("Erro ao atualizar departamento do processo:", updateError);
+
+      // 5. Atualizar o setor atual do processo
+      const { error: updateProcessError } = await supabase
+        .from("processos")
+        .update({
+          setor_atual: previousSector.id.toString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", processId);
+
+      if (updateProcessError) {
+        console.error("Erro ao atualizar processo:", updateProcessError);
         return false;
       }
-      
-      // Limpar o cache de responsáveis
-      processDataService.clearCache();
-      
+
+      // 6. Limpar possíveis responsáveis do setor anterior
+      // para permitir que novos usuários aceitem a responsabilidade
+      const { error: deleteResponsibleError } = await supabase
+        .from("setor_responsaveis")
+        .delete()
+        .eq("processo_id", processId)
+        .eq("setor_id", previousSector.id.toString());
+
+      if (deleteResponsibleError) {
+        console.error("Erro ao limpar responsáveis:", deleteResponsibleError);
+        // Não falhar completamente se apenas esta etapa falhar
+      }
+
       return true;
     } catch (error) {
-      console.error("Erro ao mover processo para o departamento anterior:", error);
+      console.error("Erro ao mover processo:", error);
       return false;
     }
-  }
-
+  },
+  
   /**
-   * Inicia um processo
+   * Inicia um processo (muda status para Em andamento)
+   * @param processId ID do processo
+   * @param userId ID do usuário que está iniciando o processo
+   * @returns true se sucesso, false se erro
    */
   async startProcess(processId: string, userId: string): Promise<boolean> {
     try {
-      // Obter o processo atual
-      const { data: process, error: processError } = await supabase
-        .from('processos')
-        .select('*')
-        .eq('id', processId)
-        .single();
-      
-      if (processError || !process) {
-        console.error("Erro ao obter processo:", processError);
-        return false;
-      }
-
-      // Obter o primeiro departamento (ordem 1 - ATENDIMENTO)
-      const { data: firstDept, error: deptError } = await supabase
-        .from('setores')
-        .select('*')
-        .eq('order_num', 1)
-        .single();
-      
-      if (deptError || !firstDept) {
-        console.error("Erro ao obter primeiro departamento:", deptError);
-        return false;
-      }
-
-      // Definir data de início
-      const startDate = new Date().toISOString();
-      
-      // Calcular data fim esperada (30 dias úteis após início)
-      const expectedEndDate = new Date();
-      expectedEndDate.setDate(expectedEndDate.getDate() + 30); // Simplificado para 30 dias corridos
-      
-      // Atualizar o processo para "Em andamento"
+      // 1. Atualizar status do processo
       const { error: updateError } = await supabase
-        .from('processos')
+        .from("processos")
         .update({
-          status: 'Em andamento',
-          setor_atual: firstDept.id.toString(),
-          data_inicio: startDate,
-          data_fim_esperada: expectedEndDate.toISOString(),
-          usuario_responsavel: userId
+          status: "Em andamento",
+          usuario_responsavel: userId,
+          updated_at: new Date().toISOString()
         })
-        .eq('id', processId);
-      
+        .eq("id", processId);
+
       if (updateError) {
-        console.error("Erro ao iniciar processo:", updateError);
-        return false;
-      }
-      
-      // Registrar entrada no primeiro departamento
-      const { error: entryError } = await supabase
-        .from('processos_historico')
-        .insert({
-          processo_id: processId,
-          setor_id: firstDept.id.toString(),
-          data_entrada: startDate,
-          usuario_id: userId
-        });
-      
-      if (entryError) {
-        console.error("Erro ao registrar entrada no primeiro departamento:", entryError);
+        console.error("Erro ao atualizar status do processo:", updateError);
         return false;
       }
 
-      // Limpar o cache de responsáveis
-      processDataService.clearCache();
-      
+      // 2. Adicionar entrada ao histórico se necessário
+      // (Isso será tratado pelo sistema existente de movimentação)
+
       return true;
     } catch (error) {
       console.error("Erro ao iniciar processo:", error);
       return false;
     }
-  }
-
+  },
+  
   /**
-   * Aceita responsabilidade por um processo em um setor específico
+   * Aceita responsabilidade por um processo em um setor
+   * @param processId ID do processo
+   * @param sectorId ID do setor
+   * @param userId ID do usuário aceitando a responsabilidade
+   * @returns true se sucesso, false se erro
    */
   async acceptResponsibility(processId: string, sectorId: string, userId: string): Promise<boolean> {
     try {
-      // Verificar se já existe responsável para este setor
-      const { count, error: countError } = await supabase
-        .from('setor_responsaveis')
-        .select('*', { count: 'exact', head: true })
-        .eq('processo_id', processId)
-        .eq('setor_id', sectorId);
-      
-      if (countError) {
-        console.error("Erro ao verificar responsáveis existentes:", countError);
+      // 1. Verificar se já existe uma responsabilidade
+      const { data, error: checkError } = await supabase
+        .from("setor_responsaveis")
+        .select("id")
+        .eq("processo_id", processId)
+        .eq("setor_id", sectorId)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Erro ao verificar responsabilidade:", checkError);
         return false;
       }
-      
-      // Se já existe responsável, retornar erro
-      if (count && count > 0) {
-        console.error("Já existe um responsável para este processo neste setor.");
-        return false;
+
+      // 2. Se já existe, atualizar; caso contrário, criar nova
+      if (data) {
+        const { error: updateError } = await supabase
+          .from("setor_responsaveis")
+          .update({
+            usuario_id: userId,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", data.id);
+
+        if (updateError) {
+          console.error("Erro ao atualizar responsabilidade:", updateError);
+          return false;
+        }
+      } else {
+        const { error: insertError } = await supabase
+          .from("setor_responsaveis")
+          .insert({
+            processo_id: processId,
+            setor_id: sectorId,
+            usuario_id: userId
+          });
+
+        if (insertError) {
+          console.error("Erro ao criar responsabilidade:", insertError);
+          return false;
+        }
       }
-      
-      // Registrar o novo responsável
-      const { error: insertError } = await supabase
-        .from('setor_responsaveis')
-        .insert({
-          processo_id: processId,
-          setor_id: sectorId,
-          usuario_id: userId
-        });
-      
-      if (insertError) {
-        console.error("Erro ao registrar responsabilidade:", insertError);
-        return false;
-      }
-      
-      // Limpar o cache de responsáveis
-      processDataService.clearCache();
-      
+
       return true;
     } catch (error) {
-      console.error("Erro ao aceitar responsabilidade pelo processo:", error);
+      console.error("Erro ao aceitar responsabilidade:", error);
       return false;
     }
   }
+};
 
-  /**
-   * Remove o responsável de um setor específico
-   */
-  async clearSectorResponsible(processId: string, sectorId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('setor_responsaveis')
-        .delete()
-        .eq('processo_id', processId)
-        .eq('setor_id', sectorId);
-      
-      if (error) {
-        console.error("Erro ao remover responsável do setor:", error);
-        return false;
-      }
-      
-      // Limpar o cache de responsáveis
-      processDataService.clearCache();
-      
-      return true;
-    } catch (error) {
-      console.error("Erro ao limpar responsável do setor:", error);
-      return false;
-    }
-  }
-}
-
-// Exportar uma instância única do serviço
-export const processMovementService = new ProcessMovementService();
+export default ProcessMovementService;

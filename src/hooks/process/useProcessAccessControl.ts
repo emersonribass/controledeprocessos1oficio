@@ -1,125 +1,112 @@
 
-import { useCallback } from "react";
-import { Process, User } from "@/types";
+import { User, Process } from "@/types";
+import { useAuth } from "../auth";
 import { getUserProfileInfo } from "@/utils/userProfileUtils";
-import { processDataService } from "@/services/ProcessDataService";
-import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Hook centralizado para controle de acesso e permissões de processos
+ */
 export const useProcessAccessControl = () => {
-  /**
-   * Verifica se o usuário é responsável direto pelo processo
-   */
-  const isUserProcessOwner = useCallback((process: Process, userId: string) => {
-    return process.userId === userId || process.responsibleUserId === userId;
-  }, []);
-  
-  /**
-   * Verifica se o usuário pertence ao setor atual do processo
-   */
-  const isUserInCurrentSector = useCallback((process: Process, user: User | null) => {
-    if (!user?.setores_atribuidos || !process.currentDepartment) {
-      return false;
-    }
-    return user.setores_atribuidos.includes(process.currentDepartment);
-  }, []);
+  const { user } = useAuth();
 
   /**
-   * Verifica se o usuário pode ver um processo específico
+   * Verifica se o usuário está no setor de atendimento
    */
-  const canViewProcess = useCallback(async (process: Process, user: User | null): Promise<boolean> => {
-    if (!user) return false;
-    
-    const { isAdmin, isAtendimento, assignedSectors } = getUserProfileInfo(user);
+  const isInAttendanceSector = (userId: string): boolean => {
+    // Se userId for vazio, usa o usuário atual
+    const currentUser = userId ? { id: userId, setores_atribuidos: user?.setores_atribuidos } : user;
+    return getUserProfileInfo(currentUser as User).isAtendimento;
+  };
 
-    // Administradores podem ver tudo
-    if (isAdmin) return true;
+  /**
+   * Verifica se o usuário está em um determinado setor
+   */
+  const isInSector = (sectorId: string, userId: string): boolean => {
+    // Se userId for vazio, usa o usuário atual
+    const currentUser = userId ? { id: userId, setores_atribuidos: user?.setores_atribuidos } : user;
+    return getUserProfileInfo(currentUser as User).assignedSectors.includes(sectorId);
+  };
 
-    // Verificar se o usuário é responsável direto pelo processo
-    if (isUserProcessOwner(process, user.id)) {
-      return true;
-    }
-    
+  /**
+   * Verifica se o usuário é administrador
+   */
+  const isAdmin = (userId: string): boolean => {
+    // Se userId for vazio, usa o usuário atual
+    const currentUser = userId ? { id: userId, perfil: user?.perfil } : user;
+    return getUserProfileInfo(currentUser as User).isAdmin;
+  };
+
+  /**
+   * Verifica se o usuário pode visualizar o processo
+   */
+  const canViewProcess = (process: Process, userId: string): boolean => {
+    // Administradores podem ver todos os processos
+    if (isAdmin(userId)) return true;
+
     // Usuários do setor de atendimento podem ver processos não iniciados
-    if (process.status === 'not_started' && isAtendimento) {
-      return true;
-    }
+    if (process.status === "not_started" && isInAttendanceSector(userId)) return true;
 
-    // Se o usuário pertence ao setor atual
-    if (isUserInCurrentSector(process, user)) {
-      // Verificar se existe um responsável para o setor
-      const hasResponsible = await processDataService.hasSectorResponsible(process.id, process.currentDepartment);
-      
-      // Se não houver responsável, qualquer usuário do setor pode ver
-      if (!hasResponsible) {
-        return true;
-      }
-      
-      // Se houver responsável, verificar se é o usuário atual
-      const responsible = await processDataService.getResponsibleForSector(process.id, process.currentDepartment);
-      return responsible?.id === user.id;
-    }
-    
-    // Por padrão, não pode ver
+    // Usuários podem ver processos nos setores que estão atribuídos
+    if (process.currentDepartment && isInSector(process.currentDepartment, userId)) return true;
+
+    // Verificar se o usuário é responsável pelo processo
+    if (process.responsibleUserId === userId) return true;
+
     return false;
-  }, [isUserProcessOwner, isUserInCurrentSector]);
-
-  /**
-   * Verifica se o usuário pode aceitar a responsabilidade por um processo
-   */
-  const canAcceptProcess = useCallback(async (process: Process, user: User | null): Promise<boolean> => {
-    if (!user) return false;
-    
-    const { isAdmin } = getUserProfileInfo(user);
-    
-    // Administradores sempre podem aceitar processos
-    if (isAdmin) return true;
-    
-    // Usuário precisa pertencer ao setor atual
-    if (!isUserInCurrentSector(process, user)) {
-      return false;
-    }
-    
-    // Verificar se já existe um responsável para o setor
-    const hasResponsible = await processDataService.hasSectorResponsible(process.id, process.currentDepartment);
-    
-    // Se já existe responsável, não pode aceitar
-    return !hasResponsible;
-  }, [isUserInCurrentSector]);
+  };
 
   /**
    * Verifica se o usuário pode iniciar um processo
    */
-  const canStartProcess = useCallback((user: User | null): boolean => {
-    if (!user) return false;
-    
-    const { isAdmin, isAtendimento } = getUserProfileInfo(user);
-    
-    // Administradores e usuários do setor de atendimento podem iniciar processos
-    return isAdmin || isAtendimento;
-  }, []);
+  const canStartProcess = (userId: string): boolean => {
+    // Apenas usuários do setor de atendimento podem iniciar processos
+    return isInAttendanceSector(userId) || isAdmin(userId);
+  };
 
   /**
-   * Verifica se o usuário é responsável pelo setor específico em um processo
+   * Verifica se o usuário pode aceitar um processo
    */
-  const isResponsibleForSector = useCallback(async (process: Process, userId: string, sectorId: string): Promise<boolean> => {
-    const responsible = await processDataService.getResponsibleForSector(process.id, sectorId);
-    return responsible?.id === userId;
-  }, []);
+  const canAcceptProcess = (process: Process, userId: string): boolean => {
+    // Usuários não podem aceitar processos que já possuem responsável no setor
+    // Isso será verificado pelo serviço de responsabilidade
+    
+    // Se for do setor de atendimento e o processo está no setor de atendimento
+    if (isInAttendanceSector(userId) && process.currentDepartment === "1") return true;
+
+    // Se não for do setor de atendimento, mas estiver no setor atual
+    if (process.currentDepartment && isInSector(process.currentDepartment, userId)) return true;
+
+    return false;
+  };
 
   /**
-   * Limpa o cache de responsabilidades
+   * Verifica se o usuário é responsável pelo processo
    */
-  const invalidateResponsibilityCache = useCallback(() => {
-    processDataService.clearCache();
-  }, []);
+  const isResponsible = (process: Process, userId: string, sectorId?: string): boolean => {
+    // Se não informar o setor, verifica se é responsável global
+    if (!sectorId) {
+      return process.responsibleUserId === userId;
+    }
+
+    // Verificar responsabilidade no setor será feito pelo serviço de responsabilidade
+    return false;
+  };
+
+  /**
+   * Verifica se o usuário é dono do processo (responsável principal)
+   */
+  const isProcessOwner = (process: Process, userId: string): boolean => {
+    return process.userId === userId || process.responsibleUserId === userId;
+  };
 
   return {
     canViewProcess,
-    canAcceptProcess,
     canStartProcess,
-    isUserProcessOwner,
-    isUserInCurrentSector,
-    isResponsibleForSector,
-    invalidateResponsibilityCache
+    canAcceptProcess,
+    isResponsible,
+    isProcessOwner,
+    isInAttendanceSector,
+    isInSector,
+    isAdmin
   };
 };

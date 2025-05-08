@@ -81,7 +81,7 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // Wrapper para moveToPreviousDepartment para manter compatibilidade com API
-  const moveToPreviousDepartment = async (processId: string) => {
+  const moveProcessToPreviousDepartment = async (processId: string) => {
     const success = await processManager.moveToPreviousDepartment(processId);
     if (!success) {
       throw new Error("Falha ao mover processo para o departamento anterior");
@@ -176,7 +176,7 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
         isUserResponsibleForSector: async (process, userId) => false, // Substituído por processManager
         isUserInAttendanceSector,
         isUserInCurrentSector,
-        hasSectorResponsible: (processId, sectorId) => Promise.resolve(processManager.hasSectorResponsible(processId, sectorId)),
+        hasSectorResponsible: async (processId, sectorId) => processManager.hasSectorResponsible(processId, sectorId),
         queueSectorForLoading
       }}
     >

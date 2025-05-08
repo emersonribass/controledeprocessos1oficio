@@ -6,14 +6,24 @@ import RecentProcessList from "@/components/Dashboard/RecentProcessList";
 import { ProcessesProvider } from "@/hooks/useProcesses";
 import DashboardFilters from "@/components/Dashboard/DashboardFilters";
 import { useProcessListFilters } from "@/hooks/useProcessListFilters";
+import { useState } from "react";
 
 const Dashboard = () => {
   const { filters, setFilters } = useProcessListFilters({});
 
   return (
-    <ProcessesProvider>
-      <DashboardContent filters={filters} setFilters={setFilters} />
-    </ProcessesProvider>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <p className="text-muted-foreground">
+          Visão geral dos processos e estatísticas do sistema.
+        </p>
+      </div>
+
+      <ProcessesProvider>
+        <DashboardContent filters={filters} setFilters={setFilters} />
+      </ProcessesProvider>
+    </div>
   );
 };
 
@@ -28,14 +38,7 @@ const DashboardContent = ({
   const { departments } = useProcesses();
   
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">
-          Visão geral dos processos e estatísticas do sistema.
-        </p>
-      </div>
-
+    <>
       <DashboardFilters 
         filters={filters}
         setFilters={setFilters}
@@ -48,7 +51,7 @@ const DashboardContent = ({
         <DepartmentStatusChart />
         <RecentProcessList />
       </div>
-    </div>
+    </>
   );
 };
 
