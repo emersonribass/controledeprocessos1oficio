@@ -181,6 +181,6 @@ const ProcessTableRow = ({
       </TableCell>
     </TableRow>
   );
-})}
+};
 
 export default ProcessTableRow;
