@@ -73,15 +73,14 @@ export const useProcessTableState = (processes: Process[]) => {
               email
             )
           `)
-          .eq('processo_id', processId)
-          .in('setor_id', Array.from(sectors));
+          .eq('processo_id', processId);
 
         if (sectorError) {
           console.error("Erro ao buscar responsáveis de setor:", sectorError);
           throw sectorError;
         }
         
-        return sectorResponsibles;
+        return { processId, responsibles: sectorResponsibles };
       });
 
       const sectorResponsiblesResults = await Promise.all(
@@ -103,20 +102,22 @@ export const useProcessTableState = (processes: Process[]) => {
       });
 
       // Mapear responsáveis por setor
-      sectorResponsiblesResults.flat().forEach(resp => {
-        if (!resp) return;
+      sectorResponsiblesResults.forEach(result => {
+        if (!result) return;
         
-        const processId = resp.processo_id;
-        const sectorId = String(resp.setor_id);
+        const { processId, responsibles } = result;
         
         if (!responsiblesMap[processId]) {
           responsiblesMap[processId] = {};
         }
         
-        // Garante que temos os dados formatados corretamente
-        if (resp.usuarios) {
-          responsiblesMap[processId][sectorId] = resp.usuarios;
-        }
+        // Garantir que temos os dados formatados corretamente
+        responsibles.forEach(resp => {
+          if (resp.usuarios && resp.setor_id) {
+            const sectorId = String(resp.setor_id);
+            responsiblesMap[processId][sectorId] = resp.usuarios;
+          }
+        });
       });
 
       // Log de todos os responsáveis carregados

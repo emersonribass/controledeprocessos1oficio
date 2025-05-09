@@ -28,10 +28,12 @@ export const useProcessesFetch = () => {
       const formattedProcesses = formatProcesses(processesData);
 
       setProcesses(formattedProcesses);
+      return formattedProcesses;
     } catch (error) {
       console.error('Erro ao processar dados dos processos:', error);
       // Definir um array vazio mesmo em caso de erro
       setProcesses([]);
+      return [];
     }
   };
 

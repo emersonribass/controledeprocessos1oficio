@@ -133,22 +133,27 @@ const ProcessTableRow = ({
         />
       </TableCell>
       
-      {sortedDepartments.map((dept) => (
-        <TableCell key={dept.id} className="min-w-[120px] text-center">
-          <ProcessDepartmentCell 
-            departmentId={dept.id}
-            isCurrentDepartment={isCurrentDepartment(dept.id)}
-            hasPassedDepartment={hasPassedDepartment(dept.id)}
-            entryDate={getMostRecentEntryDate(dept.id)}
-            showDate={isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)}
-            isDepartmentOverdue={isCurrentDepartment(dept.id) && checkDepartmentOverdue(dept.id, process.status !== "not_started")}
-            departmentTimeLimit={dept.timeLimit}
-            isProcessStarted={process.status !== "not_started"}
-            responsible={processResponsibles?.[dept.id]}
-            isFirstDepartment={dept.id === sortedDepartments[0]?.id}
-          />
-        </TableCell>
-      ))}
+      {sortedDepartments.map((dept) => {
+        // Buscar o responsável para este departamento dos processResponsibles
+        const deptResponsible = processResponsibles && processResponsibles[process.id] && processResponsibles[process.id][dept.id];
+        
+        return (
+          <TableCell key={dept.id} className="min-w-[120px] text-center">
+            <ProcessDepartmentCell 
+              departmentId={dept.id}
+              isCurrentDepartment={isCurrentDepartment(dept.id)}
+              hasPassedDepartment={hasPassedDepartment(dept.id)}
+              entryDate={getMostRecentEntryDate(dept.id)}
+              showDate={isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)}
+              isDepartmentOverdue={isCurrentDepartment(dept.id) && checkDepartmentOverdue(dept.id, process.status !== "not_started")}
+              departmentTimeLimit={dept.timeLimit}
+              isProcessStarted={process.status !== "not_started"}
+              responsible={deptResponsible}
+              isFirstDepartment={dept.id === sortedDepartments[0]?.id}
+            />
+          </TableCell>
+        );
+      })}
     
       <TableCell className="w-[120px] process-action">
         <ProcessRowActions 
@@ -171,11 +176,11 @@ const ProcessTableRow = ({
           showRenewDeadlineButton={canRenewDeadline}
           onRenewalComplete={() => refreshProcesses()}
           isUserProcessOwner={isOwner}
-          process={process} // Passando o objeto process completo
+          process={process}
         />
       </TableCell>
     </TableRow>
   );
-};
+})}
 
 export default ProcessTableRow;
