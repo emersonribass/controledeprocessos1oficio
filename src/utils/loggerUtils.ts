@@ -1,59 +1,65 @@
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+/**
+ * Utilitário para gerenciar logs de forma centralizada e eficiente
+ */
 
-interface Logger {
-  debug: (message: string, ...args: any[]) => void;
-  info: (message: string, ...args: any[]) => void;
-  warn: (message: string, ...args: any[]) => void;
-  error: (message: string, ...args: any[]) => void;
+type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+
+class Logger {
+  private context: string;
+  private enabled: boolean;
+  private static debugMode = process.env.NODE_ENV === 'development';
+  
+  constructor(context: string, enabled: boolean = true) {
+    this.context = context;
+    this.enabled = enabled && Logger.debugMode;
+  }
+
+  private log(level: LogLevel, message: string, ...args: any[]): void {
+    if (!this.enabled) return;
+    
+    const formattedMessage = `[${this.context}] ${message}`;
+    
+    switch(level) {
+      case 'info':
+        console.log(formattedMessage, ...args);
+        break;
+      case 'warn':
+        console.warn(formattedMessage, ...args);
+        break;
+      case 'error':
+        console.error(formattedMessage, ...args);
+        break;
+      case 'debug':
+        if (Logger.debugMode) {
+          console.debug(formattedMessage, ...args);
+        }
+        break;
+    }
+  }
+
+  info(message: string, ...args: any[]): void {
+    this.log('info', message, ...args);
+  }
+
+  warn(message: string, ...args: any[]): void {
+    this.log('warn', message, ...args);
+  }
+
+  error(message: string, ...args: any[]): void {
+    this.log('error', message, ...args);
+  }
+
+  debug(message: string, ...args: any[]): void {
+    this.log('debug', message, ...args);
+  }
+  
+  // Método para criação rápida de uma instância de logger
+  static getLogger(context: string, enabled: boolean = true): Logger {
+    return new Logger(context, enabled);
+  }
 }
 
-// Definir o nível de log mínimo (pode ser ajustado conforme necessário)
-// Em produção, você pode mudar para 'info', 'warn' ou 'error'
-const MIN_LOG_LEVEL: LogLevel = 'debug';
-
-const LOG_LEVELS: Record<LogLevel, number> = {
-  debug: 0,
-  info: 1,
-  warn: 2,
-  error: 3
-};
-
-/**
- * Cria um logger para um componente/módulo específico
- * @param componentName Nome do componente ou módulo
- * @returns Um objeto logger com métodos para diferentes níveis de log
- */
-export const createLogger = (componentName: string): Logger => {
-  const shouldLog = (level: LogLevel): boolean => {
-    return LOG_LEVELS[level] >= LOG_LEVELS[MIN_LOG_LEVEL];
-  };
-
-  const formatMessage = (message: string): string => {
-    const timestamp = new Date().toISOString();
-    return `${timestamp} [${componentName}] ${message}`;
-  };
-
-  return {
-    debug: (message: string, ...args: any[]) => {
-      if (shouldLog('debug')) {
-        console.debug(formatMessage(message), ...args);
-      }
-    },
-    info: (message: string, ...args: any[]) => {
-      if (shouldLog('info')) {
-        console.info(formatMessage(message), ...args);
-      }
-    },
-    warn: (message: string, ...args: any[]) => {
-      if (shouldLog('warn')) {
-        console.warn(formatMessage(message), ...args);
-      }
-    },
-    error: (message: string, ...args: any[]) => {
-      if (shouldLog('error')) {
-        console.error(formatMessage(message), ...args);
-      }
-    }
-  };
+export const createLogger = (context: string, enabled: boolean = true): Logger => {
+  return Logger.getLogger(context, enabled);
 };

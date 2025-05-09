@@ -1,13 +1,11 @@
 
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
+import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useAuth } from "@/hooks/auth";
+import { useProcesses } from "@/hooks/useProcesses";
 import { memo, useCallback } from "react";
-import { createLogger } from "@/utils/loggerUtils";
-import { useProcessManager } from "@/hooks/useProcessManager";
-import { ProcessResponsibilityService } from "@/services/ProcessResponsibilityService";
-
-const logger = createLogger("AcceptProcessButton");
+import { useProcessTableState } from "@/hooks/useProcessTableState";
 
 interface AcceptProcessResponsibilityButtonProps {
   processId: string;
@@ -24,24 +22,23 @@ const AcceptProcessResponsibilityButton = memo(({
   hasResponsibleUser,
   onAccept,
 }: AcceptProcessResponsibilityButtonProps) => {
+  const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const { user } = useAuth();
-  const { acceptResponsibility, isLoading } = useProcessManager({
-    processes: [], // Fornecendo um array vazio como argumento para satisfazer a interface
-    refreshProcessesCallback: async () => { /* função vazia */ }
-  });
-  
-  logger.debug(`Button: processId=${processId}, sectorId=${sectorId}, hasResponsible=${hasResponsibleUser}`);
+  const { refreshProcesses } = useProcesses();
+  const { queueSectorForLoading } = useProcessTableState([]);
 
   const handleAcceptProcess = useCallback(async () => {
-    if (!user || !sectorId) return;
-    
-    const success = await acceptResponsibility(processId, sectorId);
+    // Não exibir toast durante a aceitação
+    const success = await acceptProcessResponsibility(processId, protocolNumber, false);
     if (success) {
-      // Limpa o cache após aceitar para garantir dados atualizados
-      ProcessResponsibilityService.clearCache();
+      // Atualizar o setor específico
+      queueSectorForLoading(processId, sectorId);
+      // Atualizar a lista de processos
+      await refreshProcesses();
+      // Chamar o callback de onAccept
       onAccept();
     }
-  }, [processId, sectorId, acceptResponsibility, onAccept, user]);
+  }, [processId, protocolNumber, sectorId, acceptProcessResponsibility, queueSectorForLoading, refreshProcesses, onAccept]);
 
   if (hasResponsibleUser) {
     return null;
@@ -50,12 +47,12 @@ const AcceptProcessResponsibilityButton = memo(({
   return (
     <Button
       onClick={handleAcceptProcess}
-      disabled={isLoading || !user}
+      disabled={isAccepting || !user}
       className="bg-green-600 hover:bg-green-700"
       size="sm"
     >
       <CheckCircle className="mr-2 h-4 w-4" />
-      {isLoading ? "Processando..." : "Aceitar Processo"}
+      {isAccepting ? "Processando..." : "Aceitar Processo"}
     </Button>
   );
 });

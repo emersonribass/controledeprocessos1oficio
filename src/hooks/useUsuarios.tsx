@@ -2,7 +2,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { UsuarioSupabase, FormUsuario } from "@/types/usuario";
-import { supabaseService } from "@/services/supabase/index";
+import { supabaseService } from "@/services/supabase";
 
 // Tempo de validade do cache em milissegundos (5 minutos)
 const CACHE_TTL = 5 * 60 * 1000;
@@ -222,4 +222,3 @@ export function useUsuarios() {
     saveUsuario
   };
 }
-

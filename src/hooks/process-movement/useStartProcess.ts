@@ -1,12 +1,8 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/auth";
 import { saveDateToDatabase } from "@/utils/dateUtils";
-import { createLogger } from "@/utils/loggerUtils";
-
-const logger = createLogger("useStartProcess");
 
 export const useStartProcess = (onProcessUpdated: () => void) => {
   const [isStarting, setIsStarting] = useState(false);
@@ -18,8 +14,6 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
     
     setIsStarting(true);
     try {
-      logger.debug(`Iniciando processo ${processId} pelo usuário ${user.id}`);
-      
       // Buscar dados do processo
       const { data: process, error: processError } = await supabase
         .from('processos')
@@ -27,22 +21,14 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
         .eq('id', processId)
         .single();
 
-      if (processError) {
-        logger.error("Erro ao buscar processo:", processError);
-        throw processError;
-      }
-      
-      if (!process) {
-        logger.error(`Processo ${processId} não encontrado`);
-        throw new Error("Processo não encontrado");
-      }
+      if (processError) throw processError;
+      if (!process) throw new Error("Processo não encontrado");
 
       // Validação: tipo do processo precisa estar definido
       if (!process.tipo_processo) {
-        logger.error(`Processo ${processId} sem tipo definido`);
         uiToast({
           title: "Erro",
-          description: "Selecione um tipo de processo antes de iniciá-lo.",
+          description: "Selecione um tipo de processo antes de iniciar.",
           variant: "destructive"
         });
         setIsStarting(false);
@@ -57,10 +43,7 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
         .limit(1)
         .single();
 
-      if (firstDeptError) {
-        logger.error("Erro ao buscar primeiro departamento:", firstDeptError);
-        throw firstDeptError;
-      }
+      if (firstDeptError) throw firstDeptError;
 
       // Definir data_fim_esperada de acordo com o time_limit do primeiro setor
       let expectedEndDate: string | null = null;
@@ -73,8 +56,6 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
 
       const now = saveDateToDatabase(new Date());
 
-      logger.debug(`Atualizando processo ${processId} para setor ${firstDepartment.id}, status: Em andamento`);
-      
       // Atualizar o processo
       const { error: updateError } = await supabase
         .from('processos')
@@ -88,14 +69,9 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
         })
         .eq('id', processId);
 
-      if (updateError) {
-        logger.error("Erro ao atualizar processo:", updateError);
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
       // Criar entrada no histórico
-      logger.debug(`Criando histórico para processo ${processId} no setor ${firstDepartment.id}`);
-      
       const { error: historyError } = await supabase
         .from('processos_historico')
         .insert({
@@ -108,14 +84,9 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
           updated_at: now
         });
 
-      if (historyError) {
-        logger.error("Erro ao criar histórico:", historyError);
-        throw historyError;
-      }
+      if (historyError) throw historyError;
 
       // Atribuir o usuário como responsável no primeiro setor
-      logger.debug(`Atribuindo usuário ${user.id} como responsável pelo processo ${processId} no setor ${firstDepartment.id}`);
-      
       const { error: responsibleError } = await supabase
         .from('setor_responsaveis')
         .insert({
@@ -128,11 +99,9 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
         });
 
       if (responsibleError) {
-        logger.error("Erro ao atribuir responsável de setor:", responsibleError);
+        console.error("Erro ao atribuir responsável de setor:", responsibleError);
       }
 
-      logger.debug(`Processo ${processId} iniciado com sucesso`);
-      
       onProcessUpdated();
       uiToast({
         title: "Sucesso",
@@ -140,7 +109,7 @@ export const useStartProcess = (onProcessUpdated: () => void) => {
       });
       return true;
     } catch (error) {
-      logger.error("Erro ao iniciar processo:", error);
+      console.error("Erro ao iniciar processo:", error);
       uiToast({
         title: "Erro",
         description: "Não foi possível iniciar o processo.",

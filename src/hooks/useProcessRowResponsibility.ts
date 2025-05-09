@@ -4,13 +4,9 @@ import { useProcessResponsibility } from "./useProcessResponsibility";
 import { useToast } from "./use-toast";
 import { useAuth } from "./auth";
 import { useProcesses } from "./useProcesses";
-import { ProcessResponsibilityService } from "@/services/ProcessResponsibilityService";
-import { createLogger } from "@/utils/loggerUtils";
-
-const logger = createLogger("useProcessRowResponsibility");
 
 export const useProcessRowResponsibility = (processId: string, sectorId?: string) => {
-  const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
+  const { getSectorResponsible, acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const { filterProcesses } = useProcesses();
   const [sectorResponsible, setSectorResponsible] = useState<any>(null);
   const [isLoadingResponsible, setIsLoadingResponsible] = useState(false);
@@ -26,14 +22,7 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     
     setIsLoadingResponsible(true);
     try {
-      // Usando o serviço centralizado para evitar duplicação de código
-      const responsible = await ProcessResponsibilityService.getSectorResponsible(processId, sectorId);
-      
-      // Debug para o processo específico
-      if (processId === '118866') {
-        logger.debug(`Responsável do setor ${sectorId} para processo 118866:`, responsible);
-      }
-      
+      const responsible = await getSectorResponsible(processId, sectorId);
       setSectorResponsible(responsible);
     } catch (error) {
       console.error("Erro ao carregar responsável:", error);
@@ -41,7 +30,7 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     } finally {
       setIsLoadingResponsible(false);
     }
-  }, [processId, sectorId]);
+  }, [processId, sectorId, getSectorResponsible]);
 
   // Carrega o responsável quando o componente é montado ou quando o departamento atual muda
   useEffect(() => {
@@ -83,7 +72,6 @@ export const useProcessRowResponsibility = (processId: string, sectorId?: string
     sectorResponsible,
     isLoadingResponsible,
     handleAcceptResponsibility,
-    isAccepting,
-    loadSectorResponsible
+    isAccepting
   };
 };

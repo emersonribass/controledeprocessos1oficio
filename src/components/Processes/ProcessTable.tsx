@@ -4,7 +4,6 @@ import { Process, Department, ProcessType } from "@/types";
 import ProcessTableHeader from "./ProcessTableHeader";
 import { useProcessTableState } from "@/hooks/useProcessTableState";
 import ProcessTableBody from "./ProcessTableBody";
-import { useProcessManager } from "@/hooks/useProcessManager";
 
 interface ProcessTableProps {
   processes: Process[];
@@ -43,16 +42,12 @@ const ProcessTable = ({
   filterProcesses,
   filters,
   isUserInAttendanceSector,
-  processesResponsibles: externalResponsibles
+  processesResponsibles
 }: ProcessTableProps) => {
-  const { isLoading: isLocalLoading, queueSectorForLoading } = useProcessTableState(processes);
-  const { processesResponsibles: managedResponsibles, isLoading: isManagerLoading } = useProcessManager({ 
-    processes // Passando um objeto com a propriedade 'processes' conforme esperado pela interface
-  });
+  const { processesResponsibles: localProcessesResponsibles, isLoading, queueSectorForLoading } = useProcessTableState(processes);
 
-  // Usar os responsáveis passados como propriedade, se disponíveis, ou os carregados pelo gerente
-  const effectiveResponsibles = externalResponsibles || managedResponsibles;
-  const isLoading = isLocalLoading || isManagerLoading;
+  // Usar os responsáveis passados como propriedade, se disponíveis, ou os carregados localmente
+  const effectiveResponsibles = processesResponsibles || localProcessesResponsibles;
 
   return (
     <div className="border rounded-md overflow-x-auto">

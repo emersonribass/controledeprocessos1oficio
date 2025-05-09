@@ -12,11 +12,10 @@ import { useProcessResponsibility } from "@/hooks/useProcessResponsibility";
 import { useProcesses } from "@/hooks/useProcesses";
 import { useDeadlineRenewalCondition } from "@/hooks/useDeadlineRenewalCondition";
 import { createLogger } from "@/utils/loggerUtils";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useProcessTableState } from "@/hooks/useProcessTableState";
 import { useAuth } from "@/hooks/auth";
 import { useProcessPermissionCheckers } from "@/hooks/process/permission/useProcessPermissionCheckers";
-import { ProcessResponsibilityService } from "@/services/ProcessResponsibilityService";
 
 const logger = createLogger("ProcessTableRow");
 
@@ -50,7 +49,7 @@ const ProcessTableRow = ({
   isAccepting,
   hasSectorResponsible = false,
   canInitiateProcesses = false,
-  processResponsibles: initialProcessResponsibles,
+  processResponsibles,
   historyId
 }: ProcessTableRowProps) => {
   const navigate = useNavigate();
@@ -58,18 +57,17 @@ const ProcessTableRow = ({
   const { queueSectorForLoading } = useProcessTableState([]);
   const { user } = useAuth();
   const { isUserProcessOwner } = useProcessPermissionCheckers();
-  const [sectorResponsibles, setSectorResponsibles] = useState<Record<string, any>>(initialProcessResponsibles || {});
+
+  const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
   
   // Verificação se o usuário é o proprietário do processo
   const isOwner = user ? isUserProcessOwner(process, user.id) : false;
   
-  // Log para depuração de processos específicos
-  if (process.id === '118866') {
-    logger.debug(`Processo 118866 detectado. Responsáveis iniciais:`, initialProcessResponsibles);
-    logger.debug(`CurrentDepartment=${process.currentDepartment}, isOwner=${isOwner}, userId=${user?.id}, processUserId=${process.userId}`);
+  // Log para depuração
+  if (process.id === '118706' && user) {
+    logger.debug(`Processo 118706: isOwner=${isOwner}, userId=${user.id}, processUserId=${process.userId}, hasSectorResponsible=${hasSectorResponsible}`);
   }
   
-  const { sectorResponsible } = useProcessRowResponsibility(process.id, process.currentDepartment);
   const hasResponsible = hasSectorResponsible || !!sectorResponsible;
   const { canRenewDeadline, historyId: renewalHistoryId } = useDeadlineRenewalCondition(process);
 
@@ -85,36 +83,7 @@ const ProcessTableRow = ({
     isDepartmentOverdue: checkDepartmentOverdue
   } = useProcessDepartmentInfo(process, departments);
 
-  // Carrega responsáveis de todos os setores para o processo
-  useEffect(() => {
-    const loadSectorResponsibles = async () => {
-      if (process.status === "not_started") return;
-      
-      // Obtém IDs de todos os setores
-      const sectorIds = sortedDepartments.map(dept => dept.id);
-      
-      // Pré-carrega responsáveis para todos os setores do processo
-      if (process.id === '118866') {
-        logger.debug(`Carregando responsáveis para setores de processo 118866: ${sectorIds.join(', ')}`);
-      }
-      
-      const responsibles = await ProcessResponsibilityService.preloadProcessResponsibles(
-        process.id, 
-        sectorIds
-      );
-      
-      if (process.id === '118866') {
-        logger.debug(`Responsáveis carregados para processo 118866:`, responsibles);
-      }
-      
-      setSectorResponsibles(responsibles);
-    };
-    
-    loadSectorResponsibles();
-  }, [process.id, process.status, sortedDepartments]);
-
   const getRowBorderColor = (status: string) => {
-    if (status === "archived") return "border-l-4 border-l-orange-500";
     if (status === "completed") return "border-l-4 border-l-green-600";
     if (status === "overdue") return "border-l-4 border-l-red-600";
     if (status === "pending") return "border-l-4 border-l-blue-600";
@@ -134,19 +103,13 @@ const ProcessTableRow = ({
     await onAcceptResponsibility();
     queueSectorForLoading(process.id, process.currentDepartment);
     await refreshProcesses();
-    
-    // Recarregar responsáveis após aceitar responsabilidade
-    const sectorIds = sortedDepartments.map(dept => dept.id);
-    const responsibles = await ProcessResponsibilityService.preloadProcessResponsibles(
-      process.id, 
-      sectorIds
-    );
-    setSectorResponsibles(responsibles);
-    
-  }, [onAcceptResponsibility, process.id, process.currentDepartment, queueSectorForLoading, refreshProcesses, sortedDepartments]);
+  }, [onAcceptResponsibility, process.id, process.currentDepartment, queueSectorForLoading, refreshProcesses]);
 
   const isProcessOverdue = process.status === "overdue";
-  const isProcessArchived = process.status === "archived";
+  
+  if (canRenewDeadline && renewalHistoryId) {
+    logger.debug(`Processo ${process.id} pode renovar prazo, historyId=${renewalHistoryId}`);
+  }
 
   return (
     <TableRow 
@@ -181,9 +144,8 @@ const ProcessTableRow = ({
             isDepartmentOverdue={isCurrentDepartment(dept.id) && checkDepartmentOverdue(dept.id, process.status !== "not_started")}
             departmentTimeLimit={dept.timeLimit}
             isProcessStarted={process.status !== "not_started"}
-            responsible={sectorResponsibles[dept.id]}
+            responsible={processResponsibles?.[dept.id]}
             isFirstDepartment={dept.id === sortedDepartments[0]?.id}
-            isArchived={isProcessArchived}
           />
         </TableCell>
       ))}

@@ -3,9 +3,6 @@ import { useState, useEffect } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ProcessType } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { createLogger } from "@/utils/loggerUtils";
-
-const logger = createLogger("ProcessTypePicker");
 
 interface ProcessTypePickerProps {
   processId: string;
@@ -22,36 +19,31 @@ const ProcessTypePicker = ({
   getProcessTypeName,
   updateProcessType,
 }: ProcessTypePickerProps) => {
-  const [selectedType, setSelectedType] = useState(currentTypeId || "");
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedType, setSelectedType] = useState(currentTypeId);
   const { toast } = useToast();
   
   useEffect(() => {
-    setSelectedType(currentTypeId || "");
+    setSelectedType(currentTypeId);
   }, [currentTypeId]);
-
-  logger.debug(`ProcessTypePicker - processId=${processId}, currentTypeId=${currentTypeId}, selectedType=${selectedType}`);
 
   const handleChange = async (value: string) => {
     if (value === currentTypeId) return;
     
-    setIsUpdating(true);
-    logger.debug(`Alterando tipo do processo ${processId}: ${currentTypeId} -> ${value}`);
-    
+    setSelectedType(value);
     try {
-      setSelectedType(value);
       await updateProcessType(processId, value);
-      logger.debug(`Tipo do processo ${processId} atualizado com sucesso para ${value}`);
+      toast({
+        title: "Sucesso",
+        description: "Tipo de processo atualizado com sucesso"
+      });
     } catch (error) {
-      logger.error("Erro ao atualizar tipo de processo:", error);
-      setSelectedType(currentTypeId || "");
+      console.error("Erro ao atualizar tipo de processo:", error);
+      setSelectedType(currentTypeId);
       toast({
         title: "Erro",
         description: "Não foi possível atualizar o tipo de processo",
         variant: "destructive"
       });
-    } finally {
-      setIsUpdating(false);
     }
   };
 
@@ -59,7 +51,7 @@ const ProcessTypePicker = ({
 
   return (
     <div className="w-full max-w-[160px] mx-auto">
-      <Select value={selectedType} onValueChange={handleChange} disabled={isUpdating}>
+      <Select value={selectedType} onValueChange={handleChange}>
         <SelectTrigger className="h-8">
           <SelectValue placeholder="Selecione o tipo" />
         </SelectTrigger>

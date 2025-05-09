@@ -11,9 +11,6 @@ import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Process } from "@/types";
-import { createLogger } from "@/utils/loggerUtils";
-
-const logger = createLogger("RecentProcessList");
 
 const RecentProcessList = () => {
   const navigate = useNavigate();
@@ -21,8 +18,7 @@ const RecentProcessList = () => {
     processes,
     getDepartmentName,
     getProcessTypeName,
-    filterProcesses,
-    isLoading: isContextLoading
+    filterProcesses
   } = useProcesses();
   const [limit, setLimit] = useState(5);
   const [filteredProcesses, setFilteredProcesses] = useState<Process[]>([]);
@@ -33,12 +29,8 @@ const RecentProcessList = () => {
     const loadFilteredProcesses = async () => {
       setIsLoading(true);
       try {
-        logger.debug(`Filtrando processos. Total disponível: ${processes.length}`);
-        
         // Aplicar filtros por departamento e status conforme a permissão do usuário
         const filtered = await filterProcesses({});
-        logger.debug(`Processos filtrados: ${filtered.length}`);
-        
         setFilteredProcesses(filtered);
       } catch (error) {
         console.error("Erro ao filtrar processos:", error);
@@ -79,7 +71,7 @@ const RecentProcessList = () => {
     return "";
   };
 
-  if (isLoading || isContextLoading) {
+  if (isLoading) {
     return (
       <Card className="col-span-2">
         <CardHeader>

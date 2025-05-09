@@ -2,11 +2,6 @@
 import { TableCell } from "@/components/ui/table";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import { Department } from "@/types";
-import { useProcessManager } from "@/hooks/useProcessManager";
-import { useAuth } from "@/hooks/auth";
-import { createLogger } from "@/utils/loggerUtils";
-
-const logger = createLogger("ProcessDepartmentsSection");
 
 interface ProcessDepartmentsSectionProps {
   sortedDepartments: Department[];
@@ -19,7 +14,6 @@ interface ProcessDepartmentsSectionProps {
   processId: string;
   processResponsible?: any;
   sectorResponsibles?: Record<string, any>;
-  isArchived?: boolean;
 }
 
 const ProcessDepartmentsSection = ({
@@ -32,8 +26,7 @@ const ProcessDepartmentsSection = ({
   isDepartmentOverdue,
   processId,
   processResponsible,
-  sectorResponsibles,
-  isArchived = false
+  sectorResponsibles
 }: ProcessDepartmentsSectionProps) => {
   // Encontrar o order_num do departamento atual
   const findCurrentDepartmentOrder = (): number => {
@@ -42,10 +35,6 @@ const ProcessDepartmentsSection = ({
   };
 
   const currentDeptOrder = findCurrentDepartmentOrder();
-  
-  // Debug dos responsáveis para identificar problemas
-  logger.debug(`ProcessDepartmentsSection para processo ${processId}. Responsáveis por setor:`, sectorResponsibles);
-  logger.debug(`Departamento atual: order=${currentDeptOrder}`);
 
   return (
     <>
@@ -55,22 +44,20 @@ const ProcessDepartmentsSection = ({
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
-        // CORREÇÃO: Sempre mostrar responsáveis para setores com order <= ao atual
-        // Isto garante que setores anteriores e o atual mostrem seus responsáveis
+        // Lógica corrigida: mostra responsáveis apenas para o setor atual e setores com order_num menor
         let departmentResponsible = null;
-        const showResponsible = isProcessStarted && (isActive || (dept.order <= currentDeptOrder));
         
-        if (showResponsible) {
-          // Debug de cada departamento para identificar problemas
-          logger.debug(`Dept ${dept.id} (order=${dept.order}): showResponsible=${showResponsible}, isActive=${isActive}, isPastDept=${isPastDept}`);
-          
+        // Estritamente verificar se o dept.order é menor que o order do departamento atual
+        // ou se é o departamento atual
+        const showResponsible = isActive || (dept.order < currentDeptOrder);
+        
+        if (showResponsible && isProcessStarted) {
+          // Apenas mostra responsáveis se o processo estiver iniciado e 
+          // o departamento for atual ou anterior na ordem
           if (sectorResponsibles && sectorResponsibles[dept.id]) {
             departmentResponsible = sectorResponsibles[dept.id];
-            logger.debug(`Responsável encontrado para setor ${dept.id}:`, departmentResponsible);
           } else if (index === 0 && processResponsible) {
             departmentResponsible = processResponsible;
-          } else {
-            logger.debug(`Nenhum responsável encontrado para setor ${dept.id}`);
           }
         }
 
@@ -87,7 +74,6 @@ const ProcessDepartmentsSection = ({
               isProcessStarted={isProcessStarted}
               responsible={departmentResponsible}
               isFirstDepartment={index === 0}
-              isArchived={isArchived}
             />
           </TableCell>
         );

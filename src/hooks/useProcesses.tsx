@@ -1,12 +1,12 @@
 
-import { createContext, useContext, ReactNode, useState, useCallback } from "react";
+import { createContext, useContext, ReactNode, useState } from "react";
 import { Process } from "@/types";
 import { useProcessesFetch } from "@/hooks/useProcessesFetch";
+import { useProcessHookAdapters } from "./process/context/useProcessHookAdapters";
+import { useProcessBaseOperations } from "./process/context/useProcessBaseOperations";
+import { useProcessResponsibilityIntegration } from "./process/context/useProcessResponsibilityIntegration";
 import { useProcessDependencies } from "./process/context/useProcessDependencies";
-import { useProcessManager } from "./useProcessManager";
-import { useProcessStatusFilters } from "./process/filters/useProcessStatusFilters";
-import { getUserProfileInfo } from "@/utils/userProfileUtils";
-import { useAuth } from "./auth";
+import { useProcessTableState } from "./useProcessTableState";
 
 // Definição do tipo para o contexto
 type ProcessesContextType = {
@@ -51,140 +51,32 @@ const ProcessesContext = createContext<ProcessesContextType | undefined>(undefin
  * Provider para o contexto de processos
  */
 export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
   const { processes, isLoading: isLoadingProcesses, fetchProcesses } = useProcessesFetch();
+  const { queueSectorForLoading } = useProcessTableState(processes);
+  
+  // Hooks para diferentes partes do contexto
   const { departments, processTypes, getDepartmentName, getProcessTypeName } = useProcessDependencies();
-  const statusFilters = useProcessStatusFilters();
   
-  // Manter mapeamento de setores a serem atualizados
-  const [sectorsToUpdate, setSectorsToUpdate] = useState<Record<string, Set<string>>>({});
+  const { 
+    filterProcesses, 
+    isProcessOverdue,
+    isUserResponsibleForProcess,
+    isUserResponsibleForSector,
+    isUserInAttendanceSector,
+    isUserInCurrentSector,
+    hasSectorResponsible
+  } = useProcessResponsibilityIntegration(processes);
   
-  // Função para adicionar setor à fila de atualização
-  const queueSectorForLoading = useCallback((processId: string, sectorId: string) => {
-    setSectorsToUpdate(prev => {
-      const newQueue = { ...prev };
-      if (!newQueue[processId]) {
-        newQueue[processId] = new Set();
-      }
-      newQueue[processId].add(sectorId);
-      return newQueue;
-    });
-  }, []);
-
-  // Inicializando processManager com os processes e a função de atualização
-  const processManager = useProcessManager({ 
-    processes, 
-    refreshProcessesCallback: async () => {
-      await fetchProcesses();
-      return;
-    }
-  });
-
-  // Wrapper para moveToNextDepartment para manter compatibilidade com API
-  const moveProcessToNextDepartment = async (processId: string) => {
-    const success = await processManager.moveToNextDepartment(processId);
-    if (!success) {
-      throw new Error("Falha ao mover processo para o próximo departamento");
-    }
-  };
-  
-  // Wrapper para moveToPreviousDepartment para manter compatibilidade com API
-  const moveProcessToPreviousDepartment = async (processId: string) => {
-    const success = await processManager.moveToPreviousDepartment(processId);
-    if (!success) {
-      throw new Error("Falha ao mover processo para o departamento anterior");
-    }
-  };
-  
-  // Wrapper para startProcess para manter compatibilidade com API
-  const startProcess = async (processId: string) => {
-    const success = await processManager.startProcess(processId);
-    if (!success) {
-      throw new Error("Falha ao iniciar o processo");
-    }
-  };
-  
-  // Filtro de processos com aplicação de regras de acesso
-  const filterProcesses = async (
-    filters: any,
-    processesToFilter: Process[] = processes,
-    processesResponsibles?: Record<string, any>
-  ): Promise<Process[]> => {
-    if (!user) return [];
-    
-    // Aplicar regras de acesso para filtrar processos visíveis
-    const accessibleProcesses = await processManager.filterProcessesByAccess(processesToFilter);
-    
-    // Aplicar filtros adicionais (status, departamento, etc.)
-    return statusFilters.applyUserFilters(accessibleProcesses, filters, processesResponsibles);
-  };
-  
-  // Verificar se um usuário está no setor de atendimento
-  const isUserInAttendanceSector = useCallback(() => {
-    if (!user) return false;
-    return getUserProfileInfo(user).isAtendimento;
-  }, [user]);
-  
-  // Verificar se um usuário está no setor atual de um processo
-  const isUserInCurrentSector = useCallback((process: Process) => {
-    if (!user || !user.setores_atribuidos || !process.currentDepartment) {
-      return false;
-    }
-    return user.setores_atribuidos.includes(process.currentDepartment);
-  }, [user]);
-  
-  // Implementar getProcess para compatibilidade
-  const getProcess = useCallback(async (processId: string): Promise<Process | null> => {
-    const process = processes.find(p => p.id === processId) || null;
-    return process;
-  }, [processes]);
-  
-  // Implementar updateProcessType para compatibilidade
-  const updateProcessType = useCallback(async (processId: string, newTypeId: string) => {
-    // Esta função seria mantida como está, pois não faz parte da refatoração atual
-    console.log(`Atualizando tipo de processo para: ${newTypeId}`);
-  }, []);
-  
-  // Implementar updateProcessStatus para compatibilidade
-  const updateProcessStatus = useCallback(async (processId: string, newStatus: 'Em andamento' | 'Concluído' | 'Não iniciado' | 'Arquivado') => {
-    // Esta função seria mantida como está, pois não faz parte da refatoração atual
-    console.log(`Atualizando status para: ${newStatus}`);
-  }, []);
-  
-  // Implementar deleteProcess para compatibilidade
-  const deleteProcess = useCallback(async (processId: string): Promise<boolean> => {
-    // Esta função seria mantida como está, pois não faz parte da refatoração atual
-    console.log(`Deletando processo: ${processId}`);
-    return true;
-  }, []);
-  
-  // Implementar deleteManyProcesses para compatibilidade
-  const deleteManyProcesses = useCallback(async (processIds: string[]): Promise<boolean> => {
-    // Esta função seria mantida como está, pois não faz parte da refatoração atual
-    console.log(`Deletando múltiplos processos: ${processIds.join(', ')}`);
-    return true;
-  }, []);
-
-  // Implementar hasSectorResponsible como promise para compatibilidade
-  const hasSectorResponsible = useCallback(async (processId: string, sectorId: string): Promise<boolean> => {
-    return Promise.resolve(processManager.hasSectorResponsible(processId, sectorId));
-  }, [processManager]);
-
-  // Implementar isUserResponsibleForProcess e isUserResponsibleForSector
-  const isUserResponsibleForProcess = useCallback((process: Process, userId: string): boolean => {
-    return process.responsibleUserId === userId;
-  }, []);
-
-  const isUserResponsibleForSector = useCallback((process: Process, userId: string): boolean => {
-    // Função simplificada, deve ser implementada com a lógica real
-    return false;
-  }, []);
-  
-  // Wrapper para refreshProcesses para compatibilidade com a assinatura esperada
-  const refreshProcessesWrapper = async (): Promise<void> => {
-    await fetchProcesses();
-    return;
-  };
+  const { 
+    moveProcessToNextDepartment, 
+    moveProcessToPreviousDepartment,
+    startProcess,
+    updateProcessType,
+    updateProcessStatus,
+    deleteProcess,
+    deleteManyProcesses,
+    getProcess
+  } = useProcessBaseOperations(fetchProcesses);
   
   return (
     <ProcessesContext.Provider
@@ -197,9 +89,9 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
         getProcessTypeName,
         moveProcessToNextDepartment,
         moveProcessToPreviousDepartment,
-        isProcessOverdue: statusFilters.isProcessOverdue,
-        isLoading: isLoadingProcesses || processManager.isLoading,
-        refreshProcesses: refreshProcessesWrapper,
+        isProcessOverdue,
+        isLoading: isLoadingProcesses,
+        refreshProcesses: fetchProcesses,
         updateProcessType,
         updateProcessStatus,
         startProcess,
