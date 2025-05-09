@@ -9,6 +9,8 @@ const logger = createLogger("useProcessTableState");
 export const useProcessTableState = (processes: Process[]) => {
   const [processesResponsibles, setProcessesResponsibles] = useState<Record<string, Record<string, any>>>({});
   const [isLoading, setIsLoading] = useState(false);
+  
+  logger.debug(`useProcessTableState recebeu ${processes?.length || 0} processos`);
 
   const fetchResponsibles = useCallback(async () => {
     if (!processes.length) {
@@ -45,9 +47,21 @@ export const useProcessTableState = (processes: Process[]) => {
         `)
         .in('id', startedProcessIds);
 
-      if (processError) throw processError;
-      logger.debug('Responsáveis iniciais encontrados:', processResponsibles?.length);
-      logger.debug('Detalhe dos responsáveis iniciais:', JSON.stringify(processResponsibles));
+      if (processError) {
+        logger.error("Erro ao buscar responsáveis iniciais:", processError);
+        throw processError;
+      }
+      
+      logger.debug(`Responsáveis iniciais encontrados: ${processResponsibles?.length || 0}`);
+      
+      // Log detalhado dos responsáveis iniciais
+      if (processResponsibles && processResponsibles.length > 0) {
+        const responsivesSample = processResponsibles.slice(0, 3);
+        for (const resp of responsivesSample) {
+          logger.debug(`Responsável inicial para processo ${resp.id}:`, 
+            resp.usuarios ? `${resp.usuarios.nome} (${resp.usuarios.email})` : "Nenhum");
+        }
+      }
 
       // Buscar histórico dos processos para identificar setores que já receberam o processo
       const { data: processHistory, error: historyError } = await supabase
@@ -55,8 +69,12 @@ export const useProcessTableState = (processes: Process[]) => {
         .select('processo_id, setor_id')
         .in('processo_id', startedProcessIds);
 
-      if (historyError) throw historyError;
-      logger.debug('Histórico de processos encontrados:', processHistory?.length);
+      if (historyError) {
+        logger.error("Erro ao buscar histórico de processos:", historyError);
+        throw historyError;
+      }
+      
+      logger.debug(`Histórico de processos encontrados: ${processHistory?.length || 0} registros`);
 
       // Criar mapa de setores por processo que já receberam o processo
       const processToSectorsMap: Record<string, Set<string>> = {};
@@ -67,9 +85,10 @@ export const useProcessTableState = (processes: Process[]) => {
         processToSectorsMap[history.processo_id].add(history.setor_id);
       });
       
-      logger.debug('Mapa de setores por processo:', JSON.stringify(Object.fromEntries(
-        Object.entries(processToSectorsMap).map(([k, v]) => [k, Array.from(v)])
-      )));
+      // Log detalhado do mapa de setores
+      for (const [processId, sectors] of Object.entries(processToSectorsMap)) {
+        logger.debug(`Processo ${processId} passou por ${sectors.size} setores: ${Array.from(sectors).join(', ')}`);
+      }
 
       // Buscar todos os responsáveis de setores para todos os processos de uma vez
       const { data: allSectorResponsibles, error: sectorError } = await supabase
@@ -86,13 +105,23 @@ export const useProcessTableState = (processes: Process[]) => {
         `)
         .in('processo_id', startedProcessIds);
 
-      if (sectorError) throw sectorError;
+      if (sectorError) {
+        logger.error("Erro ao buscar responsáveis de setor:", sectorError);
+        throw sectorError;
+      }
       
-      logger.debug('Total de responsáveis de setor encontrados:', allSectorResponsibles?.length);
+      logger.debug(`Total de responsáveis de setor encontrados: ${allSectorResponsibles?.length || 0}`);
+      
       if (allSectorResponsibles?.length === 0) {
         logger.warn('NENHUM RESPONSÁVEL DE SETOR ENCONTRADO NA CONSULTA!');
       } else {
-        logger.debug('Amostra dos primeiros 3 responsáveis:', JSON.stringify(allSectorResponsibles.slice(0, 3)));
+        logger.info(`Encontrados ${allSectorResponsibles.length} responsáveis de setor no total`);
+        
+        // Log detalhado dos primeiros responsáveis de setor
+        const sampleResponsibles = allSectorResponsibles.slice(0, 5);
+        for (const resp of sampleResponsibles) {
+          logger.debug(`Responsável para processo ${resp.processo_id}, setor ${resp.setor_id}: ${resp.usuarios?.nome || 'Desconhecido'}`);
+        }
       }
 
       // Organizar os dados em uma estrutura adequada
@@ -105,7 +134,7 @@ export const useProcessTableState = (processes: Process[]) => {
         }
         // Armazenar o responsável inicial do processo
         if (process.usuarios) {
-          logger.debug(`Responsável inicial para processo ${process.id}:`, process.usuarios);
+          logger.debug(`Mapeando responsável inicial para processo ${process.id}:`, process.usuarios.nome);
           responsiblesMap[process.id].initial = process.usuarios;
         }
       });
@@ -121,25 +150,25 @@ export const useProcessTableState = (processes: Process[]) => {
         // Garantir que temos os dados formatados corretamente
         if (resp.usuarios && resp.setor_id) {
           const sectorId = String(resp.setor_id);
-          logger.debug(`Responsável para processo ${processId}, setor ${sectorId}:`, resp.usuarios);
+          logger.debug(`Mapeando responsável para processo ${processId}, setor ${sectorId}:`, resp.usuarios.nome);
           responsiblesMap[processId][sectorId] = resp.usuarios;
+        } else {
+          logger.warn(`Dados incompletos para processo ${processId}, setor ${resp.setor_id}`);
         }
       });
 
       // Log de todos os responsáveis carregados
-      logger.info("Responsáveis carregados por processo:", 
-        Object.keys(responsiblesMap).length, 
-        "processos com responsáveis"
-      );
+      logger.info(`Responsáveis carregados por processo: ${Object.keys(responsiblesMap).length} processos com responsáveis`);
       
-      // Log detalhado da estrutura montada
-      Object.keys(responsiblesMap).forEach(processId => {
+      // Log detalhado da estrutura montada para alguns processos
+      const sampleProcessIds = Object.keys(responsiblesMap).slice(0, 3);
+      for (const processId of sampleProcessIds) {
         const setores = Object.keys(responsiblesMap[processId]).filter(k => k !== 'initial');
         logger.debug(
           `Processo ${processId}: ${setores.length} setores com responsáveis - ` +
           `Setores: ${setores.join(', ')}`
         );
-      });
+      }
       
       setProcessesResponsibles(responsiblesMap);
     } catch (error) {
@@ -150,6 +179,7 @@ export const useProcessTableState = (processes: Process[]) => {
   }, [processes]);
 
   useEffect(() => {
+    logger.debug("Efeito fetchResponsibles disparado");
     fetchResponsibles();
   }, [fetchResponsibles]);
 

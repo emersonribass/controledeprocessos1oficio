@@ -41,6 +41,11 @@ export const useProcessFetcher = () => {
       
       logger.debug(`${departmentsData?.length || 0} setores encontrados`);
 
+      // Logar os primeiros setores para debug
+      departmentsData.slice(0, 3).forEach((dept, idx) => {
+        logger.debug(`Setor ${idx + 1}: ID=${dept.id}, Nome=${dept.name}`);
+      });
+
       // Combinar os dados dos processos com os setores correspondentes
       const processesWithDepartments = processesData.map((process: any) => {
         // Encontrar o setor que corresponde ao setor_atual do processo
@@ -56,6 +61,11 @@ export const useProcessFetcher = () => {
       });
       
       logger.info(`${processesWithDepartments.length} processos combinados com informações de setores`);
+
+      // Logar alguns processos com suas informações de setor
+      processesWithDepartments.slice(0, 3).forEach((proc: any, idx: number) => {
+        logger.debug(`Processo ${idx + 1} com setor: ID=${proc.id}, Setor=${proc.setor_atual}, Info=${proc.setor_info ? proc.setor_info.name : 'N/A'}`);
+      });
 
       return processesWithDepartments;
     } catch (error) {

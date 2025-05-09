@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/auth";
 import { ProcessesProvider } from "@/hooks/useProcesses";
 import { useAuth } from "@/hooks/auth";
 import { useEffect, useState } from "react";
+import { createLogger } from "@/utils/loggerUtils";
 
 // Importações necessárias para resolver os erros
 import Layout from "@/components/Layout/Layout";
@@ -25,6 +26,8 @@ import AdminProcessTypesPage from "@/pages/AdminProcessTypesPage";
 import NotFound from "@/pages/NotFound";
 import ChangePasswordPage from "@/pages/ChangePasswordPage";
 
+const logger = createLogger("App");
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -34,10 +37,12 @@ const queryClient = new QueryClient({
   },
 });
 
-const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: { children: React.ReactNode, adminOnly?: boolean, needsProcesses?: boolean }) => {
+const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = false }: { children: React.ReactNode, adminOnly?: boolean, needsProcesses?: boolean }) => {
   const { user, isLoading, isAdmin } = useAuth();
   const [isUserAdmin, setIsUserAdmin] = useState<boolean>(false);
   const [isCheckingAdmin, setIsCheckingAdmin] = useState<boolean>(true);
+  
+  logger.debug(`ProtectedRoute: needsProcesses=${needsProcesses}, adminOnly=${adminOnly}`);
   
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -46,7 +51,7 @@ const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: 
           const adminStatus = await isAdmin(user.email);
           setIsUserAdmin(adminStatus);
         } catch (error) {
-          console.error("Erro ao verificar status de administrador:", error);
+          logger.error("Erro ao verificar status de administrador:", error);
           setIsUserAdmin(false);
         } finally {
           setIsCheckingAdmin(false);
@@ -80,19 +85,15 @@ const ProtectedRoute = ({ children, adminOnly = false, needsProcesses = true }: 
     return <Navigate to="/dashboard" replace />;
   }
   
-  if (needsProcesses) {
-    return (
-      <ProcessesProvider>
-        {children}
-      </ProcessesProvider>
-    );
-  }
-  
-  return children;
+  return needsProcesses ? (
+    <ProcessesProvider>
+      {children}
+    </ProcessesProvider>
+  ) : children;
 };
 
 const AppRoutes = () => {
-  console.log("Renderizando AppRoutes");
+  logger.debug("Renderizando AppRoutes");
   return (
     <BrowserRouter>
       <Routes>
@@ -107,25 +108,25 @@ const AppRoutes = () => {
           } />
           
           <Route path="processes" element={
-            <ProtectedRoute>
+            <ProtectedRoute needsProcesses={true}>
               <ProcessesPage />
             </ProtectedRoute>
           } />
           
           <Route path="processes/:id" element={
-            <ProtectedRoute>
+            <ProtectedRoute needsProcesses={true}>
               <ProcessDetailsPage />
             </ProtectedRoute>
           } />
           
           <Route path="users" element={
-            <ProtectedRoute>
+            <ProtectedRoute needsProcesses={true}>
               <UsersPage />
             </ProtectedRoute>
           } />
           
           <Route path="settings" element={
-            <ProtectedRoute>
+            <ProtectedRoute needsProcesses={true}>
               <SettingsPage />
             </ProtectedRoute>
           } />
@@ -137,25 +138,25 @@ const AppRoutes = () => {
           } />
 
           <Route path="admin/users" element={
-            <ProtectedRoute adminOnly={true}>
+            <ProtectedRoute adminOnly={true} needsProcesses={true}>
               <AdminUsersPage />
             </ProtectedRoute>
           } />
           
           <Route path="admin/departments" element={
-            <ProtectedRoute adminOnly={true}>
+            <ProtectedRoute adminOnly={true} needsProcesses={true}>
               <AdminDepartmentsPage />
             </ProtectedRoute>
           } />
           
           <Route path="admin/process-settings" element={
-            <ProtectedRoute adminOnly={true}>
+            <ProtectedRoute adminOnly={true} needsProcesses={true}>
               <AdminProcessSettingsPage />
             </ProtectedRoute>
           } />
           
           <Route path="admin/process-types" element={
-            <ProtectedRoute adminOnly={true}>
+            <ProtectedRoute adminOnly={true} needsProcesses={true}>
               <AdminProcessTypesPage />
             </ProtectedRoute>
           } />
@@ -168,7 +169,7 @@ const AppRoutes = () => {
 };
 
 const App = () => {
-  console.log("Renderizando App");
+  logger.debug("Renderizando App");
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
