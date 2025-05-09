@@ -20,7 +20,7 @@ export const useProcessesFetch = () => {
     });
   }, []);
 
-  const fetchProcesses = async () => {
+  const fetchProcesses = async (): Promise<void> => {
     try {
       const processesData = await fetchProcessesData();
       
@@ -28,12 +28,11 @@ export const useProcessesFetch = () => {
       const formattedProcesses = formatProcesses(processesData);
 
       setProcesses(formattedProcesses);
-      return formattedProcesses;
+      // Retornamos void para compatibilidade com a tipagem esperada
     } catch (error) {
       console.error('Erro ao processar dados dos processos:', error);
       // Definir um array vazio mesmo em caso de erro
       setProcesses([]);
-      return [];
     }
   };
 
