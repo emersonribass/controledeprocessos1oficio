@@ -4,6 +4,9 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Clock, User } from "lucide-react";
 import { addBusinessDays, getRemainingBusinessDays } from "@/utils/dateUtils";
+import { createLogger } from "@/utils/loggerUtils";
+
+const logger = createLogger("ProcessDepartmentCell");
 
 interface ProcessDepartmentCellProps {
   departmentId: string;
@@ -33,6 +36,11 @@ const ProcessDepartmentCell = ({
   responsible,
   isFirstDepartment = false
 }: ProcessDepartmentCellProps) => {
+  // Log de debug para cada célula renderizada
+  logger.debug(`Renderizando célula para departamento ${departmentId}: ` + 
+    `${isCurrentDepartment ? 'ATUAL' : ''}${hasPassedDepartment ? 'PASSADO' : ''}, ` +
+    `responsável: ${responsible?.nome || 'Não definido'}`);
+
   // Calcular dias úteis restantes se for o departamento atual
   let remainingDays = 0;
   if (isProcessStarted && isCurrentDepartment && entryDate && departmentTimeLimit > 0) {
@@ -43,6 +51,16 @@ const ProcessDepartmentCell = ({
 
   // Apenas exibe responsáveis para departamentos atuais ou que já passaram
   const shouldShowResponsible = isProcessStarted && responsible && (isCurrentDepartment || hasPassedDepartment);
+
+  if (shouldShowResponsible) {
+    logger.debug(`Exibindo responsável para departamento ${departmentId}: ${responsible?.nome}`);
+  } else {
+    logger.debug(`Sem responsável para exibir no departamento ${departmentId}. ` + 
+      `isProcessStarted=${isProcessStarted}, ` + 
+      `responsible=${responsible ? 'Sim' : 'Não'}, ` + 
+      `isCurrentDepartment=${isCurrentDepartment}, ` + 
+      `hasPassedDepartment=${hasPassedDepartment}`);
+  }
 
   return (
     <div className="text-center w-full">

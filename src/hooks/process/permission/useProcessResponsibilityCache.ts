@@ -2,6 +2,9 @@
 import { Process } from "@/types";
 import { useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { createLogger } from "@/utils/loggerUtils";
+
+const logger = createLogger("useProcessResponsibilityCache");
 
 /**
  * Hook para gerenciar cache de responsabilidades de processos por setor
@@ -19,6 +22,8 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
           processResponsibilitiesCacheRef.current[process.id] = {};
         }
       });
+      
+      logger.debug(`Cache de responsabilidades inicializado para ${processes.length} processos`);
     }
   }, [processes]);
 
@@ -26,6 +31,7 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
    * Limpa o cache de responsabilidades para forçar uma nova verificação
    */
   const clearResponsibilityCache = () => {
+    logger.info("Limpando cache de responsabilidades");
     processResponsibilitiesCacheRef.current = {};
     // Reinicializa o cache
     processes.forEach(process => {
@@ -43,12 +49,16 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
     sectorId: string, 
     userId: string
   ): Promise<boolean> => {
+    logger.debug(`Verificando responsabilidade para processo=${processId}, setor=${sectorId}, usuário=${userId}`);
+    
     // Verificar se já temos no cache
     if (
       processResponsibilitiesCacheRef.current[processId] && 
       processResponsibilitiesCacheRef.current[processId][sectorId] !== undefined
     ) {
-      return processResponsibilitiesCacheRef.current[processId][sectorId];
+      const cachedResult = processResponsibilitiesCacheRef.current[processId][sectorId];
+      logger.debug(`Usando valor em cache: ${cachedResult}`);
+      return cachedResult;
     }
     
     try {
@@ -62,12 +72,14 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
         .maybeSingle();
       
       if (error) {
-        console.error("Erro ao verificar responsabilidade:", error);
+        logger.error("Erro ao verificar responsabilidade:", error);
         return false;
       }
       
       // Armazenar resultado no cache
       const isResponsible = !!data;
+      logger.debug(`Resultado da verificação: ${isResponsible ? "É responsável" : "Não é responsável"}`);
+      
       if (!processResponsibilitiesCacheRef.current[processId]) {
         processResponsibilitiesCacheRef.current[processId] = {};
       }
@@ -75,7 +87,7 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
       
       return isResponsible;
     } catch (error) {
-      console.error("Erro ao verificar responsabilidade para setor:", error);
+      logger.error("Erro ao verificar responsabilidade para setor:", error);
       return false;
     }
   };
@@ -84,6 +96,8 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
    * Função para verificar se existe um responsável para o processo no setor
    */
   const hasSectorResponsible = async (processId: string, sectorId: string): Promise<boolean> => {
+    logger.debug(`Verificando existência de responsável para processo=${processId}, setor=${sectorId}`);
+    
     try {
       // Modificado para usar .select('count') em vez de .maybeSingle()
       // porque pode haver múltiplos responsáveis por setor
@@ -94,13 +108,16 @@ export const useProcessResponsibilityCache = (processes: Process[]) => {
         .eq('setor_id', sectorId);
       
       if (error) {
-        console.error("Erro ao verificar existência de responsável no setor:", error);
+        logger.error("Erro ao verificar existência de responsável no setor:", error);
         return false;
       }
       
-      return count !== null && count > 0;
+      const hasResponsible = count !== null && count > 0;
+      logger.debug(`Resultado: ${hasResponsible ? "Tem responsável" : "Não tem responsável"}, count=${count}`);
+      
+      return hasResponsible;
     } catch (error) {
-      console.error("Erro ao verificar responsáveis de setor:", error);
+      logger.error("Erro ao verificar responsáveis de setor:", error);
       return false;
     }
   };

@@ -50,6 +50,21 @@ const ProcessTableBody = ({
   const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const [acceptingProcessId, setAcceptingProcessId] = useState<string | null>(null);
   
+  logger.debug("ProcessTableBody renderizado com", processes.length, "processos");
+  logger.debug("processesResponsibles recebido:", 
+    processesResponsibles ? Object.keys(processesResponsibles).length : 0, 
+    "processos com responsáveis"
+  );
+
+  // Log detalhado da estrutura de responsáveis
+  if (processesResponsibles) {
+    Object.keys(processesResponsibles).forEach(processId => {
+      const setoresList = Object.keys(processesResponsibles[processId] || {})
+        .filter(key => key !== 'initial');
+      logger.debug(`Processo ${processId}: ${setoresList.length} setores com responsáveis: ${setoresList.join(', ')}`);
+    });
+  }
+  
   // Função para aceitar a responsabilidade pelo processo
   const handleAcceptResponsibility = async (processId: string, protocolNumber?: string) => {
     if (!user || !protocolNumber) return;
@@ -64,7 +79,11 @@ const ProcessTableBody = ({
           description: "Você aceitou a responsabilidade pelo processo."
         });
         // Atualizar cache de responsáveis
-        queueSectorForLoading(processId, processes.find(p => p.id === processId)?.currentDepartment || "");
+        const currentProcess = processes.find(p => p.id === processId);
+        if (currentProcess) {
+          logger.info(`Atualizando responsáveis após aceite para processo ${processId}, setor ${currentProcess.currentDepartment}`);
+          queueSectorForLoading(processId, currentProcess.currentDepartment);
+        }
       }
     } catch (error) {
       console.error("Erro ao aceitar responsabilidade:", error);
@@ -75,13 +94,31 @@ const ProcessTableBody = ({
 
   // Função para verificar se existe um responsável para o processo no setor atual
   const hasSectorResponsible = (processId: string, currentDepartment: string) => {
-    // Adicionar log de debug para verificar hasSectorResponsible
-    const hasResponsible = !!(
-      processesResponsibles[processId] && 
-      processesResponsibles[processId][currentDepartment]
-    );
+    // Verificar se o processId e o currentDepartment existem
+    if (!processId || !currentDepartment) {
+      logger.warn(`hasSectorResponsible chamado com valores inválidos: processId=${processId}, setor=${currentDepartment}`);
+      return false;
+    }
     
-    logger.debug(`hasSectorResponsible para processo ${processId}, setor ${currentDepartment}: ${hasResponsible}`);
+    // Verificar se temos dados para este processo
+    if (!processesResponsibles || !processesResponsibles[processId]) {
+      logger.debug(`Sem dados de responsáveis para processo ${processId}`);
+      return false;
+    }
+    
+    // Verificar se temos um responsável para este setor
+    const hasResponsible = !!processesResponsibles[processId][currentDepartment];
+    
+    logger.debug(`[hasSectorResponsible] Processo ${processId}, Setor ${currentDepartment}: ${hasResponsible ? "TEM" : "NÃO TEM"} responsável`);
+    
+    // Log dos setores disponíveis
+    const availableSectors = Object.keys(processesResponsibles[processId])
+      .filter(key => key !== 'initial');
+      
+    if (availableSectors.length > 0) {
+      logger.debug(`Setores disponíveis para processo ${processId}: ${availableSectors.join(', ')}`);
+    }
+    
     return hasResponsible;
   };
 
@@ -115,9 +152,20 @@ const ProcessTableBody = ({
   return (
     <TableBody>
       {processes.map(process => {
+        // Verificar se temos os dados necessários para esta linha
+        logger.debug(`Renderizando linha para processo ${process.id} (${process.protocolNumber}), setor atual: ${process.currentDepartment}`);
+        
         // Adicionar log para verificar os valores para cada processo
         const hasResponsible = hasSectorResponsible(process.id, process.currentDepartment);
-        logger.debug(`Processo ${process.id}: hasSectorResponsible=${hasResponsible}, currentDepartment=${process.currentDepartment}`);
+        
+        // Verificar quais responsáveis estão disponíveis para este processo
+        const processResponsibles = processesResponsibles[process.id] || {};
+        logger.debug(
+          `Processo ${process.id}: ` +
+          `${Object.keys(processResponsibles).length} responsáveis disponíveis, ` +
+          `hasSectorResponsible=${hasResponsible}, ` + 
+          `currentDepartment=${process.currentDepartment}`
+        );
         
         return (
           <ProcessTableRow
