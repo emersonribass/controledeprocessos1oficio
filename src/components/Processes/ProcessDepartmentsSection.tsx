@@ -2,6 +2,9 @@
 import { TableCell } from "@/components/ui/table";
 import ProcessDepartmentCell from "./ProcessDepartmentCell";
 import { Department } from "@/types";
+import { createLogger } from "@/utils/loggerUtils";
+
+const logger = createLogger("ProcessDepartmentsSection");
 
 interface ProcessDepartmentsSectionProps {
   sortedDepartments: Department[];
@@ -36,6 +39,18 @@ const ProcessDepartmentsSection = ({
 
   const currentDeptOrder = findCurrentDepartmentOrder();
 
+  // Log para verificar os responsáveis disponíveis
+  logger.debug(`ProcessDepartmentsSection para processo ${processId}`);
+  logger.debug(`sectorResponsibles: ${JSON.stringify(sectorResponsibles)}`);
+  
+  if (processId === '118766') {
+    logger.debug(`Detalhamento do processo 118766 em ProcessDepartmentsSection:
+      - isProcessStarted: ${isProcessStarted}
+      - currentDeptOrder: ${currentDeptOrder}
+      - sectorResponsibles: ${JSON.stringify(sectorResponsibles || {})}
+    `);
+  }
+
   return (
     <>
       {sortedDepartments.map((dept, index) => {
@@ -44,16 +59,27 @@ const ProcessDepartmentsSection = ({
         const isActive = isCurrentDepartment(dept.id);
         const isOverdue = isDepartmentOverdue(dept.id, isProcessStarted);
         
-        // Lógica corrigida: mostra responsáveis apenas para o setor atual e setores com order_num menor
+        // Log para depurar a exibição de responsáveis
+        if (processId === '118766') {
+          logger.debug(`Departamento ${dept.id} para processo 118766:
+            - isActive: ${isActive}
+            - isPastDept: ${isPastDept}
+            - dept.order: ${dept.order}
+            - currentDeptOrder: ${currentDeptOrder}
+            - Tem responsável no setor: ${!!(sectorResponsibles && sectorResponsibles[dept.id])}
+          `);
+        }
+        
+        // CORREÇÃO: A lógica estava incorreta. Devemos mostrar responsáveis para:
+        // 1. O departamento atual
+        // 2. Departamentos pelos quais o processo já passou
+        // Importante: Não estamos mais verificando order_num, mas sim se é atual ou passado
         let departmentResponsible = null;
         
-        // Estritamente verificar se o dept.order é menor que o order do departamento atual
-        // ou se é o departamento atual
-        const showResponsible = isActive || (dept.order < currentDeptOrder);
+        // A lógica corrigida é mais simples: mostrar responsáveis para departamentos atuais ou passados
+        const showResponsible = isActive || isPastDept;
         
         if (showResponsible && isProcessStarted) {
-          // Apenas mostra responsáveis se o processo estiver iniciado e 
-          // o departamento for atual ou anterior na ordem
           if (sectorResponsibles && sectorResponsibles[dept.id]) {
             departmentResponsible = sectorResponsibles[dept.id];
           } else if (index === 0 && processResponsible) {

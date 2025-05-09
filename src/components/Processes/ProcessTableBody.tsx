@@ -50,6 +50,16 @@ const ProcessTableBody = ({
   const { acceptProcessResponsibility, isAccepting } = useProcessResponsibility();
   const [acceptingProcessId, setAcceptingProcessId] = useState<string | null>(null);
   
+  // Log de todos os responsáveis
+  logger.debug(`ProcessesResponsibles recebidos: ${JSON.stringify(Object.keys(processesResponsibles))}`);
+  
+  // Verificar especificamente o processo 118766
+  if (processesResponsibles['118766']) {
+    logger.debug(`Dados de responsáveis para processo 118766: ${JSON.stringify(processesResponsibles['118766'])}`);
+  } else {
+    logger.debug('Processo 118766 não tem dados de responsáveis na tabela');
+  }
+  
   // Função para aceitar a responsabilidade pelo processo
   const handleAcceptResponsibility = async (processId: string, protocolNumber?: string) => {
     if (!user || !protocolNumber) return;
@@ -82,6 +92,14 @@ const ProcessTableBody = ({
     );
     
     logger.debug(`hasSectorResponsible para processo ${processId}, setor ${currentDepartment}: ${hasResponsible}`);
+    
+    if (processId === '118766') {
+      logger.debug(`Verificação detalhada hasSectorResponsible para 118766:
+        processesResponsibles['118766'] existe: ${!!processesResponsibles['118766']}
+        processesResponsibles['118766'][${currentDepartment}] existe: ${!!(processesResponsibles['118766'] && processesResponsibles['118766'][currentDepartment])}
+      `);
+    }
+    
     return hasResponsible;
   };
 
@@ -118,6 +136,16 @@ const ProcessTableBody = ({
         // Adicionar log para verificar os valores para cada processo
         const hasResponsible = hasSectorResponsible(process.id, process.currentDepartment);
         logger.debug(`Processo ${process.id}: hasSectorResponsible=${hasResponsible}, currentDepartment=${process.currentDepartment}`);
+        
+        // Para o processo 118766, vamos fazer um log mais detalhado
+        if (process.id === '118766') {
+          logger.debug(`Detalhamento do processo 118766 em ProcessTableBody:
+            - currentDepartment: ${process.currentDepartment}
+            - status: ${process.status}
+            - hasResponsible: ${hasResponsible}
+            - processesResponsibles específicos: ${JSON.stringify(processesResponsibles[process.id] || {})}
+          `);
+        }
         
         return (
           <ProcessTableRow

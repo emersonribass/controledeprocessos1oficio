@@ -64,8 +64,13 @@ const ProcessTableRow = ({
   const isOwner = user ? isUserProcessOwner(process, user.id) : false;
   
   // Log para depuração
-  if (process.id === '118706' && user) {
-    logger.debug(`Processo 118706: isOwner=${isOwner}, userId=${user.id}, processUserId=${process.userId}, hasSectorResponsible=${hasSectorResponsible}`);
+  if (process.id === '118766') {
+    logger.debug(`Processo 118766: isOwner=${isOwner}, userId=${user?.id || 'não logado'}, processUserId=${process.userId}, hasSectorResponsible=${hasSectorResponsible}`);
+    logger.debug(`Processo 118766: processResponsibles=`, processResponsibles ? JSON.stringify(processResponsibles) : 'undefined');
+    
+    if (sectorResponsible) {
+      logger.debug(`Processo 118766: sectorResponsible=`, JSON.stringify(sectorResponsible));
+    }
   }
   
   const hasResponsible = hasSectorResponsible || !!sectorResponsible;
@@ -133,22 +138,32 @@ const ProcessTableRow = ({
         />
       </TableCell>
       
-      {sortedDepartments.map((dept) => (
-        <TableCell key={dept.id} className="min-w-[120px] text-center">
-          <ProcessDepartmentCell 
-            departmentId={dept.id}
-            isCurrentDepartment={isCurrentDepartment(dept.id)}
-            hasPassedDepartment={hasPassedDepartment(dept.id)}
-            entryDate={getMostRecentEntryDate(dept.id)}
-            showDate={isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)}
-            isDepartmentOverdue={isCurrentDepartment(dept.id) && checkDepartmentOverdue(dept.id, process.status !== "not_started")}
-            departmentTimeLimit={dept.timeLimit}
-            isProcessStarted={process.status !== "not_started"}
-            responsible={processResponsibles?.[dept.id]}
-            isFirstDepartment={dept.id === sortedDepartments[0]?.id}
-          />
-        </TableCell>
-      ))}
+      {sortedDepartments.map((dept) => {
+        // Log específico para o processo 118766
+        if (process.id === '118766') {
+          logger.debug(`Processo 118766, Departamento ${dept.id}: isCurrentDepartment=${isCurrentDepartment(dept.id)}, hasPassedDepartment=${hasPassedDepartment(dept.id)}`);
+          if (processResponsibles) {
+            logger.debug(`Processo 118766, Departamento ${dept.id}: responsible=`, processResponsibles[dept.id] ? JSON.stringify(processResponsibles[dept.id]) : 'undefined');
+          }
+        }
+        
+        return (
+          <TableCell key={dept.id} className="min-w-[120px] text-center">
+            <ProcessDepartmentCell 
+              departmentId={dept.id}
+              isCurrentDepartment={isCurrentDepartment(dept.id)}
+              hasPassedDepartment={hasPassedDepartment(dept.id)}
+              entryDate={getMostRecentEntryDate(dept.id)}
+              showDate={isCurrentDepartment(dept.id) || hasPassedDepartment(dept.id)}
+              isDepartmentOverdue={isCurrentDepartment(dept.id) && checkDepartmentOverdue(dept.id, process.status !== "not_started")}
+              departmentTimeLimit={dept.timeLimit}
+              isProcessStarted={process.status !== "not_started"}
+              responsible={processResponsibles?.[dept.id]}
+              isFirstDepartment={dept.id === sortedDepartments[0]?.id}
+            />
+          </TableCell>
+        );
+      })}
     
       <TableCell className="w-[120px] process-action">
         <ProcessRowActions 
@@ -176,6 +191,6 @@ const ProcessTableRow = ({
       </TableCell>
     </TableRow>
   );
-};
+}
 
 export default ProcessTableRow;
