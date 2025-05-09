@@ -11,12 +11,8 @@ import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Process } from "@/types";
-import { createLogger } from "@/utils/loggerUtils";
-
-const logger = createLogger("RecentProcessList");
 
 const RecentProcessList = () => {
-  logger.debug("Inicializando componente RecentProcessList");
   const navigate = useNavigate();
   const {
     processes,
@@ -28,22 +24,16 @@ const RecentProcessList = () => {
   const [filteredProcesses, setFilteredProcesses] = useState<Process[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  logger.debug(`RecentProcessList recebeu ${processes?.length || 0} processos do contexto`);
-
   // Carregar processos filtrados de forma assíncrona
   useEffect(() => {
-    logger.debug(`RecentProcessList: Efeito disparado com ${processes?.length || 0} processos`);
-    
     const loadFilteredProcesses = async () => {
       setIsLoading(true);
       try {
         // Aplicar filtros por departamento e status conforme a permissão do usuário
-        logger.debug("RecentProcessList: Buscando processos filtrados");
         const filtered = await filterProcesses({});
-        logger.debug(`RecentProcessList: ${filtered?.length || 0} processos filtrados recebidos`);
         setFilteredProcesses(filtered);
       } catch (error) {
-        logger.error("RecentProcessList: Erro ao filtrar processos:", error);
+        console.error("Erro ao filtrar processos:", error);
         setFilteredProcesses([]);
       } finally {
         setIsLoading(false);
@@ -57,8 +47,6 @@ const RecentProcessList = () => {
   const recentProcesses = [...filteredProcesses]
     .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
     .slice(0, limit);
-
-  logger.debug(`RecentProcessList: ${recentProcesses.length} processos recentes exibidos`);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -77,14 +65,13 @@ const RecentProcessList = () => {
 
   // Função para obter a cor de fundo baseada no status
   const getItemBackgroundColor = (status: string) => {
-    if (status === "completed") return "bg-green-50";
-    if (status === "overdue") return "bg-red-50";
-    if (status === "pending") return "bg-blue-50";
+    if (status === "completed") return "bg-green-200";
+    if (status === "overdue") return "bg-red-200";
+    if (status === "pending") return "bg-blue-200";
     return "";
   };
 
   if (isLoading) {
-    logger.debug("RecentProcessList: Exibindo indicador de carregamento");
     return (
       <Card className="col-span-2">
         <CardHeader>
@@ -100,7 +87,6 @@ const RecentProcessList = () => {
     );
   }
 
-  logger.debug("RecentProcessList: Renderizando lista de processos");
   return (
     <Card className="col-span-2">
       <CardHeader>

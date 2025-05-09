@@ -3,34 +3,18 @@ import { Card } from "@/components/ui/card";
 import DashboardSummary from "@/components/Dashboard/DashboardSummary";
 import DepartmentStatusChart from "@/components/Dashboard/DepartmentStatusChart";
 import RecentProcessList from "@/components/Dashboard/RecentProcessList";
-import { ProcessesProvider, useProcesses } from "@/hooks/useProcesses";
+import { ProcessesProvider } from "@/hooks/useProcesses";
 import DashboardFilters from "@/components/Dashboard/DashboardFilters";
 import { useProcessListFilters } from "@/hooks/useProcessListFilters";
-import { createLogger } from "@/utils/loggerUtils";
-
-const logger = createLogger("Dashboard");
 
 const Dashboard = () => {
-  logger.debug("Renderizando Dashboard");
   const { filters, setFilters } = useProcessListFilters({});
 
   return (
     <ProcessesProvider>
-      <DashboardContentWrapper filters={filters} setFilters={setFilters} />
+      <DashboardContent filters={filters} setFilters={setFilters} />
     </ProcessesProvider>
   );
-};
-
-// Componente que realmente usa o contexto de processos
-const DashboardContentWrapper = ({ 
-  filters, 
-  setFilters 
-}: { 
-  filters: any; 
-  setFilters: React.Dispatch<React.SetStateAction<any>> 
-}) => {
-  logger.debug("Renderizando DashboardContentWrapper");
-  return <DashboardContent filters={filters} setFilters={setFilters} />;
 };
 
 // Componente interno que usa o contexto de processos
@@ -42,7 +26,6 @@ const DashboardContent = ({
   setFilters: React.Dispatch<React.SetStateAction<any>> 
 }) => {
   const { departments } = useProcesses();
-  logger.debug(`DashboardContent recebeu ${departments?.length || 0} departamentos`);
   
   return (
     <div className="space-y-6">
@@ -68,5 +51,8 @@ const DashboardContent = ({
     </div>
   );
 };
+
+// Não se esqueça de importar useProcesses
+import { useProcesses } from "@/hooks/useProcesses";
 
 export default Dashboard;

@@ -8,9 +8,6 @@ import { useAuth } from "@/hooks/auth";
 import { Process } from "@/types";
 import ProcessListHeader from "./ProcessListHeader";
 import ProcessListContent from "./ProcessListContent";
-import { createLogger } from "@/utils/loggerUtils";
-
-const logger = createLogger("ProcessList");
 
 interface ProcessListProps {
   initialFilters?: {
@@ -39,27 +36,21 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
     isUserInAttendanceSector
   } = useProcesses();
 
-  logger.info(`ProcessList montado com ${processes.length} processos`);
-
   const { user, isAdmin } = useAuth();
   const { filters, setFilters } = useProcessListFilters(initialFilters);
   const { sortField, sortDirection, toggleSort, sortProcesses } = useProcessListSorting();
   const [isLoadingFiltered, setIsLoadingFiltered] = useState(true);
   const [filteredProcesses, setFilteredProcesses] = useState<Process[]>([]);
   const { processesResponsibles } = useProcessTableState(processes);
-  
-  logger.debug(`ProcessList carregou ${Object.keys(processesResponsibles).length} processos com responsáveis`);
 
   const loadFilteredProcesses = useCallback(async () => {
-    logger.debug("Iniciando carregamento de processos filtrados");
     setIsLoadingFiltered(true);
     try {
       const filtered = await filterProcesses(filters, processes, processesResponsibles);
-      logger.debug(`${filtered.length} processos filtrados de ${processes.length} processos totais`);
       const sorted = sortProcesses(filtered);
       setFilteredProcesses(sorted);
     } catch (error) {
-      logger.error("Erro ao filtrar processos:", error);
+      console.error("Erro ao filtrar processos:", error);
       setFilteredProcesses([]);
     } finally {
       setIsLoadingFiltered(false);
@@ -67,7 +58,6 @@ const ProcessList = ({ initialFilters = {} }: ProcessListProps) => {
   }, [filters, processes, processesResponsibles, filterProcesses, sortProcesses]);
 
   useEffect(() => {
-    logger.debug("Efeito loadFilteredProcesses executado");
     loadFilteredProcesses();
   }, [loadFilteredProcesses]);
 

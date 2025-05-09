@@ -7,9 +7,6 @@ import { useProcessBaseOperations } from "./process/context/useProcessBaseOperat
 import { useProcessResponsibilityIntegration } from "./process/context/useProcessResponsibilityIntegration";
 import { useProcessDependencies } from "./process/context/useProcessDependencies";
 import { useProcessTableState } from "./useProcessTableState";
-import { createLogger } from "@/utils/loggerUtils";
-
-const logger = createLogger("useProcesses");
 
 // Definição do tipo para o contexto
 type ProcessesContextType = {
@@ -54,16 +51,11 @@ const ProcessesContext = createContext<ProcessesContextType | undefined>(undefin
  * Provider para o contexto de processos
  */
 export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
-  logger.info("Inicializando ProcessesProvider");
   const { processes, isLoading: isLoadingProcesses, fetchProcesses } = useProcessesFetch();
   const { queueSectorForLoading } = useProcessTableState(processes);
   
-  logger.debug(`ProcessesProvider carregou ${processes.length} processos`);
-  
   // Hooks para diferentes partes do contexto
   const { departments, processTypes, getDepartmentName, getProcessTypeName } = useProcessDependencies();
-  
-  logger.debug(`ProcessesProvider carregou ${departments?.length || 0} departamentos e ${processTypes?.length || 0} tipos de processo`);
   
   const { 
     filterProcesses, 
@@ -85,8 +77,6 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
     deleteManyProcesses,
     getProcess
   } = useProcessBaseOperations(fetchProcesses);
-  
-  logger.debug("ProcessesProvider inicializado com sucesso");
   
   return (
     <ProcessesContext.Provider
@@ -127,9 +117,7 @@ export const ProcessesProvider = ({ children }: { children: ReactNode }) => {
 export const useProcesses = () => {
   const context = useContext(ProcessesContext);
   if (context === undefined) {
-    logger.error("useProcesses deve ser usado dentro de um ProcessesProvider");
     throw new Error("useProcesses must be used within a ProcessesProvider");
   }
-  logger.debug("useProcesses acessado com sucesso");
   return context;
 };
