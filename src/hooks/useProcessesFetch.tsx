@@ -27,8 +27,9 @@ export const useProcessesFetch = () => {
       // Converter para o formato do nosso tipo Process
       const formattedProcesses = formatProcesses(processesData);
 
+      // Definir os processos formatados no estado
       setProcesses(formattedProcesses);
-      // Retornamos void para compatibilidade com a tipagem esperada
+      // Não retornamos os dados para manter compatibilidade com Promise<void>
     } catch (error) {
       console.error('Erro ao processar dados dos processos:', error);
       // Definir um array vazio mesmo em caso de erro

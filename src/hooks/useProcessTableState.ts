@@ -22,6 +22,8 @@ export const useProcessTableState = (processes: Process[]) => {
         return;
       }
 
+      console.log('Buscando responsáveis para processos:', startedProcessIds);
+
       // Buscar responsáveis iniciais dos processos com dados do usuário
       const { data: processResponsibles, error: processError } = await supabase
         .from('processos')
@@ -55,37 +57,22 @@ export const useProcessTableState = (processes: Process[]) => {
         processToSectorsMap[history.processo_id].add(history.setor_id);
       });
 
-      // Buscar responsáveis apenas para os setores que já receberam o processo
-      const sectorResponsiblesPromises = startedProcessIds.map(async (processId) => {
-        const sectors = processToSectorsMap[processId];
-        if (!sectors || sectors.size === 0) return null;
+      // Buscar todos os responsáveis de setores para todos os processos de uma vez
+      const { data: allSectorResponsibles, error: sectorError } = await supabase
+        .from('setor_responsaveis')
+        .select(`
+          processo_id,
+          setor_id,
+          usuario_id,
+          usuarios:usuario_id(
+            id,
+            nome,
+            email
+          )
+        `)
+        .in('processo_id', startedProcessIds);
 
-        // Buscar todos os responsáveis por setor de uma vez
-        const { data: sectorResponsibles, error: sectorError } = await supabase
-          .from('setor_responsaveis')
-          .select(`
-            processo_id,
-            setor_id,
-            usuario_id,
-            usuarios:usuario_id(
-              id,
-              nome,
-              email
-            )
-          `)
-          .eq('processo_id', processId);
-
-        if (sectorError) {
-          console.error("Erro ao buscar responsáveis de setor:", sectorError);
-          throw sectorError;
-        }
-        
-        return { processId, responsibles: sectorResponsibles };
-      });
-
-      const sectorResponsiblesResults = await Promise.all(
-        sectorResponsiblesPromises.filter(Boolean)
-      );
+      if (sectorError) throw sectorError;
 
       // Organizar os dados em uma estrutura adequada
       const responsiblesMap: Record<string, Record<string, any>> = {};
@@ -102,22 +89,18 @@ export const useProcessTableState = (processes: Process[]) => {
       });
 
       // Mapear responsáveis por setor
-      sectorResponsiblesResults.forEach(result => {
-        if (!result) return;
-        
-        const { processId, responsibles } = result;
+      allSectorResponsibles?.forEach(resp => {
+        const processId = resp.processo_id;
         
         if (!responsiblesMap[processId]) {
           responsiblesMap[processId] = {};
         }
         
         // Garantir que temos os dados formatados corretamente
-        responsibles.forEach(resp => {
-          if (resp.usuarios && resp.setor_id) {
-            const sectorId = String(resp.setor_id);
-            responsiblesMap[processId][sectorId] = resp.usuarios;
-          }
-        });
+        if (resp.usuarios && resp.setor_id) {
+          const sectorId = String(resp.setor_id);
+          responsiblesMap[processId][sectorId] = resp.usuarios;
+        }
       });
 
       // Log de todos os responsáveis carregados
