@@ -49,7 +49,7 @@ const ProcessDepartmentsSection = ({
         
         // Estritamente verificar se o dept.order é menor que o order do departamento atual
         // ou se é o departamento atual
-        const showResponsible = isProcessStarted && isActive || (dept.order < currentDeptOrder);
+        const showResponsible = isActive || (dept.order < currentDeptOrder);
         
         if (showResponsible && isProcessStarted) {
           // Apenas mostra responsáveis se o processo estiver iniciado e 
